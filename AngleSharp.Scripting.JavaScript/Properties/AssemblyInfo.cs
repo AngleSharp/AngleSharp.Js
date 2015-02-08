@@ -1,13 +1,12 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("AngleSharp.Scripting")]
-[assembly: AssemblyDescription("Extension for AngleSharp to enable JavaScript scripts using the Jurassic JavaScript to MSIL compiler.")]
+[assembly: AssemblyTitle("AngleSharp.Scripting.JavaScript")]
+[assembly: AssemblyDescription("Extension for AngleSharp to enable JavaScript scripts using the Jint JavaScript interpreter.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("AngleVisions")]
 [assembly: AssemblyProduct("AngleSharp.Scripting")]
-[assembly: AssemblyCopyright("Copyright © Florian Rappl et al. 2013-2014")]
+[assembly: AssemblyCopyright("Copyright © 2013-2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
