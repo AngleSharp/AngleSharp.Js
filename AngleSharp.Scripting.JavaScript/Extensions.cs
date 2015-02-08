@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting
+﻿namespace AngleSharp.Scripting.JavaScript
 {
     using Jint;
     using Jint.Native;
