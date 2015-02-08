@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>AngleSharp.Scripting.JavaScript</id>
+    <version>0.1.0</version>
+    <authors>Florian Rappl</authors>
+    <owners>Florian Rappl</owners>
+    <licenseUrl>https://github.com/AngleSharp/AngleSharp.Scripting/blob/master/LICENSE</licenseUrl>
+    <projectUrl>http://github.com/AngleSharp/AngleSharp.Scripting</projectUrl>
+    <iconUrl>https://raw.github.com/AngleSharp/AngleSharp.Scripting/master/logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JavaScript integration for AngleSharp.</description>
+    <releaseNotes>Initial release.</releaseNotes>
+    <copyright>Copyright 2015, AngleSharp collaborators.</copyright>
+    <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint</tags>
+  </metadata>
+</package>
