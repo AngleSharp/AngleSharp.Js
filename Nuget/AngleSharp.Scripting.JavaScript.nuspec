@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>AngleSharp.Scripting.JavaScript</id>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <authors>Florian Rappl</authors>
     <owners>Florian Rappl</owners>
     <licenseUrl>https://github.com/AngleSharp/AngleSharp.Scripting/blob/master/LICENSE</licenseUrl>
@@ -14,8 +14,8 @@
     <copyright>Copyright 2015, AngleSharp collaborators.</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies> 
-      <dependency id="AngleSharp" />
-      <dependency id="Jint" />
+      <dependency id="AngleSharp" version="0.8.2" />
+      <dependency id="Jint" version="2.4.0" />
     </dependencies>
   </metadata>
 </package>
