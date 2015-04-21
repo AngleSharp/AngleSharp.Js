@@ -31,9 +31,9 @@
     <DocumentationFile>bin\Release\AngleSharp.Scripting.JavaScript.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.8.2.34949, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="AngleSharp, Version=0.8.3.114, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AngleSharp.0.8.2\lib\net40\AngleSharp.dll</HintPath>
+      <HintPath>..\packages\AngleSharp.0.8.3\lib\net40\AngleSharp.dll</HintPath>
     </Reference>
     <Reference Include="Jint, Version=2.4.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

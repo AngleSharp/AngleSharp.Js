@@ -10,16 +10,17 @@
     {
         /// <summary>
         /// Sets scripting to true, registers the JavaScript engine and returns
-        /// the same instance.
+        /// a new configuration with the scripting service.
         /// </summary>
-        /// <typeparam name="TConfiguration">Type of Configuration.</typeparam>
-        /// <param name="configuration">The configuration to modify.</param>
-        /// <returns>The same object, for chaining.</returns>
-        public static TConfiguration WithJavaScript<TConfiguration>(this TConfiguration configuration)
-            where TConfiguration : Configuration
+        /// <param name="configuration">The configuration to use.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithJavaScript(this IConfiguration configuration)
         {
             if (!configuration.Services.OfType<ScriptingService>().Any())
-                configuration.Register(new ScriptingService());
+            {
+                var service = new ScriptingService();
+                return configuration.With(service);
+            }
 
             return configuration;
         }
