@@ -3,13 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Dynamic;
-    using AngleSharp.Dom;
 
-    public class DynamicNode : DynamicObject
+    sealed class DynamicDomObject : DynamicObject
     {
-        readonly INode _node;
+        readonly Object _node;
 
-        public DynamicNode(INode node)
+        public DynamicDomObject(Object node)
         {
             _node = node;
         }

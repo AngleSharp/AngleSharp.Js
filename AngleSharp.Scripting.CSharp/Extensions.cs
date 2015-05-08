@@ -14,7 +14,7 @@
         /// <returns>The dynamic object.</returns>
         public static dynamic ToDynamic(this INode node)
         {
-            return new DynamicNode(node);
+            return new DynamicDomObject(node);
         }
     }
 }
