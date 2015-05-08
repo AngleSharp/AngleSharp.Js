@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22310.1
+VisualStudioVersion = 14.0.22728.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript", "AngleSharp.Scripting.JavaScript\AngleSharp.Scripting.JavaScript.csproj", "{4ED5A0B3-AE7A-40B6-BBAC-FF408D6C6BC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.CSharp", "AngleSharp.Scripting.CSharp\AngleSharp.Scripting.CSharp.csproj", "{73856B9E-967D-44AA-A644-91CBBE75BF9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{4ED5A0B3-AE7A-40B6-BBAC-FF408D6C6BC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ED5A0B3-AE7A-40B6-BBAC-FF408D6C6BC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4ED5A0B3-AE7A-40B6-BBAC-FF408D6C6BC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73856B9E-967D-44AA-A644-91CBBE75BF9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73856B9E-967D-44AA-A644-91CBBE75BF9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73856B9E-967D-44AA-A644-91CBBE75BF9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73856B9E-967D-44AA-A644-91CBBE75BF9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
