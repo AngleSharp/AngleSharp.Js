@@ -1,6 +1,6 @@
 ﻿namespace AngleSharp.Scripting.CSharp
 {
-    using System;
+    using AngleSharp.Dom;
 
     /// <summary>
     /// A set of extensions to use the C# scripting library.
@@ -12,7 +12,7 @@
         /// </summary>
         /// <param name="node">The node to treat dynamically.</param>
         /// <returns>The dynamic object.</returns>
-        public static dynamic ToDynamic(this Object node)
+        public static dynamic ToDynamic(this INode node)
         {
             return new DynamicNode(node);
         }
