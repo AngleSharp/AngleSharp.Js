@@ -25,8 +25,13 @@
         {
             var index = 0;
 
-            if (_indexer != null && Int32.TryParse(propertyName, out index))
-                return new PropertyDescriptor(_indexer.GetMethod.Invoke(_value, new Object[] { index }).ToJsValue(Engine), false, false, false);
+            if (_indexer != null)
+            {
+                if (_indexer.GetIndexParameters()[0].ParameterType == typeof(Int32) && Int32.TryParse(propertyName, out index))
+                    return new PropertyDescriptor(_indexer.GetMethod.Invoke(_value, new Object[] { index }).ToJsValue(Engine), false, false, false);
+                else if (_indexer.GetIndexParameters()[0].ParameterType == typeof(String))
+                    return new PropertyDescriptor(_indexer.GetMethod.Invoke(_value, new Object[] { propertyName }).ToJsValue(Engine), false, false, false);
+            }
 
             return base.GetOwnProperty(propertyName);
         }
