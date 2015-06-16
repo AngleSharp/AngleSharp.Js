@@ -2,6 +2,7 @@
 {
     using AngleSharp.Dom;
     using AngleSharp.Network;
+    using AngleSharp.Services.Scripting;
     using Jint;
     using Jint.Runtime.Environments;
     using System;
