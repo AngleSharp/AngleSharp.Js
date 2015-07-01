@@ -36,5 +36,16 @@
             Assert.IsNotNull(document);
             Assert.AreEqual(url, document.URL);
         }
+
+        [Test]
+        public async Task ConvertDocumentShouldResultInEmptyBody()
+        {
+            var url = "http://www.test.com/";
+            var context = BrowsingContext.New();
+            var original = await context.OpenNewAsync(url);
+            var document = original.ToDynamic();
+            Assert.IsNotNull(document);
+            Assert.AreEqual(0, document.body.childElementCount);
+        }
     }
 }
