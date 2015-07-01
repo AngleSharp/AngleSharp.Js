@@ -63,6 +63,11 @@
             }
         }
 
+        public static Boolean IsCustom(this Object obj)
+        {
+            return obj != null && obj.GetType().GetTypeInfo().Assembly == typeof(BrowsingContext).GetTypeInfo().Assembly;
+        }
+
         public static Boolean SameAs(this PropertyInfo a, PropertyInfo b)
         {
             return a.Name == b.Name && a.PropertyType == b.PropertyType;

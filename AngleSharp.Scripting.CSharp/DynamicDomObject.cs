@@ -31,8 +31,8 @@
                 var property = (PropertyInfo)info;
 
                 if (property.CanRead)
-                    result = property.GetValue(_node);
-
+                    result = Convert(property.GetValue(_node));
+                
                 return true;
             }
 
@@ -76,11 +76,16 @@
             if (_members.TryGetValue(binder.Name, out info) && info is MethodInfo)
             {
                 var method = (MethodInfo)info;
-                result = method.Invoke(_node, args);
+                result = Convert(method.Invoke(_node, args));
                 return true;
             }
 
             return false;
+        }
+
+        static Object Convert(Object result)
+        {
+            return result.IsCustom() ? new DynamicDomObject(result) : result;
         }
     }
 }
