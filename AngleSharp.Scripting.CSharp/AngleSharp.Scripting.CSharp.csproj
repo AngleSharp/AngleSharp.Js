@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="DynamicDomObject.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="InternalHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

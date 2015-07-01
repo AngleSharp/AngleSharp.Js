@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Dynamic;
     using System.Reflection;
-    using AngleSharp.Attributes;
 
     sealed class DynamicDomObject : DynamicObject
     {
@@ -14,27 +13,7 @@
         public DynamicDomObject(Object node)
         {
             _node = node;
-            _members = new Dictionary<String, MemberInfo>();
-
-            foreach (var method in node.GetType().GetRuntimeMethods())
-            {
-                var attr = method.GetCustomAttribute<DomNameAttribute>();
-
-                if (attr == null)
-                    break;
-
-                _members.Add(attr.OfficialName, method);
-            }
-
-            foreach (var property in node.GetType().GetRuntimeProperties())
-            {
-                var attr = property.GetCustomAttribute<DomNameAttribute>();
-
-                if (attr == null)
-                    break;
-
-                _members.Add(attr.OfficialName, property);
-            }
+            _members = node.GetType().CreateMemberMap();
         }
 
         public override IEnumerable<String> GetDynamicMemberNames()
