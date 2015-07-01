@@ -35,6 +35,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AngleSharp">
+      <HintPath>..\packages\AngleSharp.0.8.5\lib\net45\AngleSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="nunit.core">
       <HintPath>..\packages\NUnitTestAdapter.2.0.0\lib\nunit.core.dll</HintPath>
       <Private>False</Private>
@@ -65,10 +69,17 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="ConversionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AngleSharp.Scripting.CSharp\AngleSharp.Scripting.CSharp.csproj">
+      <Project>{73856b9e-967d-44aa-a644-91cbbe75bf9d}</Project>
+      <Name>AngleSharp.Scripting.CSharp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
