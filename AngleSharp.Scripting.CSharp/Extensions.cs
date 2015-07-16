@@ -30,5 +30,18 @@
         {
             return context.Active.ToDynamic();
         }
+
+        /// <summary>
+        /// Uses the provided creator function to supply a special wrapper for
+        /// the (default) IWindow instance.
+        /// </summary>
+        /// <param name="configuration">The configuration to extend.</param>
+        /// <param name="creator">The function to create a new window.</param>
+        /// <returns>The new configuration with the supplied service.</returns>
+        public static IConfiguration WithWindowContext(this IConfiguration configuration, Func<IWindow, WindowContext> creator)
+        {
+            var service = new WindowService(creator);
+            return configuration.With(service);
+        }
     }
 }
