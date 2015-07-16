@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AngleSharp">
-      <HintPath>..\packages\AngleSharp.0.8.5\lib\portable-windows8+net45+windowsphone8+wpa\AngleSharp.dll</HintPath>
+      <HintPath>..\packages\AngleSharp.0.8.7.1\lib\portable-windows8+net45+windowsphone8+wpa\AngleSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
