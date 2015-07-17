@@ -2,41 +2,46 @@
 {
     using System;
 
-    class BindingProperty : BindingMember
+    sealed class BindingProperty : BindingMember
     {
-        public BindingProperty(String name)
-            : base(name)
+        public BindingProperty(String originalName, Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, String forwardedTo = null)
+            : base(originalName)
         {
+            AllowGet = canRead;
+            AllowSet = canWrite;
+            IsLenient = isLenient;
+            ForwardedTo = forwardedTo;
+            ValueType = valueType;
         }
 
-        public String OriginalName 
-        { 
-            get; 
-            set; 
+        public Type ValueType
+        {
+            get;
+            private set;
         }
 
         public Boolean AllowGet 
         { 
             get; 
-            set;
+            private set;
         }
 
         public Boolean AllowSet 
-        { 
-            get; 
-            set; 
+        {
+            get;
+            private set;
         }
 
         public Boolean IsLenient 
-        { 
-            get; 
-            set;
+        {
+            get;
+            private set;
         }
 
         public String ForwardedTo
-        { 
-            get; 
-            set; 
+        {
+            get;
+            private set;
         }
     }
 }

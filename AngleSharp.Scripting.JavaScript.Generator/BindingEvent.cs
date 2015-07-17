@@ -1,16 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AngleSharp.Scripting.JavaScript.Generator
+﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
-    class BindingEvent : BindingMember
+    using System;
+
+    sealed class BindingEvent : BindingMember
     {
-        public BindingEvent(String name)
-            : base(name)
+        public BindingEvent(String originalName, Type handlerType, Boolean isLenient = false)
+            : base(originalName)
         {
+            HandlerType = handlerType;
+            IsLenient = isLenient;
+        }
+
+        public Type HandlerType 
+        { 
+            get; 
+            private set; 
+        }
+
+        public Boolean IsLenient 
+        { 
+            get; 
+            private set; 
         }
     }
 }

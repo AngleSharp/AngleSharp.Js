@@ -1,16 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AngleSharp.Scripting.JavaScript.Generator
+﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
-    class BindingIndex : BindingMember
+    using System;
+    using System.Collections.Generic;
+
+    sealed class BindingIndex : BindingMember
     {
-        public BindingIndex(String name)
-            : base(name)
+        public BindingIndex(String originalName, Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, Dictionary<String, Type> parameters = null)
+            : base(originalName)
         {
+            AllowGet = canRead;
+            AllowSet = canWrite;
+            IsLenient = isLenient;
+            ValueType = valueType;
+            Parameters = parameters ?? new Dictionary<String, Type>();
+        }
+
+        public Type ValueType 
+        { 
+            get; 
+            private set;
+        }
+
+        public Boolean AllowGet
+        {
+            get;
+            private set;
+        }
+
+        public Boolean AllowSet
+        {
+            get;
+            private set;
+        }
+
+        public Boolean IsLenient
+        {
+            get;
+            private set;
+        }
+
+        public Dictionary<String, Type> Parameters
+        {
+            get;
+            private set;
         }
     }
 }

@@ -1,12 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AngleSharp.Scripting.JavaScript.Generator
+﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
-    class BindingConstructor
+    using System;
+    using System.Collections.Generic;
+
+    sealed class BindingConstructor : BindingMember
     {
+        public BindingConstructor(String originalName, Dictionary<String, Type> parameters = null)
+            : base(originalName)
+        {
+            Parameters = parameters ?? new Dictionary<String, Type>();
+        }
+
+        public Dictionary<String, Type> Parameters 
+        { 
+            get; 
+            private set; 
+        }
     }
 }

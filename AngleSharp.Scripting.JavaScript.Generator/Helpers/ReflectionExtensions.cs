@@ -3,10 +3,17 @@
     using AngleSharp.Attributes;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     static class ReflectionExtensions
     {
+        public static IEnumerable<Accessors> Split(this Accessors accessors)
+        {
+            var values = Enum.GetValues(typeof(Accessors)) as Accessors[];
+            return values.Where(m => m != Accessors.None && accessors.HasFlag(m));
+        }
+
         public static DomNoInterfaceObjectAttribute GetDomNoInterfaceObjectAttribute(this MemberInfo member)
         {
             return member.GetCustomAttribute<DomNoInterfaceObjectAttribute>(inherit: false);
@@ -58,6 +65,16 @@
             }
 
             return candidates;
+        }
+
+        public static Dictionary<String, Type> GetParameterMap(this MethodBase method)
+        {
+            return method.GetParameters().Map();
+        }
+
+        public static Dictionary<String, Type> Map(this IEnumerable<ParameterInfo> parameters)
+        {
+            return parameters.ToDictionary(m => m.Name, m => m.ParameterType);
         }
     }
 }

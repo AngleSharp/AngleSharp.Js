@@ -2,14 +2,14 @@
 {
     using System;
 
-    class BindingMember
+    abstract class BindingMember
     {
-        public BindingMember(String name)
+        public BindingMember(String originalName)
         {
-            Name = name;
+            OriginalName = originalName;
         }
 
-        public String Name
+        public String OriginalName
         {
             get;
             private set;
