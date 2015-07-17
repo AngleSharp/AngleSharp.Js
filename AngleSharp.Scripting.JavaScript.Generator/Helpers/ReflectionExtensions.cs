@@ -1,0 +1,63 @@
+﻿namespace AngleSharp.Scripting.JavaScript.Generator
+{
+    using AngleSharp.Attributes;
+    using System;
+    using System.Collections.Generic;
+    using System.Reflection;
+
+    static class ReflectionExtensions
+    {
+        public static DomNoInterfaceObjectAttribute GetDomNoInterfaceObjectAttribute(this MemberInfo member)
+        {
+            return member.GetCustomAttribute<DomNoInterfaceObjectAttribute>(inherit: false);
+        }
+
+        public static DomAccessorAttribute GetDomAccessorAttribute(this MemberInfo member)
+        {
+            return member.GetCustomAttribute<DomAccessorAttribute>(inherit: false);
+        }
+
+        public static DomConstructorAttribute GetDomConstructorAttribute(this MemberInfo member)
+        {
+            return member.GetCustomAttribute<DomConstructorAttribute>(inherit: false);
+        }
+
+        public static DomLenientThisAttribute GetDomLenientThisAttribute(this MemberInfo member)
+        {
+            return member.GetCustomAttribute<DomLenientThisAttribute>(inherit: false);
+        }
+
+        public static DomPutForwardsAttribute GetDomPutForwardsAttribute(this MemberInfo member)
+        {
+            return member.GetCustomAttribute<DomPutForwardsAttribute>(inherit: false);
+        }
+
+        public static IEnumerable<DomNameAttribute> GetDomNameAttributes(this MemberInfo member)
+        {
+            return member.GetCustomAttributes<DomNameAttribute>(inherit: false);
+        }
+
+        public static Dictionary<String, Type> GetCandidates(this Assembly assembly)
+        {
+            var candidates = new Dictionary<String, Type>();
+
+            foreach (var type in assembly.ExportedTypes)
+            {
+                var noBinding = type.GetDomNoInterfaceObjectAttribute();
+
+                if (noBinding != null)
+                    continue;
+
+                var nameAttributes = type.GetDomNameAttributes();
+
+                foreach (var nameAttribute in nameAttributes)
+                {
+                    var name = nameAttribute.OfficialName;
+                    candidates.Add(name, type);
+                }
+            }
+
+            return candidates;
+        }
+    }
+}
