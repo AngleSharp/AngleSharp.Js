@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.CSharp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript.Tests", "AngleSharp.Scripting.JavaScript.Tests\AngleSharp.Scripting.JavaScript.Tests.csproj", "{18B0B97B-8795-4DC2-A1E7-8070255BE718}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript.Generator", "AngleSharp.Scripting.JavaScript.Generator\AngleSharp.Scripting.JavaScript.Generator.csproj", "{2BEBF4AD-1660-43A6-B452-109716F42FA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{18B0B97B-8795-4DC2-A1E7-8070255BE718}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18B0B97B-8795-4DC2-A1E7-8070255BE718}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18B0B97B-8795-4DC2-A1E7-8070255BE718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
