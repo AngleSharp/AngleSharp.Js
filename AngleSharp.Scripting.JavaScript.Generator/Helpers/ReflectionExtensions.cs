@@ -8,10 +8,10 @@
 
     static class ReflectionExtensions
     {
-        public static IEnumerable<Accessors> Split(this Accessors accessors)
+        public static IEnumerable<Accessors> GetAccessors(this DomAccessorAttribute accessorAttribute)
         {
             var values = Enum.GetValues(typeof(Accessors)) as Accessors[];
-            return values.Where(m => m != Accessors.None && accessors.HasFlag(m));
+            return values.Where(m => m != Accessors.None && accessorAttribute.Type.HasFlag(m));
         }
 
         public static DomNoInterfaceObjectAttribute GetDomNoInterfaceObjectAttribute(this MemberInfo member)

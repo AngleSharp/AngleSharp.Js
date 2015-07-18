@@ -18,24 +18,17 @@
                 parameters: parameters.Map());
         }
 
-        static BindingMember CreatePropertyBinding(PropertyInfo propertyInfo)
+        static BindingProperty CreatePropertyBinding(PropertyInfo propertyInfo)
         {
-            var parameters = propertyInfo.GetIndexParameters();
-
-            if (parameters.Length == 0)
-            {
-                var lenient = propertyInfo.GetDomLenientThisAttribute();
-                var putsForward = propertyInfo.GetDomPutForwardsAttribute();
-                return new BindingProperty(
-                    originalName: propertyInfo.Name,
-                    canRead: propertyInfo.CanRead,
-                    canWrite: propertyInfo.CanWrite,
-                    isLenient: lenient != null,
-                    forwardedTo: putsForward != null ? putsForward.PropertyName : null,
-                    valueType: propertyInfo.PropertyType);
-            }
-
-            return CreateIndexBinding(parameters, propertyInfo);
+            var lenient = propertyInfo.GetDomLenientThisAttribute();
+            var putsForward = propertyInfo.GetDomPutForwardsAttribute();
+            return new BindingProperty(
+                originalName: propertyInfo.Name,
+                canRead: propertyInfo.CanRead,
+                canWrite: propertyInfo.CanWrite,
+                isLenient: lenient != null,
+                forwardedTo: putsForward != null ? putsForward.PropertyName : null,
+                valueType: propertyInfo.PropertyType);
         }
 
         static BindingConstructor CreateConstructorBinding(ConstructorInfo constructorInfo)
@@ -66,15 +59,11 @@
         {
             foreach (var nameAttribute in nameAttributes)
                 target.Bind(nameAttribute.OfficialName, member);
-
-            target.Wrap(member);
         }
 
         public static void AttachAll(this BindingClass target, DomAccessorAttribute accessorAttribute, BindingMember member)
         {
-            var accessors = accessorAttribute.Type.Split();
-
-            foreach (var accessor in accessors)
+            foreach (var accessor in accessorAttribute.GetAccessors())
                 target.Bind(accessor, member);
         }
 
@@ -82,8 +71,6 @@
         {
             if (ctorAttribute != null)
                 target.BindConstructor(member);
-
-            target.Wrap(member);
         }
 
         public static void AttachEvents(this BindingClass target, IEnumerable<EventInfo> events)
@@ -92,7 +79,9 @@
             {
                 var nameAttributes = evt.GetDomNameAttributes();
                 var binding = CreateEventBinding(evt);
+
                 target.AttachAll(nameAttributes, binding);
+                target.Wrap(binding);
             }
         }
 
@@ -109,6 +98,7 @@
                 
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
+                target.Wrap(binding);
             }
         }
 
@@ -118,7 +108,9 @@
             {
                 var ctorAttribute = constructor.GetDomConstructorAttribute();
                 var binding = CreateConstructorBinding(constructor);
+
                 target.AttachAll(ctorAttribute, binding);
+                target.Wrap(binding);
             }
         }
 
@@ -128,9 +120,13 @@
             {
                 var nameAttributes = property.GetDomNameAttributes();
                 var access = property.GetDomAccessorAttribute();
-                var binding = CreatePropertyBinding(property);
+                var parameters = property.GetIndexParameters();
+                var binding = parameters.Length == 0 ? CreatePropertyBinding(property) : 
+                    CreateIndexBinding(parameters, property) as BindingMember;
+
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
+                target.Wrap(binding);
             }
         }
     }
