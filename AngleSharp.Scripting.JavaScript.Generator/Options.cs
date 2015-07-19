@@ -14,6 +14,7 @@
         public Options()
         {
             Extension = ".g.cs";
+            Namespace = "AngleSharp";
             TypeMapping = new Dictionary<Type, Type>();
         }
 
@@ -21,6 +22,15 @@
         /// Gets or sets the extension to use. By default this is ".g.cs".
         /// </summary>
         public String Extension
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the namespace to use. By default this is "AngleSharp".
+        /// </summary>
+        public String Namespace
         {
             get;
             set;

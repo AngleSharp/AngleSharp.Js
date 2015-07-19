@@ -66,9 +66,11 @@
     <Compile Include="Files.cs" />
     <Compile Include="Helpers\GeneralExtensions.cs" />
     <Compile Include="GeneratedFile.cs" />
+    <Compile Include="Helpers\RoslynExtensions.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\ReflectionExtensions.cs" />
+    <Compile Include="SyntaxWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

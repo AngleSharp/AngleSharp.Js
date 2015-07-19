@@ -20,7 +20,7 @@
             var assembly = typeof(BrowsingContext).Assembly;
             var candidates = assembly.GetCandidates();
             var bindings = candidates.GetBindings();
-            return bindings.Select(m => new GeneratedFile(m, options.Extension));
+            return bindings.Select(m => new GeneratedFile(m, options));
         }
     }
 }

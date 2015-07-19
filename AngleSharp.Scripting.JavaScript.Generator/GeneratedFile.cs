@@ -8,12 +8,12 @@
     public class GeneratedFile
     {
         readonly BindingClass _bindingClass;
-        readonly String _extension;
+        readonly Options _options;
 
-        internal GeneratedFile(BindingClass bindingClass, String extension)
+        internal GeneratedFile(BindingClass bindingClass, Options options)
         {
             _bindingClass = bindingClass;
-            _extension = extension;
+            _options = options;
         }
 
         /// <summary>
@@ -21,7 +21,7 @@
         /// </summary>
         public String FileName
         {
-            get { return _bindingClass.Name + _extension; }
+            get { return _bindingClass.Name + _options.Extension; }
         }
 
         /// <summary>
@@ -29,7 +29,12 @@
         /// </summary>
         public String Content
         {
-            get { return String.Empty; }
+            get 
+            {
+                var writer = new SyntaxWriter(_options.Namespace);
+                writer.AddClass(_bindingClass);
+                return writer.Serialize(); 
+            }
         }
     }
 }
