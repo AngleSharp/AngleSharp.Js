@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    public static class Bindings
+    public static class Files
     {
         public static IEnumerable<GeneratedFile> Generate()
         {

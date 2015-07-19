@@ -55,15 +55,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BindingClass.cs" />
-    <Compile Include="BindingConstructor.cs" />
-    <Compile Include="BindingEvent.cs" />
+    <Compile Include="Bindings\BindingClass.cs" />
+    <Compile Include="Bindings\BindingConstructor.cs" />
+    <Compile Include="Bindings\BindingEvent.cs" />
     <Compile Include="Helpers\BindingExtensions.cs" />
-    <Compile Include="BindingIndex.cs" />
-    <Compile Include="BindingMember.cs" />
-    <Compile Include="BindingMethod.cs" />
-    <Compile Include="BindingProperty.cs" />
-    <Compile Include="Bindings.cs" />
+    <Compile Include="Bindings\BindingIndex.cs" />
+    <Compile Include="Bindings\BindingMember.cs" />
+    <Compile Include="Bindings\BindingMethod.cs" />
+    <Compile Include="Bindings\BindingProperty.cs" />
+    <Compile Include="Files.cs" />
     <Compile Include="Helpers\GeneralExtensions.cs" />
     <Compile Include="GeneratedFile.cs" />
     <Compile Include="Options.cs" />
