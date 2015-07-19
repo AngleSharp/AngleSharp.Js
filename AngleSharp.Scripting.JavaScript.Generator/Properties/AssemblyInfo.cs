@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("AngleSharp.Scripting.JavaScript.Generator")]
@@ -13,3 +14,4 @@ using System.Runtime.InteropServices;
 [assembly: Guid("c8c0eeaf-0cd3-459d-8321-bee7c7a673c0")]
 [assembly: AssemblyVersion("0.1.0")]
 [assembly: AssemblyFileVersion("0.1.0")]
+[assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.JavaScript.Tests")]

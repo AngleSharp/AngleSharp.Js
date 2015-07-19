@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("AngleSharp.Scripting.JavaScript")]
@@ -13,3 +14,4 @@ using System.Runtime.InteropServices;
 [assembly: Guid("be485498-5294-46d0-b1ba-54f095eba40d")]
 [assembly: AssemblyVersion("0.1.6.*")]
 [assembly: AssemblyFileVersion("0.1.6")]
+[assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.JavaScript.Tests")]
