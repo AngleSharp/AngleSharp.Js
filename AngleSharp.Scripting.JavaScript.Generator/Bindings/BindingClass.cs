@@ -8,19 +8,18 @@
     {
         readonly Dictionary<String, BindingMember> _members;
         readonly Dictionary<Special, BindingMember> _specials;
-        readonly List<BindingMember> _wrappers;
 
         public BindingClass(String name)
         {
             Name = name;
             _members = new Dictionary<String, BindingMember>();
             _specials = new Dictionary<Special, BindingMember>();
-            _wrappers = new List<BindingMember>();
         }
 
         public void BindConstructor(BindingMember value)
         {
-            _specials.Add(Special.Constructor, value);
+            var key = Special.Constructor;
+            _specials.Add(key, value);
         }
 
         public void Bind(String name, BindingMember value)
@@ -30,12 +29,8 @@
 
         public void Bind(Accessors accessor, BindingMember value)
         {
-            _specials.Add(Translate[accessor], value);
-        }
-
-        public void Wrap(BindingMember member)
-        {
-            _wrappers.Add(member);
+            var key = Translate[accessor];
+            _specials.Add(key, value);
         }
 
         public String Name

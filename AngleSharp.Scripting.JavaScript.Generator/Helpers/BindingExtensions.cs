@@ -81,7 +81,6 @@
                 var binding = CreateEventBinding(evt);
 
                 target.AttachAll(nameAttributes, binding);
-                target.Wrap(binding);
             }
         }
 
@@ -98,7 +97,6 @@
                 
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
-                target.Wrap(binding);
             }
         }
 
@@ -110,7 +108,6 @@
                 var binding = CreateConstructorBinding(constructor);
 
                 target.AttachAll(ctorAttribute, binding);
-                target.Wrap(binding);
             }
         }
 
@@ -126,7 +123,6 @@
 
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
-                target.Wrap(binding);
             }
         }
     }
