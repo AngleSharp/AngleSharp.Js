@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("AngleSharp.Scripting.CSharp")]
@@ -12,3 +13,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: AssemblyVersion("0.1.0.*")]
 [assembly: AssemblyFileVersion("0.1.0")]
+[assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.CSharp.Tests")]
