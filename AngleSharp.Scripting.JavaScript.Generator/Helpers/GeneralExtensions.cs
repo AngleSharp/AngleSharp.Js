@@ -12,7 +12,8 @@
             {
                 var name = m.Key;
                 var type = m.Value;
-                var binding = new BindingClass(name);
+                var noInterfaceObject = type.GetDomNoInterfaceObjectAttribute() != null;
+                var binding = new BindingClass(name, noInterfaceObject);
                 binding.AttachProperties(type.GetProperties());
                 binding.AttachEvents(type.GetEvents());
                 binding.AttachMethods(type.GetMethods());

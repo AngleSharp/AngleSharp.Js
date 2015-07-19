@@ -10,8 +10,13 @@
     {
         public static IEnumerable<Accessors> GetAccessors(this DomAccessorAttribute accessorAttribute)
         {
-            var values = Enum.GetValues(typeof(Accessors)) as Accessors[];
-            return values.Where(m => m != Accessors.None && accessorAttribute.Type.HasFlag(m));
+            if (accessorAttribute != null)
+            {
+                var values = Enum.GetValues(typeof(Accessors)) as Accessors[];
+                return values.Where(m => m != Accessors.None && accessorAttribute.Type.HasFlag(m));
+            }
+
+            return Enumerable.Empty<Accessors>();
         }
 
         public static DomNoInterfaceObjectAttribute GetDomNoInterfaceObjectAttribute(this MemberInfo member)
@@ -50,11 +55,6 @@
 
             foreach (var type in assembly.ExportedTypes)
             {
-                var noBinding = type.GetDomNoInterfaceObjectAttribute();
-
-                if (noBinding != null)
-                    continue;
-
                 var nameAttributes = type.GetDomNameAttributes();
 
                 foreach (var nameAttribute in nameAttributes)
