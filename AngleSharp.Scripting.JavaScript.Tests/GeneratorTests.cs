@@ -60,7 +60,6 @@
             }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
             Assert.IsFalse(binding.IsInterfaced);
-            Assert.AreEqual(8, binding.Members.Count());
             Assert.AreEqual(0, binding.Constructors.Count());
             Assert.AreEqual(0, binding.Deleters.Count());
             Assert.AreEqual(0, binding.Getters.Count());
@@ -70,6 +69,29 @@
             for (int i = 0; i < members.Length; i++)
             {
                 Assert.IsTrue(binding.Members.Any(m => m.Key == members[i]));
+            }
+        }
+
+        [Test]
+        public void NodeFilterShouldHaveCorrectNameAndLocations()
+        {
+            var name = "NodeFilter";
+            var fields = new[] 
+            { 
+                "SHOW_ELEMENT", "SHOW_ATTRIBUTE", "SHOW_TEXT", "SHOW_CDATA_SECTION", 
+                "SHOW_ENTITY_REFERENCE", "SHOW_ENTITY", "SHOW_PROCESSING_INSTRUCTION", "SHOW_COMMENT" ,
+                "SHOW_DOCUMENT", "SHOW_DOCUMENT_TYPE", "SHOW_DOCUMENT_FRAGMENT", "SHOW_NOTATION", "SHOW_ALL"
+            };
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
+            {
+                { name, typeof(FilterSettings) }
+            }).First() as BindingEnum;
+            Assert.AreEqual(name, binding.Name);
+            Assert.AreEqual(fields.Length, binding.Fields.Count());
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                Assert.IsTrue(binding.Fields.Any(m => m.Key == fields[i]));
             }
         }
     }
