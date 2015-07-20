@@ -17,7 +17,7 @@
             var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
             {
                 { name, typeof(IDocument) }
-            }).First();
+            }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
             Assert.IsTrue(binding.IsInterfaced);
             Assert.AreEqual(0, binding.Constructors.Count());
@@ -32,7 +32,7 @@
             var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
             {
                 { name, typeof(MutationObserver) }
-            }).First();
+            }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
             Assert.IsTrue(binding.IsInterfaced);
             Assert.AreEqual(1, binding.Constructors.Count());
@@ -57,7 +57,7 @@
             var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
             {
                 { name, typeof(IParentNode) }
-            }).First();
+            }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
             Assert.IsFalse(binding.IsInterfaced);
             Assert.AreEqual(8, binding.Members.Count());
