@@ -4,6 +4,11 @@
 
     static class RoslynExtensions
     {
+        public static void AddEnum(this SyntaxWriter writer, BindingEnum type)
+        {
+            //TODO
+        }
+
         public static void AddClass(this SyntaxWriter writer, BindingClass member)
         {
             var classDeclaration = SyntaxFactory.ClassDeclaration(member.Name);

@@ -56,9 +56,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bindings\BindingBase.cs" />
     <Compile Include="Bindings\BindingClass.cs" />
     <Compile Include="Bindings\BindingConstructor.cs" />
+    <Compile Include="Bindings\BindingEnum.cs" />
     <Compile Include="Bindings\BindingEvent.cs" />
+    <Compile Include="Bindings\BindingType.cs" />
     <Compile Include="Helpers\BindingExtensions.cs" />
     <Compile Include="Bindings\BindingIndex.cs" />
     <Compile Include="Bindings\BindingMember.cs" />

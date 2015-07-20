@@ -20,6 +20,7 @@
             _namespace = namespaceDeclaration.WithNamespaceKeyword(namespaceKeyword)
                                              .WithOpenBraceToken(openBrace)
                                              .WithCloseBraceToken(closeBrace);
+
             _declarations = new List<MemberDeclarationSyntax>();
         }
 

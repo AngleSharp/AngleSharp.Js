@@ -2,7 +2,7 @@
 {
     using System;
 
-    abstract class BindingMember
+    abstract class BindingMember : BindingBase
     {
         public BindingMember(String originalName)
         {

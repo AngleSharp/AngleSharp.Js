@@ -5,14 +5,14 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    sealed class BindingClass
+    sealed class BindingClass : BindingType
     {
         readonly Dictionary<String, BindingMember> _members;
         readonly Dictionary<Special, BindingMember> _specials;
 
         public BindingClass(String name, Boolean createNoInterfaceObject = false)
+            : base(name)
         {
-            Name = name;
             _members = new Dictionary<String, BindingMember>();
             _specials = new Dictionary<Special, BindingMember>();
             IsInterfaced = createNoInterfaceObject == false;
@@ -47,12 +47,6 @@
         public IEnumerable<BindingMember> Setters
         {
             get { return GetSpecials(Special.Setter); }
-        }
-
-        public String Name
-        {
-            get;
-            private set;
         }
 
         public void BindConstructor(BindingMember value)
@@ -92,6 +86,11 @@
             Destructor,
             Getter,
             Setter
+        }
+
+        public override void Serialize(SyntaxWriter writer)
+        {
+            writer.AddClass(this);
         }
     }
 }
