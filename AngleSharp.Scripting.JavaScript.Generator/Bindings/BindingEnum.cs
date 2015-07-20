@@ -5,22 +5,22 @@
 
     sealed class BindingEnum : BindingType
     {
-        readonly Dictionary<String, Object> _fields;
+        readonly Dictionary<String, String> _fields;
 
         public BindingEnum(String name)
             : base(name)
         {
-            _fields = new Dictionary<String, Object>();
+            _fields = new Dictionary<String, String>();
         }
 
-        public IEnumerable<KeyValuePair<String, Object>> Fields
+        public IEnumerable<KeyValuePair<String, String>> Fields
         {
             get { return _fields; }
         }
 
-        public void Bind(String name, Object value)
+        public void Bind(String name, String location)
         {
-            _fields.Add(name, value);
+            _fields.Add(name, location);
         }
 
         public override void Serialize(SyntaxWriter writer)

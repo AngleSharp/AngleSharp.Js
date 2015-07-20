@@ -22,14 +22,15 @@
         static BindingEnum GetEnumBinding(String name, Type type)
         {
             var binding = new BindingEnum(name);
-            var names = type.GetEnumNames();
-            var values = type.GetEnumValues();
+            var fields = type.GetFields();
 
-            for (int i = 0; i < names.Length; i++)
+            foreach (var field in fields)
             {
-                var key = names[i];
-                var val = values.GetValue(i);
-                binding.Bind(key, val);
+                var nameAttributes = field.GetDomNameAttributes();
+                var location = field.DeclaringType.FullName + "." + field.Name;
+
+                foreach (var nameAttribute in nameAttributes)
+                    binding.Bind(nameAttribute.OfficialName, location);
             }
 
             return binding;
