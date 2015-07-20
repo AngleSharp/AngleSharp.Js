@@ -2,6 +2,7 @@
 {
     using AngleSharp.Network;
     using AngleSharp.Services;
+    using AngleSharp.Services.Scripting;
     using System;
 
     class ScriptingService : IScriptingService

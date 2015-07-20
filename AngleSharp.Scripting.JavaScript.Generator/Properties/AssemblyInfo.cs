@@ -2,8 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("AngleSharp.Scripting.JavaScript")]
-[assembly: AssemblyDescription("Extension for AngleSharp to enable JavaScript scripts using the Jint JavaScript interpreter.")]
+[assembly: AssemblyTitle("AngleSharp.Scripting.JavaScript.Generator")]
+[assembly: AssemblyDescription("Generates the AngleSharp.Scripting.JavaScript files.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("AngleVisions")]
 [assembly: AssemblyProduct("AngleSharp.Scripting")]
@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: Guid("be485498-5294-46d0-b1ba-54f095eba40d")]
-[assembly: AssemblyVersion("0.1.6.*")]
-[assembly: AssemblyFileVersion("0.1.6")]
+[assembly: Guid("c8c0eeaf-0cd3-459d-8321-bee7c7a673c0")]
+[assembly: AssemblyVersion("0.1.0")]
+[assembly: AssemblyFileVersion("0.1.0")]
 [assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.JavaScript.Tests")]
