@@ -55,6 +55,10 @@
 
             foreach (var type in assembly.ExportedTypes)
             {
+                // Delegates are not interesting
+                if (typeof(Delegate).IsAssignableFrom(type))
+                    continue;
+
                 var nameAttributes = type.GetDomNameAttributes();
 
                 foreach (var nameAttribute in nameAttributes)
