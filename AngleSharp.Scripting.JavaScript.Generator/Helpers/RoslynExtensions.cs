@@ -8,12 +8,18 @@
         {
             var classDeclaration = SyntaxFactory.ClassDeclaration(member.Name);
             var classKeyword = SyntaxFactory.Token(SyntaxKind.ClassKeyword);
-            var partialKeyword = SyntaxFactory.Token(SyntaxKind.PartialKeyword);
             var openBrace = SyntaxFactory.Token(SyntaxKind.OpenBraceToken);
             var closeBrace = SyntaxFactory.Token(SyntaxKind.CloseBraceToken);
+            var publicModifier = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+            var partialModifier = SyntaxFactory.Token(SyntaxKind.PartialKeyword);
+            var modifiers = SyntaxFactory.TokenList(new []
+            {
+                publicModifier,
+                partialModifier
+            });
 
             var cls = classDeclaration.WithKeyword(classKeyword)
-                                      .WithKeyword(partialKeyword)
+                                      .WithModifiers(modifiers)
                                       .WithOpenBraceToken(openBrace)
                                       .WithCloseBraceToken(closeBrace);
 
