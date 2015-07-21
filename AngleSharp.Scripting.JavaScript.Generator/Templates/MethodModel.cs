@@ -3,21 +3,15 @@
     using System;
     using System.Collections.Generic;
 
-    public class ClassConstructorModel
+    public class MethodModel
     {
-        public String Namespace
-        {
-            get;
-            set;
-        }
-
-        public String OriginalNamespace
-        {
-            get;
-            set;
-        }
-
         public String Name
+        {
+            get;
+            set;
+        }
+
+        public Boolean IsVoid
         {
             get;
             set;
@@ -29,24 +23,16 @@
             set;
         }
 
-        public IEnumerable<ParameterModel> Parameters
+        public String RefName
         {
             get;
             set;
         }
-    }
 
-    partial class ClassConstructor
-    {
-        public ClassConstructor(ClassConstructorModel model)
-        {
-            Model = model;
-        }
-
-        public ClassConstructorModel Model
+        public IEnumerable<ParameterModel> Parameters
         {
             get;
-            private set;
+            set;
         }
     }
 }

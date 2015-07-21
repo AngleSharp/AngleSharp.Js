@@ -2,3 +2,30 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+
+namespace <#= Model.Namespace #>
+{
+    using <#= Model.OriginalNamespace #>;
+    using Jint;
+    using Jint.Native.Object;
+    using System;
+
+    partial class <#= Model.Name #>Instance : <#= Model.BaseName #>Instance
+    {
+        public <#= Model.Name #>Instance(Engine engine)
+            : base(engine)
+        {
+        }
+
+        public override String Class
+        {
+            get { return "<#= Model.Name #>"; }
+        }
+
+        public <#= Model.OriginalName #> Ref
+        {
+            get;
+            set;
+        }
+    }
+}

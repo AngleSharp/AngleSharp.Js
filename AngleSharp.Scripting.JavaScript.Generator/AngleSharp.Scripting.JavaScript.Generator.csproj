@@ -78,6 +78,9 @@
       <DependentUpon>ClassPrototype.tt</DependentUpon>
     </Compile>
     <Compile Include="Templates\ClassPrototypeModel.cs" />
+    <Compile Include="Templates\Extensions.cs" />
+    <Compile Include="Templates\MethodModel.cs" />
+    <Compile Include="Templates\ParameterModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -2,3 +2,67 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+
+namespace <#= Model.Namespace #>
+{
+    using <#= Model.OriginalNamespace #>;
+    using Jint;
+    using Jint.Native.Object;
+    using Jint.Runtime;
+    using Jint.Runtime.Descriptors;
+    using Jint.Runtime.Interop;
+    using System;
+
+    partial sealed class <#= Model.Name #>Prototype : <#= Model.Name #>Instance
+    {
+        public <#= Model.Name #>Prototype(Engine engine)
+            : base(engine)
+        {
+        }
+
+        <# if (Model.HasConstructor) { #>
+        public static <#= Model.Name #>Prototype CreatePrototypeObject(Engine engine, <#= Model.Name #>Constructor constructor)
+        <# } else { #>
+        public static <#= Model.Name #>Prototype CreatePrototypeObject(Engine engine)
+        <# } #>
+        {
+            var obj = new <#= Model.Name #>Prototype(engine)
+            {
+                Prototype = <#= Model.Prototype #>,
+                Extensible = true,
+            };
+            <# if (Model.HasConstructor) { #>
+            obj.FastAddProperty("constructor", constructor, true, false, true);
+            <# } #>
+            return obj;
+        }
+
+        public void Configure()
+        {
+            <# foreach (var method in Model.Methods) { #>
+            FastAddProperty("<#= method.Name #>", new ClrFunctionInstance(Engine, <#= method.RefName #>), true, true, true);
+            <# } #>
+        }
+
+        <# foreach (var method in Model.Methods) { #>
+        JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
+        {
+            var ref = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref;
+            <# foreach (var parameter in method.Parameters) { #>
+            var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
+            <# } #>
+            <# if (method.IsVoid) { #>
+            ref.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
+            return JsValue.Undefined;
+            <# } else { #>
+            return ref.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
+            <# } #>
+        }
+        <# } #>
+
+        void Fail(JsValue obsolete)
+        {
+            throw new JavaScriptException(Engine.TypeError);
+        }
+    }
+}
