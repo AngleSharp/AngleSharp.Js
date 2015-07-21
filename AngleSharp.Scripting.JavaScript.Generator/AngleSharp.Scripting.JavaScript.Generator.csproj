@@ -57,6 +57,7 @@
     <Compile Include="Files.cs" />
     <Compile Include="Helpers\GeneralExtensions.cs" />
     <Compile Include="GeneratedFile.cs" />
+    <Compile Include="OptionsExtensions.cs" />
     <Compile Include="Templates\ClassConstructor.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
