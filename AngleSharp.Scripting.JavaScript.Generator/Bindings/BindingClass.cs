@@ -8,13 +8,15 @@
     sealed class BindingClass : BindingType
     {
         readonly Dictionary<String, BindingMember> _members;
-        readonly Dictionary<Special, BindingMember> _specials;
+        readonly Dictionary<Accessors, BindingMember> _specials;
+        readonly List<BindingConstructor> _constructors;
 
         public BindingClass(String name, Boolean createNoInterfaceObject = false)
             : base(name)
         {
             _members = new Dictionary<String, BindingMember>();
-            _specials = new Dictionary<Special, BindingMember>();
+            _specials = new Dictionary<Accessors, BindingMember>();
+            _constructors = new List<BindingConstructor>();
             IsInterfaced = createNoInterfaceObject == false;
         }
 
@@ -31,28 +33,27 @@
 
         public IEnumerable<BindingMember> Constructors
         {
-            get { return GetSpecials(Special.Constructor); }
+            get { return _constructors; }
         }
 
         public IEnumerable<BindingMember> Deleters
         {
-            get { return GetSpecials(Special.Destructor); }
+            get { return GetSpecials(Accessors.Deleter); }
         }
 
         public IEnumerable<BindingMember> Getters
         {
-            get { return GetSpecials(Special.Getter); }
+            get { return GetSpecials(Accessors.Getter); }
         }
 
         public IEnumerable<BindingMember> Setters
         {
-            get { return GetSpecials(Special.Setter); }
+            get { return GetSpecials(Accessors.Setter); }
         }
 
-        public void BindConstructor(BindingMember value)
+        public void BindConstructor(BindingConstructor value)
         {
-            var key = Special.Constructor;
-            _specials.Add(key, value);
+            _constructors.Add(value);
         }
 
         public void Bind(String name, BindingMember value)
@@ -62,30 +63,17 @@
 
         public void Bind(Accessors accessor, BindingMember value)
         {
-            var key = Translate[accessor];
-            _specials.Add(key, value);
+            _specials.Add(accessor, value);
         }
 
-        IEnumerable<BindingMember> GetSpecials(Special key)
+        IEnumerable<BindingMember> GetSpecials(Accessors key)
         {
             return _specials.Where(m => m.Key == key).Select(m => m.Value);
         }
-
-        static readonly Dictionary<Accessors, Special> Translate = new Dictionary<Accessors, Special>
+        
+        public override IEnumerable<GeneratedFile> ToFiles(String extension)
         {
-            { Accessors.None, Special.None },
-            { Accessors.Getter, Special.Getter },
-            { Accessors.Setter, Special.Setter },
-            { Accessors.Deleter, Special.Destructor },
-        };
-
-        enum Special
-        {
-            None,
-            Constructor,
-            Destructor,
-            Getter,
-            Setter
+            return Enumerable.Empty<GeneratedFile>();
         }
     }
 }

@@ -22,8 +22,10 @@
 
             foreach (var binding in bindings)
             {
-                var fileName = binding.Name + options.Extension;
-                yield return new GeneratedFile("", fileName);
+                var files = binding.ToFiles(options.Extension);
+
+                foreach (var file in files)
+                    yield return file;
             }
         }
     }

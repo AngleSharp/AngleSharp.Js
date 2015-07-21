@@ -5,8 +5,8 @@
 
     sealed class BindingIndex : BindingMember
     {
-        public BindingIndex(String originalName, Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, Dictionary<String, Type> parameters = null)
-            : base(originalName)
+        public BindingIndex(Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, Dictionary<String, Type> parameters = null)
+            : base(String.Empty)
         {
             AllowGet = canRead;
             AllowSet = canWrite;

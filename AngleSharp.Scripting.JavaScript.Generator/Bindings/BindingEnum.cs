@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     sealed class BindingEnum : BindingType
     {
@@ -21,6 +22,11 @@
         public void Bind(String name, String location)
         {
             _fields.Add(name, location);
+        }
+
+        public override IEnumerable<GeneratedFile> ToFiles(String extension)
+        {
+            return Enumerable.Empty<GeneratedFile>();
         }
     }
 }

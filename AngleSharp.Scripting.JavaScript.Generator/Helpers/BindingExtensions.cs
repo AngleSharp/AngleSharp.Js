@@ -10,7 +10,6 @@
         {
             var lenient = propertyInfo.GetDomLenientThisAttribute();
             return new BindingIndex(
-                originalName: "this",
                 canRead: propertyInfo.CanRead,
                 canWrite: propertyInfo.CanWrite,
                 isLenient: lenient != null,
@@ -67,10 +66,10 @@
                 target.Bind(accessor, member);
         }
 
-        public static void AttachAll(this BindingClass target, DomConstructorAttribute ctorAttribute, BindingMember member)
+        public static void AttachAll(this BindingClass target, DomConstructorAttribute ctorAttribute, BindingConstructor constructor)
         {
             if (ctorAttribute != null)
-                target.BindConstructor(member);
+                target.BindConstructor(constructor);
         }
 
         public static void AttachEvents(this BindingClass target, IEnumerable<EventInfo> events)

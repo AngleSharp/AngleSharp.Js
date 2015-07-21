@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
+    using System.Collections.Generic;
 
     abstract class BindingType : BindingBase
     {
@@ -14,5 +15,7 @@
             get; 
             private set; 
         }
+
+        public abstract IEnumerable<GeneratedFile> ToFiles(String extension);
     }
 }
