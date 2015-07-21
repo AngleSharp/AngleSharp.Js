@@ -22,10 +22,5 @@
         {
             _fields.Add(name, location);
         }
-
-        public override void Serialize(SyntaxWriter writer)
-        {
-            writer.AddEnum(this);
-        }
     }
 }

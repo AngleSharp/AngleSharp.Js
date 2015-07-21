@@ -1,5 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
+    using AngleSharp.Scripting.JavaScript.Generator.Templates;
     using System;
 
     /// <summary>
@@ -31,9 +32,9 @@
         {
             get 
             {
-                var writer = new SyntaxWriter(_options.Namespace);
-                _type.Serialize(writer);
-                return writer.Serialize(); 
+                var model = new ClassInstanceModel();
+                var instance = new ClassInstance(model);
+                return instance.TransformText(); 
             }
         }
     }

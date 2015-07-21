@@ -87,10 +87,5 @@
             Getter,
             Setter
         }
-
-        public override void Serialize(SyntaxWriter writer)
-        {
-            writer.AddClass(this);
-        }
     }
 }

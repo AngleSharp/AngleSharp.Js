@@ -14,7 +14,5 @@
             get; 
             private set; 
         }
-
-        public abstract void Serialize(SyntaxWriter writer);
     }
 }

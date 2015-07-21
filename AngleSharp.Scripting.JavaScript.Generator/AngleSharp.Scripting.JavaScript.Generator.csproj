@@ -34,21 +34,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AngleSharp.0.8.7.1\lib\net45\AngleSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Common.1.0.0\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0\lib\net45\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.1.36.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\System.Collections.Immutable.1.1.36\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="System.Reflection.Metadata">
-      <HintPath>..\packages\System.Reflection.Metadata.1.0.21\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -70,14 +57,51 @@
     <Compile Include="Files.cs" />
     <Compile Include="Helpers\GeneralExtensions.cs" />
     <Compile Include="GeneratedFile.cs" />
-    <Compile Include="Helpers\RoslynExtensions.cs" />
+    <Compile Include="Templates\ClassConstructor.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClassConstructor.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Templates\ClassConstructorModel.cs" />
+    <Compile Include="Templates\ClassInstance.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClassInstance.tt</DependentUpon>
+    </Compile>
     <Compile Include="Options.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\ReflectionExtensions.cs" />
-    <Compile Include="SyntaxWriter.cs" />
+    <Compile Include="Templates\ClassInstanceModel.cs" />
+    <Compile Include="Templates\ClassPrototype.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClassPrototype.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Templates\ClassPrototypeModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Templates\ClassInstance.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ClassInstance.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Templates\ClassPrototype.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ClassPrototype.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Templates\ClassConstructor.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ClassConstructor.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
