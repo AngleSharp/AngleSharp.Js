@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     public static class Files
     {
@@ -20,7 +19,12 @@
             var assembly = typeof(BrowsingContext).Assembly;
             var candidates = assembly.GetCandidates();
             var bindings = candidates.GetBindings();
-            return bindings.Select(m => new GeneratedFile(m, options));
+
+            foreach (var binding in bindings)
+            {
+                var fileName = binding.Name + options.Extension;
+                yield return new GeneratedFile("", fileName);
+            }
         }
     }
 }

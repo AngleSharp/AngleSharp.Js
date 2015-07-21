@@ -1,6 +1,5 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
-    using AngleSharp.Scripting.JavaScript.Generator.Templates;
     using System;
 
     /// <summary>
@@ -8,13 +7,13 @@
     /// </summary>
     public class GeneratedFile
     {
-        readonly BindingType _type;
-        readonly Options _options;
+        readonly String _content;
+        readonly String _fileName;
 
-        internal GeneratedFile(BindingType type, Options options)
+        internal GeneratedFile(String content, String fileName)
         {
-            _type = type;
-            _options = options;
+            _content = content;
+            _fileName = fileName;
         }
 
         /// <summary>
@@ -22,7 +21,7 @@
         /// </summary>
         public String FileName
         {
-            get { return _type.Name + _options.Extension; }
+            get { return _fileName; }
         }
 
         /// <summary>
@@ -30,12 +29,7 @@
         /// </summary>
         public String Content
         {
-            get 
-            {
-                var model = new ClassInstanceModel();
-                var instance = new ClassInstance(model);
-                return instance.TransformText(); 
-            }
+            get { return _content; }
         }
     }
 }

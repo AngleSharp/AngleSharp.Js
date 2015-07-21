@@ -14,8 +14,8 @@
         public Options()
         {
             Extension = ".g.cs";
-            Namespace = "AngleSharp";
-            TypeMapping = new Dictionary<Type, Type>();
+            Namespace = "AngleSharp.Scripting.JavaScript";
+            TypeConverters = new Dictionary<Type, String>();
         }
 
         /// <summary>
@@ -28,7 +28,8 @@
         }
 
         /// <summary>
-        /// Gets or sets the namespace to use. By default this is "AngleSharp".
+        /// Gets or sets the namespace to use. By default this is 
+        /// "AngleSharp.Scripting.JavaScript".
         /// </summary>
         public String Namespace
         {
@@ -37,9 +38,9 @@
         }
 
         /// <summary>
-        /// Gets the defined type mapping. By default nothing is mapped.
+        /// Gets the defined type converters. By default nothing is defined.
         /// </summary>
-        public Dictionary<Type, Type> TypeMapping
+        public Dictionary<Type, String> TypeConverters
         {
             get;
             private set;
