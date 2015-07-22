@@ -8,14 +8,14 @@
     sealed class BindingClass : BindingType
     {
         readonly Dictionary<String, BindingMember> _members;
-        readonly Dictionary<Accessors, BindingMember> _specials;
+        readonly List<KeyValuePair<Accessors, BindingMember>> _specials;
         readonly List<BindingConstructor> _constructors;
 
         public BindingClass(String name, String originalName, String originalNamespace, String baseName, Boolean createNoInterfaceObject = false)
             : base(name, originalName, originalNamespace)
         {
             _members = new Dictionary<String, BindingMember>();
-            _specials = new Dictionary<Accessors, BindingMember>();
+            _specials = new List<KeyValuePair<Accessors, BindingMember>>();
             _constructors = new List<BindingConstructor>();
             BaseName = baseName;
             IsInterfaced = createNoInterfaceObject == false;
@@ -71,12 +71,14 @@
 
         public void Bind(String name, BindingMember value)
         {
-            _members.Add(name, value);
+            //TODO Merge Overloads
+            _members[name] = value;
         }
 
         public void Bind(Accessors accessor, BindingMember value)
         {
-            _specials.Add(accessor, value);
+            //TODO Merge Overloads
+            _specials.Add(new KeyValuePair<Accessors, BindingMember>(accessor, value));
         }
 
         IEnumerable<BindingMember> GetSpecials(Accessors key)

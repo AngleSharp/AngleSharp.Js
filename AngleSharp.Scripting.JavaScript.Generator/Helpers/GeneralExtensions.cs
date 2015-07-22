@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     static class GeneralExtensions
     {
@@ -49,8 +50,29 @@
 
         static String ResolveBase(Type type)
         {
-            //Find DOM-name (if any) - otherwise return "Object"
-            return type.BaseType.Name;
+            var name = GetDomNameOrNull(type.BaseType);
+
+            if (name == null)
+            {
+                var interfaces = type.GetInterfaces();
+
+                for (int i = 0; i < interfaces.Length; i++)
+                {
+                    name = GetDomNameOrNull(interfaces[i]);
+
+                    if (name != null)
+                        return name;
+                }
+
+                return "Object";
+            }
+
+            return name;
+        }
+
+        static String GetDomNameOrNull(Type type)
+        {
+            return type != null && type.GetDomNoInterfaceObjectAttribute() == null && type.GetDomNameAttributes().Any() ? type.GetDomNameAttributes().First().OfficialName : null;
         }
     }
 }
