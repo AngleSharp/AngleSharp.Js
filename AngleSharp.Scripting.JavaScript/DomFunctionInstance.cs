@@ -1,8 +1,10 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
+    using Attributes;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
+    using Jint.Runtime.Interop;
     using System;
     using System.Linq;
     using System.Reflection;
@@ -17,6 +19,8 @@
         {
             _host = host;
             _method = method;
+
+            FastAddProperty("toString", new ClrFunctionInstance(Engine, ToString), true, false, true);
         }
 
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)
@@ -68,6 +72,26 @@
                 return new String[0];
 
             return method.GetParameters().Select(m => m.Name).ToArray();
+        }
+
+        private JsValue ToString(JsValue thisObj, JsValue[] arguments)
+        {
+            var func = thisObj.TryCast<FunctionInstance>();
+
+            if (func == null)
+            {
+                throw new JavaScriptException(Engine.TypeError, "Function object expected.");
+            }
+
+            var names = _method.GetCustomAttributes<DomNameAttribute>();
+
+            var officialName = _method.Name;
+            var officalNameAttribute = names.FirstOrDefault();
+
+            if (officalNameAttribute != null)
+                officialName = officalNameAttribute.OfficialName;
+
+            return string.Format("function {0}() {{ [native code] }}", officialName);
         }
     }
 }
