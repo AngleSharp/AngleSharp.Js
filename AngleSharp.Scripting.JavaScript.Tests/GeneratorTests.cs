@@ -19,7 +19,6 @@
                 { name, typeof(IDocument) }
             }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
-            Assert.IsTrue(binding.IsInterfaced);
             Assert.AreEqual(0, binding.Constructors.Count());
             Assert.AreEqual(0, binding.Deleters.Count());
         }
@@ -34,7 +33,6 @@
                 { name, typeof(MutationObserver) }
             }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
-            Assert.IsTrue(binding.IsInterfaced);
             Assert.AreEqual(1, binding.Constructors.Count());
             Assert.AreEqual(0, binding.Deleters.Count());
             Assert.AreEqual(members.Length, binding.Members.Count());
@@ -46,9 +44,20 @@
         }
 
         [Test]
-        public void IParentNodeShouldSetInterfaceObjectCorrectly()
+        public void IParentNodeIsNoInterfaceAndShouldNotBeCreated()
         {
             var name = "ParentNode";
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
+            {
+                { name, typeof(IParentNode) }
+            }).FirstOrDefault();
+            Assert.IsNull(binding);
+        }
+
+        [Test]
+        public void IElementShouldContainMembersFromParentNode()
+        {
+            var name = "Element";
             var members = new[] 
             { 
                 "childElementCount", "children", "firstElementChild", "lastElementChild", 
@@ -56,15 +65,13 @@
             };
             var binding = GeneralExtensions.GetBindings(new Dictionary<String, Type>
             {
-                { name, typeof(IParentNode) }
+                { name, typeof(IElement) }
             }).First() as BindingClass;
             Assert.AreEqual(name, binding.Name);
-            Assert.IsFalse(binding.IsInterfaced);
             Assert.AreEqual(0, binding.Constructors.Count());
             Assert.AreEqual(0, binding.Deleters.Count());
             Assert.AreEqual(0, binding.Getters.Count());
             Assert.AreEqual(0, binding.Setters.Count());
-            Assert.AreEqual(members.Length, binding.Members.Count());
 
             for (int i = 0; i < members.Length; i++)
             {
