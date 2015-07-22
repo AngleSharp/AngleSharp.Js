@@ -19,14 +19,6 @@
             }
         }
 
-        public static IEnumerable<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
-        {
-            foreach (var binding in bindings)
-            {
-                yield break;
-            }
-        }
-
         static BindingEnum GetEnumBinding(String name, Type type)
         {
             var binding = new BindingEnum(name);

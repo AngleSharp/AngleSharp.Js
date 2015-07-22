@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
+    using System.Collections.Generic;
 
     abstract class BindingMember : BindingBase
     {

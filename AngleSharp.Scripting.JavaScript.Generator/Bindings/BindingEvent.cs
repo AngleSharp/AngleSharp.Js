@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
+    using System.Collections.Generic;
 
     sealed class BindingEvent : BindingMember
     {
@@ -21,6 +22,11 @@
         { 
             get; 
             private set; 
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

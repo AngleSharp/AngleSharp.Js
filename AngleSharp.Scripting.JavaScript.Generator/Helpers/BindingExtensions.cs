@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using AngleSharp.Attributes;
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -123,6 +124,29 @@
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
             }
+        }
+
+        public static List<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
+        {
+            var list = new List<Type>();
+
+            //foreach (var binding in bindings)
+            //{
+            //    var members = binding.GetMembers();
+
+            //    foreach (var member in members)
+            //    {
+            //        var types = member.GetDependentTypes();
+
+            //        foreach (var type in types)
+            //        {
+            //            if (list.Contains(type) == false)
+            //                list.Add(type);
+            //        }
+            //    }
+            //}
+
+            return list;
         }
     }
 }

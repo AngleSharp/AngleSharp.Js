@@ -2,5 +2,6 @@
 {
     abstract class BindingBase
     {
+        public abstract void Accept(IVisitor visitor);
     }
 }

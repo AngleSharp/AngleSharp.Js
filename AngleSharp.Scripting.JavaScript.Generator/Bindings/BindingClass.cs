@@ -80,5 +80,10 @@
         {
             return _members.Select(m => m.Value);
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }
