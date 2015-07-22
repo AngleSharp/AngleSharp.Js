@@ -49,6 +49,8 @@
     <Compile Include="Bindings\BindingEnum.cs" />
     <Compile Include="Bindings\BindingEvent.cs" />
     <Compile Include="Bindings\BindingField.cs" />
+    <Compile Include="Bindings\BindingFunction.cs" />
+    <Compile Include="Bindings\BindingParameter.cs" />
     <Compile Include="Bindings\BindingType.cs" />
     <Compile Include="Helpers\BindingExtensions.cs" />
     <Compile Include="Bindings\BindingIndex.cs" />

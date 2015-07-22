@@ -20,7 +20,7 @@
             var candidates = assembly.GetCandidates();
             var bindings = candidates.GetBindings();
             var types = bindings.ResolveTypes();
-            var visitor = new GeneratorVisitor();
+            var visitor = new GeneratorVisitor(options);
 
             foreach (var binding in bindings)
                 binding.Accept(visitor);

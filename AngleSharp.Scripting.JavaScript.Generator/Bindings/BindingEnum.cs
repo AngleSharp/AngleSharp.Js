@@ -8,8 +8,8 @@
     {
         readonly Dictionary<String, BindingField> _fields;
 
-        public BindingEnum(String name)
-            : base(name)
+        public BindingEnum(String name, String originalName, String originalNamespace)
+            : base(name, originalName, originalNamespace)
         {
             _fields = new Dictionary<String, BindingField>();
         }

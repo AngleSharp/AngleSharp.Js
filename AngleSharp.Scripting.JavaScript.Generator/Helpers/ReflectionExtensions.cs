@@ -70,15 +70,5 @@
 
             return candidates;
         }
-
-        public static Dictionary<String, Type> GetParameterMap(this MethodBase method)
-        {
-            return method.GetParameters().Map();
-        }
-
-        public static Dictionary<String, Type> Map(this IEnumerable<ParameterInfo> parameters)
-        {
-            return parameters.ToDictionary(m => m.Name, m => m.ParameterType);
-        }
     }
 }

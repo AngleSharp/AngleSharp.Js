@@ -21,7 +21,7 @@
 
         static BindingEnum GetEnumBinding(String name, Type type)
         {
-            var binding = new BindingEnum(name);
+            var binding = new BindingEnum(name, type.Name, type.Namespace);
             var fields = type.GetFields();
 
             foreach (var field in fields)
@@ -39,12 +39,18 @@
         static BindingClass GetClassBinding(String name, Type type)
         {
             var noInterfaceObject = type.GetDomNoInterfaceObjectAttribute() != null;
-            var binding = new BindingClass(name, noInterfaceObject);
+            var binding = new BindingClass(name, type.Name, type.Namespace, ResolveBase(type), noInterfaceObject);
             binding.AttachProperties(type.GetProperties());
             binding.AttachEvents(type.GetEvents());
             binding.AttachMethods(type.GetMethods());
             binding.AttachConstructors(type.GetConstructors());
             return binding;
+        }
+
+        static String ResolveBase(Type type)
+        {
+            //Find DOM-name (if any) - otherwise return "Object"
+            return type.BaseType.Name;
         }
     }
 }

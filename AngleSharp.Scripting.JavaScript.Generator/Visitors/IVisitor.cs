@@ -17,5 +17,7 @@
         void Visit(BindingIndex index);
 
         void Visit(BindingProperty property);
+
+        void Visit(BindingParameter parameter);
     }
 }

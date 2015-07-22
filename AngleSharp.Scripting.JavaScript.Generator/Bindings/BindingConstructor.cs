@@ -3,18 +3,11 @@
     using System;
     using System.Collections.Generic;
 
-    sealed class BindingConstructor : BindingMember
+    sealed class BindingConstructor : BindingFunction
     {
-        public BindingConstructor(String originalName, Dictionary<String, Type> parameters = null)
+        public BindingConstructor(String originalName)
             : base(originalName)
         {
-            Parameters = parameters ?? new Dictionary<String, Type>();
-        }
-
-        public Dictionary<String, Type> Parameters 
-        { 
-            get; 
-            private set; 
         }
 
         public override void Accept(IVisitor visitor)

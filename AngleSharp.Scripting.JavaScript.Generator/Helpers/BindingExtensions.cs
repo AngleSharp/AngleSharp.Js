@@ -7,15 +7,14 @@
 
     static class BindingExtensions
     {
-        static BindingIndex CreateIndexBinding(ParameterInfo[] parameters, PropertyInfo propertyInfo)
+        static BindingIndex CreateIndexBinding(PropertyInfo propertyInfo)
         {
             var lenient = propertyInfo.GetDomLenientThisAttribute();
             return new BindingIndex(
                 canRead: propertyInfo.CanRead,
                 canWrite: propertyInfo.CanWrite,
                 isLenient: lenient != null,
-                valueType: propertyInfo.PropertyType,
-                parameters: parameters.Map());
+                valueType: propertyInfo.PropertyType);
         }
 
         static BindingProperty CreatePropertyBinding(PropertyInfo propertyInfo)
@@ -31,11 +30,21 @@
                 valueType: propertyInfo.PropertyType);
         }
 
+        static BindingMember CreatePropertyOrIndexBinding(PropertyInfo propertyInfo)
+        {
+            var parameters = propertyInfo.GetIndexParameters();
+
+            if (parameters.Length > 0)
+                return CreateIndexBinding(propertyInfo).With(parameters);
+
+            return CreatePropertyBinding(propertyInfo);
+        }
+
         static BindingConstructor CreateConstructorBinding(ConstructorInfo constructorInfo)
         {
             return new BindingConstructor(
-                originalName: constructorInfo.DeclaringType.Name,
-                parameters: constructorInfo.GetParameterMap());
+                originalName: constructorInfo.DeclaringType.Name).With(
+                constructorInfo.GetParameters());
         }
 
         static BindingEvent CreateEventBinding(EventInfo eventInfo)
@@ -51,8 +60,8 @@
         {
             return new BindingMethod(
                 originalName: methodInfo.Name,
-                parameters: methodInfo.GetParameterMap(),
-                returnType: methodInfo.ReturnType);
+                returnType: methodInfo.ReturnType).With(
+                methodInfo.GetParameters());
         }
 
         public static void AttachAll(this BindingClass target, IEnumerable<DomNameAttribute> nameAttributes, BindingMember member)
@@ -84,6 +93,22 @@
             }
         }
 
+        static T With<T>(this T function, ParameterInfo[] parameters)
+            where T : BindingFunction
+        {
+            foreach (var parameter in parameters)
+            {
+                function.Bind(new BindingParameter(
+                    originalName: parameter.Name,
+                    valueType: parameter.ParameterType,
+                    position: parameter.Position,
+                    optional: parameter.IsOptional
+                ));
+            }
+
+            return function;
+        }
+
         public static void AttachMethods(this BindingClass target, IEnumerable<MethodInfo> methods)
         {
             foreach (var method in methods)
@@ -94,7 +119,7 @@
                 var nameAttributes = method.GetDomNameAttributes();
                 var access = method.GetDomAccessorAttribute();
                 var binding = CreateMethodBinding(method);
-                
+
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);
             }
@@ -117,9 +142,7 @@
             {
                 var nameAttributes = property.GetDomNameAttributes();
                 var access = property.GetDomAccessorAttribute();
-                var parameters = property.GetIndexParameters();
-                var binding = parameters.Length == 0 ? CreatePropertyBinding(property) : 
-                    CreateIndexBinding(parameters, property) as BindingMember;
+                var binding = CreatePropertyOrIndexBinding(property);
 
                 target.AttachAll(nameAttributes, binding);
                 target.AttachAll(access, binding);

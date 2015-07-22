@@ -11,13 +11,20 @@
         readonly Dictionary<Accessors, BindingMember> _specials;
         readonly List<BindingConstructor> _constructors;
 
-        public BindingClass(String name, Boolean createNoInterfaceObject = false)
-            : base(name)
+        public BindingClass(String name, String originalName, String originalNamespace, String baseName, Boolean createNoInterfaceObject = false)
+            : base(name, originalName, originalNamespace)
         {
             _members = new Dictionary<String, BindingMember>();
             _specials = new Dictionary<Accessors, BindingMember>();
             _constructors = new List<BindingConstructor>();
+            BaseName = baseName;
             IsInterfaced = createNoInterfaceObject == false;
+        }
+
+        public String BaseName 
+        { 
+            get; 
+            private set; 
         }
 
         public Boolean IsInterfaced
@@ -29,6 +36,12 @@
         public IEnumerable<KeyValuePair<String, BindingMember>> Members
         {
             get { return _members; }
+        }
+
+        public IEnumerable<KeyValuePair<String, T>> GetAll<T>()
+            where T : BindingMember
+        {
+            return _members.Select(m => new KeyValuePair<String, T>(m.Key, m.Value as T)).Where(m => m.Value != null);
         }
 
         public IEnumerable<BindingMember> Constructors

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     sealed class TypeVisitor : IVisitor
     {
@@ -20,7 +19,7 @@
 
         public void Visit(BindingConstructor constructor)
         {
-            Include(constructor.Parameters.Select(m => m.Value));
+            VisitParameters(constructor);
         }
 
         public void Visit(BindingClass @class)
@@ -45,16 +44,21 @@
             Include(field.ValueType);
         }
 
+        public void Visit(BindingParameter parameter)
+        {
+            Include(parameter.ValueType);
+        }
+
         public void Visit(BindingMethod method)
         {
             Include(method.ReturnType);
-            Include(method.Parameters.Select(m => m.Value));
+            VisitParameters(method);
         }
 
         public void Visit(BindingIndex index)
         {
             Include(index.ValueType);
-            Include(index.Parameters.Select(m => m.Value));
+            VisitParameters(index);
         }
 
         public void Visit(BindingProperty property)
@@ -62,10 +66,10 @@
             Include(property.ValueType);
         }
 
-        void Include(IEnumerable<Type> types)
+        void VisitParameters(BindingFunction function)
         {
-            foreach (var type in types)
-                Include(type);
+            foreach (var parameter in function.Parameters)
+                parameter.Accept(this);
         }
 
         void Include(Type type)

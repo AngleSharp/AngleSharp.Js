@@ -1,18 +1,16 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
-    using System.Collections.Generic;
 
-    sealed class BindingIndex : BindingMember
+    sealed class BindingIndex : BindingFunction
     {
-        public BindingIndex(Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, Dictionary<String, Type> parameters = null)
+        public BindingIndex(Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false)
             : base(String.Empty)
         {
             AllowGet = canRead;
             AllowSet = canWrite;
             IsLenient = isLenient;
             ValueType = valueType;
-            Parameters = parameters ?? new Dictionary<String, Type>();
         }
 
         public Type ValueType 
@@ -34,12 +32,6 @@
         }
 
         public Boolean IsLenient
-        {
-            get;
-            private set;
-        }
-
-        public Dictionary<String, Type> Parameters
         {
             get;
             private set;
