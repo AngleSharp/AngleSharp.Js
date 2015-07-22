@@ -19,6 +19,14 @@
             }
         }
 
+        public static IEnumerable<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
+        {
+            foreach (var binding in bindings)
+            {
+                yield break;
+            }
+        }
+
         static BindingEnum GetEnumBinding(String name, Type type)
         {
             var binding = new BindingEnum(name);
@@ -27,10 +35,10 @@
             foreach (var field in fields)
             {
                 var nameAttributes = field.GetDomNameAttributes();
-                var location = field.DeclaringType.FullName + "." + field.Name;
+                var enumValue = new BindingField(field.Name, field.FieldType);
 
                 foreach (var nameAttribute in nameAttributes)
-                    binding.Bind(nameAttribute.OfficialName, location);
+                    binding.Bind(nameAttribute.OfficialName, enumValue);
             }
 
             return binding;

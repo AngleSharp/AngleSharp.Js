@@ -16,6 +16,8 @@
             private set; 
         }
 
+        public abstract IEnumerable<BindingMember> GetMembers();
+
         public abstract IEnumerable<GeneratedFile> ToFiles(String extension);
     }
 }

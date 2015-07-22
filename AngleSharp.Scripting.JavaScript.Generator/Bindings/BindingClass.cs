@@ -75,5 +75,10 @@
         {
             return Enumerable.Empty<GeneratedFile>();
         }
+
+        public override IEnumerable<BindingMember> GetMembers()
+        {
+            return _members.Select(m => m.Value);
+        }
     }
 }

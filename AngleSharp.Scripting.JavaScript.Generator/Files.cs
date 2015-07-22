@@ -19,6 +19,7 @@
             var assembly = typeof(BrowsingContext).Assembly;
             var candidates = assembly.GetCandidates();
             var bindings = candidates.GetBindings();
+            var types = bindings.ResolveTypes();
 
             foreach (var binding in bindings)
             {
