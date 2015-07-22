@@ -70,11 +70,6 @@
         {
             return _specials.Where(m => m.Key == key).Select(m => m.Value);
         }
-        
-        public override IEnumerable<GeneratedFile> ToFiles(String extension)
-        {
-            return Enumerable.Empty<GeneratedFile>();
-        }
 
         public override IEnumerable<BindingMember> GetMembers()
         {

@@ -24,11 +24,6 @@
             _fields.Add(name, location);
         }
 
-        public override IEnumerable<GeneratedFile> ToFiles(String extension)
-        {
-            return Enumerable.Empty<GeneratedFile>();
-        }
-
         public override IEnumerable<BindingMember> GetMembers()
         {
             return _fields.Select(m => m.Value);

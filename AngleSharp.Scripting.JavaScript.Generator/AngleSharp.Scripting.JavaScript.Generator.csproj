@@ -83,7 +83,9 @@
     <Compile Include="Templates\Extensions.cs" />
     <Compile Include="Templates\MethodModel.cs" />
     <Compile Include="Templates\ParameterModel.cs" />
+    <Compile Include="Visitors\GeneratorVisitor.cs" />
     <Compile Include="Visitors\IVisitor.cs" />
+    <Compile Include="Visitors\TypeVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

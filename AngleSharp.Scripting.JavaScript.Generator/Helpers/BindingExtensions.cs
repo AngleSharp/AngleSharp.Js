@@ -126,27 +126,14 @@
             }
         }
 
-        public static List<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
+        public static IEnumerable<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
         {
-            var list = new List<Type>();
+            var visitor = new TypeVisitor();
 
-            //foreach (var binding in bindings)
-            //{
-            //    var members = binding.GetMembers();
+            foreach (var binding in bindings)
+                binding.Accept(visitor);
 
-            //    foreach (var member in members)
-            //    {
-            //        var types = member.GetDependentTypes();
-
-            //        foreach (var type in types)
-            //        {
-            //            if (list.Contains(type) == false)
-            //                list.Add(type);
-            //        }
-            //    }
-            //}
-
-            return list;
+            return visitor.Dependencies;
         }
     }
 }

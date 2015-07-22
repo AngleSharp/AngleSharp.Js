@@ -20,14 +20,12 @@
             var candidates = assembly.GetCandidates();
             var bindings = candidates.GetBindings();
             var types = bindings.ResolveTypes();
+            var visitor = new GeneratorVisitor();
 
             foreach (var binding in bindings)
-            {
-                var files = binding.ToFiles(options.Extension);
+                binding.Accept(visitor);
 
-                foreach (var file in files)
-                    yield return file;
-            }
+            return visitor.Files;
         }
     }
 }
