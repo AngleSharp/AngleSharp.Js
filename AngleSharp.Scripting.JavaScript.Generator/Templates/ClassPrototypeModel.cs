@@ -23,6 +23,12 @@
             set;
         }
 
+        public String OriginalName
+        {
+            get;
+            set;
+        }
+
         public Boolean HasConstructor
         {
             get;

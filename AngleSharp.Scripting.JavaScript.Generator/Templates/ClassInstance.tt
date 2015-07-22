@@ -17,12 +17,27 @@ namespace <#= Model.Namespace #>
         {
         }
 
+        public static <#= Model.Name #>Instance Create<#= Model.Name #>Object(Engine engine)
+        {
+            var obj = new <#= Model.Name #>Instance(engine);
+            obj.Extensible = true;
+            obj.Prototype = engine.Object.PrototypeObject;            
+            return obj;
+        }
+
+        public void Configure()
+        {
+            <# foreach (var field in Model.Fields) { #>
+            FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
+            <# } #>
+        }
+
         public override String Class
         {
             get { return "<#= Model.Name #>"; }
         }
 
-        public <#= Model.OriginalName #> Ref
+        public <#= Model.OriginalName #> Ref<#= Model.OriginalName #>
         {
             get;
             set;

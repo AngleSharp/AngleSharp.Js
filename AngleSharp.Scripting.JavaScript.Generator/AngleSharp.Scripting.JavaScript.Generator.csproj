@@ -81,6 +81,7 @@
     </Compile>
     <Compile Include="Templates\ClassPrototypeModel.cs" />
     <Compile Include="Templates\Extensions.cs" />
+    <Compile Include="Templates\FieldModel.cs" />
     <Compile Include="Templates\MethodModel.cs" />
     <Compile Include="Templates\ParameterModel.cs" />
     <Compile Include="Visitors\GeneratorVisitor.cs" />

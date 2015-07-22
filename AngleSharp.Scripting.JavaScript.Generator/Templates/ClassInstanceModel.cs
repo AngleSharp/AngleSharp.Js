@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator.Templates
 {
     using System;
+    using System.Collections.Generic;
 
     public class ClassInstanceModel
     {
@@ -29,6 +30,12 @@
         }
 
         public String OriginalName
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<FieldModel> Fields
         {
             get;
             set;

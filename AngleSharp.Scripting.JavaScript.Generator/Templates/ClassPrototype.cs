@@ -138,44 +138,45 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             #line default
             #line hidden
             this.Write("            return obj;\r\n        }\r\n\r\n        public void Configure()\r\n        {\r" +
-                    "\n            ");
+                    "\n            FastAddProperty(\"toString\", new ClrFunctionInstance(Engine, ToStrin" +
+                    "g), true, true, true);\r\n            ");
             
-            #line 42 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 43 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  foreach (var method in Model.Methods) { 
             
             #line default
             #line hidden
             this.Write("            FastAddProperty(\"");
             
-            #line 43 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 44 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.Name));
             
             #line default
             #line hidden
             this.Write("\", new ClrFunctionInstance(Engine, ");
             
-            #line 43 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 44 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.RefName));
             
             #line default
             #line hidden
             this.Write("), true, true, true);\r\n            ");
             
-            #line 44 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 45 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  } 
             
             #line default
             #line hidden
             this.Write("        }\r\n\r\n        ");
             
-            #line 47 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 48 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  foreach (var method in Model.Methods) { 
             
             #line default
             #line hidden
             this.Write("        JsValue ");
             
-            #line 48 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 49 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.RefName));
             
             #line default
@@ -183,104 +184,119 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             this.Write("(JsValue thisObj, JsValue[] arguments)\r\n        {\r\n            var ref = thisObj." +
                     "TryCast<");
             
-            #line 50 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
             #line hidden
-            this.Write("Instance>(Fail).Ref;\r\n            ");
+            this.Write("Instance>(Fail).Ref");
             
             #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.OriginalName));
+            
+            #line default
+            #line hidden
+            this.Write(";\r\n            ");
+            
+            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  foreach (var parameter in method.Parameters) { 
             
             #line default
             #line hidden
             this.Write("            var ");
             
-            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Name));
             
             #line default
             #line hidden
             this.Write(" = ");
             
-            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Converter));
             
             #line default
             #line hidden
             this.Write("(arguments.At(");
             
-            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Index));
             
             #line default
             #line hidden
             this.Write("));\r\n            ");
             
-            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 54 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  } 
             
             #line default
             #line hidden
             this.Write("            ");
             
-            #line 54 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 55 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  if (method.IsVoid) { 
             
             #line default
             #line hidden
             this.Write("            ref.");
             
-            #line 55 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 56 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.OriginalName));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 55 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 56 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.Parameters.Stringify()));
             
             #line default
             #line hidden
             this.Write(");\r\n            return JsValue.Undefined;\r\n            ");
             
-            #line 57 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 58 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  } else { 
             
             #line default
             #line hidden
             this.Write("            return ref.");
             
-            #line 58 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 59 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.OriginalName));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 58 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 59 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(method.Parameters.Stringify()));
             
             #line default
             #line hidden
             this.Write(");\r\n            ");
             
-            #line 59 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 60 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  } 
             
             #line default
             #line hidden
             this.Write("        }\r\n        ");
             
-            #line 61 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            #line 62 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  } 
             
             #line default
             #line hidden
-            this.Write("\r\n        void Fail(JsValue obsolete)\r\n        {\r\n            throw new JavaScrip" +
-                    "tException(Engine.TypeError);\r\n        }\r\n    }\r\n}");
+            this.Write("\r\n        JsValue ToString(JsValue thisObj, JsValue[] arguments)\r\n        {\r\n    " +
+                    "        return \"[object ");
+            
+            #line 66 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
+            
+            #line default
+            #line hidden
+            this.Write("]\";\r\n        }\r\n\r\n        void Fail(JsValue obsolete)\r\n        {\r\n            thr" +
+                    "ow new JavaScriptException(Engine.TypeError);\r\n        }\r\n    }\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

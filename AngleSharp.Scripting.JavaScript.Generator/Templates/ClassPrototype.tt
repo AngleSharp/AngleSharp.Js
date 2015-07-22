@@ -39,6 +39,7 @@ namespace <#= Model.Namespace #>
 
         public void Configure()
         {
+            FastAddProperty("toString", new ClrFunctionInstance(Engine, ToString), true, true, true);
             <# foreach (var method in Model.Methods) { #>
             FastAddProperty("<#= method.Name #>", new ClrFunctionInstance(Engine, <#= method.RefName #>), true, true, true);
             <# } #>
@@ -47,7 +48,7 @@ namespace <#= Model.Namespace #>
         <# foreach (var method in Model.Methods) { #>
         JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
         {
-            var ref = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref;
+            var ref = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
             <# foreach (var parameter in method.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
             <# } #>
@@ -59,6 +60,11 @@ namespace <#= Model.Namespace #>
             <# } #>
         }
         <# } #>
+
+        JsValue ToString(JsValue thisObj, JsValue[] arguments)
+        {
+            return "[object <#= Model.Name #>]";
+        }
 
         void Fail(JsValue obsolete)
         {
