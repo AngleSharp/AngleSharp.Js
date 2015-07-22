@@ -11,26 +11,19 @@
         readonly List<KeyValuePair<Accessors, BindingMember>> _specials;
         readonly List<BindingConstructor> _constructors;
 
-        public BindingClass(String name, String originalName, String originalNamespace, String baseName, Boolean createNoInterfaceObject = false)
+        public BindingClass(String name, String originalName, String originalNamespace, String baseName)
             : base(name, originalName, originalNamespace)
         {
             _members = new Dictionary<String, BindingMember>();
             _specials = new List<KeyValuePair<Accessors, BindingMember>>();
             _constructors = new List<BindingConstructor>();
             BaseName = baseName;
-            IsInterfaced = createNoInterfaceObject == false;
         }
 
         public String BaseName 
         { 
             get; 
             private set; 
-        }
-
-        public Boolean IsInterfaced
-        {
-            get;
-            private set;
         }
 
         public IEnumerable<KeyValuePair<String, BindingMember>> Members

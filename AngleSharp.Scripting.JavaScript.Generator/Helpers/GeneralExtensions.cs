@@ -15,7 +15,7 @@
 
                 if (type.IsEnum)
                     yield return GetEnumBinding(name, type);
-                else
+                else if (type.GetDomNoInterfaceObjectAttribute() == null)
                     yield return GetClassBinding(name, type);
             }
         }
@@ -39,8 +39,7 @@
         
         static BindingClass GetClassBinding(String name, Type type)
         {
-            var noInterfaceObject = type.GetDomNoInterfaceObjectAttribute() != null;
-            var binding = new BindingClass(name, type.Name, type.Namespace, ResolveBase(type), noInterfaceObject);
+            var binding = new BindingClass(name, type.Name, type.Namespace, ResolveBase(type));
             binding.AttachProperties(type.GetProperties());
             binding.AttachEvents(type.GetEvents());
             binding.AttachMethods(type.GetMethods());
