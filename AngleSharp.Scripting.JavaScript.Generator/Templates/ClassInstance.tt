@@ -2,7 +2,6 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
-
 namespace <#= Model.Namespace #>
 {
     using <#= Model.OriginalNamespace #>;
@@ -27,9 +26,9 @@ namespace <#= Model.Namespace #>
 
         public void Configure()
         {
-            <# foreach (var field in Model.Fields) { #>
+<# foreach (var field in Model.Fields) { #>
             FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
-            <# } #>
+<# } #>
         }
 
         public override String Class

@@ -2,7 +2,6 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
-
 namespace <#= Model.Namespace #>
 {
     using <#= Model.OriginalNamespace #>;
@@ -45,9 +44,9 @@ namespace <#= Model.Namespace #>
 
         public ObjectInstance Construct(JsValue[] arguments)
         {
-            <# foreach (var parameter in Model.Parameters) { #>
+<# foreach (var parameter in Model.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
-            <# } #>
+<# } #>
             var ref = new <#= Model.OriginalName #>(<#= Model.Parameters.Stringify() #>);
             return new <#= Model.Name #>Instance(Engine)
             {
