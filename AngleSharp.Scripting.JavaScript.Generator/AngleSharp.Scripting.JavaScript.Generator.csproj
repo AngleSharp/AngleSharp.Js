@@ -30,9 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.8.7.42712, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="AngleSharp, Version=0.8.8.42317, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AngleSharp.0.8.7.1\lib\net45\AngleSharp.dll</HintPath>
+      <HintPath>..\packages\AngleSharp.0.8.8\lib\net45\AngleSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -92,8 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Templates\ClassInstance.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>ClassInstance.cs</LastGenOutput>

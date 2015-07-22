@@ -35,8 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp">
-      <HintPath>..\packages\AngleSharp.0.8.7.1\lib\net45\AngleSharp.dll</HintPath>
+    <Reference Include="AngleSharp, Version=0.8.8.42317, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AngleSharp.0.8.8\lib\net45\AngleSharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="nunit.core">
