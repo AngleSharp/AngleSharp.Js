@@ -1,6 +1,8 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
+    using System.IO;
+    using System.Text;
 
     /// <summary>
     /// Represents the result of generating a single file.
@@ -30,6 +32,17 @@
         public String Content
         {
             get { return _content; }
+        }
+
+        /// <summary>
+        /// Saves the generated file in the specified directory.
+        /// </summary>
+        /// <param name="directory">The directory to write to.</param>
+        public void SaveIn(String directory)
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, _fileName);
+            File.WriteAllText(path, _content, Encoding.UTF8);
         }
     }
 }
