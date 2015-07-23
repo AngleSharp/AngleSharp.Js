@@ -30,7 +30,16 @@
                 var node = thisObject.AsObject() as DomNodeInstance;
 
                 if (node != null)
-                    return _method.Invoke(node.Value, BuildArgs(arguments)).ToJsValue(Engine);
+                {
+                    try
+                    {
+                        return _method.Invoke(node.Value, BuildArgs(arguments)).ToJsValue(Engine);
+                    }
+                    catch
+                    {
+                        throw new JavaScriptException(Engine.Error);
+                    }
+                }
             }
 
             return JsValue.Undefined;
