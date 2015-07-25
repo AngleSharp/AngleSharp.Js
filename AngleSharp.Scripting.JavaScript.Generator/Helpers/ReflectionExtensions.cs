@@ -49,9 +49,9 @@
             return member.GetCustomAttributes<DomNameAttribute>(inherit: false);
         }
 
-        public static Dictionary<String, Type> GetCandidates(this Assembly assembly)
+        public static Dictionary<String, List<Type>> GetCandidates(this Assembly assembly)
         {
-            var candidates = new Dictionary<String, Type>();
+            var candidates = new Dictionary<String, List<Type>>();
 
             foreach (var type in assembly.ExportedTypes)
             {
@@ -63,8 +63,13 @@
 
                 foreach (var nameAttribute in nameAttributes)
                 {
+                    var list = default(List<Type>);
                     var name = nameAttribute.OfficialName;
-                    candidates.Add(name, type);
+
+                    if (candidates.TryGetValue(name, out list) == false)
+                        candidates.Add(name, list = new List<Type>());
+
+                    list.Add(type);
                 }
             }
 
