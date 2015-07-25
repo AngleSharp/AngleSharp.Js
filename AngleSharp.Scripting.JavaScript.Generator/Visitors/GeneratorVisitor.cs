@@ -67,7 +67,7 @@
                 Fields = @class.GetAll<BindingField>().Select(m => new FieldModel 
                 { 
                     Name = m.Key, 
-                    Value = FieldRef(@class, m.Value) 
+                    Value = FieldRef(m.Value) 
                 })
             });
 
@@ -132,9 +132,9 @@
             _files.Add(new GeneratedFile(content, fileName));
         }
 
-        static String FieldRef(BindingType @enum, BindingField field)
+        static String FieldRef(BindingField field)
         {
-            return String.Concat("(", field.ValueType.Name, ")(", @enum.OriginalName, ".", field.OriginalName, ")");
+            return String.Concat("(Int32)(", field.ValueType.FullName, ".", field.OriginalName, ")");
         }
 
         String GetConverter(Type type)
