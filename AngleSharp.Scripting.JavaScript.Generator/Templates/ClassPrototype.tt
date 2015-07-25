@@ -6,13 +6,14 @@ namespace <#= Model.Namespace #>
 {
     using <#= Model.OriginalNamespace #>;
     using Jint;
+    using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
 
-    partial sealed class <#= Model.Name #>Prototype : <#= Model.Name #>Instance
+    sealed partial class <#= Model.Name #>Prototype : <#= Model.Name #>Instance
     {
         public <#= Model.Name #>Prototype(Engine engine)
             : base(engine)
@@ -47,15 +48,15 @@ namespace <#= Model.Namespace #>
 
         JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
         {
-            var ref = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
 <# foreach (var parameter in method.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
 <# } #>
 <# if (method.IsVoid) { #>
-            ref.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
+            reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
             return JsValue.Undefined;
 <# } else { #>
-            return ref.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
+            return reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
 <# } #>
         }
 <# } #>
