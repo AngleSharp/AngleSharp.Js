@@ -145,7 +145,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("            var ref = new ");
+            this.Write("            var reference = new ");
             
             #line 50 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.OriginalName));
@@ -167,8 +167,8 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             #line default
             #line hidden
             this.Write("Instance(Engine)\r\n            {\r\n                Prototype = PrototypeObject,\r\n  " +
-                    "              Ref = ref,\r\n                Extensible = true\r\n            };\r\n   " +
-                    "     }\r\n    }\r\n}");
+                    "              Ref = reference,\r\n                Extensible = true\r\n            }" +
+                    ";\r\n        }\r\n    }\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

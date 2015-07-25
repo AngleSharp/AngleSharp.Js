@@ -11,6 +11,12 @@
             set;
         }
 
+        public Boolean IsUnique
+        {
+            get;
+            set;
+        }
+
         public Boolean IsVoid
         {
             get;

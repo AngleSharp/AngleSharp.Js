@@ -1,7 +1,10 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Media;
     using System;
+    using System.Collections.Generic;
+    using System.IO;
 
     public static class OptionsExtensions
     {
@@ -20,12 +23,18 @@
         {
             options.TypeConverters.Add(typeof(DomEventHandler), "DomTypeConverter.ToEventHandler");
             options.TypeConverters.Add(typeof(IElement), "DomTypeConverter.ToElement");
+            options.TypeConverters.Add(typeof(INode), "DomTypeConverter.ToNode");
+            options.TypeConverters.Add(typeof(INode[]), "DomTypeConverter.ToNodeArray");
+            options.TypeConverters.Add(typeof(Action<IWindow>), "DomTypeConverter.ToTimer");
+            options.TypeConverters.Add(typeof(IRenderingContext), "DomTypeConverter.ToRenderingContext");
+            options.TypeConverters.Add(typeof(IWindow), "DomTypeConverter.ToWindow");
             return options;
         }
 
         public static Options UseSystemConverters(this Options options)
         {
-            options.TypeConverters.Add(typeof(Action<>), "SystemTypeConverter.ToAction");
+            options.TypeConverters.Add(typeof(IDictionary<String, Object>), "SystemTypeConverter.ToObjBag");
+            options.TypeConverters.Add(typeof(Action<Stream>), "SystemTypeConverter.ToStreamTask");
             return options;
         }
     }

@@ -47,11 +47,11 @@ namespace <#= Model.Namespace #>
 <# foreach (var parameter in Model.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
 <# } #>
-            var ref = new <#= Model.OriginalName #>(<#= Model.Parameters.Stringify() #>);
+            var reference = new <#= Model.OriginalName #>(<#= Model.Parameters.Stringify() #>);
             return new <#= Model.Name #>Instance(Engine)
             {
                 Prototype = PrototypeObject,
-                Ref = ref,
+                Ref = reference,
                 Extensible = true
             };
         }

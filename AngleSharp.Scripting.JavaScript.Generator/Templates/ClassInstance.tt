@@ -24,12 +24,14 @@ namespace <#= Model.Namespace #>
             return obj;
         }
 
+<#if (Model.Fields.Any()) { #>
         public void Configure()
         {
 <# foreach (var field in Model.Fields) { #>
             FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
 <# } #>
         }
+<# } #>
 
         public override String Class
         {

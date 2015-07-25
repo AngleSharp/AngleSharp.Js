@@ -56,6 +56,7 @@
         public void Visit(BindingClass @class)
         {
             var hasConstructor = @class.Constructors.Any();
+            var nameBuffer = new List<String>();
 
             Generate(new ClassInstanceModel
             {
@@ -69,7 +70,7 @@
                 { 
                     Name = m.Key, 
                     Value = FieldRef(m.Value) 
-                })
+                }).ToArray()
             });
 
             Generate(new ClassPrototypeModel
@@ -79,10 +80,11 @@
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
                 HasConstructor = hasConstructor,
-                Prototype = "engine.Object.PrototypeObject",
+                Prototype = "engine.Object.PrototypeObject",//TODO -- Replace with appropriate type. But where is this stored?!
                 Methods = @class.GetAll<BindingMethod>().Select(m => new MethodModel 
                 { 
                     IsVoid = m.Value.ReturnType == typeof(void), 
+                    IsUnique = CheckUniqueness(nameBuffer, m.Value.OriginalName),
                     Name = m.Key,
                     OriginalName = m.Value.OriginalName,
                     RefName = "Wrap" + m.Value.OriginalName,
@@ -92,8 +94,8 @@
                         Index = n.Position,
                         IsOptional = n.IsOptional,
                         Name = n.OriginalName
-                    })
-                })
+                    }).ToArray()
+                }).ToArray()
             });
 
             if (hasConstructor)
@@ -149,7 +151,18 @@
 
         static String FieldRef(BindingField field)
         {
-            return String.Concat("(Int32)(", field.ValueType.FullName, ".", field.OriginalName, ")");
+            return String.Concat("(UInt32)(", field.ValueType.FullName, ".", field.OriginalName, ")");
+        }
+
+        static Boolean CheckUniqueness(List<String> buffer, String name)
+        {
+            if (buffer.Contains(name) == false)
+            {
+                buffer.Add(name);
+                return true;
+            }
+
+            return false;
         }
 
         String GetConverter(Type type)
@@ -158,8 +171,10 @@
 
             if (_options.TypeConverters.TryGetValue(type, out converter))
                 return converter;
+            else if (type.IsGenericType && _options.TypeConverters.TryGetValue(type.GetGenericTypeDefinition(), out converter))
+                return converter;
 
-            return "UnresolvedConverter.To" + type.Name;
+            return String.Concat("UnresolvedConverter.To<", type.FullName, ">");
         }
     }
 }

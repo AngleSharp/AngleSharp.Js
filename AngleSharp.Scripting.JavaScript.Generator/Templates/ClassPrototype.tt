@@ -45,6 +45,7 @@ namespace <#= Model.Namespace #>
 <# } #>
         }
 <# foreach (var method in Model.Methods) { #>
+<# if (method.IsUnique) { #>
 
         JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
         {
@@ -59,6 +60,7 @@ namespace <#= Model.Namespace #>
             return reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
 <# } #>
         }
+<# } #>
 <# } #>
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)

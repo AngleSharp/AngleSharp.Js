@@ -59,7 +59,7 @@
                         return name;
                 }
 
-                return "Object";
+                return typeof(Object).Name;
             }
 
             return name;
