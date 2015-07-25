@@ -20,6 +20,9 @@
         {
             _value = value;
             SetMembers(value.GetType());
+
+            //  DOM objects can have properties added dynamically
+            Extensible = true;
         }
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
