@@ -92,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="run-generator.psm1" />
     <None Include="Templates\ClassInstance.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>ClassInstance.cs</LastGenOutput>
