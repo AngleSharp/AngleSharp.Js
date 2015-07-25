@@ -19,6 +19,13 @@
         public static Options UseDomConverters(this Options options)
         {
             options.TypeConverters.Add(typeof(DomEventHandler), "DomTypeConverter.ToEventHandler");
+            options.TypeConverters.Add(typeof(IElement), "DomTypeConverter.ToElement");
+            return options;
+        }
+
+        public static Options UseSystemConverters(this Options options)
+        {
+            options.TypeConverters.Add(typeof(Action<>), "SystemTypeConverter.ToAction");
             return options;
         }
     }

@@ -21,7 +21,7 @@ function Run-Generator() {
 
 	Write-Host "Generating JavaScript binders ..."
 
-	$config = (New-Object AngleSharp.Scripting.JavaScript.Generator.Options)
+	$config = [AngleSharp.Scripting.JavaScript.Generator.Options]::ForJint()
     $files = [AngleSharp.Scripting.JavaScript.Generator.Files]::Generate($config)
 	
 	Write-Host "Saving generated files ..."
