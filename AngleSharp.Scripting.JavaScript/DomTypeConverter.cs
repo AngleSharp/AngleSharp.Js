@@ -36,5 +36,10 @@
         {
             return null;
         }
+
+        public static IWindow ToWindow(JsValue arg)
+        {
+            return null;
+        }
     }
 }
