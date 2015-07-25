@@ -9,7 +9,7 @@
 function Run-Generator() {
 	Write-Host "Adding generator library ..."
 
-	$lib = "bin\Debug\AngleSharp.Scripting.JavaScript.Generator.dll"
+	$lib = "bin\Release\AngleSharp.Scripting.JavaScript.Generator.dll"
 	$result = (Add-Type -Path $lib)
 	$project = (Get-Project "AngleSharp.Scripting.JavaScript")
 	
