@@ -14,7 +14,7 @@
                 var types = mapping.Value;
                 var type = types.Where(m => !m.IsEnum).FirstOrDefault() ?? types.First();
                 
-                if (type.GetDomNoInterfaceObjectAttribute() != null)
+                if (type.IsNotInterfaced())
                     continue;
 
                 var binding = new BindingClass(name, type.Name.Replace("`1", ""), type.Namespace, type.ResolveBase());
@@ -67,7 +67,7 @@
 
         static String GetDomNameOrNull(Type type)
         {
-            return type != null && type.GetDomNoInterfaceObjectAttribute() == null && type.GetDomNameAttributes().Any() ? type.GetDomNameAttributes().First().OfficialName : null;
+            return type != null && type.IsNotInterfaced() == false ? type.GetDomNames().FirstOrDefault() : null;
         }
     }
 }

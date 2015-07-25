@@ -1,37 +1,32 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using AngleSharp.Attributes;
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
     static class AttachExtensions
     {
-        public static void AttachAll(this BindingClass target, IEnumerable<DomNameAttribute> nameAttributes, BindingMember member)
+        public static void AttachAll(this BindingClass target, IEnumerable<String> names, BindingMember member)
         {
-            foreach (var nameAttribute in nameAttributes)
-                target.Bind(nameAttribute.OfficialName, member);
+            foreach (var name in names)
+                target.Bind(name, member);
         }
 
-        public static void AttachAll(this BindingClass target, DomAccessorAttribute accessorAttribute, BindingMember member)
+        public static void AttachAll(this BindingClass target, IEnumerable<Accessors> accessors, BindingMember member)
         {
-            foreach (var accessor in accessorAttribute.GetAccessors())
+            foreach (var accessor in accessors)
                 target.Bind(accessor, member);
-        }
-
-        public static void AttachAll(this BindingClass target, DomConstructorAttribute ctorAttribute, BindingConstructor constructor)
-        {
-            if (ctorAttribute != null)
-                target.BindConstructor(constructor);
         }
 
         public static void AttachFields(this BindingClass target, IEnumerable<FieldInfo> fields)
         {
             foreach (var field in fields)
             {
-                var nameAttributes = field.GetDomNameAttributes();
+                var names = field.GetDomNames();
                 var binding = new BindingField(field.Name, field.FieldType);
 
-                target.AttachAll(nameAttributes, binding);
+                target.AttachAll(names, binding);
             }
         }
 
@@ -42,12 +37,12 @@
                 if (method.IsConstructor)
                     continue;
 
-                var nameAttributes = method.GetDomNameAttributes();
-                var access = method.GetDomAccessorAttribute();
+                var names = method.GetDomNames();
+                var accessors = method.GetDomAccessors();
                 var binding = method.CreateMethodBinding();
 
-                target.AttachAll(nameAttributes, binding);
-                target.AttachAll(access, binding);
+                target.AttachAll(names, binding);
+                target.AttachAll(accessors, binding);
             }
         }
 
@@ -55,10 +50,11 @@
         {
             foreach (var constructor in constructors)
             {
-                var ctorAttribute = constructor.GetDomConstructorAttribute();
-                var binding = constructor.CreateConstructorBinding();
-
-                target.AttachAll(ctorAttribute, binding);
+                if (constructor.IsConstructorExposed())
+                {
+                    var binding = constructor.CreateConstructorBinding();
+                    target.BindConstructor(binding);
+                }
             }
         }
 
@@ -66,12 +62,12 @@
         {
             foreach (var property in properties)
             {
-                var nameAttributes = property.GetDomNameAttributes();
-                var access = property.GetDomAccessorAttribute();
+                var names = property.GetDomNames();
+                var accessors = property.GetDomAccessors();
                 var binding = property.CreatePropertyOrIndexBinding();
 
-                target.AttachAll(nameAttributes, binding);
-                target.AttachAll(access, binding);
+                target.AttachAll(names, binding);
+                target.AttachAll(accessors, binding);
             }
         }
 
@@ -79,10 +75,10 @@
         {
             foreach (var evt in events)
             {
-                var nameAttributes = evt.GetDomNameAttributes();
+                var names = evt.GetDomNames();
                 var binding = evt.CreateEventBinding();
 
-                target.AttachAll(nameAttributes, binding);
+                target.AttachAll(names, binding);
             }
         }
     }

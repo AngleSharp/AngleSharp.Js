@@ -9,24 +9,21 @@
     {
         public static BindingIndex CreateIndexBinding(this PropertyInfo propertyInfo)
         {
-            var lenient = propertyInfo.GetDomLenientThisAttribute();
             return new BindingIndex(
                 canRead: propertyInfo.CanRead,
                 canWrite: propertyInfo.CanWrite,
-                isLenient: lenient != null,
+                isLenient: propertyInfo.HasLenientThis(),
                 valueType: propertyInfo.PropertyType);
         }
 
         public static BindingProperty CreatePropertyBinding(this PropertyInfo propertyInfo)
         {
-            var lenient = propertyInfo.GetDomLenientThisAttribute();
-            var putsForward = propertyInfo.GetDomPutForwardsAttribute();
             return new BindingProperty(
                 originalName: propertyInfo.Name,
                 canRead: propertyInfo.CanRead,
                 canWrite: propertyInfo.CanWrite,
-                isLenient: lenient != null,
-                forwardedTo: putsForward != null ? putsForward.PropertyName : null,
+                isLenient: propertyInfo.HasLenientThis(),
+                forwardedTo: propertyInfo.GetPutForwardsTo(),
                 valueType: propertyInfo.PropertyType);
         }
 
@@ -49,11 +46,10 @@
 
         public static BindingEvent CreateEventBinding(this EventInfo eventInfo)
         {
-            var lenient = eventInfo.GetDomLenientThisAttribute();
             return new BindingEvent(
                 originalName: eventInfo.Name,
                 handlerType: eventInfo.EventHandlerType,
-                isLenient: lenient != null);
+                isLenient: eventInfo.HasLenientThis());
         }
 
         public static BindingMethod CreateMethodBinding(this MethodInfo methodInfo)

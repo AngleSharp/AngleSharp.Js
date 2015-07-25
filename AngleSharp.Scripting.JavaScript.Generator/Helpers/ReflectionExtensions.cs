@@ -8,45 +8,43 @@
 
     static class ReflectionExtensions
     {
-        public static IEnumerable<Accessors> GetAccessors(this DomAccessorAttribute accessorAttribute)
+        public static Boolean IsNotInterfaced(this MemberInfo member)
         {
-            if (accessorAttribute != null)
+            return member.GetCustomAttribute<DomNoInterfaceObjectAttribute>(inherit: false) != null;
+        }
+
+        public static IEnumerable<Accessors> GetDomAccessors(this MemberInfo member)
+        {
+            var attr = member.GetCustomAttribute<DomAccessorAttribute>(inherit: false);
+
+            if (attr != null)
             {
                 var values = Enum.GetValues(typeof(Accessors)) as Accessors[];
-                return values.Where(m => m != Accessors.None && accessorAttribute.Type.HasFlag(m));
+                return values.Where(m => m != Accessors.None && attr.Type.HasFlag(m));
             }
 
             return Enumerable.Empty<Accessors>();
         }
 
-        public static DomNoInterfaceObjectAttribute GetDomNoInterfaceObjectAttribute(this MemberInfo member)
+        public static Boolean IsConstructorExposed(this MemberInfo member)
         {
-            return member.GetCustomAttribute<DomNoInterfaceObjectAttribute>(inherit: false);
+            return member.GetCustomAttribute<DomConstructorAttribute>(inherit: false) != null;
         }
 
-        public static DomAccessorAttribute GetDomAccessorAttribute(this MemberInfo member)
+        public static Boolean HasLenientThis(this MemberInfo member)
         {
-            return member.GetCustomAttribute<DomAccessorAttribute>(inherit: false);
+            return member.GetCustomAttribute<DomLenientThisAttribute>(inherit: false) != null;
         }
 
-        public static DomConstructorAttribute GetDomConstructorAttribute(this MemberInfo member)
+        public static String GetPutForwardsTo(this MemberInfo member)
         {
-            return member.GetCustomAttribute<DomConstructorAttribute>(inherit: false);
+            var attr = member.GetCustomAttribute<DomPutForwardsAttribute>(inherit: false);
+            return attr != null ? attr.PropertyName : null;
         }
 
-        public static DomLenientThisAttribute GetDomLenientThisAttribute(this MemberInfo member)
+        public static IEnumerable<String> GetDomNames(this MemberInfo member)
         {
-            return member.GetCustomAttribute<DomLenientThisAttribute>(inherit: false);
-        }
-
-        public static DomPutForwardsAttribute GetDomPutForwardsAttribute(this MemberInfo member)
-        {
-            return member.GetCustomAttribute<DomPutForwardsAttribute>(inherit: false);
-        }
-
-        public static IEnumerable<DomNameAttribute> GetDomNameAttributes(this MemberInfo member)
-        {
-            return member.GetCustomAttributes<DomNameAttribute>(inherit: false);
+            return member.GetCustomAttributes<DomNameAttribute>(inherit: false).Select(m => m.OfficialName.Trim());
         }
 
         public static Dictionary<String, List<Type>> GetCandidates(this Assembly assembly)
@@ -59,12 +57,11 @@
                 if (typeof(Delegate).IsAssignableFrom(type))
                     continue;
 
-                var nameAttributes = type.GetDomNameAttributes();
+                var names = type.GetDomNames();
 
-                foreach (var nameAttribute in nameAttributes)
+                foreach (var name in names)
                 {
                     var list = default(List<Type>);
-                    var name = nameAttribute.OfficialName.Trim();
 
                     if (candidates.TryGetValue(name, out list) == false)
                         candidates.Add(name, list = new List<Type>());
@@ -79,7 +76,7 @@
         public static IEnumerable<T> GetAll<T>(this Type type, Func<Type, IEnumerable<T>> selectFrom)
         {
             var members = selectFrom(type);
-            var others = type.GetInterfaces().Where(m => m.GetDomNoInterfaceObjectAttribute() != null).SelectMany(m => m.GetAll(selectFrom));
+            var others = type.GetInterfaces().Where(m => m.IsNotInterfaced()).SelectMany(m => m.GetAll(selectFrom));
             return members.Concat(others);
         }
     }
