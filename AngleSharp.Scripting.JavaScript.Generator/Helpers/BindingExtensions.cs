@@ -109,6 +109,17 @@
             return function;
         }
 
+        public static void AttachFields(this BindingClass target, IEnumerable<FieldInfo> fields)
+        {
+            foreach (var field in fields)
+            {
+                var nameAttributes = field.GetDomNameAttributes();
+                var binding = new BindingField(field.Name, field.FieldType);
+
+                target.AttachAll(nameAttributes, binding);
+            }
+        }
+
         public static void AttachMethods(this BindingClass target, IEnumerable<MethodInfo> methods)
         {
             foreach (var method in methods)

@@ -108,23 +108,6 @@
             }
         }
 
-        public void Visit(BindingEnum @enum)
-        {
-            Generate(new ClassInstanceModel
-            {
-                BaseName = "Object",
-                OriginalName = @enum.OriginalName,
-                Name = @enum.Name,
-                OriginalNamespace = @enum.OriginalNamespace,
-                Namespace = _options.Namespace,
-                Fields = @enum.Fields.Select(m => new FieldModel 
-                { 
-                    Name = m.Key, 
-                    Value = FieldRef(@enum, m.Value) 
-                })
-            });
-        }
-
         void Generate(ClassInstanceModel model)
         {
             var template = new ClassInstance(model);

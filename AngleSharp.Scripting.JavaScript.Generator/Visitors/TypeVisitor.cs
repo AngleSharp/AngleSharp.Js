@@ -28,12 +28,6 @@
                 member.Accept(this);
         }
 
-        public void Visit(BindingEnum @enum)
-        {
-            foreach (var member in @enum.GetMembers())
-                member.Accept(this);
-        }
-
         public void Visit(BindingEvent @event)
         {
             Include(@event.HandlerType);

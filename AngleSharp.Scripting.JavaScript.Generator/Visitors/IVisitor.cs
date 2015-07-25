@@ -6,8 +6,6 @@
 
         void Visit(BindingClass @class);
 
-        void Visit(BindingEnum @enum);
-
         void Visit(BindingEvent @event);
 
         void Visit(BindingField field);

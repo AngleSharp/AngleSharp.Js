@@ -6,48 +6,40 @@
 
     static class GeneralExtensions
     {
-        public static IEnumerable<BindingType> GetBindings(this IDictionary<String, Type> mappings)
+        public static IEnumerable<BindingClass> GetBindings(this IDictionary<String, Type> mappings)
         {
+            var classes = new List<BindingClass>();
+
             foreach (var mapping in mappings)
             {
                 var name = mapping.Key;
                 var type = mapping.Value;
 
-                if (type.IsEnum)
-                    yield return GetEnumBinding(name, type);
-                else if (type.GetDomNoInterfaceObjectAttribute() == null)
-                    yield return GetClassBinding(name, type);
-            }
-        }
-
-        static BindingEnum GetEnumBinding(String name, Type type)
-        {
-            var binding = new BindingEnum(name, type.Name, type.Namespace);
-            var fields = type.GetFields();
-
-            foreach (var field in fields)
-            {
-                var nameAttributes = field.GetDomNameAttributes();
-                var enumValue = new BindingField(field.Name, field.FieldType);
-
-                foreach (var nameAttribute in nameAttributes)
-                    binding.Bind(nameAttribute.OfficialName, enumValue);
+                if (type.GetDomNoInterfaceObjectAttribute() == null)
+                    classes.Add(type.GetClassBinding(name, classes));
             }
 
-            return binding;
+            return classes;
         }
         
-        static BindingClass GetClassBinding(String name, Type type)
+        static BindingClass GetClassBinding(this Type type, String name, IEnumerable<BindingClass> classes)
         {
-            var binding = new BindingClass(name, type.Name, type.Namespace, ResolveBase(type));
+            var binding = classes.CreateBinding(name, type);
             binding.AttachProperties(type.GetProperties());
             binding.AttachEvents(type.GetEvents());
             binding.AttachMethods(type.GetMethods());
+            binding.AttachFields(type.GetFields());
             binding.AttachConstructors(type.GetConstructors());
             return binding;
         }
 
-        static String ResolveBase(Type type)
+        static BindingClass CreateBinding(this IEnumerable<BindingClass> reservoir, String name, Type type)
+        {
+            return reservoir.Where(m => m.Name == name).SingleOrDefault() ?? 
+                new BindingClass(name, type.Name, type.Namespace, type.ResolveBase());
+        }
+
+        static String ResolveBase(this Type type)
         {
             var name = GetDomNameOrNull(type.BaseType);
 
