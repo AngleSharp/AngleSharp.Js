@@ -131,6 +131,12 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
+            
+            #line 39 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.GenericArguments));
+            
+            #line default
+            #line hidden
             this.Write(" Ref");
             
             #line 39 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"

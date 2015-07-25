@@ -17,7 +17,14 @@
                 if (type.GetDomNoInterfaceObjectAttribute() != null)
                     continue;
 
-                var binding = new BindingClass(name, type.Name, type.Namespace, type.ResolveBase());
+                var binding = new BindingClass(name, type.Name.Replace("`1", ""), type.Namespace, type.ResolveBase());
+
+                if (type.IsGenericType)
+                {
+                    var args = type.GetGenericArguments();
+                    binding.GenericArguments.AddRange(args);
+                }
+
                 yield return binding.GetClassBindings(types, name);
             }
         }

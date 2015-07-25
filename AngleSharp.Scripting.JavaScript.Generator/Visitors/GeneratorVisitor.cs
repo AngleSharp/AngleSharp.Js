@@ -64,6 +64,7 @@
                 Name = @class.Name,
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
+                GenericArguments = GenericRef(@class),
                 Fields = @class.GetAll<BindingField>().Select(m => new FieldModel 
                 { 
                     Name = m.Key, 
@@ -130,6 +131,20 @@
             var content = template.TransformText();
             var fileName = String.Concat(model.Name, "Constructor", _options.Extension);
             _files.Add(new GeneratedFile(content, fileName));
+        }
+
+        static String GenericRef(BindingClass @class)
+        {
+            if (@class.GenericArguments.Count > 0)
+            {
+                var strs = @class.GenericArguments.
+                                  Select(m => m.GetGenericParameterConstraints().FirstOrDefault() ?? typeof(Object)).
+                                  Select(m => m.Name);
+                var rep = String.Join(", ", strs);
+                return String.Concat("<", rep, ">");
+            }
+
+            return String.Empty;
         }
 
         static String FieldRef(BindingField field)

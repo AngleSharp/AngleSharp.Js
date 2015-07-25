@@ -35,6 +35,12 @@
             set;
         }
 
+        public String GenericArguments
+        {
+            get;
+            set;
+        }
+
         public IEnumerable<FieldModel> Fields
         {
             get;

@@ -10,6 +10,7 @@
         readonly Dictionary<String, BindingMember> _members;
         readonly List<KeyValuePair<Accessors, BindingMember>> _specials;
         readonly List<BindingConstructor> _constructors;
+        readonly List<Type> _genericArguments;
 
         public BindingClass(String name, String originalName, String originalNamespace, String baseName)
             : base(name, originalName, originalNamespace)
@@ -17,13 +18,24 @@
             _members = new Dictionary<String, BindingMember>();
             _specials = new List<KeyValuePair<Accessors, BindingMember>>();
             _constructors = new List<BindingConstructor>();
+            _genericArguments = new List<Type>();
             BaseName = baseName;
+        }
+
+        public Boolean IsGeneric
+        {
+            get { return _genericArguments.Count > 0; }
         }
 
         public String BaseName 
         { 
             get; 
             private set; 
+        }
+
+        public List<Type> GenericArguments
+        {
+            get { return _genericArguments; }
         }
 
         public IEnumerable<KeyValuePair<String, BindingMember>> Members
