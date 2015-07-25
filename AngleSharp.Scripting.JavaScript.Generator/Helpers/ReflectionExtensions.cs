@@ -70,5 +70,12 @@
 
             return candidates;
         }
+
+        public static IEnumerable<T> GetAll<T>(this Type type, Func<Type, IEnumerable<T>> selectFrom)
+        {
+            var members = selectFrom(type);
+            var others = type.GetInterfaces().Where(m => m.GetDomNoInterfaceObjectAttribute() != null).SelectMany(m => m.GetAll(selectFrom));
+            return members.Concat(others);
+        }
     }
 }

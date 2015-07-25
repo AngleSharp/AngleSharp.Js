@@ -7,7 +7,7 @@
 
     static class BindingExtensions
     {
-        static BindingIndex CreateIndexBinding(PropertyInfo propertyInfo)
+        public static BindingIndex CreateIndexBinding(this PropertyInfo propertyInfo)
         {
             var lenient = propertyInfo.GetDomLenientThisAttribute();
             return new BindingIndex(
@@ -17,7 +17,7 @@
                 valueType: propertyInfo.PropertyType);
         }
 
-        static BindingProperty CreatePropertyBinding(PropertyInfo propertyInfo)
+        public static BindingProperty CreatePropertyBinding(this PropertyInfo propertyInfo)
         {
             var lenient = propertyInfo.GetDomLenientThisAttribute();
             var putsForward = propertyInfo.GetDomPutForwardsAttribute();
@@ -30,7 +30,7 @@
                 valueType: propertyInfo.PropertyType);
         }
 
-        static BindingMember CreatePropertyOrIndexBinding(PropertyInfo propertyInfo)
+        public static BindingMember CreatePropertyOrIndexBinding(this PropertyInfo propertyInfo)
         {
             var parameters = propertyInfo.GetIndexParameters();
 
@@ -40,14 +40,14 @@
             return CreatePropertyBinding(propertyInfo);
         }
 
-        static BindingConstructor CreateConstructorBinding(ConstructorInfo constructorInfo)
+        public static BindingConstructor CreateConstructorBinding(this ConstructorInfo constructorInfo)
         {
             return new BindingConstructor(
                 originalName: constructorInfo.DeclaringType.Name).With(
                 constructorInfo.GetParameters());
         }
 
-        static BindingEvent CreateEventBinding(EventInfo eventInfo)
+        public static BindingEvent CreateEventBinding(this EventInfo eventInfo)
         {
             var lenient = eventInfo.GetDomLenientThisAttribute();
             return new BindingEvent(
@@ -56,7 +56,7 @@
                 isLenient: lenient != null);
         }
 
-        static BindingMethod CreateMethodBinding(MethodInfo methodInfo)
+        public static BindingMethod CreateMethodBinding(this MethodInfo methodInfo)
         {
             return new BindingMethod(
                 originalName: methodInfo.Name,
@@ -64,33 +64,14 @@
                 methodInfo.GetParameters());
         }
 
-        public static void AttachAll(this BindingClass target, IEnumerable<DomNameAttribute> nameAttributes, BindingMember member)
+        public static IEnumerable<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
         {
-            foreach (var nameAttribute in nameAttributes)
-                target.Bind(nameAttribute.OfficialName, member);
-        }
+            var visitor = new TypeVisitor();
 
-        public static void AttachAll(this BindingClass target, DomAccessorAttribute accessorAttribute, BindingMember member)
-        {
-            foreach (var accessor in accessorAttribute.GetAccessors())
-                target.Bind(accessor, member);
-        }
+            foreach (var binding in bindings)
+                binding.Accept(visitor);
 
-        public static void AttachAll(this BindingClass target, DomConstructorAttribute ctorAttribute, BindingConstructor constructor)
-        {
-            if (ctorAttribute != null)
-                target.BindConstructor(constructor);
-        }
-
-        public static void AttachEvents(this BindingClass target, IEnumerable<EventInfo> events)
-        {
-            foreach (var evt in events)
-            {
-                var nameAttributes = evt.GetDomNameAttributes();
-                var binding = CreateEventBinding(evt);
-
-                target.AttachAll(nameAttributes, binding);
-            }
+            return visitor.Dependencies;
         }
 
         static T With<T>(this T function, ParameterInfo[] parameters)
@@ -107,67 +88,6 @@
             }
 
             return function;
-        }
-
-        public static void AttachFields(this BindingClass target, IEnumerable<FieldInfo> fields)
-        {
-            foreach (var field in fields)
-            {
-                var nameAttributes = field.GetDomNameAttributes();
-                var binding = new BindingField(field.Name, field.FieldType);
-
-                target.AttachAll(nameAttributes, binding);
-            }
-        }
-
-        public static void AttachMethods(this BindingClass target, IEnumerable<MethodInfo> methods)
-        {
-            foreach (var method in methods)
-            {
-                if (method.IsConstructor)
-                    continue;
-
-                var nameAttributes = method.GetDomNameAttributes();
-                var access = method.GetDomAccessorAttribute();
-                var binding = CreateMethodBinding(method);
-
-                target.AttachAll(nameAttributes, binding);
-                target.AttachAll(access, binding);
-            }
-        }
-
-        public static void AttachConstructors(this BindingClass target, IEnumerable<ConstructorInfo> constructors)
-        {
-            foreach (var constructor in constructors)
-            {
-                var ctorAttribute = constructor.GetDomConstructorAttribute();
-                var binding = CreateConstructorBinding(constructor);
-
-                target.AttachAll(ctorAttribute, binding);
-            }
-        }
-
-        public static void AttachProperties(this BindingClass target, IEnumerable<PropertyInfo> properties)
-        {
-            foreach (var property in properties)
-            {
-                var nameAttributes = property.GetDomNameAttributes();
-                var access = property.GetDomAccessorAttribute();
-                var binding = CreatePropertyOrIndexBinding(property);
-
-                target.AttachAll(nameAttributes, binding);
-                target.AttachAll(access, binding);
-            }
-        }
-
-        public static IEnumerable<Type> ResolveTypes(this IEnumerable<BindingType> bindings)
-        {
-            var visitor = new TypeVisitor();
-
-            foreach (var binding in bindings)
-                binding.Accept(visitor);
-
-            return visitor.Dependencies;
         }
     }
 }

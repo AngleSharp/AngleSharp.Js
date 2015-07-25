@@ -25,10 +25,10 @@
         static BindingClass GetClassBinding(this Type type, String name, IEnumerable<BindingClass> classes)
         {
             var binding = classes.CreateBinding(name, type);
-            binding.AttachProperties(type.GetProperties());
-            binding.AttachEvents(type.GetEvents());
-            binding.AttachMethods(type.GetMethods());
-            binding.AttachFields(type.GetFields());
+            binding.AttachProperties(type.GetAll(m => m.GetProperties()));
+            binding.AttachEvents(type.GetAll(m => m.GetEvents()));
+            binding.AttachMethods(type.GetAll(m => m.GetMethods()));
+            binding.AttachFields(type.GetAll(m => m.GetFields()));
             binding.AttachConstructors(type.GetConstructors());
             return binding;
         }
