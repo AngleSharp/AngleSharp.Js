@@ -13,7 +13,7 @@ namespace <#= Model.Namespace #>
     using Jint.Runtime.Interop;
     using System;
 
-    partial sealed class <#= Model.Name #>Constructor : FunctionInstance, IConstructor
+    sealed partial class <#= Model.Name #>Constructor : FunctionInstance, IConstructor
     {
         public <#= Model.Name #>Constructor(Engine engine)
             : base(engine, null, null, false)

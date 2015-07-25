@@ -78,7 +78,7 @@
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
                 HasConstructor = hasConstructor,
-                Prototype = "",
+                Prototype = "engine.Object.PrototypeObject",
                 Methods = @class.GetAll<BindingMethod>().Select(m => new MethodModel 
                 { 
                     IsVoid = m.Value.ReturnType == typeof(void), 

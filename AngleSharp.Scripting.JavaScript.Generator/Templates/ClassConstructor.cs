@@ -44,7 +44,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             #line hidden
             this.Write(";\r\n    using Jint;\r\n    using Jint.Native;\r\n    using Jint.Native.Object;\r\n    us" +
                     "ing Jint.Native.Function;\r\n    using Jint.Runtime;\r\n    using Jint.Runtime.Inter" +
-                    "op;\r\n    using System;\r\n\r\n    partial sealed class ");
+                    "op;\r\n    using System;\r\n\r\n    sealed partial class ");
             
             #line 16 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));

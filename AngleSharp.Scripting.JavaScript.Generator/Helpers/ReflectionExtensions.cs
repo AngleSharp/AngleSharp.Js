@@ -64,7 +64,7 @@
                 foreach (var nameAttribute in nameAttributes)
                 {
                     var list = default(List<Type>);
-                    var name = nameAttribute.OfficialName;
+                    var name = nameAttribute.OfficialName.Trim();
 
                     if (candidates.TryGetValue(name, out list) == false)
                         candidates.Add(name, list = new List<Type>());
