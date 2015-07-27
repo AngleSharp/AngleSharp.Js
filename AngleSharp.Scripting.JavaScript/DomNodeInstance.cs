@@ -12,27 +12,37 @@
     sealed class DomNodeInstance : ObjectInstance
     {
         readonly Object _value;
-        PropertyInfo _indexer;
+        PropertyInfo _numericIndexer;
+        PropertyInfo _stringIndexer;
 
         public DomNodeInstance(Engine engine, Object value)
             : base(engine)
         {
             _value = value;
             SetMembers(value.GetType());
+
+            //  DOM objects can have properties added dynamically
+            Extensible = true;
         }
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
         {
-            var index = 0;
+            //  If we have a numeric indexer and the property is numeric
+            int numericIndex;
 
-            if (_indexer != null)
-            {
-                if (_indexer.GetIndexParameters()[0].ParameterType == typeof(Int32) && Int32.TryParse(propertyName, out index))
-                    return new PropertyDescriptor(_indexer.GetMethod.Invoke(_value, new Object[] { index }).ToJsValue(Engine), false, false, false);
-                else if (_indexer.GetIndexParameters()[0].ParameterType == typeof(String))
-                    return new PropertyDescriptor(_indexer.GetMethod.Invoke(_value, new Object[] { propertyName }).ToJsValue(Engine), false, false, false);
-            }
+            if (_numericIndexer != null && int.TryParse(propertyName, out numericIndex))
+                return new PropertyDescriptor(_numericIndexer.GetMethod.Invoke(_value, new Object[] { numericIndex }).ToJsValue(Engine), false, false, false);
 
+            //  Else a string property
+            //  If we have a string indexer and no property exists for this name then use the string indexer
+            //  Jint possibly has a limitation here - if an object has a string indexer.  How do we know whether to use the defined indexer or a property?
+            //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
+            //  node.attributes is one such object - has both a string and numeric indexer
+            //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
+            if (_stringIndexer != null && Properties.ContainsKey(propertyName) == false)
+                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] {propertyName}).ToJsValue(Engine), false, false, false);
+            
+            //  Else try to return a registered property
             return base.GetOwnProperty(propertyName);
         }
 
@@ -73,10 +83,20 @@
                 var index = property.GetCustomAttribute<DomAccessorAttribute>();
 
                 if (index != null)
-                    _indexer = property;
+                {
+                    var indexParameters = property.GetIndexParameters();
+
+                    if (indexParameters.Length == 1)
+                    {
+                        if (indexParameters[0].ParameterType == typeof(Int32))
+                            _numericIndexer = property;
+                        else if (indexParameters[0].ParameterType == typeof(String))
+                            _stringIndexer = property;
+                    }
+                }
 
                 var names = property.GetCustomAttributes<DomNameAttribute>();
-
+                
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
                     FastSetProperty(name, new PropertyDescriptor(
