@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-
-namespace AngleSharp.Scripting.JavaScript
+﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
     using AngleSharp.Network;
@@ -11,6 +8,7 @@ namespace AngleSharp.Scripting.JavaScript
     using System;
     using System.IO;
     using System.Text;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// The JavaScript engine.
@@ -18,11 +16,12 @@ namespace AngleSharp.Scripting.JavaScript
     public class JavaScriptEngine : IScriptEngine
     {
         static readonly ConditionalWeakTable<Engine, JavaScriptEngine> _engineLookup = new ConditionalWeakTable<Engine, JavaScriptEngine>();
+        static readonly ConditionalWeakTable<IWindow, ContextCache> _contextCaches = new ConditionalWeakTable<IWindow, ContextCache>();
         static readonly object _padlock = new object();
 
         readonly Engine _engine;
-        readonly LexicalEnvironment _variable;
-        readonly Dictionary<object, DomNodeInstance> _objectCache = new Dictionary<object, DomNodeInstance>();
+        IWindow _windowContext;
+        ContextCache _contextCache;
 
         internal static JavaScriptEngine Get(Engine engine)
         {
@@ -45,7 +44,6 @@ namespace AngleSharp.Scripting.JavaScript
         {
             _engine = new Engine();
             _engine.SetValue("console", new ConsoleInstance(_engine));
-            _variable = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
 
             lock (_padlock)
                 _engineLookup.Add(_engine, this);
@@ -74,9 +72,29 @@ namespace AngleSharp.Scripting.JavaScript
         /// <param name="options">The options to consider.</param>
         public void Evaluate(String source, ScriptOptions options)
         {
-            var context = GetDomNodeInstance(options.Context);
-            var env = LexicalEnvironment.NewObjectEnvironment(_engine, context, _engine.ExecutionContext.LexicalEnvironment, true);
-            _engine.EnterExecutionContext(env, _variable, context);
+            var objectContext = _windowContext = options.Context;
+            ContextCache contextCache;
+            DomNodeInstance domContext;
+
+            lock (_padlock)
+            {
+                if (_contextCaches.TryGetValue(objectContext, out contextCache) == false)
+                {
+                    contextCache = new ContextCache();
+                    _contextCaches.Add(objectContext, contextCache);
+                }
+
+                domContext = GetDomNodeInstance(objectContext);
+
+                //  Get or create the new environment
+                if (contextCache.LexicalEnvironment == null)
+                {
+                    contextCache.LexicalEnvironment = LexicalEnvironment.NewObjectEnvironment(_engine, domContext, _engine.ExecutionContext.LexicalEnvironment, true);
+                    contextCache.VariableEnvironment = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
+                }
+            }
+
+            _engine.EnterExecutionContext(contextCache.LexicalEnvironment, contextCache.VariableEnvironment, domContext);
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
         }
@@ -101,16 +119,12 @@ namespace AngleSharp.Scripting.JavaScript
         /// <returns></returns>
         internal DomNodeInstance GetDomNodeInstance(object obj)
         {
-            DomNodeInstance domNodeInstance;
+            ContextCache contextCache;
 
-            if(_objectCache.TryGetValue(obj, out domNodeInstance))
-                return domNodeInstance;
+            if (_contextCaches.TryGetValue(_windowContext, out contextCache) == false)
+                throw new Exception("Failed to get context cache!");
 
-            domNodeInstance = new DomNodeInstance(_engine, obj);
-
-            _objectCache.Add(obj, domNodeInstance);
-
-            return domNodeInstance;
+            return contextCache.GetDomNodeInstance(_engine, obj);
         }
 
         /// <summary>
