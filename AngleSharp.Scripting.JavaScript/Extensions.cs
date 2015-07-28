@@ -30,7 +30,12 @@
             else if (obj is Enum)
                 return new JsValue(Convert.ToInt32(obj));
 
-            return JavaScriptEngine.Get(engine).GetDomNodeInstance(obj);
+            return engine.Select(obj);
+        }
+
+        public static DomNodeInstance Select(this Engine engine, Object obj)
+        {
+            return JavaScriptEngine.Instance.GetCache(engine).GetDomNode(obj);
         }
 
         public static Object FromJsValue(this JsValue val)

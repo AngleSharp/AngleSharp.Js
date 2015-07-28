@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />
+    <Compile Include="EngineInstance.cs" />
     <Compile Include="DomDelegates.cs" />
     <Compile Include="DomFunctionInstance.cs" />
     <Compile Include="DomNodeInstance.cs" />
