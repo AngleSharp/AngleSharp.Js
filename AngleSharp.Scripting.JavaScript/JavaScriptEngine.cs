@@ -4,9 +4,9 @@
     using AngleSharp.Network;
     using AngleSharp.Services.Scripting;
     using Jint;
-    using Jint.Runtime.Environments;
     using System;
     using System.IO;
+    using System.Runtime.CompilerServices;
     using System.Text;
 
     /// <summary>
@@ -14,18 +14,22 @@
     /// </summary>
     public class JavaScriptEngine : IScriptEngine
     {
-        readonly Engine _engine;
-        readonly LexicalEnvironment _variable;
+        readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
+        readonly ConditionalWeakTable<Engine, EngineInstance> _engines;
 
         /// <summary>
-        /// Creates a new JavaScript engine.s
+        /// Creates a new JavaScript engine.
         /// </summary>
-        public JavaScriptEngine()
+        JavaScriptEngine()
         {
-            _engine = new Engine();
-            _engine.SetValue("console", new ConsoleInstance(_engine));
-            _variable = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
+            _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
+            _engines = new ConditionalWeakTable<Engine, EngineInstance>();
         }
+
+        /// <summary>
+        /// The instance of the JavaScript engine.
+        /// </summary>
+        public static readonly JavaScriptEngine Instance = new JavaScriptEngine();
 
         /// <summary>
         /// Gets the engine's mime-type.
@@ -36,25 +40,22 @@
         }
 
         /// <summary>
-        /// Gets the result of the previous evaluation.
-        /// </summary>
-        public Object Result
-        {
-            get { return _engine.GetCompletionValue(); }
-        }
-
-        /// <summary>
         /// Evaluates the given source.
         /// </summary>
         /// <param name="source">The source code to evaluate.</param>
         /// <param name="options">The options to consider.</param>
         public void Evaluate(String source, ScriptOptions options)
         {
-            var context = new DomNodeInstance(_engine, options.Context);
-            var env = LexicalEnvironment.NewObjectEnvironment(_engine, context, _engine.ExecutionContext.LexicalEnvironment, true);
-            _engine.EnterExecutionContext(env, _variable, context);
-            _engine.Execute(source);
-            _engine.LeaveExecutionContext();
+            var objectContext = options.Context;
+            var instance = default(EngineInstance);
+
+            if (_contexts.TryGetValue(objectContext, out instance) == false)
+            {
+                _contexts.Add(objectContext, instance = new EngineInstance(objectContext));
+                _engines.Add(instance.Jint, instance);
+            }
+
+            instance.RunScript(source);
         }
 
         /// <summary>
@@ -71,11 +72,13 @@
         }
 
         /// <summary>
-        /// Resets the engine.
+        /// Gets a context cache for the provided engine.
         /// </summary>
-        public void Reset()
+        internal EngineInstance GetCache(Engine engine)
         {
-            //TODO Jint
+            var instance = default(EngineInstance);
+            _engines.TryGetValue(engine, out instance);
+            return instance;
         }
     }
 }

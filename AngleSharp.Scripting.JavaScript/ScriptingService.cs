@@ -10,7 +10,7 @@
         public IScriptEngine GetEngine(String mimeType)
         {
             if (MimeTypes.IsJavaScript(mimeType))
-                return new JavaScriptEngine();
+                return JavaScriptEngine.Instance;
 
             return null;
         }
