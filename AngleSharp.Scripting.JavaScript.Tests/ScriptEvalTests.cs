@@ -2,7 +2,6 @@
 {
     using NUnit.Framework;
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -17,17 +16,29 @@
             return document.GetElementById("result").InnerHtml;
         }
 
+        public static String SetResult(String eval)
+        {
+            return "document.querySelector('#result').textContent = " + eval + ";";
+        }
+
+        [Test]
+        public async Task AccessUndefinedGlobalVariable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("$.toString()"));
+            Assert.AreEqual("", result);
+        }
+
         [Test]
         public async Task AccessGlobalVariablesFromOtherScriptShouldWork()
         {
-            var result = await EvaluateComplexScriptAsync("var a = 5;", "document.querySelector('#result').textContent = a.toString();");
+            var result = await EvaluateComplexScriptAsync("var a = 5;", SetResult("a.toString()"));
             Assert.AreEqual("5", result);
         }
 
         [Test]
         public async Task AccessLocalVariablesFromOtherScriptShouldNotWork()
         {
-            var result = await EvaluateComplexScriptAsync("(function () { var a = 5; })();", "document.querySelector('#result').textContent = a.toString();");
+            var result = await EvaluateComplexScriptAsync("(function () { var a = 5; })();", SetResult("a.toString()"));
             Assert.AreEqual("", result);
         }
     }
