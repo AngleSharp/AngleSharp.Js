@@ -203,7 +203,7 @@ if (Model.Fields.Any()) {
             this.Write("[propertyName] = ");
             
             #line 58 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(method.Converter));
+            this.Write(this.ToStringHelper.ToStringWithCulture(method.Parameters.First().Converter));
             
             #line default
             #line hidden

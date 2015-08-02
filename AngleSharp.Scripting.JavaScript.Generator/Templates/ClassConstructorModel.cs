@@ -29,13 +29,7 @@
             set;
         }
 
-        public IEnumerable<ParameterModel> Parameters
-        {
-            get;
-            set;
-        }
-
-        public Boolean HasConstructor 
+        public IEnumerable<MethodModel> Constructors 
         { 
             get; 
             set; 

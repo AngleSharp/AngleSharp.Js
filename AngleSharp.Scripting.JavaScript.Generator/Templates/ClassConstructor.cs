@@ -94,7 +94,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
                     "ength\", ");
             
             #line 35 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Parameters.Count()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Constructors.Select(m => m.Parameters.Count()).Max()));
             
             #line default
             #line hidden
@@ -113,82 +113,78 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
 ");
             
             #line 47 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
- if (Model.HasConstructor) { 
+ foreach (var constructor in Model.Constructors) { 
             
             #line default
             #line hidden
+            this.Write("            if (arguments.Length == constructor.Parameters.Length)\r\n            {" +
+                    "\r\n");
             
-            #line 48 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
- foreach (var parameter in Model.Parameters) { 
+            #line 50 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+ foreach (var parameter in constructor.Parameters) { 
             
             #line default
             #line hidden
-            this.Write("            var ");
+            this.Write("                var ");
             
-            #line 49 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Name));
             
             #line default
             #line hidden
             this.Write(" = ");
             
-            #line 49 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Converter));
             
             #line default
             #line hidden
             this.Write("(arguments.At(");
             
-            #line 49 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(parameter.Index));
             
             #line default
             #line hidden
             this.Write("));\r\n");
             
-            #line 50 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
  } 
             
             #line default
             #line hidden
-            this.Write("            var reference = new ");
+            this.Write("                var reference = new ");
             
-            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.OriginalName));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 51 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Parameters.Stringify()));
+            #line 53 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(constructor.Parameters.Stringify()));
             
             #line default
             #line hidden
-            this.Write(");\r\n            return new ");
+            this.Write(");\r\n                return new ");
             
-            #line 52 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 54 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
             #line hidden
-            this.Write("Instance(Engine)\r\n            {\r\n                Prototype = PrototypeObject,\r\n  " +
-                    "              Ref = reference,\r\n                Extensible = true\r\n            }" +
-                    ";\r\n");
+            this.Write("Instance(Engine)\r\n                {\r\n                    Prototype = PrototypeObj" +
+                    "ect,\r\n                    Ref = reference,\r\n                    Extensible = tru" +
+                    "e\r\n                };\r\n            }\r\n");
             
-            #line 58 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
- } else { 
-            
-            #line default
-            #line hidden
-            this.Write("            throw new JavaScriptException(Engine.TypeError);\r\n");
-            
-            #line 60 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 61 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
  } 
             
             #line default
             #line hidden
-            this.Write("            \r\n        }\r\n    }\r\n}");
+            this.Write("            throw new JavaScriptException(Engine.TypeError);         \r\n        }\r" +
+                    "\n    }\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

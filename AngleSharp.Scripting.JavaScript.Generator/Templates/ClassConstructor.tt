@@ -32,7 +32,7 @@ namespace <#= Model.Namespace #>
             obj.Extensible = true;
             obj.Prototype = engine.Function.PrototypeObject;
             obj.PrototypeObject = <#= Model.Name #>Prototype.CreatePrototypeObject(engine, obj);
-            obj.FastAddProperty("length", <#= Model.Parameters.Count() #>, false, false, false);
+            obj.FastAddProperty("length", <#= Model.Constructors.Select(m => m.Parameters.Count()).Max() #>, false, false, false);
             obj.FastAddProperty("prototype", obj.PrototypeObject, false, false, false);
             return obj;
         }
@@ -44,20 +44,22 @@ namespace <#= Model.Namespace #>
 
         public ObjectInstance Construct(JsValue[] arguments)
         {
-<# if (Model.HasConstructor) { #>
-<# foreach (var parameter in Model.Parameters) { #>
-            var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
-<# } #>
-            var reference = new <#= Model.OriginalName #>(<#= Model.Parameters.Stringify() #>);
-            return new <#= Model.Name #>Instance(Engine)
+<# foreach (var constructor in Model.Constructors) { #>
+            if (arguments.Length == constructor.Parameters.Length)
             {
-                Prototype = PrototypeObject,
-                Ref = reference,
-                Extensible = true
-            };
-<# } else { #>
-            throw new JavaScriptException(Engine.TypeError);
-<# } #>            
+<# foreach (var parameter in constructor.Parameters) { #>
+                var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
+<# } #>
+                var reference = new <#= Model.OriginalName #>(<#= constructor.Parameters.Stringify() #>);
+                return new <#= Model.Name #>Instance(Engine)
+                {
+                    Prototype = PrototypeObject,
+                    Ref = reference,
+                    Extensible = true
+                };
+            }
+<# } #>
+            throw new JavaScriptException(Engine.TypeError);         
         }
     }
 }

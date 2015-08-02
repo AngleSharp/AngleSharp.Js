@@ -55,7 +55,7 @@ namespace <#= Model.Namespace #>
         {
 <# foreach (var method in Model.Setters) { #>
             //TODO
-            Ref<#= Model.OriginalName #>[propertyName] = <#= method.Converter #>(value);
+            Ref<#= Model.OriginalName #>[propertyName] = <#= method.Parameters.First().Converter #>(value);
 <# } #>
             base.Put(propertyName, value, throwOnError);
         }

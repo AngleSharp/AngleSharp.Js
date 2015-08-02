@@ -65,10 +65,10 @@
 
         #endregion
 
+        #region Visit
+
         public void Visit(BindingClass @class)
         {
-            var hasConstructor = @class.Constructors.Any();
-
             Generate(new ClassInstanceModel
             {
                 BaseName = @class.BaseName,
@@ -101,8 +101,7 @@
                 Namespace = _options.Namespace,
                 OriginalNamespace = @class.OriginalNamespace,
                 OriginalName = @class.OriginalName,
-                HasConstructor = hasConstructor,
-                Parameters = Enumerable.Empty<ParameterModel>()
+                Constructors = @class.Constructors.Select(CreateMethod).ToArray()
             });
         }
 
@@ -177,14 +176,14 @@
             };
         }
 
-        MethodModel CreateMethod(BindingMember method)
+        MethodModel CreateMethod(BindingMember member)
         {
             return new MethodModel
             {
                 Name = String.Empty,
                 IsVoid = true,
-                OriginalName = method.OriginalName,
-                RefName = method.OriginalName,
+                OriginalName = member.OriginalName,
+                RefName = member.OriginalName,
                 IsLenient = true,
                 Parameters = Enumerable.Empty<ParameterModel>()
             };
@@ -208,6 +207,19 @@
             };
         }
 
+        MethodModel CreateMethod(BindingConstructor constructor)
+        {
+            return new MethodModel
+            {
+                Name = String.Empty,
+                IsVoid = true,
+                OriginalName = constructor.OriginalName,
+                RefName = constructor.OriginalName,
+                IsLenient = true,
+                Parameters = constructor.Parameters.Select(CreateParameter).ToArray()
+            };
+        }
+
         ParameterModel CreateParameter(BindingParameter parameter)
         {
             return new ParameterModel
@@ -218,6 +230,10 @@
                 Name = parameter.OriginalName
             };
         }
+
+        #endregion
+
+        #region Generate Files
 
         void Generate(ClassInstanceModel model)
         {
@@ -242,6 +258,10 @@
             var fileName = String.Concat(model.Name, "Constructor", _options.Extension);
             _files.Add(new GeneratedFile(content, fileName));
         }
+
+        #endregion
+
+        #region Helpers
 
         static String GenericRef(BindingClass @class)
         {
@@ -273,5 +293,7 @@
 
             return String.Concat("UnresolvedConverter.To<", type.FullName, ">");
         }
+
+        #endregion
     }
 }
