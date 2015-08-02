@@ -4,6 +4,8 @@
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
+    using Jint.Runtime.Descriptors;
+    using Jint.Runtime.Interop;
     using System;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -36,6 +38,16 @@
         public static DomNodeInstance Select(this Engine engine, Object obj)
         {
             return JavaScriptEngine.Instance.GetCache(engine).GetDomNode(obj);
+        }
+
+        public static ClrFunctionInstance Wrap(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
+        {
+            return new ClrFunctionInstance(engine, func);
+        }
+
+        public static PropertyDescriptor Wrap(this Engine engine, Func<JsValue, JsValue[], JsValue> getter, Func<JsValue, JsValue[], JsValue> setter)
+        {
+            return new PropertyDescriptor(engine.Wrap(getter), engine.Wrap(setter), true, true);
         }
 
         public static Object FromJsValue(this JsValue val)
