@@ -10,6 +10,7 @@
         #region Fields
 
         readonly List<GeneratedFile> _files;
+        readonly List<String> _names;
         readonly Options _options;
 
         #endregion
@@ -19,6 +20,7 @@
         public GeneratorVisitor(Options options)
         {
             _files = new List<GeneratedFile>();
+            _names = new List<String>();
             _options = options;
         }
 
@@ -35,31 +37,31 @@
 
         #region Not Implemented
 
-        public void Visit(BindingParameter parameter)
+        void IVisitor.Visit(BindingParameter parameter)
         {
         }
 
-        public void Visit(BindingConstructor constructor)
+        void IVisitor.Visit(BindingConstructor constructor)
         {
         }
 
-        public void Visit(BindingEvent @event)
+        void IVisitor.Visit(BindingEvent @event)
         {
         }
 
-        public void Visit(BindingField field)
+        void IVisitor.Visit(BindingField field)
         {
         }
 
-        public void Visit(BindingMethod method)
+        void IVisitor.Visit(BindingMethod method)
         {
         }
 
-        public void Visit(BindingIndex index)
+        void IVisitor.Visit(BindingIndex index)
         {
         }
 
-        public void Visit(BindingProperty property)
+        void IVisitor.Visit(BindingProperty property)
         {
         }
 
@@ -67,7 +69,7 @@
 
         #region Visit
 
-        public void Visit(BindingClass @class)
+        void IVisitor.Visit(BindingClass @class)
         {
             Generate(new ClassInstanceModel
             {
@@ -103,6 +105,8 @@
                 OriginalName = @class.OriginalName,
                 Constructors = @class.Constructors.Select(CreateMethod).ToArray()
             });
+
+            _names.Add(@class.Name);
         }
 
         EventModel CreateEvent(String name, BindingEvent @event)
@@ -243,6 +247,23 @@
         #endregion
 
         #region Generate Files
+
+        public void GenerateAuxiliary()
+        {
+            Generate(new InstanceCacheModel
+            {
+                Namespace = _options.Namespace,
+                Constructors = _names
+            });
+        }
+
+        void Generate(InstanceCacheModel model)
+        {
+            var template = new InstanceCache(model);
+            var content = template.TransformText();
+            var fileName = String.Concat("InstanceCache", _options.Extension);
+            _files.Add(new GeneratedFile(content, fileName));
+        }
 
         void Generate(ClassInstanceModel model)
         {

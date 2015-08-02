@@ -25,6 +25,7 @@
             foreach (var binding in bindings)
                 binding.Accept(visitor);
 
+            visitor.GenerateAuxiliary();
             return visitor.Files;
         }
     }
