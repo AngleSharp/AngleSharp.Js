@@ -138,7 +138,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("            FastAddProperty(\"");
+            this.Write("            FastSetProperty(\"");
             
             #line 41 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(property.Name));
@@ -152,7 +152,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("), ");
+            this.Write(", ");
             
             #line 41 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(property.Setter.RefName));
@@ -172,7 +172,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("            FastAddProperty(\"");
+            this.Write("            FastSetProperty(\"");
             
             #line 44 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(evt.Name));

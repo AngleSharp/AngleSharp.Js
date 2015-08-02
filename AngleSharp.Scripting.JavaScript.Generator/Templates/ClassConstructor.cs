@@ -105,7 +105,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
 
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
-            return PrototypeObject.ToString(Construct(Arguments.Empty), Arguments.Empty);
+            throw new JavaScriptException(Engine.TypeError);
         }
 
         public ObjectInstance Construct(JsValue[] arguments)

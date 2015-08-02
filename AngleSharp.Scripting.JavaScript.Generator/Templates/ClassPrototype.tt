@@ -38,10 +38,10 @@ namespace <#= Model.Namespace #>
             FastAddProperty("<#= method.Name #>", Engine.Wrap(<#= method.RefName #>), true, true, true);
 <# } #>
 <# foreach (var property in Model.Properties) { #>
-            FastAddProperty("<#= property.Name #>", Engine.Wrap(<#= property.Getter.RefName #>), <#= property.Setter.RefName #>));
+            FastSetProperty("<#= property.Name #>", Engine.Wrap(<#= property.Getter.RefName #>, <#= property.Setter.RefName #>));
 <# } #>
 <# foreach (var evt in Model.Events) { #>
-            FastAddProperty("<#= evt.Name #>", Engine.Wrap(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
+            FastSetProperty("<#= evt.Name #>", Engine.Wrap(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
 <# } #>
         }
 <# foreach (var method in Model.Methods.Distinct()) { #>

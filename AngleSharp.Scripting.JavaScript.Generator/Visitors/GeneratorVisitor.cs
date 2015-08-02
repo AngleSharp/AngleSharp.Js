@@ -176,12 +176,17 @@
 
         MethodModel CreateMethod(String name, BindingMethod method)
         {
+            var suffix = String.Empty;
+
+            if (method.Parameters.Any())
+                suffix = "_" + String.Concat(method.Parameters.Select(m => m.ValueType.Name.Substring(0, 1).ToLowerInvariant()));
+
             return new MethodModel
             {
                 Name = name,
                 IsVoid = method.ReturnType == typeof(void),
                 OriginalName = method.OriginalName,
-                RefName = method.OriginalName,
+                RefName = method.OriginalName + suffix,
                 IsLenient = method.IsLenient,
                 Parameters = method.Parameters.Select(CreateParameter).ToArray()
             };
