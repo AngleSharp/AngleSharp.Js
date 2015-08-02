@@ -133,5 +133,23 @@
             Assert.IsFalse(media.Value.AllowSet);
             Assert.AreEqual(typeof(IMediaList), media.Value.ValueType);
         }
+
+        [Test]
+        public void IDocumentHasGlobalEventHandlers()
+        {
+            var name = "Document";
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, List<Type>>
+            {
+                { name, ListOf(typeof(IDocument)) }
+            }).First() as BindingClass;
+            var bindingEvents = binding.GetAll<BindingEvent>();
+            var click = bindingEvents.Where(m => m.Key == "onclick").FirstOrDefault();
+            Assert.AreEqual(0, binding.Constructors.Count());
+            Assert.AreEqual(0, binding.Deleters.Count());
+            Assert.IsNotNull(click);
+            Assert.IsFalse(click.Value.IsLenient);
+            Assert.AreEqual("Clicked", click.Value.OriginalName);
+            Assert.AreEqual(typeof(DomEventHandler), click.Value.HandlerType);
+        }
     }
 }
