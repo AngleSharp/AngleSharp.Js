@@ -81,10 +81,12 @@
       <DependentUpon>ClassPrototype.tt</DependentUpon>
     </Compile>
     <Compile Include="Templates\ClassPrototypeModel.cs" />
+    <Compile Include="Templates\EventModel.cs" />
     <Compile Include="Templates\Extensions.cs" />
     <Compile Include="Templates\FieldModel.cs" />
     <Compile Include="Templates\MethodModel.cs" />
     <Compile Include="Templates\ParameterModel.cs" />
+    <Compile Include="Templates\PropertyModel.cs" />
     <Compile Include="Visitors\GeneratorVisitor.cs" />
     <Compile Include="Visitors\IVisitor.cs" />
     <Compile Include="Visitors\TypeVisitor.cs" />

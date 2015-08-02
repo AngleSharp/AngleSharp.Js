@@ -11,12 +11,6 @@
             set;
         }
 
-        public Boolean IsUnique
-        {
-            get;
-            set;
-        }
-
         public Boolean IsVoid
         {
             get;
@@ -39,6 +33,12 @@
         {
             get;
             set;
+        }
+
+        public Boolean IsLenient 
+        { 
+            get; 
+            set; 
         }
     }
 }

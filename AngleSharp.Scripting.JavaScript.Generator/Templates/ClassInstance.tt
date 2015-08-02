@@ -25,7 +25,7 @@ namespace <#= Model.Namespace #>
         }
 
 <#if (Model.Fields.Any()) { #>
-        public void Configure()
+        public void Configure<#= Model.Name #>()
         {
 <# foreach (var field in Model.Fields) { #>
             FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);

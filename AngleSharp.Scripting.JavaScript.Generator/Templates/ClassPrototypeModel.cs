@@ -29,12 +29,6 @@
             set;
         }
 
-        public Boolean HasConstructor
-        {
-            get;
-            set;
-        }
-
         public String Prototype
         {
             get;
@@ -45,6 +39,18 @@
         {
             get;
             set;
+        }
+
+        public IEnumerable<PropertyModel> Properties
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<EventModel> Events 
+        { 
+            get; 
+            set; 
         }
     }
 

@@ -44,6 +44,7 @@ namespace <#= Model.Namespace #>
 
         public ObjectInstance Construct(JsValue[] arguments)
         {
+<# if (Model.HasConstructor) { #>
 <# foreach (var parameter in Model.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
 <# } #>
@@ -54,6 +55,9 @@ namespace <#= Model.Namespace #>
                 Ref = reference,
                 Extensible = true
             };
+<# } else { #>
+            throw new JavaScriptException(Engine.TypeError);
+<# } #>            
         }
     }
 }

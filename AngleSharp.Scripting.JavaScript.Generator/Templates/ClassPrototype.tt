@@ -20,32 +20,31 @@ namespace <#= Model.Namespace #>
         {
         }
 
-<# if (Model.HasConstructor) { #>
         public static <#= Model.Name #>Prototype CreatePrototypeObject(Engine engine, <#= Model.Name #>Constructor constructor)
-<# } else { #>
-        public static <#= Model.Name #>Prototype CreatePrototypeObject(Engine engine)
-<# } #>
         {
             var obj = new <#= Model.Name #>Prototype(engine)
             {
                 Prototype = <#= Model.Prototype #>,
                 Extensible = true,
             };
-<# if (Model.HasConstructor) { #>
             obj.FastAddProperty("constructor", constructor, true, false, true);
-<# } #>
             return obj;
         }
 
-        public void Configure()
+        public void Configure<#= Model.Name #>()
         {
-            FastAddProperty("toString", new ClrFunctionInstance(Engine, ToString), true, true, true);
+            FastAddProperty("toString", Engine.Wrap(ToString), true, true, true);
 <# foreach (var method in Model.Methods) { #>
-            FastAddProperty("<#= method.Name #>", new ClrFunctionInstance(Engine, <#= method.RefName #>), true, true, true);
+            FastAddProperty("<#= method.Name #>", Engine.Wrap(<#= method.RefName #>), true, true, true);
+<# } #>
+<# foreach (var property in Model.Properties) { #>
+            FastAddProperty("<#= property.Name #>", Engine.Wrap(<#= property.Getter.RefName #>), <#= property.Setter.RefName #>));
+<# } #>
+<# foreach (var evt in Model.Events) { #>
+            FastAddProperty("<#= evt.Name #>", Engine.Wrap(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
 <# } #>
         }
-<# foreach (var method in Model.Methods) { #>
-<# if (method.IsUnique) { #>
+<# foreach (var method in Model.Methods.Distinct()) { #>
 
         JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
         {
@@ -57,10 +56,60 @@ namespace <#= Model.Namespace #>
             reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
             return JsValue.Undefined;
 <# } else { #>
-            return reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
+            return Engine.Select(reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>));
 <# } #>
         }
 <# } #>
+<# foreach (var property in Model.Properties.Distinct()) { #>
+
+        JsValue <#= property.Getter.RefName #>(JsValue thisObj)
+        {
+<# if (property.Getter.IsVoid) { #>
+            return JsValue.Undefined;
+<# } else { #>
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            return Engine.Select(reference.<#= property.Getter.OriginalName #>);
+<# } #>
+        }
+
+        void <#= property.Setter.RefName #>(JsValue thisObj, JsValue argument)
+        {
+<# if (!property.Setter.IsVoid) { #>
+<# var parameter = property.Setter.Parameters.First(); #>
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            var <#= parameter.Name #> = <#= parameter.Converter #>(argument);
+            reference.<#= property.Setter.OriginalName #> = <#= parameter.Name #>;
+<# } #>
+        }
+<# } #>
+<# foreach (var evt in Model.Events.Distinct()) { #>
+
+        JsValue Get<#= evt.RefName #>(JsValue thisObj)
+        {
+            var instance = thisObj.TryCast<<#= Model.Name #>Instance>(Fail);
+            return instance.Get("<#= evt.Name #>");
+        }
+
+        void Set<#= evt.RefName #>(JsValue thisObj, JsValue argument)
+        {
+            var instance = thisObj.TryCast<<#= Model.Name #>Instance>(Fail);
+            var reference = instance.Ref<#= Model.OriginalName #>;
+            var existing = Get<#= evt.RefName #>(thisObj);
+
+            if (existing != JsValue.Undefined)
+            {
+                var method = <#= evt.Converter #>(existing);
+                reference.<#= evt.OriginalName #> -= method;
+            }
+
+            instance.Put("<#= evt.Name #>", argument, false);
+
+            if (argument != JsValue.Undefined)
+            {
+                var method = <#= evt.Converter #>(argument);
+                reference.<#= evt.OriginalName #> += method;
+            }
+        }
 <# } #>
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)

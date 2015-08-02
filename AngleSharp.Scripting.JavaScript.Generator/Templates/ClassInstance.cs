@@ -95,7 +95,14 @@ if (Model.Fields.Any()) {
             
             #line default
             #line hidden
-            this.Write("        public void Configure()\r\n        {\r\n");
+            this.Write("        public void Configure");
+            
+            #line 28 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
+            
+            #line default
+            #line hidden
+            this.Write("()\r\n        {\r\n");
             
             #line 30 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"
  foreach (var field in Model.Fields) { 

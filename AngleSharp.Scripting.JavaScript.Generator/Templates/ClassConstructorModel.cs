@@ -34,6 +34,12 @@
             get;
             set;
         }
+
+        public Boolean HasConstructor 
+        { 
+            get; 
+            set; 
+        }
     }
 
     partial class ClassConstructor

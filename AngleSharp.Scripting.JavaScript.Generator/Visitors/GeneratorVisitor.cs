@@ -7,8 +7,14 @@
 
     sealed class GeneratorVisitor : IVisitor
     {
+        #region Fields
+
         readonly List<GeneratedFile> _files;
         readonly Options _options;
+
+        #endregion
+
+        #region ctor
 
         public GeneratorVisitor(Options options)
         {
@@ -16,10 +22,16 @@
             _options = options;
         }
 
+        #endregion
+
+        #region Properties
+
         public IEnumerable<GeneratedFile> Files
         {
             get { return _files; }
         }
+
+        #endregion
 
         #region Not Implemented
 
@@ -56,7 +68,6 @@
         public void Visit(BindingClass @class)
         {
             var hasConstructor = @class.Constructors.Any();
-            var nameBuffer = new List<String>();
 
             Generate(new ClassInstanceModel
             {
@@ -66,11 +77,7 @@
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
                 GenericArguments = GenericRef(@class),
-                Fields = @class.GetAll<BindingField>().Select(m => new FieldModel 
-                { 
-                    Name = m.Key, 
-                    Value = FieldRef(m.Value) 
-                }).ToArray()
+                Fields = @class.GetAll<BindingField>().Select(m => CreateField(m.Key, m.Value)).ToArray()
             });
 
             Generate(new ClassPrototypeModel
@@ -79,36 +86,116 @@
                 Name = @class.Name,
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
-                HasConstructor = hasConstructor,
-                Prototype = "engine.Object.PrototypeObject",//TODO -- Replace with appropriate type. But where is this stored?!
-                Methods = @class.GetAll<BindingMethod>().Select(m => new MethodModel 
-                { 
-                    IsVoid = m.Value.ReturnType == typeof(void), 
-                    IsUnique = CheckUniqueness(nameBuffer, m.Value.OriginalName),
-                    Name = m.Key,
-                    OriginalName = m.Value.OriginalName,
-                    RefName = "Wrap" + m.Value.OriginalName,
-                    Parameters = m.Value.Parameters.Select(n => new ParameterModel
-                    {
-                        Converter = GetConverter(n.ValueType),
-                        Index = n.Position,
-                        IsOptional = n.IsOptional,
-                        Name = n.OriginalName
-                    }).ToArray()
-                }).ToArray()
+                Prototype = @class.Prototype,
+                Events = @class.GetAll<BindingEvent>().Select(m => CreateEvent(m.Key, m.Value)).ToArray(),
+                Properties = @class.GetAll<BindingProperty>().Select(m => CreateProperty(m.Key, m.Value)).ToArray(),
+                Methods = @class.GetAll<BindingMethod>().Select(m => CreateMethod(m.Key, m.Value)).ToArray()
             });
 
-            if (hasConstructor)
+            Generate(new ClassConstructorModel
             {
-                Generate(new ClassConstructorModel
-                {
-                    Name = @class.Name,
-                    Namespace = _options.Namespace,
-                    OriginalNamespace = @class.OriginalNamespace,
-                    OriginalName = @class.OriginalName,
-                    Parameters = Enumerable.Empty<ParameterModel>()
-                });
+                Name = @class.Name,
+                Namespace = _options.Namespace,
+                OriginalNamespace = @class.OriginalNamespace,
+                OriginalName = @class.OriginalName,
+                HasConstructor = hasConstructor,
+                Parameters = Enumerable.Empty<ParameterModel>()
+            });
+        }
+
+        EventModel CreateEvent(String name, BindingEvent @event)
+        {
+            return new EventModel
+            {
+                Name = name,
+                Converter = GetConverter(@event.HandlerType),
+                IsLenient = @event.IsLenient,
+                OriginalName = @event.OriginalName
+            };
+        }
+
+        FieldModel CreateField(String name, BindingField field)
+        {
+            return new FieldModel
+            {
+                Name = name,
+                Value = FieldRef(field)
+            };
+        }
+
+        PropertyModel CreateProperty(String name, BindingProperty property)
+        {
+            var originalName = property.OriginalName;
+            var forwardedTo = property.ForwardedTo;
+            var targetType = property.ValueType;
+            var ignoreSet = property.AllowSet == false;
+
+            if (forwardedTo != null)
+            {
+                originalName = String.Concat(originalName, ".", forwardedTo);
+                ignoreSet = false;
+                targetType = typeof(String);
             }
+
+            var getter = new MethodModel
+            {
+                Name = name,
+                OriginalName = property.OriginalName,
+                IsLenient = property.IsLenient,
+                Parameters = Enumerable.Empty<ParameterModel>(),
+                RefName = "Get" + property.OriginalName,
+                IsVoid = property.AllowGet == false
+            };
+
+            var setter = new MethodModel
+            {
+                Name = name,
+                OriginalName = originalName,
+                IsLenient = property.IsLenient,
+                Parameters = new []
+                {
+                    new ParameterModel 
+                    {
+                        Converter = GetConverter(targetType),
+                        Index = 0,
+                        IsOptional = false,
+                        Name = "value"
+                    }
+                },
+                RefName = "Set" + property.OriginalName,
+                IsVoid = ignoreSet
+            };
+
+            return new PropertyModel
+            {
+                Name = name,
+                Getter = getter,
+                Setter = setter
+            };
+        }
+
+        MethodModel CreateMethod(String name, BindingMethod method)
+        {
+            return new MethodModel
+            {
+                Name = name,
+                IsVoid = method.ReturnType == typeof(void),
+                OriginalName = method.OriginalName,
+                RefName = method.OriginalName,
+                IsLenient = method.IsLenient,
+                Parameters = method.Parameters.Select(CreateParameter).ToArray()
+            };
+        }
+
+        ParameterModel CreateParameter(BindingParameter parameter)
+        {
+            return new ParameterModel
+            {
+                Converter = GetConverter(parameter.ValueType),
+                Index = parameter.Position,
+                IsOptional = parameter.IsOptional,
+                Name = parameter.OriginalName
+            };
         }
 
         void Generate(ClassInstanceModel model)
@@ -152,17 +239,6 @@
         static String FieldRef(BindingField field)
         {
             return String.Concat("(UInt32)(", field.ValueType.FullName, ".", field.OriginalName, ")");
-        }
-
-        static Boolean CheckUniqueness(List<String> buffer, String name)
-        {
-            if (buffer.Contains(name) == false)
-            {
-                buffer.Add(name);
-                return true;
-            }
-
-            return false;
         }
 
         String GetConverter(Type type)
