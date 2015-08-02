@@ -151,5 +151,12 @@
             Assert.AreEqual("Clicked", click.Value.OriginalName);
             Assert.AreEqual(typeof(DomEventHandler), click.Value.HandlerType);
         }
+
+        [Test]
+        public void GeneratingFilesShouldYieldSome()
+        {
+            var files = Files.Generate();
+            Assert.IsTrue(files.Any());
+        }
     }
 }
