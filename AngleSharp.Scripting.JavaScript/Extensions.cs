@@ -45,9 +45,9 @@
             return new ClrFunctionInstance(engine, func);
         }
 
-        public static PropertyDescriptor Wrap(this Engine engine, Func<JsValue, JsValue[], JsValue> getter, Func<JsValue, JsValue[], JsValue> setter)
+        public static PropertyDescriptor Wrap(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter)
         {
-            return new PropertyDescriptor(engine.Wrap(getter), engine.Wrap(setter), true, true);
+            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
         }
 
         public static Object FromJsValue(this JsValue val)
