@@ -19,12 +19,21 @@
             _specials = new List<KeyValuePair<Accessors, BindingMember>>();
             _constructors = new List<BindingConstructor>();
             _genericArguments = new List<Type>();
-            BaseName = baseName;
+            BaseName = baseName ?? typeof(Object).Name;
+            Prototype = baseName != null ?
+                String.Concat("InstanceCache.", baseName, ".PrototypeObject") :
+                "engine.Object.PrototypeObject";
         }
 
         public Boolean IsGeneric
         {
             get { return _genericArguments.Count > 0; }
+        }
+
+        public String Prototype
+        {
+            get;
+            private set;
         }
 
         public String BaseName 

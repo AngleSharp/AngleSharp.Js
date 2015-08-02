@@ -56,6 +56,7 @@
         {
             return new BindingMethod(
                 originalName: methodInfo.Name,
+                isLenient: methodInfo.HasLenientThis(),
                 returnType: methodInfo.ReturnType).With(
                 methodInfo.GetParameters());
         }
