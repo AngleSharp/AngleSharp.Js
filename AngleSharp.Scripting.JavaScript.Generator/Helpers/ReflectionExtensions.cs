@@ -26,7 +26,7 @@
             return Enumerable.Empty<Accessors>();
         }
 
-        public static Boolean IsConstructorExposed(this MemberInfo member)
+        public static Boolean IsConstructorExposed(this ConstructorInfo member)
         {
             return member.GetCustomAttribute<DomConstructorAttribute>(inherit: false) != null;
         }
@@ -36,10 +36,21 @@
             return member.GetCustomAttribute<DomLenientThisAttribute>(inherit: false) != null;
         }
 
-        public static String GetPutForwardsTo(this MemberInfo member)
+        public static String GetPutForwardsTo(this PropertyInfo member)
         {
             var attr = member.GetCustomAttribute<DomPutForwardsAttribute>(inherit: false);
-            return attr != null ? attr.PropertyName : null;
+
+            if (attr != null)
+            {
+                var target = member.PropertyType.GetProperties().
+                                    Where(m => m.GetDomNames().Contains(attr.PropertyName)).
+                                    FirstOrDefault();
+
+                if (target != null)
+                    return target.Name;
+            }
+
+            return null;
         }
 
         public static IEnumerable<String> GetDomNames(this MemberInfo member)
