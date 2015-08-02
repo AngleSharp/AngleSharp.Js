@@ -77,6 +77,9 @@
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
                 GenericArguments = GenericRef(@class),
+                Getters = @class.Getters.Select(CreateMethod).ToArray(),
+                Setters = @class.Setters.Select(CreateMethod).ToArray(),
+                Deleters = @class.Deleters.Select(CreateMethod).ToArray(),
                 Fields = @class.GetAll<BindingField>().Select(m => CreateField(m.Key, m.Value)).ToArray()
             });
 
@@ -171,6 +174,19 @@
                 Name = name,
                 Getter = getter,
                 Setter = setter
+            };
+        }
+
+        MethodModel CreateMethod(BindingMember method)
+        {
+            return new MethodModel
+            {
+                Name = String.Empty,
+                IsVoid = true,
+                OriginalName = method.OriginalName,
+                RefName = method.OriginalName,
+                IsLenient = true,
+                Parameters = Enumerable.Empty<ParameterModel>()
             };
         }
 

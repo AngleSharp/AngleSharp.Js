@@ -46,6 +46,24 @@
             get;
             set;
         }
+
+        public IEnumerable<MethodModel> Getters
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<MethodModel> Setters
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<MethodModel> Deleters
+        {
+            get;
+            set;
+        }
     }
 
     partial class ClassInstance

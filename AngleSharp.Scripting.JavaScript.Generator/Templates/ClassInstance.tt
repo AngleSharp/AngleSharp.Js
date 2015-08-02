@@ -37,6 +37,39 @@ namespace <#= Model.Namespace #>
         {
             get { return "<#= Model.Name #>"; }
         }
+<# if (Model.Getters.Any()) { #>
+        
+        public override JsValue Get(String propertyName)
+        {
+<# foreach (var method in Model.Getters) { #>
+            //TODO
+            return Engine.Select(Ref<#= Model.OriginalName #>[propertyName]);
+<# } #>
+            return base.Get(propertyName);
+        }
+
+<# } #>
+<# if (Model.Setters.Any()) { #>
+        
+        public override void Put(String propertyName, JsValue value, Boolean throwOnError)
+        {
+<# foreach (var method in Model.Setters) { #>
+            //TODO
+            Ref<#= Model.OriginalName #>[propertyName] = <#= method.Converter #>(value);
+<# } #>
+            base.Put(propertyName, value, throwOnError);
+        }
+
+<# } #>
+<# if (Model.Deleters.Any()) { #>
+        
+        public override Boolean Delete(String propertyName, Boolean throwOnError)
+        {
+<# foreach (var method in Model.Deleters) { #>
+            Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+<# } #>
+        }
+<# } #>
 
         public <#= Model.OriginalName #><#= Model.GenericArguments #> Ref<#= Model.OriginalName #>
         {
