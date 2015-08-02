@@ -26,11 +26,11 @@ namespace <#= Model.Namespace #>
             private set; 
         }
 
-        public static <#= Model.Name #>Constructor CreateConstructor(Engine engine)
+        public static <#= Model.Name #>Constructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new <#= Model.Name #>Constructor(engine);
+            var obj = new <#= Model.Name #>Constructor(engine.Jint);
             obj.Extensible = true;
-            obj.Prototype = engine.Function.PrototypeObject;
+            obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = <#= Model.Name #>Prototype.CreatePrototypeObject(engine, obj);
             obj.FastAddProperty("length", <#= Model.ConstructorLength #>, false, false, false);
             obj.FastAddProperty("prototype", obj.PrototypeObject, false, false, false);
@@ -45,7 +45,7 @@ namespace <#= Model.Namespace #>
         public ObjectInstance Construct(JsValue[] arguments)
         {
 <# foreach (var constructor in Model.Constructors) { #>
-            if (arguments.Length == constructor.Parameters.Length)
+            if (arguments.Length == <#= constructor.Parameters.Count() #>)
             {
 <# foreach (var parameter in constructor.Parameters) { #>
                 var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
@@ -54,7 +54,7 @@ namespace <#= Model.Namespace #>
                 return new <#= Model.Name #>Instance(Engine)
                 {
                     Prototype = PrototypeObject,
-                    Ref = reference,
+                    Ref<#= Model.Name #> = reference,
                     Extensible = true
                 };
             }

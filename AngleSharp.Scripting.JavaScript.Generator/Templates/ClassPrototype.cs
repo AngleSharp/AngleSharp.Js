@@ -73,7 +73,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("Prototype CreatePrototypeObject(Engine engine, ");
+            this.Write("Prototype CreatePrototypeObject(EngineInstance engine, ");
             
             #line 23 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
@@ -87,7 +87,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("Prototype(engine)\r\n            {\r\n                Prototype = ");
+            this.Write("Prototype(engine.Jint)\r\n            {\r\n                Prototype = ");
             
             #line 27 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Prototype));

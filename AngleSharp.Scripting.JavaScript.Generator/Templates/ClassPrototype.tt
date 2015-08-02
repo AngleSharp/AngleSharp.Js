@@ -20,9 +20,9 @@ namespace <#= Model.Namespace #>
         {
         }
 
-        public static <#= Model.Name #>Prototype CreatePrototypeObject(Engine engine, <#= Model.Name #>Constructor constructor)
+        public static <#= Model.Name #>Prototype CreatePrototypeObject(EngineInstance engine, <#= Model.Name #>Constructor constructor)
         {
-            var obj = new <#= Model.Name #>Prototype(engine)
+            var obj = new <#= Model.Name #>Prototype(engine.Jint)
             {
                 Prototype = <#= Model.Prototype #>,
                 Extensible = true,

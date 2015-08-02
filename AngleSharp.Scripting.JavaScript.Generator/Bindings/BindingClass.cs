@@ -21,8 +21,8 @@
             _genericArguments = new List<Type>();
             BaseName = baseName ?? typeof(Object).Name;
             Prototype = baseName != null ?
-                String.Concat("InstanceCache.", baseName, ".PrototypeObject") :
-                "engine.Object.PrototypeObject";
+                String.Concat("engine.InstanceCache.", baseName, ".PrototypeObject") :
+                "engine.Jint.Object.PrototypeObject";
         }
 
         public Boolean IsGeneric
@@ -58,7 +58,7 @@
             return _members.Select(m => new KeyValuePair<String, T>(m.Key, m.Value as T)).Where(m => m.Value != null);
         }
 
-        public IEnumerable<BindingMember> Constructors
+        public IEnumerable<BindingConstructor> Constructors
         {
             get { return _constructors; }
         }

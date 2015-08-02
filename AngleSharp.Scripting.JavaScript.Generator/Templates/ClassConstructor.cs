@@ -74,16 +74,17 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("Constructor CreateConstructor(Engine engine)\r\n        {\r\n            var obj = ne" +
-                    "w ");
+            this.Write("Constructor CreateConstructor(EngineInstance engine)\r\n        {\r\n            var " +
+                    "obj = new ");
             
             #line 31 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
             #line hidden
-            this.Write("Constructor(engine);\r\n            obj.Extensible = true;\r\n            obj.Prototy" +
-                    "pe = engine.Function.PrototypeObject;\r\n            obj.PrototypeObject = ");
+            this.Write("Constructor(engine.Jint);\r\n            obj.Extensible = true;\r\n            obj.Pr" +
+                    "ototype = engine.Jint.Function.PrototypeObject;\r\n            obj.PrototypeObject" +
+                    " = ");
             
             #line 34 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
@@ -117,8 +118,14 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("            if (arguments.Length == constructor.Parameters.Length)\r\n            {" +
-                    "\r\n");
+            this.Write("            if (arguments.Length == ");
+            
+            #line 48 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(constructor.Parameters.Count()));
+            
+            #line default
+            #line hidden
+            this.Write(")\r\n            {\r\n");
             
             #line 50 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
  foreach (var parameter in constructor.Parameters) { 
@@ -175,8 +182,15 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             #line default
             #line hidden
             this.Write("Instance(Engine)\r\n                {\r\n                    Prototype = PrototypeObj" +
-                    "ect,\r\n                    Ref = reference,\r\n                    Extensible = tru" +
-                    "e\r\n                };\r\n            }\r\n");
+                    "ect,\r\n                    Ref");
+            
+            #line 57 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
+            
+            #line default
+            #line hidden
+            this.Write(" = reference,\r\n                    Extensible = true\r\n                };\r\n       " +
+                    "     }\r\n");
             
             #line 61 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
  } 
