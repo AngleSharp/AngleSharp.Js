@@ -32,7 +32,7 @@ namespace <#= Model.Namespace #>
             obj.Extensible = true;
             obj.Prototype = engine.Function.PrototypeObject;
             obj.PrototypeObject = <#= Model.Name #>Prototype.CreatePrototypeObject(engine, obj);
-            obj.FastAddProperty("length", <#= Model.Constructors.Select(m => m.Parameters.Count()).Max() #>, false, false, false);
+            obj.FastAddProperty("length", <#= Model.ConstructorLength #>, false, false, false);
             obj.FastAddProperty("prototype", obj.PrototypeObject, false, false, false);
             return obj;
         }

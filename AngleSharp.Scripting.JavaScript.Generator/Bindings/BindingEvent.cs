@@ -1,21 +1,18 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
-    using System.Collections.Generic;
 
     sealed class BindingEvent : BindingMember
     {
         public BindingEvent(String originalName, Type handlerType, Boolean isLenient = false)
-            : base(originalName)
+            : base(originalName, handlerType)
         {
-            HandlerType = handlerType;
             IsLenient = isLenient;
         }
 
-        public Type HandlerType 
-        { 
-            get; 
-            private set; 
+        public Type HandlerType
+        {
+            get { return Type; }
         }
 
         public Boolean IsLenient 

@@ -7,8 +7,8 @@
     {
         readonly List<BindingParameter> _parameters;
 
-        public BindingFunction(String originalName)
-            : base(originalName)
+        public BindingFunction(String originalName, Type type)
+            : base(originalName, type)
         {
             _parameters = new List<BindingParameter>();
         }

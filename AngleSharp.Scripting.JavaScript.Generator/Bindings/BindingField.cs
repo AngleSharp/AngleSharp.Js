@@ -1,20 +1,17 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
-    using System.Collections.Generic;
 
     sealed class BindingField : BindingMember
     {
         public BindingField(String originalName, Type valueType)
-            : base(originalName)
+            : base(originalName, valueType)
         {
-            ValueType = valueType;
         }
 
         public Type ValueType
         {
-            get;
-            private set;
+            get { return Type; }
         }
 
         public override void Accept(IVisitor visitor)

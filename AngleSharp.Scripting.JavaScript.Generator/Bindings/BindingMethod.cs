@@ -5,16 +5,14 @@
     sealed class BindingMethod : BindingFunction
     {
         public BindingMethod(String originalName, Type returnType, Boolean isLenient = false)
-            : base(originalName)
+            : base(originalName, returnType)
         {
-            ReturnType = returnType;
             IsLenient = isLenient;
         }
 
         public Type ReturnType 
-        { 
-            get; 
-            private set; 
+        {
+            get { return Type; }
         }
 
         public Boolean IsLenient

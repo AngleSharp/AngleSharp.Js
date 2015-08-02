@@ -185,7 +185,16 @@
                 OriginalName = member.OriginalName,
                 RefName = member.OriginalName,
                 IsLenient = true,
-                Parameters = Enumerable.Empty<ParameterModel>()
+                Parameters = new[] 
+                { 
+                    new ParameterModel
+                    {
+                        Name = "value",
+                        Converter = GetConverter(member.Type),
+                        Index = 0,
+                        IsOptional = false
+                    }
+                }
             };
         }
 

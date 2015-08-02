@@ -5,17 +5,15 @@
     sealed class BindingParameter : BindingMember
     {
         public BindingParameter(String originalName, Type valueType, Int32 position, Boolean optional = false)
-            : base(originalName)
+            : base(originalName, valueType)
         {
-            ValueType = valueType;
             Position = position;
             IsOptional = optional;
         }
 
         public Type ValueType
         {
-            get;
-            private set;
+            get { return Type; }
         }
 
         public Boolean IsOptional

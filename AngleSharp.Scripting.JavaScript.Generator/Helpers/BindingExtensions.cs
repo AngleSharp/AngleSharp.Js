@@ -1,6 +1,5 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
-    using AngleSharp.Attributes;
     using System;
     using System.Collections.Generic;
     using System.Reflection;
@@ -40,7 +39,8 @@
         public static BindingConstructor CreateConstructorBinding(this ConstructorInfo constructorInfo)
         {
             return new BindingConstructor(
-                originalName: constructorInfo.DeclaringType.Name).With(
+                originalName: constructorInfo.DeclaringType.Name,
+                type: constructorInfo.DeclaringType).With(
                 constructorInfo.GetParameters());
         }
 

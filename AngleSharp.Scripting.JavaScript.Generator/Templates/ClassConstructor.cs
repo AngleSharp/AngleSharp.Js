@@ -94,7 +94,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
                     "ength\", ");
             
             #line 35 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Model.Constructors.Select(m => m.Parameters.Count()).Max()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(Model.ConstructorLength));
             
             #line default
             #line hidden

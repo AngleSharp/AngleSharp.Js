@@ -1,24 +1,21 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
-    using System.Collections.Generic;
 
     sealed class BindingProperty : BindingMember
     {
         public BindingProperty(String originalName, Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false, String forwardedTo = null)
-            : base(originalName)
+            : base(originalName, valueType)
         {
             AllowGet = canRead;
             AllowSet = canWrite;
             IsLenient = isLenient;
             ForwardedTo = forwardedTo;
-            ValueType = valueType;
         }
 
         public Type ValueType
         {
-            get;
-            private set;
+            get { return Type; }
         }
 
         public Boolean AllowGet 

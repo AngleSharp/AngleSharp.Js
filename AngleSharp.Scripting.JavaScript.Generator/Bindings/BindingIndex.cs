@@ -5,18 +5,16 @@
     sealed class BindingIndex : BindingFunction
     {
         public BindingIndex(Type valueType, Boolean canRead = false, Boolean canWrite = false, Boolean isLenient = false)
-            : base(String.Empty)
+            : base(String.Empty, valueType)
         {
             AllowGet = canRead;
             AllowSet = canWrite;
             IsLenient = isLenient;
-            ValueType = valueType;
         }
 
         public Type ValueType 
-        { 
-            get; 
-            private set;
+        {
+            get { return Type; }
         }
 
         public Boolean AllowGet

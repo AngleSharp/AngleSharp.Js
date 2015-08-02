@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public class ClassConstructorModel
     {
@@ -9,6 +10,17 @@
         {
             get;
             set;
+        }
+
+        public Int32 ConstructorLength
+        {
+            get
+            {
+                if (Constructors.Any() == false)
+                    return 0;
+
+                return Constructors.Select(m => m.Parameters.Count()).Max();
+            }
         }
 
         public String OriginalNamespace
