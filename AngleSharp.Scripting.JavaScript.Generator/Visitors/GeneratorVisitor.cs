@@ -103,7 +103,8 @@
                 Namespace = _options.Namespace,
                 OriginalNamespace = @class.OriginalNamespace,
                 OriginalName = @class.OriginalName,
-                Constructors = @class.Constructors.Select(CreateMethod).ToArray()
+                Constructors = @class.Constructors.Select(CreateMethod).ToArray(),
+                Constants = @class.GetAll<BindingField>().Select(m => CreateField(m.Key, m.Value)).ToArray()
             });
 
             _names.Add(@class.Name);

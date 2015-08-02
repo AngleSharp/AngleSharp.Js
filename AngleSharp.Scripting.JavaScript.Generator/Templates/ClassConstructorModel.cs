@@ -46,6 +46,12 @@
             get; 
             set; 
         }
+
+        public IEnumerable<FieldModel> Constants
+        {
+            get;
+            set;
+        }
     }
 
     partial class ClassConstructor
