@@ -16,7 +16,7 @@
                 
                 if (type.IsNotInterfaced())
                     continue;
-
+                
                 var binding = new BindingClass(name, type.Name.Replace("`1", ""), type.Namespace, type.ResolveBase());
 
                 if (type.IsGenericType)
@@ -59,7 +59,7 @@
                         return name;
                 }
 
-                return typeof(Object).Name;
+                return null;
             }
 
             return name;
