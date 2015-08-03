@@ -176,5 +176,34 @@
             Assert.IsNull(data.Value.ForwardedTo);
             Assert.AreEqual("Data", data.Value.OriginalName);
         }
+
+        [Test]
+        public void DependencyTreeWithHoles()
+        {
+            var tree = new DependencyTree<Int32>();
+            tree.Include(1, 0);
+            tree.Include(2, 1);
+            tree.Include(-1, 0);
+            tree.Include(20, 10);
+            tree.Include(30, 20);
+            tree.Include(300, 200);
+            tree.Include(200, 100);
+            tree.Include(100, 0);
+
+            var controllers = tree.Controllers().ToArray();
+
+            Assert.AreEqual(2, controllers.Length);
+            Assert.AreEqual(0, controllers[0]);
+            Assert.AreEqual(10, controllers[1]);
+
+            var zeros = tree.Dependencies(0).ToArray();
+            var tens = tree.Dependencies(10).ToArray();
+
+            Assert.AreEqual(7, zeros.Length);
+            Assert.AreEqual(3, tens.Length);
+
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, -1, 100, 200, 300 }, zeros);
+            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, tens);
+        }
     }
 }
