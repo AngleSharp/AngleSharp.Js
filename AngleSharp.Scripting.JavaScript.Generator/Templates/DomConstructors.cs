@@ -18,9 +18,9 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+    #line 1 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "12.0.0.0")]
-    public partial class InstanceCache : InstanceCacheBase
+    public partial class DomConstructors : DomConstructorsBase
     {
 #line hidden
         /// <summary>
@@ -30,64 +30,64 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
         {
             this.Write("namespace ");
             
-            #line 5 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 5 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Namespace));
             
             #line default
             #line hidden
-            this.Write("\r\n{\r\n    partial class InstanceCache\r\n    {\r\n        public InstanceCache(EngineI" +
+            this.Write("\r\n{\r\n    partial class DomConstructors\r\n    {\r\n        partial void Setup(EngineI" +
                     "nstance engine)\r\n        {\r\n");
             
-            #line 11 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 11 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
  foreach (var name in Model.Constructors) { 
             
             #line default
             #line hidden
             this.Write("            ");
             
-            #line 12 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 12 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(name));
             
             #line default
             #line hidden
             this.Write(" = ");
             
-            #line 12 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 12 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(name));
             
             #line default
             #line hidden
             this.Write("Constructor.CreateConstructor(engine);\r\n");
             
-            #line 13 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 13 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
  } 
             
             #line default
             #line hidden
-            this.Write("        }\r\n\r\n");
+            this.Write("        }\r\n");
             
-            #line 16 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 15 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
  foreach (var name in Model.Constructors) { 
             
             #line default
             #line hidden
-            this.Write("        public ");
+            this.Write("\r\n        public ");
             
-            #line 17 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 17 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(name));
             
             #line default
             #line hidden
             this.Write("Constructor ");
             
-            #line 17 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 17 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(name));
             
             #line default
             #line hidden
             this.Write("\r\n        {\r\n            get;\r\n            private set;\r\n        }\r\n");
             
-            #line 22 "D:\Code\Libraries\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\InstanceCache.tt"
+            #line 22 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\DomConstructors.tt"
  } 
             
             #line default
@@ -104,7 +104,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
     /// Base class for this transformation
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "12.0.0.0")]
-    public class InstanceCacheBase
+    public class DomConstructorsBase
     {
         #region Fields
         private global::System.Text.StringBuilder generationEnvironmentField;

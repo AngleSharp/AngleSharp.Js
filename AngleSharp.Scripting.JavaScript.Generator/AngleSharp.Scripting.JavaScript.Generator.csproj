@@ -84,12 +84,12 @@
     <Compile Include="Templates\EventModel.cs" />
     <Compile Include="Templates\Extensions.cs" />
     <Compile Include="Templates\FieldModel.cs" />
-    <Compile Include="Templates\InstanceCache.cs">
+    <Compile Include="Templates\DomConstructors.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>InstanceCache.tt</DependentUpon>
+      <DependentUpon>DomConstructors.tt</DependentUpon>
     </Compile>
-    <Compile Include="Templates\InstanceCacheModel.cs" />
+    <Compile Include="Templates\DomConstructorsModel.cs" />
     <Compile Include="Templates\MethodModel.cs" />
     <Compile Include="Templates\ParameterModel.cs" />
     <Compile Include="Templates\PropertyModel.cs" />
@@ -121,9 +121,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Templates\InstanceCache.tt">
+    <Content Include="Templates\DomConstructors.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>InstanceCache.cs</LastGenOutput>
+      <LastGenOutput>DomConstructors.cs</LastGenOutput>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

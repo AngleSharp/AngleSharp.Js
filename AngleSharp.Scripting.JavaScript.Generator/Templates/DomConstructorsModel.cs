@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    public class InstanceCacheModel
+    public class DomConstructorsModel
     {
         public String Namespace
         {
@@ -18,14 +18,14 @@
         }
     }
 
-    partial class InstanceCache
+    partial class DomConstructors
     {
-        public InstanceCache(InstanceCacheModel model)
+        public DomConstructors(DomConstructorsModel model)
         {
             Model = model;
         }
 
-        public InstanceCacheModel Model
+        public DomConstructorsModel Model
         {
             get;
             private set;

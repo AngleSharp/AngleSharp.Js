@@ -233,18 +233,18 @@
 
         public void GenerateAuxiliary()
         {
-            Generate(new InstanceCacheModel
+            Generate(new DomConstructorsModel
             {
                 Namespace = _options.Namespace,
                 Constructors = _names
             });
         }
 
-        void Generate(InstanceCacheModel model)
+        void Generate(DomConstructorsModel model)
         {
-            var template = new InstanceCache(model);
+            var template = new DomConstructors(model);
             var content = template.TransformText();
-            var fileName = String.Concat("InstanceCache", _options.Extension);
+            var fileName = String.Concat("DomConstructors", _options.Extension);
             _files.Add(new GeneratedFile(content, fileName));
         }
 

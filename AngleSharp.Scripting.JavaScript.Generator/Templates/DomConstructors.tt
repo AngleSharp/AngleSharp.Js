@@ -4,16 +4,16 @@
 <#@ import namespace="System.Collections.Generic" #>
 namespace <#= Model.Namespace #>
 {
-    partial class InstanceCache
+    partial class DomConstructors
     {
-        public InstanceCache(EngineInstance engine)
+        partial void Setup(EngineInstance engine)
         {
 <# foreach (var name in Model.Constructors) { #>
             <#= name #> = <#= name #>Constructor.CreateConstructor(engine);
 <# } #>
         }
-
 <# foreach (var name in Model.Constructors) { #>
+
         public <#= name #>Constructor <#= name #>
         {
             get;
