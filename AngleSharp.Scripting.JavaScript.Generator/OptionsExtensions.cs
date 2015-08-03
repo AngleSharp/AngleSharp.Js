@@ -1,6 +1,8 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
+    using AngleSharp.Dom.Html;
     using AngleSharp.Dom.Media;
     using System;
     using System.Collections.Generic;
@@ -22,12 +24,33 @@
         public static Options UseDomConverters(this Options options)
         {
             options.TypeConverters.Add(typeof(DomEventHandler), "DomTypeConverter.ToEventHandler");
+            options.TypeConverters.Add(typeof(MutationCallback), "DomTypeConverter.ToMutationCallback");
             options.TypeConverters.Add(typeof(IElement), "DomTypeConverter.ToElement");
+            options.TypeConverters.Add(typeof(IHtmlElement), "DomTypeConverter.ToHtmlElement");
+            options.TypeConverters.Add(typeof(IHtmlOptionElement), "DomTypeConverter.ToOptionElement");
+            options.TypeConverters.Add(typeof(IHtmlTableCaptionElement), "DomTypeConverter.ToTableCaptionElement");
+            options.TypeConverters.Add(typeof(IHtmlTableSectionElement), "DomTypeConverter.ToTableSectionElement");
             options.TypeConverters.Add(typeof(INode), "DomTypeConverter.ToNode");
             options.TypeConverters.Add(typeof(INode[]), "DomTypeConverter.ToNodeArray");
+            options.TypeConverters.Add(typeof(IEventTarget), "DomTypeConverter.ToEventTarget");
             options.TypeConverters.Add(typeof(Action<IWindow>), "DomTypeConverter.ToTimer");
             options.TypeConverters.Add(typeof(IRenderingContext), "DomTypeConverter.ToRenderingContext");
             options.TypeConverters.Add(typeof(IWindow), "DomTypeConverter.ToWindow");
+            options.TypeConverters.Add(typeof(IDocumentType), "DomTypeConverter.ToDoctype");
+            options.TypeConverters.Add(typeof(IHtmlMenuElement), "DomTypeConverter.ToMenuElement");
+            options.TypeConverters.Add(typeof(IHtmlOptionsGroupElement), "DomTypeConverter.ToOptionsGroupElement");
+            options.TypeConverters.Add(typeof(ITouchList), "DomTypeConverter.ToTouchList");
+            options.TypeConverters.Add(typeof(IRange), "DomTypeConverter.ToRange");
+            options.TypeConverters.Add(typeof(AdjacentPosition), "DomTypeConverter.ToAdjacentPosition");
+            options.TypeConverters.Add(typeof(RangeType), "DomTypeConverter.ToRangeType");
+            options.TypeConverters.Add(typeof(WheelMode), "DomTypeConverter.ToWheelMode");
+            options.TypeConverters.Add(typeof(MouseButton), "DomTypeConverter.ToMouseButton");
+            options.TypeConverters.Add(typeof(KeyboardLocation), "DomTypeConverter.ToKeyboardLocation");
+            options.TypeConverters.Add(typeof(TextTrackMode), "DomTypeConverter.ToTextTrackMode");
+            options.TypeConverters.Add(typeof(ITextTrackCue), "DomTypeConverter.ToTextTrackCue");
+            options.TypeConverters.Add(typeof(Event), "DomTypeConverter.ToEvent");
+            options.TypeConverters.Add(typeof(DomException), "DomTypeConverter.ToDomException");
+            options.TypeConverters.Add(typeof(IMessagePort), "DomTypeConverter.ToMessagePort");
             return options;
         }
 
@@ -35,6 +58,10 @@
         {
             options.TypeConverters.Add(typeof(IDictionary<String, Object>), "SystemTypeConverter.ToObjBag");
             options.TypeConverters.Add(typeof(Action<Stream>), "SystemTypeConverter.ToStreamTask");
+            options.TypeConverters.Add(typeof(Nullable<Int32>), "SystemTypeConverter.ToOptionalInt32");
+            options.TypeConverters.Add(typeof(Nullable<DateTime>), "SystemTypeConverter.ToOptionalDateTime");
+            options.TypeConverters.Add(typeof(Object), "SystemTypeConverter.ToObject");
+            options.TypeConverters.Add(typeof(String[]), "SystemTypeConverter.ToStringArray");
             return options;
         }
     }
