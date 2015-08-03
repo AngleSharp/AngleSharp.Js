@@ -102,10 +102,10 @@
 
             public IEnumerable<T> GetAll()
             {
-                yield return Dependency;
-
                 foreach (var child in Children)
                 {
+                    yield return child.Dependency;
+
                     foreach (var dependency in child.GetAll())
                         yield return dependency;
                 }

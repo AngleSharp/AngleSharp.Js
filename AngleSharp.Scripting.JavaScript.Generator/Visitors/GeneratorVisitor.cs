@@ -232,7 +232,7 @@
             Generate(new DomConstructorsModel
             {
                 Namespace = _options.Namespace,
-                Constructors = _names.Controllers().SelectMany(_names.Dependencies)
+                Constructors = _names.Dependencies(typeof(Object).Name).ToArray()
             });
         }
 
