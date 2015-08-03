@@ -16,7 +16,7 @@ function Run-Generator() {
 	Write-Host "Checking destination folder ..."
 
     $projectPath = [System.IO.Path]::GetDirectoryName($project.FullName)
-	$destination = (Join-Path $projectpath "Bindings")
+	$destination = (Join-Path $projectpath "Dom")
 	$result = (New-Item -ItemType Directory -Force -Path $destination)
 
 	Write-Host "Generating JavaScript binders ..."
