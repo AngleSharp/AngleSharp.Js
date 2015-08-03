@@ -3,6 +3,7 @@
     using AngleSharp.Dom;
     using AngleSharp.Dom.Css;
     using AngleSharp.Dom.Events;
+    using AngleSharp.Dom.Html;
     using AngleSharp.Scripting.JavaScript.Generator;
     using NUnit.Framework;
     using System;
@@ -221,6 +222,19 @@
             Assert.AreEqual(1, append.Value.Parameters.Count());
             Assert.AreEqual(typeof(INode), append.Value.Parameters.First().Type);
             Assert.IsTrue(append.Value.Parameters.First().IsParams);
+        }
+
+        [Test]
+        public void HtmlElementShouldNotDuplicateParentNodeMethods()
+        {
+            var name = "HTMLElement";
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, List<Type>>
+            {
+                { name, ListOf(typeof(IHtmlElement)) }
+            }).First() as BindingClass;
+            var bindingMethods = binding.GetAll<BindingMethod>();
+            var appends = bindingMethods.Count(m => m.Key == "append");
+            Assert.AreEqual(0, appends);
         }
     }
 }
