@@ -303,8 +303,17 @@
                 return converter;
             else if (type.IsGenericType && _options.TypeConverters.TryGetValue(type.GetGenericTypeDefinition(), out converter))
                 return converter;
+            else if (type.IsGenericType)
+                return GetGenericConverter(type, type.GenericTypeArguments);
 
             return String.Concat("UnresolvedConverter.To<", type.FullName, ">");
+        }
+
+        static String GetGenericConverter(Type type, Type[] arguments)
+        {
+            var name = type.FullName.Replace("`1", "");
+            var args = String.Join(", ", arguments.Select(m => m.FullName));
+            return String.Concat("UnresolvedConverter.To<", name, "<", args, ">>");
         }
 
         #endregion
