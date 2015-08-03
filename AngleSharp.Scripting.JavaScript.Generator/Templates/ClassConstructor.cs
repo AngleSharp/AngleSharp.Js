@@ -59,9 +59,37 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             #line default
             #line hidden
             this.Write("Constructor(Engine engine)\r\n            : base(engine, null, null, false)\r\n      " +
-                    "  {\r\n        }\r\n\r\n        public ");
+                    "  {\r\n");
+            
+            #line 21 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+ foreach (var constant in Model.Constants) { 
+            
+            #line default
+            #line hidden
+            this.Write("            obj.FastAddProperty(\"");
+            
+            #line 22 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(constant.Name));
+            
+            #line default
+            #line hidden
+            this.Write("\", ");
+            
+            #line 22 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(constant.Value));
+            
+            #line default
+            #line hidden
+            this.Write(", false, false, false);\r\n");
             
             #line 23 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write("        }\r\n\r\n        public ");
+            
+            #line 26 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
@@ -69,7 +97,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             this.Write("Prototype PrototypeObject \r\n        { \r\n            get; \r\n            private se" +
                     "t; \r\n        }\r\n\r\n        public static ");
             
-            #line 29 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 32 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
@@ -77,7 +105,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             this.Write("Constructor CreateConstructor(EngineInstance engine)\r\n        {\r\n            var " +
                     "obj = new ");
             
-            #line 31 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 34 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
@@ -86,7 +114,7 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
                     "ototype = engine.Jint.Function.PrototypeObject;\r\n            obj.PrototypeObject" +
                     " = ");
             
-            #line 34 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 37 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.Name));
             
             #line default
@@ -94,41 +122,14 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             this.Write("Prototype.CreatePrototypeObject(engine, obj);\r\n            obj.FastAddProperty(\"l" +
                     "ength\", ");
             
-            #line 35 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
+            #line 38 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Model.ConstructorLength));
             
             #line default
             #line hidden
-            this.Write(", false, false, false);\r\n            obj.FastAddProperty(\"prototype\", obj.Prototy" +
-                    "peObject, false, false, false);\r\n");
-            
-            #line 37 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
- foreach (var constant in Model.Constants) { 
-            
-            #line default
-            #line hidden
-            this.Write("            obj.FastAddProperty(\"");
-            
-            #line 38 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(constant.Name));
-            
-            #line default
-            #line hidden
-            this.Write("\", ");
-            
-            #line 38 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(constant.Value));
-            
-            #line default
-            #line hidden
-            this.Write(", false, false, false);\r\n");
-            
-            #line 39 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassConstructor.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write(@"            return obj;
+            this.Write(@", false, false, false);
+            obj.FastAddProperty(""prototype"", obj.PrototypeObject, false, false, false);
+            return obj;
         }
 
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)

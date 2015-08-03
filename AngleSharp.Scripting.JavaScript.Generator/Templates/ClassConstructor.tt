@@ -18,6 +18,9 @@ namespace <#= Model.Namespace #>
         public <#= Model.Name #>Constructor(Engine engine)
             : base(engine, null, null, false)
         {
+<# foreach (var constant in Model.Constants) { #>
+            obj.FastAddProperty("<#= constant.Name #>", <#= constant.Value #>, false, false, false);
+<# } #>
         }
 
         public <#= Model.Name #>Prototype PrototypeObject 
@@ -34,9 +37,6 @@ namespace <#= Model.Namespace #>
             obj.PrototypeObject = <#= Model.Name #>Prototype.CreatePrototypeObject(engine, obj);
             obj.FastAddProperty("length", <#= Model.ConstructorLength #>, false, false, false);
             obj.FastAddProperty("prototype", obj.PrototypeObject, false, false, false);
-<# foreach (var constant in Model.Constants) { #>
-            obj.FastAddProperty("<#= constant.Name #>", <#= constant.Value #>, false, false, false);
-<# } #>
             return obj;
         }
 

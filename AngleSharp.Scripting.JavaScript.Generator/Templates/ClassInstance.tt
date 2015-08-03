@@ -16,6 +16,9 @@ namespace <#= Model.Namespace #>
         public <#= Model.Name #>Instance(Engine engine)
             : base(engine)
         {
+<# foreach (var field in Model.Fields) { #>
+            FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
+<# } #>
         }
 
         public static <#= Model.Name #>Instance Create<#= Model.Name #>Object(Engine engine)
@@ -25,15 +28,6 @@ namespace <#= Model.Namespace #>
             obj.Prototype = engine.Object.PrototypeObject;            
             return obj;
         }
-
-<#if (Model.Fields.Any()) { #>
-        public void Configure<#= Model.Name #>Instance()
-        {
-<# foreach (var field in Model.Fields) { #>
-            FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
-<# } #>
-        }
-<# } #>
 
         public override String Class
         {
