@@ -12,6 +12,7 @@
         readonly LexicalEnvironment _lexicals;
         readonly LexicalEnvironment _variables;
         readonly DomNodeInstance _this;
+        readonly DomConstructors _constructors;
 
         public EngineInstance(Object @this)
         {
@@ -21,6 +22,12 @@
             _this = GetDomNode(@this);
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _this, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
+            _constructors = new DomConstructors(this);
+        }
+
+        public DomConstructors Constructors
+        {
+            get { return _constructors; }
         }
         
         public LexicalEnvironment Lexicals 
