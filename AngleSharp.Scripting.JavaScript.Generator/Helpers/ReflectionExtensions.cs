@@ -68,7 +68,7 @@
                 if (typeof(Delegate).IsAssignableFrom(type))
                     continue;
 
-                var names = type.GetDomNames();
+                var names = type.GetDomNames().Select(Capitalize);
 
                 foreach (var name in names)
                 {
@@ -82,6 +82,18 @@
             }
 
             return candidates;
+        }
+
+        static String Capitalize(this String str)
+        {
+            if (str != null && str.Length > 0 && Char.IsLower(str[0]))
+            {
+                var chrs = str.ToCharArray();
+                chrs[0] = Char.ToUpper(str[0]);
+                return new String(chrs);
+            }
+
+            return str;
         }
 
         public static IEnumerable<T> GetAll<T>(this Type type, Func<Type, IEnumerable<T>> selectFrom)

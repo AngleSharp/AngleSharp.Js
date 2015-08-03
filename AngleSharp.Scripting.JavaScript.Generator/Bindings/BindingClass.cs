@@ -20,20 +20,11 @@
             _constructors = new List<BindingConstructor>();
             _genericArguments = new List<Type>();
             BaseName = baseName ?? typeof(Object).Name;
-            Prototype = baseName != null ?
-                String.Concat("engine.InstanceCache.", baseName, ".PrototypeObject") :
-                "engine.Jint.Object.PrototypeObject";
         }
 
         public Boolean IsGeneric
         {
             get { return _genericArguments.Count > 0; }
-        }
-
-        public String Prototype
-        {
-            get;
-            private set;
         }
 
         public String BaseName 

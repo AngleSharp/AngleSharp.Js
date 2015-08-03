@@ -91,7 +91,7 @@
                 Name = @class.Name,
                 OriginalNamespace = @class.OriginalNamespace,
                 Namespace = _options.Namespace,
-                Prototype = @class.Prototype,
+                Prototype = String.Concat("engine.Constructors.", @class.BaseName, ".PrototypeObject"),
                 Events = @class.GetAll<BindingEvent>().Select(m => CreateEvent(m.Key, m.Value)).ToArray(),
                 Properties = @class.GetAll<BindingProperty>().Select(m => CreateProperty(m.Key, m.Value)).ToArray(),
                 Methods = @class.GetAll<BindingMethod>().Select(m => CreateMethod(m.Key, m.Value)).ToArray()
