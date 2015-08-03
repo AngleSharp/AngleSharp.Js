@@ -102,7 +102,7 @@ if (Model.Fields.Any()) {
             
             #line default
             #line hidden
-            this.Write("()\r\n        {\r\n");
+            this.Write("Instance()\r\n        {\r\n");
             
             #line 32 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassInstance.tt"
  foreach (var field in Model.Fields) { 

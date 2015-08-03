@@ -103,8 +103,8 @@ namespace AngleSharp.Scripting.JavaScript.Generator.Templates
             
             #line default
             #line hidden
-            this.Write("()\r\n        {\r\n            FastAddProperty(\"toString\", Engine.Wrap(ToString), tru" +
-                    "e, true, true);\r\n");
+            this.Write("Prototype()\r\n        {\r\n            FastAddProperty(\"toString\", Engine.Wrap(ToStr" +
+                    "ing), true, true, true);\r\n");
             
             #line 37 "C:\Users\Florian\Documents\GitHub\AngleSharp.Scripting\AngleSharp.Scripting.JavaScript.Generator\Templates\ClassPrototype.tt"
  foreach (var method in Model.Methods) { 

@@ -31,7 +31,7 @@ namespace <#= Model.Namespace #>
             return obj;
         }
 
-        public void Configure<#= Model.Name #>()
+        public void Configure<#= Model.Name #>Prototype()
         {
             FastAddProperty("toString", Engine.Wrap(ToString), true, true, true);
 <# foreach (var method in Model.Methods) { #>
