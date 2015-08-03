@@ -2,6 +2,7 @@
 {
     using AngleSharp.Dom;
     using AngleSharp.Dom.Css;
+    using AngleSharp.Dom.Events;
     using AngleSharp.Scripting.JavaScript.Generator;
     using NUnit.Framework;
     using System;
@@ -157,6 +158,23 @@
         {
             var files = Files.Generate();
             Assert.IsTrue(files.Any());
+        }
+
+        [Test]
+        public void InputEventDataPropertyShouldBeReadOnly()
+        {
+            var name = "InputEvent";
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, List<Type>>
+            {
+                { name, ListOf(typeof(InputEvent)) }
+            }).First() as BindingClass;
+            var bindingProperties = binding.GetAll<BindingProperty>();
+            var data = bindingProperties.Where(m => m.Key == "data").FirstOrDefault();
+            Assert.IsFalse(data.Value.AllowSet);
+            Assert.IsTrue(data.Value.AllowGet);
+            Assert.IsFalse(data.Value.IsLenient);
+            Assert.IsNull(data.Value.ForwardedTo);
+            Assert.AreEqual("Data", data.Value.OriginalName);
         }
     }
 }
