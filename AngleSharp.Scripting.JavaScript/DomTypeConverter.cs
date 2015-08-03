@@ -74,11 +74,6 @@
             return null;
         }
 
-        public static INode[] ToNodeArray(JsValue arg)
-        {
-            return null;
-        }
-
         public static Action<IWindow> ToTimer(JsValue arg)
         {
             return null;
@@ -100,11 +95,6 @@
         }
 
         public static IMessagePort ToMessagePort(JsValue arg)
-        {
-            return null;
-        }
-
-        public static IMessagePort[] ToMessagePortArray(JsValue arg)
         {
             return null;
         }
