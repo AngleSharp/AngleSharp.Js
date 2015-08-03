@@ -23,6 +23,7 @@
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _this, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
             _constructors = new DomConstructors(this);
+            _constructors.Configure();
         }
 
         public DomConstructors Constructors
