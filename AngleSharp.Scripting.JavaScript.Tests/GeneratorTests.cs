@@ -199,11 +199,11 @@
             var zeros = tree.Dependencies(0).ToArray();
             var tens = tree.Dependencies(10).ToArray();
 
-            Assert.AreEqual(7, zeros.Length);
-            Assert.AreEqual(3, tens.Length);
+            Assert.AreEqual(6, zeros.Length);
+            Assert.AreEqual(2, tens.Length);
 
-            CollectionAssert.AreEqual(new[] { 0, 1, 2, -1, 100, 200, 300 }, zeros);
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, tens);
+            CollectionAssert.AreEqual(new[] { 1, 2, -1, 100, 200, 300 }, zeros);
+            CollectionAssert.AreEqual(new[] { 20, 30 }, tens);
         }
     }
 }
