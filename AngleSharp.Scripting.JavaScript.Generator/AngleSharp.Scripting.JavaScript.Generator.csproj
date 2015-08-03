@@ -50,6 +50,7 @@
     <Compile Include="Bindings\BindingFunction.cs" />
     <Compile Include="Bindings\BindingParameter.cs" />
     <Compile Include="Bindings\BindingType.cs" />
+    <Compile Include="DependencyTree.cs" />
     <Compile Include="Helpers\AttachExtensions.cs" />
     <Compile Include="Helpers\BindingExtensions.cs" />
     <Compile Include="Bindings\BindingIndex.cs" />

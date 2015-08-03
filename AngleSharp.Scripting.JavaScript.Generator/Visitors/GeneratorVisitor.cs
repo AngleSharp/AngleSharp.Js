@@ -10,7 +10,7 @@
         #region Fields
 
         readonly List<GeneratedFile> _files;
-        readonly List<String> _names;
+        readonly DependencyTree<String> _names;
         readonly Options _options;
 
         #endregion
@@ -20,7 +20,7 @@
         public GeneratorVisitor(Options options)
         {
             _files = new List<GeneratedFile>();
-            _names = new List<String>();
+            _names = new DependencyTree<String>();
             _options = options;
         }
 
@@ -107,7 +107,7 @@
                 Constants = @class.GetAll<BindingField>().Select(m => CreateField(m.Key, m.Value)).ToArray()
             });
 
-            _names.Add(@class.Name);
+            _names.Include(@class.Name, @class.BaseName);
         }
 
         EventModel CreateEvent(String name, BindingEvent @event)
@@ -232,7 +232,7 @@
             Generate(new DomConstructorsModel
             {
                 Namespace = _options.Namespace,
-                Constructors = _names
+                Constructors = _names.Controllers().SelectMany(_names.Dependencies)
             });
         }
 
