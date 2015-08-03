@@ -6,8 +6,8 @@
     {
         public DomConstructors(EngineInstance engine)
         {
-            Setup(engine);
             Object = engine.Jint.Object;
+            Setup(engine);
         }
 
         public ObjectConstructor Object
