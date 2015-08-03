@@ -47,7 +47,7 @@
 
         public static PropertyDescriptor Wrap(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter)
         {
-            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
+            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, false);
         }
 
         public static Object FromJsValue(this JsValue val)

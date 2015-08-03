@@ -1,5 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
+    using Jint.Native.Function;
     using Jint.Native.Object;
 
     partial class DomConstructors
@@ -21,6 +22,14 @@
         public void Configure()
         {
             Setup(_engine);
+        }
+
+        public void AttachConstructors(ObjectInstance obj)
+        {
+            var constructors = GetType().GetProperties();
+
+            foreach (var constructor in constructors)
+                obj.FastAddProperty(constructor.Name, constructor.GetValue(this) as FunctionInstance, true, false, true);
         }
 
         partial void Setup(EngineInstance engine);

@@ -1,5 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
+    using AngleSharp.Dom;
     using Jint;
     using Jint.Runtime.Environments;
     using System;
@@ -14,7 +15,7 @@
         readonly DomNodeInstance _this;
         readonly DomConstructors _constructors;
 
-        public EngineInstance(Object @this)
+        public EngineInstance(IWindow @this)
         {
             _objects = new Dictionary<Object, DomNodeInstance>();
             _engine = new Engine();
