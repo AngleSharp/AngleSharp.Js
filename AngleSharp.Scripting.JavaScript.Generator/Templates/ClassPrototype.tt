@@ -46,7 +46,15 @@ namespace <#= Model.Namespace #>
         {
             var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
 <# foreach (var parameter in method.Parameters) { #>
+<# if (parameter.IsParams) { #>
+            var <#= parameter.Name #> = new <#= parameter.ParameterType.FullName #>[Math.Max(0, arguments.Length - <#= parameter.Index #>)];
+
+            for (var i = 0; i < <#= parameter.Name #>.Length; i++)
+                <#= parameter.Name #>[i] = <#= parameter.Converter #>(arguments.At(i + <#= parameter.Index #>));
+
+<# } else { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
+<# } #>
 <# } #>
 <# if (method.IsVoid) { #>
             reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);

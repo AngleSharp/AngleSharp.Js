@@ -33,7 +33,6 @@
             options.TypeConverters.Add(typeof(IHtmlTableCaptionElement), "DomTypeConverter.ToTableCaptionElement");
             options.TypeConverters.Add(typeof(IHtmlTableSectionElement), "DomTypeConverter.ToTableSectionElement");
             options.TypeConverters.Add(typeof(INode), "DomTypeConverter.ToNode");
-            options.TypeConverters.Add(typeof(INode[]), "DomTypeConverter.ToNodeArray");
             options.TypeConverters.Add(typeof(IEventTarget), "DomTypeConverter.ToEventTarget");
             options.TypeConverters.Add(typeof(Action<IWindow>), "DomTypeConverter.ToTimer");
             options.TypeConverters.Add(typeof(IRenderingContext), "DomTypeConverter.ToRenderingContext");
@@ -54,7 +53,6 @@
             options.TypeConverters.Add(typeof(Event), "DomTypeConverter.ToEvent");
             options.TypeConverters.Add(typeof(DomException), "DomTypeConverter.ToDomException");
             options.TypeConverters.Add(typeof(IMessagePort), "DomTypeConverter.ToMessagePort");
-            options.TypeConverters.Add(typeof(IMessagePort[]), "DomTypeConverter.ToMessagePortArray");
             return options;
         }
 
@@ -65,7 +63,6 @@
             options.TypeConverters.Add(typeof(Nullable<Int32>), "SystemTypeConverter.ToOptionalInt32");
             options.TypeConverters.Add(typeof(Nullable<DateTime>), "SystemTypeConverter.ToOptionalDateTime");
             options.TypeConverters.Add(typeof(Object), "SystemTypeConverter.ToObject");
-            options.TypeConverters.Add(typeof(String[]), "SystemTypeConverter.ToStringArray");
             return options;
         }
     }

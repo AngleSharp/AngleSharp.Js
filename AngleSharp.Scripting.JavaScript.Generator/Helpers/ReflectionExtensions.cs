@@ -13,6 +13,11 @@
             return member.GetCustomAttribute<DomNoInterfaceObjectAttribute>(inherit: false) != null;
         }
 
+        public static Boolean IsParams(this ParameterInfo parameter)
+        {
+            return parameter.GetCustomAttributes<ParamArrayAttribute>(inherit: false).Any();
+        }
+
         public static IEnumerable<Accessors> GetDomAccessors(this MemberInfo member)
         {
             var attr = member.GetCustomAttribute<DomAccessorAttribute>(inherit: false);

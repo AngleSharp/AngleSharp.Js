@@ -4,11 +4,12 @@
 
     sealed class BindingParameter : BindingMember
     {
-        public BindingParameter(String originalName, Type valueType, Int32 position, Boolean optional = false)
+        public BindingParameter(String originalName, Type valueType, Int32 position, Boolean optional = false, Boolean parameters = false)
             : base(originalName, valueType)
         {
             Position = position;
             IsOptional = optional;
+            IsParams = parameters;
         }
 
         public Type ValueType
@@ -17,6 +18,12 @@
         }
 
         public Boolean IsOptional
+        {
+            get;
+            private set;
+        }
+
+        public Boolean IsParams
         {
             get;
             private set;

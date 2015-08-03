@@ -76,11 +76,15 @@
         {
             foreach (var parameter in parameters)
             {
+                var isparams = parameter.IsParams();
+                var type = isparams ? parameter.ParameterType.GetElementType() : parameter.ParameterType;
+
                 function.Bind(new BindingParameter(
                     originalName: parameter.Name,
-                    valueType: parameter.ParameterType,
+                    valueType: type,
                     position: parameter.Position,
-                    optional: parameter.IsOptional
+                    optional: parameter.IsOptional,
+                    parameters: isparams
                 ));
             }
 
