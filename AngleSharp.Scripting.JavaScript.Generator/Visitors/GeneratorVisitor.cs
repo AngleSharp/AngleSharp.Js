@@ -166,7 +166,8 @@
                         Converter = GetConverter(targetType),
                         Index = 0,
                         IsOptional = false,
-                        Name = "value"
+                        Name = "value",
+                        ParameterType = targetType
                     }
                 },
                 RefName = "Set" + property.OriginalName,
@@ -181,25 +182,17 @@
             };
         }
 
-        MethodModel CreateMethod(BindingMember member)
+        MethodModel CreateMethod(BindingFunction function)
         {
             return new MethodModel
             {
                 Name = String.Empty,
                 IsVoid = true,
-                OriginalName = member.OriginalName,
-                RefName = member.OriginalName,
+                OriginalName = function.OriginalName,
+                Converter = GetConverter(function.Type),
+                RefName = function.OriginalName,
                 IsLenient = true,
-                Parameters = new[] 
-                { 
-                    new ParameterModel
-                    {
-                        Name = "value",
-                        Converter = GetConverter(member.Type),
-                        Index = 0,
-                        IsOptional = false
-                    }
-                }
+                Parameters = function.Parameters.Select(CreateParameter).ToArray()
             };
         }
 
@@ -214,23 +207,11 @@
             {
                 Name = name,
                 IsVoid = method.ReturnType == typeof(void),
+                Converter = GetConverter(method.Type),
                 OriginalName = method.OriginalName,
                 RefName = method.OriginalName + suffix,
                 IsLenient = method.IsLenient,
                 Parameters = method.Parameters.Select(CreateParameter).ToArray()
-            };
-        }
-
-        MethodModel CreateMethod(BindingConstructor constructor)
-        {
-            return new MethodModel
-            {
-                Name = String.Empty,
-                IsVoid = true,
-                OriginalName = constructor.OriginalName,
-                RefName = constructor.OriginalName,
-                IsLenient = true,
-                Parameters = constructor.Parameters.Select(CreateParameter).ToArray()
             };
         }
 
@@ -241,7 +222,8 @@
                 Converter = GetConverter(parameter.ValueType),
                 Index = parameter.Position,
                 IsOptional = parameter.IsOptional,
-                Name = parameter.OriginalName
+                Name = parameter.OriginalName,
+                ParameterType = parameter.ValueType
             };
         }
 

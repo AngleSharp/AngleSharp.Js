@@ -8,7 +8,7 @@
     sealed class BindingClass : BindingType
     {
         readonly Dictionary<String, BindingMember> _members;
-        readonly List<KeyValuePair<Accessors, BindingMember>> _specials;
+        readonly List<KeyValuePair<Accessors, BindingFunction>> _specials;
         readonly List<BindingConstructor> _constructors;
         readonly List<Type> _genericArguments;
 
@@ -16,7 +16,7 @@
             : base(name, originalName, originalNamespace)
         {
             _members = new Dictionary<String, BindingMember>();
-            _specials = new List<KeyValuePair<Accessors, BindingMember>>();
+            _specials = new List<KeyValuePair<Accessors, BindingFunction>>();
             _constructors = new List<BindingConstructor>();
             _genericArguments = new List<Type>();
             BaseName = baseName ?? typeof(Object).Name;
@@ -63,17 +63,17 @@
             get { return _constructors; }
         }
 
-        public IEnumerable<BindingMember> Deleters
+        public IEnumerable<BindingFunction> Deleters
         {
             get { return GetSpecials(Accessors.Deleter); }
         }
 
-        public IEnumerable<BindingMember> Getters
+        public IEnumerable<BindingFunction> Getters
         {
             get { return GetSpecials(Accessors.Getter); }
         }
 
-        public IEnumerable<BindingMember> Setters
+        public IEnumerable<BindingFunction> Setters
         {
             get { return GetSpecials(Accessors.Setter); }
         }
@@ -85,17 +85,15 @@
 
         public void Bind(String name, BindingMember value)
         {
-            //TODO Merge Overloads
             _members[name] = value;
         }
 
-        public void Bind(Accessors accessor, BindingMember value)
+        public void Bind(Accessors accessor, BindingFunction value)
         {
-            //TODO Merge Overloads
-            _specials.Add(new KeyValuePair<Accessors, BindingMember>(accessor, value));
+            _specials.Add(new KeyValuePair<Accessors, BindingFunction>(accessor, value));
         }
 
-        IEnumerable<BindingMember> GetSpecials(Accessors key)
+        IEnumerable<BindingFunction> GetSpecials(Accessors key)
         {
             return _specials.Where(m => m.Key == key).Select(m => m.Value);
         }

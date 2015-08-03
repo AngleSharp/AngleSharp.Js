@@ -27,5 +27,11 @@
             get;
             set;
         }
+
+        public Type ParameterType
+        {
+            get;
+            set;
+        }
     }
 }

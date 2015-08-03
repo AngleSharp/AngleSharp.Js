@@ -13,7 +13,7 @@
                 target.Bind(name, member);
         }
 
-        public static void AttachAll(this BindingClass target, IEnumerable<Accessors> accessors, BindingMember member)
+        public static void AttachAll(this BindingClass target, IEnumerable<Accessors> accessors, BindingFunction member)
         {
             foreach (var accessor in accessors)
                 target.Bind(accessor, member);
@@ -67,7 +67,9 @@
                 var binding = property.CreatePropertyOrIndexBinding();
 
                 target.AttachAll(names, binding);
-                target.AttachAll(accessors, binding);
+
+                if (binding is BindingFunction)
+                    target.AttachAll(accessors, binding as BindingFunction);
             }
         }
 

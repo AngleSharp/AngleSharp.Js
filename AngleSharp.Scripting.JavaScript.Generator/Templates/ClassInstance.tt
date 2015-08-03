@@ -43,8 +43,18 @@ namespace <#= Model.Namespace #>
         public override JsValue Get(String propertyName)
         {
 <# foreach (var method in Model.Getters) { #>
-            //TODO
-            return Engine.Select(Ref<#= Model.OriginalName #>[propertyName]);
+<# var type = method.Parameters.First().ParameterType; #>
+<# if (type == typeof(Int32)) { #>
+            var index = default(Int32);
+
+            if (Int32.TryParse(propertyName, out index))
+                return Engine.Select(Ref<#= Model.OriginalName #>[index]);
+
+<# } else if (type == typeof(String)) { #>
+            if (propertyName != null)
+                return Engine.Select(Ref<#= Model.OriginalName #>[propertyName]);
+
+<# } #>
 <# } #>
             return base.Get(propertyName);
         }
@@ -55,8 +65,24 @@ namespace <#= Model.Namespace #>
         public override void Put(String propertyName, JsValue value, Boolean throwOnError)
         {
 <# foreach (var method in Model.Setters) { #>
-            //TODO
-            Ref<#= Model.OriginalName #>[propertyName] = <#= method.Parameters.First().Converter #>(value);
+<# var type = method.Parameters.Skip(0).First().ParameterType; #>
+<# if (type == typeof(Int32)) { #>
+            var index = default(Int32);
+
+            if (Int32.TryParse(propertyName, out index))
+            {
+                Ref<#= Model.OriginalName #>[index] = <#= method.Converter #>(value);
+                return;
+            }
+
+<# } else if (type == typeof(String)) { #>
+            if (propertyName != null)
+            {
+                Ref<#= Model.OriginalName #>[propertyName] = <#= method.Converter #>(value);
+                return;
+            }
+
+<# } #>
 <# } #>
             base.Put(propertyName, value, throwOnError);
         }
@@ -67,8 +93,25 @@ namespace <#= Model.Namespace #>
         public override Boolean Delete(String propertyName, Boolean throwOnError)
         {
 <# foreach (var method in Model.Deleters) { #>
-            Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+<# var type = method.Parameters.First().ParameterType; #>
+<# if (type == typeof(Int32)) { #>
+            var index = default(Int32);
+
+            if (Int32.TryParse(propertyName, out index))
+            {
+                Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+            }
+
+<# } else if (type == typeof(String)) { #>
+            if (propertyName != null)
+            {
+                Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+                return;
+            }
+
 <# } #>
+<# } #>
+            base.Delete(propertyName, throwOnError);
         }
 <# } #>
 

@@ -17,6 +17,12 @@
             set;
         }
 
+        public String Converter
+        {
+            get;
+            set;
+        }
+
         public String OriginalName
         {
             get;
