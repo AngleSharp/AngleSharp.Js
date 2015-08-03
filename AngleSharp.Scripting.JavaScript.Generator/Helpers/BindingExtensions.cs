@@ -19,8 +19,8 @@
         {
             return new BindingProperty(
                 originalName: propertyInfo.Name,
-                canRead: propertyInfo.CanRead,
-                canWrite: propertyInfo.CanWrite,
+                canRead: propertyInfo.CanRead && propertyInfo.GetMethod != null && propertyInfo.GetMethod.IsPublic,
+                canWrite: propertyInfo.CanWrite && propertyInfo.SetMethod != null && propertyInfo.SetMethod.IsPublic,
                 isLenient: propertyInfo.HasLenientThis(),
                 forwardedTo: propertyInfo.GetPutForwardsTo(),
                 valueType: propertyInfo.PropertyType);

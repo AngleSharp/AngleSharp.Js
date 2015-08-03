@@ -28,6 +28,18 @@
                 yield return binding.GetClassBindings(types, name);
             }
         }
+
+        public static String Capitalize(this String str)
+        {
+            if (str != null && str.Length > 0 && Char.IsLower(str[0]))
+            {
+                var chrs = str.ToCharArray();
+                chrs[0] = Char.ToUpper(str[0]);
+                return new String(chrs);
+            }
+
+            return str;
+        }
         
         static BindingClass GetClassBindings(this BindingClass binding, List<Type> types, String name)
         {

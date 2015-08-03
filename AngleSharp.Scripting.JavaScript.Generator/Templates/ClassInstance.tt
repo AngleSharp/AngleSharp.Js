@@ -49,11 +49,18 @@ namespace <#= Model.Namespace #>
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(Ref<#= Model.OriginalName #>[index]);
-
+<# if (String.IsNullOrEmpty(method.RefName)) { #>
+                return Engine.Select(Ref<#= Model.Name #>[index]);
+<# } else { #>
+                return Engine.Select(Ref<#= Model.Name #>.<#= method.RefName #>(index));
+<# } #>
 <# } else if (type == typeof(String)) { #>
             if (propertyName != null)
-                return Engine.Select(Ref<#= Model.OriginalName #>[propertyName]);
+<# if (String.IsNullOrEmpty(method.RefName)) { #>
+                return Engine.Select(Ref<#= Model.Name #>[propertyName]);
+<# } else { #>
+                return Engine.Select(Ref<#= Model.Name #>.<#= method.RefName #>(propertyName));
+<# } #>
 
 <# } #>
 <# } #>
@@ -72,14 +79,24 @@ namespace <#= Model.Namespace #>
 
             if (Int32.TryParse(propertyName, out index))
             {
-                Ref<#= Model.OriginalName #>[index] = <#= method.Converter #>(value);
+<# if (String.IsNullOrEmpty(method.RefName)) { #>
+                Ref<#= Model.Name #>[index] = <#= method.Converter #>(value);
+<# } else { #>
+<# var arg = method.Parameters.Skip(1).First(); #>
+                Ref<#= Model.Name #>.<#= method.RefName #>(index, <#= arg.Converter #>(value));
+<# } #>
                 return;
             }
 
 <# } else if (type == typeof(String)) { #>
             if (propertyName != null)
             {
-                Ref<#= Model.OriginalName #>[propertyName] = <#= method.Converter #>(value);
+<# if (String.IsNullOrEmpty(method.RefName)) { #>
+                Ref<#= Model.Name #>[propertyName] = <#= method.Converter #>(value);
+<# } else { #>
+<# var arg = method.Parameters.Skip(1).First(); #>
+                Ref<#= Model.Name #>.<#= method.RefName #>(propertyName, <#= arg.Converter #>(value));
+<# } #>
                 return;
             }
 
@@ -100,14 +117,14 @@ namespace <#= Model.Namespace #>
 
             if (Int32.TryParse(propertyName, out index))
             {
-                Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+                Ref<#= Model.Name #>.<#= method.OriginalName #>(propertyName);
                 return true;
             }
 
 <# } else if (type == typeof(String)) { #>
             if (propertyName != null)
             {
-                Ref<#= Model.OriginalName #>.<#= method.OriginalName #>(propertyName);
+                Ref<#= Model.Name #>.<#= method.OriginalName #>(propertyName);
                 return true;
             }
 
@@ -117,7 +134,7 @@ namespace <#= Model.Namespace #>
         }
 <# } #>
 
-        public <#= Model.OriginalName #><#= Model.GenericArguments #> Ref<#= Model.OriginalName #>
+        public <#= Model.OriginalName #><#= Model.GenericArguments #> Ref<#= Model.Name #>
         {
             get;
             set;

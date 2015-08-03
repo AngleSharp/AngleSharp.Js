@@ -136,6 +136,7 @@
             var forwardedTo = property.ForwardedTo;
             var targetType = property.ValueType;
             var ignoreSet = property.AllowSet == false;
+            var refName = name.Capitalize();
 
             if (forwardedTo != null)
             {
@@ -150,7 +151,7 @@
                 OriginalName = property.OriginalName,
                 IsLenient = property.IsLenient,
                 Parameters = Enumerable.Empty<ParameterModel>(),
-                RefName = "Get" + property.OriginalName,
+                RefName = "Get" + refName,
                 IsVoid = property.AllowGet == false
             };
 
@@ -170,7 +171,7 @@
                         ParameterType = targetType
                     }
                 },
-                RefName = "Set" + property.OriginalName,
+                RefName = "Set" + refName,
                 IsVoid = ignoreSet
             };
 
@@ -198,18 +199,13 @@
 
         MethodModel CreateMethod(String name, BindingMethod method)
         {
-            var suffix = String.Empty;
-
-            if (method.Parameters.Any())
-                suffix = "_" + String.Concat(method.Parameters.Select(m => m.ValueType.Name.Substring(0, 1).ToLowerInvariant()));
-
             return new MethodModel
             {
                 Name = name,
                 IsVoid = method.ReturnType == typeof(void),
                 Converter = GetConverter(method.Type),
                 OriginalName = method.OriginalName,
-                RefName = method.OriginalName + suffix,
+                RefName = name.Capitalize(),
                 IsLenient = method.IsLenient,
                 Parameters = method.Parameters.Select(CreateParameter).ToArray()
             };

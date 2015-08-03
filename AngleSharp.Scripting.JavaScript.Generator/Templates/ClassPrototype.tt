@@ -44,11 +44,11 @@ namespace <#= Model.Namespace #>
             FastSetProperty("<#= evt.Name #>", Engine.Wrap(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
 <# } #>
         }
-<# foreach (var method in Model.Methods.Distinct()) { #>
+<# foreach (var method in Model.Methods) { #>
 
         JsValue <#= method.RefName #>(JsValue thisObj, JsValue[] arguments)
         {
-            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
 <# foreach (var parameter in method.Parameters) { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
 <# } #>
@@ -60,14 +60,14 @@ namespace <#= Model.Namespace #>
 <# } #>
         }
 <# } #>
-<# foreach (var property in Model.Properties.Distinct()) { #>
+<# foreach (var property in Model.Properties) { #>
 
         JsValue <#= property.Getter.RefName #>(JsValue thisObj)
         {
 <# if (property.Getter.IsVoid) { #>
             return JsValue.Undefined;
 <# } else { #>
-            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
             return Engine.Select(reference.<#= property.Getter.OriginalName #>);
 <# } #>
         }
@@ -76,13 +76,13 @@ namespace <#= Model.Namespace #>
         {
 <# if (!property.Setter.IsVoid) { #>
 <# var parameter = property.Setter.Parameters.First(); #>
-            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.OriginalName #>;
+            var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
             var <#= parameter.Name #> = <#= parameter.Converter #>(argument);
             reference.<#= property.Setter.OriginalName #> = <#= parameter.Name #>;
 <# } #>
         }
 <# } #>
-<# foreach (var evt in Model.Events.Distinct()) { #>
+<# foreach (var evt in Model.Events) { #>
 
         JsValue Get<#= evt.RefName #>(JsValue thisObj)
         {
@@ -93,7 +93,7 @@ namespace <#= Model.Namespace #>
         void Set<#= evt.RefName #>(JsValue thisObj, JsValue argument)
         {
             var instance = thisObj.TryCast<<#= Model.Name #>Instance>(Fail);
-            var reference = instance.Ref<#= Model.OriginalName #>;
+            var reference = instance.Ref<#= Model.Name #>;
             var existing = Get<#= evt.RefName #>(thisObj);
 
             if (existing != JsValue.Undefined)
