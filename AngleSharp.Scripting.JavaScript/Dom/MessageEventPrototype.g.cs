@@ -57,7 +57,11 @@ namespace AngleSharp.Scripting.JavaScript
             var origin = TypeConverter.ToString(arguments.At(4));
             var lastEventId = TypeConverter.ToString(arguments.At(5));
             var source = DomTypeConverter.ToWindow(arguments.At(6));
-            var ports = DomTypeConverter.ToMessagePortArray(arguments.At(7));
+            var ports = new AngleSharp.Dom.Events.IMessagePort[Math.Max(0, arguments.Length - 7)];
+
+            for (var i = 0; i < ports.Length; i++)
+                ports[i] = DomTypeConverter.ToMessagePort(arguments.At(i + 7));
+
             reference.Init(type, bubbles, cancelable, data, origin, lastEventId, source, ports);
             return JsValue.Undefined;
         }

@@ -38,7 +38,11 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue Before(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
+            var nodes = new AngleSharp.Dom.INode[Math.Max(0, arguments.Length - 0)];
+
+            for (var i = 0; i < nodes.Length; i++)
+                nodes[i] = DomTypeConverter.ToNode(arguments.At(i + 0));
+
             reference.Before(nodes);
             return JsValue.Undefined;
         }
@@ -46,7 +50,11 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue After(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
+            var nodes = new AngleSharp.Dom.INode[Math.Max(0, arguments.Length - 0)];
+
+            for (var i = 0; i < nodes.Length; i++)
+                nodes[i] = DomTypeConverter.ToNode(arguments.At(i + 0));
+
             reference.After(nodes);
             return JsValue.Undefined;
         }
@@ -54,7 +62,11 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue Replace(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
+            var nodes = new AngleSharp.Dom.INode[Math.Max(0, arguments.Length - 0)];
+
+            for (var i = 0; i < nodes.Length; i++)
+                nodes[i] = DomTypeConverter.ToNode(arguments.At(i + 0));
+
             reference.Replace(nodes);
             return JsValue.Undefined;
         }

@@ -19,14 +19,6 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("focus", Engine.AsValue(Focus), true, true, true);
             FastAddProperty("blur", Engine.AsValue(Blur), true, true, true);
             FastAddProperty("forceSpellCheck", Engine.AsValue(ForceSpellCheck), true, true, true);
-            FastAddProperty("append", Engine.AsValue(Append), true, true, true);
-            FastAddProperty("prepend", Engine.AsValue(Prepend), true, true, true);
-            FastAddProperty("querySelector", Engine.AsValue(QuerySelector), true, true, true);
-            FastAddProperty("querySelectorAll", Engine.AsValue(QuerySelectorAll), true, true, true);
-            FastAddProperty("before", Engine.AsValue(Before), true, true, true);
-            FastAddProperty("after", Engine.AsValue(After), true, true, true);
-            FastAddProperty("replace", Engine.AsValue(Replace), true, true, true);
-            FastAddProperty("remove", Engine.AsValue(Remove), true, true, true);
             FastSetProperty("lang", Engine.AsProperty(GetLang, SetLang));
             FastSetProperty("title", Engine.AsProperty(GetTitle, SetTitle));
             FastSetProperty("dir", Engine.AsProperty(GetDir, SetDir));
@@ -42,12 +34,6 @@ namespace AngleSharp.Scripting.JavaScript
             FastSetProperty("accessKeyLabel", Engine.AsProperty(GetAccessKeyLabel));
             FastSetProperty("contextMenu", Engine.AsProperty(GetContextMenu, SetContextMenu));
             FastSetProperty("dropzone", Engine.AsProperty(GetDropzone, SetDropzone));
-            FastSetProperty("children", Engine.AsProperty(GetChildren));
-            FastSetProperty("firstElementChild", Engine.AsProperty(GetFirstElementChild));
-            FastSetProperty("lastElementChild", Engine.AsProperty(GetLastElementChild));
-            FastSetProperty("childElementCount", Engine.AsProperty(GetChildElementCount));
-            FastSetProperty("nextElementSibling", Engine.AsProperty(GetNextElementSibling));
-            FastSetProperty("previousElementSibling", Engine.AsProperty(GetPreviousElementSibling));
             FastSetProperty("style", Engine.AsProperty(GetStyle, SetStyle));
         }
 
@@ -87,67 +73,6 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
             reference.DoSpellCheck();
-            return JsValue.Undefined;
-        }
-
-        JsValue Append(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Append(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Prepend(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Prepend(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue QuerySelector(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelector(selectors));
-        }
-
-        JsValue QuerySelectorAll(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelectorAll(selectors));
-        }
-
-        JsValue Before(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Before(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue After(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.After(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Replace(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Replace(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Remove(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            reference.Remove();
             return JsValue.Undefined;
         }
 
@@ -327,48 +252,6 @@ namespace AngleSharp.Scripting.JavaScript
             var value = TypeConverter.ToString(argument);
             reference.DropZone.Value = value;
         }
-
-        JsValue GetChildren(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Children);
-        }
-
-
-        JsValue GetFirstElementChild(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.FirstElementChild);
-        }
-
-
-        JsValue GetLastElementChild(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.LastElementChild);
-        }
-
-
-        JsValue GetChildElementCount(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.ChildElementCount);
-        }
-
-
-        JsValue GetNextElementSibling(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.NextElementSibling);
-        }
-
-
-        JsValue GetPreviousElementSibling(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.PreviousElementSibling);
-        }
-
 
         JsValue GetStyle(JsValue thisObj)
         {

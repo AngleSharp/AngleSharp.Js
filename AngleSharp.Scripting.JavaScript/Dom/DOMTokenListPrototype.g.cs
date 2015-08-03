@@ -43,7 +43,11 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue Add(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DOMTokenListInstance>(Fail).RefDOMTokenList;
-            var tokens = SystemTypeConverter.ToStringArray(arguments.At(0));
+            var tokens = new System.String[Math.Max(0, arguments.Length - 0)];
+
+            for (var i = 0; i < tokens.Length; i++)
+                tokens[i] = TypeConverter.ToString(arguments.At(i + 0));
+
             reference.Add(tokens);
             return JsValue.Undefined;
         }
@@ -51,7 +55,11 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue Remove(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DOMTokenListInstance>(Fail).RefDOMTokenList;
-            var tokens = SystemTypeConverter.ToStringArray(arguments.At(0));
+            var tokens = new System.String[Math.Max(0, arguments.Length - 0)];
+
+            for (var i = 0; i < tokens.Length; i++)
+                tokens[i] = TypeConverter.ToString(arguments.At(i + 0));
+
             reference.Remove(tokens);
             return JsValue.Undefined;
         }

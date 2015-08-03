@@ -15,10 +15,7 @@ namespace AngleSharp.Scripting.JavaScript
             : base(engine)
         {
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
-            FastAddProperty("insertRule", Engine.AsValue(InsertRule), true, true, true);
-            FastAddProperty("deleteRule", Engine.AsValue(DeleteRule), true, true, true);
             FastSetProperty("media", Engine.AsProperty(GetMedia, SetMedia));
-            FastSetProperty("cssRules", Engine.AsProperty(GetCssRules));
         }
 
         public static CSSMediaRulePrototype CreatePrototypeObject(EngineInstance engine, CSSMediaRuleConstructor constructor)
@@ -30,22 +27,6 @@ namespace AngleSharp.Scripting.JavaScript
             };
             obj.FastAddProperty("constructor", constructor, true, false, true);
             return obj;
-        }
-
-        JsValue InsertRule(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<CSSMediaRuleInstance>(Fail).RefCSSMediaRule;
-            var rule = TypeConverter.ToString(arguments.At(0));
-            var index = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.Insert(rule, index));
-        }
-
-        JsValue DeleteRule(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<CSSMediaRuleInstance>(Fail).RefCSSMediaRule;
-            var index = TypeConverter.ToInt32(arguments.At(0));
-            reference.RemoveAt(index);
-            return JsValue.Undefined;
         }
 
         JsValue GetMedia(JsValue thisObj)
@@ -60,13 +41,6 @@ namespace AngleSharp.Scripting.JavaScript
             var value = TypeConverter.ToString(argument);
             reference.Media.MediaText = value;
         }
-
-        JsValue GetCssRules(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<CSSMediaRuleInstance>(Fail).RefCSSMediaRule;
-            return Engine.Select(reference.Rules);
-        }
-
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)
         {

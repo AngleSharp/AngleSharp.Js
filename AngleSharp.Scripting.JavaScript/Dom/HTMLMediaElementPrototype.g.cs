@@ -18,14 +18,6 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("load", Engine.AsValue(Load), true, true, true);
             FastAddProperty("canPlayType", Engine.AsValue(CanPlayType), true, true, true);
             FastAddProperty("addTextTrack", Engine.AsValue(AddTextTrack), true, true, true);
-            FastAddProperty("append", Engine.AsValue(Append), true, true, true);
-            FastAddProperty("prepend", Engine.AsValue(Prepend), true, true, true);
-            FastAddProperty("querySelector", Engine.AsValue(QuerySelector), true, true, true);
-            FastAddProperty("querySelectorAll", Engine.AsValue(QuerySelectorAll), true, true, true);
-            FastAddProperty("before", Engine.AsValue(Before), true, true, true);
-            FastAddProperty("after", Engine.AsValue(After), true, true, true);
-            FastAddProperty("replace", Engine.AsValue(Replace), true, true, true);
-            FastAddProperty("remove", Engine.AsValue(Remove), true, true, true);
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
             FastSetProperty("crossOrigin", Engine.AsProperty(GetCrossOrigin, SetCrossOrigin));
             FastSetProperty("preload", Engine.AsProperty(GetPreload, SetPreload));
@@ -44,13 +36,6 @@ namespace AngleSharp.Scripting.JavaScript
             FastSetProperty("audioTracks", Engine.AsProperty(GetAudioTracks));
             FastSetProperty("videoTracks", Engine.AsProperty(GetVideoTracks));
             FastSetProperty("textTracks", Engine.AsProperty(GetTextTracks));
-            FastSetProperty("children", Engine.AsProperty(GetChildren));
-            FastSetProperty("firstElementChild", Engine.AsProperty(GetFirstElementChild));
-            FastSetProperty("lastElementChild", Engine.AsProperty(GetLastElementChild));
-            FastSetProperty("childElementCount", Engine.AsProperty(GetChildElementCount));
-            FastSetProperty("nextElementSibling", Engine.AsProperty(GetNextElementSibling));
-            FastSetProperty("previousElementSibling", Engine.AsProperty(GetPreviousElementSibling));
-            FastSetProperty("style", Engine.AsProperty(GetStyle, SetStyle));
         }
 
         public static HTMLMediaElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMediaElementConstructor constructor)
@@ -85,67 +70,6 @@ namespace AngleSharp.Scripting.JavaScript
             var label = TypeConverter.ToString(arguments.At(1));
             var language = TypeConverter.ToString(arguments.At(2));
             return Engine.Select(reference.AddTextTrack(kind, label, language));
-        }
-
-        JsValue Append(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Append(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Prepend(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Prepend(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue QuerySelector(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelector(selectors));
-        }
-
-        JsValue QuerySelectorAll(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelectorAll(selectors));
-        }
-
-        JsValue Before(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Before(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue After(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.After(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Replace(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var nodes = DomTypeConverter.ToNodeArray(arguments.At(0));
-            reference.Replace(nodes);
-            return JsValue.Undefined;
-        }
-
-        JsValue Remove(JsValue thisObj, JsValue[] arguments)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            reference.Remove();
-            return JsValue.Undefined;
         }
 
         JsValue GetSrc(JsValue thisObj)
@@ -321,61 +245,6 @@ namespace AngleSharp.Scripting.JavaScript
             return Engine.Select(reference.TextTracks);
         }
 
-
-        JsValue GetChildren(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Children);
-        }
-
-
-        JsValue GetFirstElementChild(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.FirstElementChild);
-        }
-
-
-        JsValue GetLastElementChild(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.LastElementChild);
-        }
-
-
-        JsValue GetChildElementCount(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.ChildElementCount);
-        }
-
-
-        JsValue GetNextElementSibling(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.NextElementSibling);
-        }
-
-
-        JsValue GetPreviousElementSibling(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.PreviousElementSibling);
-        }
-
-
-        JsValue GetStyle(JsValue thisObj)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Style);
-        }
-
-        void SetStyle(JsValue thisObj, JsValue argument)
-        {
-            var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            var value = TypeConverter.ToString(argument);
-            reference.Style.CssText = value;
-        }
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)
         {
