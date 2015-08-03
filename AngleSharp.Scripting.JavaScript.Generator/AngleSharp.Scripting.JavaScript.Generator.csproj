@@ -113,7 +113,7 @@
   <ItemGroup>
     <None Include="Templates\ClassPrototype.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>ClassPrototype1.cs</LastGenOutput>
+      <LastGenOutput>ClassPrototype.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -17,7 +17,7 @@ namespace <#= Model.Namespace #>
             : base(engine)
         {
 <# foreach (var field in Model.Fields) { #>
-            FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, false, false);
+            FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, true, false);
 <# } #>
         }
 
