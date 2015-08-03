@@ -205,5 +205,22 @@
             CollectionAssert.AreEqual(new[] { 1, 2, -1, 100, 200, 300 }, zeros);
             CollectionAssert.AreEqual(new[] { 20, 30 }, tens);
         }
+
+        [Test]
+        public void ParentNodeShouldHaveParamsOnAppend()
+        {
+            var name = "Element";
+            var binding = GeneralExtensions.GetBindings(new Dictionary<String, List<Type>>
+            {
+                { name, ListOf(typeof(IElement)) }
+            }).First() as BindingClass;
+            var bindingMethods = binding.GetAll<BindingMethod>();
+            var append = bindingMethods.Where(m => m.Key == "append").FirstOrDefault();
+            Assert.AreEqual("Append", append.Value.OriginalName);
+            Assert.IsFalse(append.Value.IsLenient);
+            Assert.AreEqual(1, append.Value.Parameters.Count());
+            Assert.AreEqual(typeof(INode), append.Value.Parameters.First().Type);
+            Assert.IsTrue(append.Value.Parameters.First().IsParams);
+        }
     }
 }
