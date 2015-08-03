@@ -25,7 +25,9 @@
         {
             options.TypeConverters.Add(typeof(DomEventHandler), "DomTypeConverter.ToEventHandler");
             options.TypeConverters.Add(typeof(MutationCallback), "DomTypeConverter.ToMutationCallback");
+            options.TypeConverters.Add(typeof(NodeFilter), "DomTypeConverter.ToNodeFilter");
             options.TypeConverters.Add(typeof(IElement), "DomTypeConverter.ToElement");
+            options.TypeConverters.Add(typeof(IAttr), "DomTypeConverter.ToAttr");
             options.TypeConverters.Add(typeof(IHtmlElement), "DomTypeConverter.ToHtmlElement");
             options.TypeConverters.Add(typeof(IHtmlOptionElement), "DomTypeConverter.ToOptionElement");
             options.TypeConverters.Add(typeof(IHtmlTableCaptionElement), "DomTypeConverter.ToTableCaptionElement");
@@ -47,10 +49,12 @@
             options.TypeConverters.Add(typeof(MouseButton), "DomTypeConverter.ToMouseButton");
             options.TypeConverters.Add(typeof(KeyboardLocation), "DomTypeConverter.ToKeyboardLocation");
             options.TypeConverters.Add(typeof(TextTrackMode), "DomTypeConverter.ToTextTrackMode");
+            options.TypeConverters.Add(typeof(FilterSettings), "DomTypeConverter.ToFilterSettings");
             options.TypeConverters.Add(typeof(ITextTrackCue), "DomTypeConverter.ToTextTrackCue");
             options.TypeConverters.Add(typeof(Event), "DomTypeConverter.ToEvent");
             options.TypeConverters.Add(typeof(DomException), "DomTypeConverter.ToDomException");
             options.TypeConverters.Add(typeof(IMessagePort), "DomTypeConverter.ToMessagePort");
+            options.TypeConverters.Add(typeof(IMessagePort[]), "DomTypeConverter.ToMessagePortArray");
             return options;
         }
 
