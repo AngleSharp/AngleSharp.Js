@@ -1,10 +1,11 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Generator
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
-    public sealed class DependencyTree<T>
+    public sealed class DependencyTree<T> : IEnumerable<T>
         where T : IEquatable<T>
     {
         readonly List<DependencyNode> _branches;
@@ -25,8 +26,7 @@
 
         public IEnumerable<T> Controllers()
         {
-            foreach (var branch in _branches)
-                yield return branch.Dependency;
+            return _branches.Select(m => m.Dependency);
         }
 
         public IEnumerable<T> Dependencies(T dependency)
@@ -62,6 +62,16 @@
             };
             _branches.Add(result);
             return result;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Controllers().SelectMany(Dependencies).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         sealed class DependencyNode
