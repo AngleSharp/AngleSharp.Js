@@ -92,8 +92,17 @@
         public static IEnumerable<T> GetAll<T>(this Type type, Func<Type, IEnumerable<T>> selectFrom)
         {
             var members = selectFrom(type);
-            var others = type.GetInterfaces().Where(m => m.IsNotInterfaced()).SelectMany(m => m.GetAll(selectFrom));
+            var interfaces = type.GetExclusiveInterfaces();
+            var others = interfaces.SelectMany(m => m.GetAll(selectFrom));
             return members.Concat(others);
+        }
+
+        public static IEnumerable<Type> GetExclusiveInterfaces(this Type type)
+        {
+            var interfaces = type.GetInterfaces();
+            var allInterfaces = interfaces.Where(m => m.IsNotInterfaced());
+            var sharedInterfaces = interfaces.Where(m => !m.IsNotInterfaced()).SelectMany(m => m.GetExclusiveInterfaces());
+            return allInterfaces.Except(sharedInterfaces);
         }
     }
 }
