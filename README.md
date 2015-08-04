@@ -7,7 +7,7 @@ AngleSharp.Scripting extends the core AngleSharp library with some useful script
 
 Current status of this repository:
 
-[![Build status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp.Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
+[![Build status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
 [![Issues open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Scripting.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Scripting/issues)
 
 AngleSharp.Scripting.CSharp
