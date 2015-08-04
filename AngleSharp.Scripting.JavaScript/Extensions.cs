@@ -40,14 +40,24 @@
             return JavaScriptEngine.Instance.GetCache(engine).GetDomNode(obj);
         }
 
-        public static ClrFunctionInstance Wrap(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
+        public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
         {
             return new ClrFunctionInstance(engine, func);
         }
 
-        public static PropertyDescriptor Wrap(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter)
+        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter)
         {
-            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, false);
+            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
+        }
+
+        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter)
+        {
+            return new PropertyDescriptor(new GetterFunctionInstance(engine, getter), null, true, false);
+        }
+
+        public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter)
+        {
+            return new PropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
         }
 
         public static Object FromJsValue(this JsValue val)

@@ -18,15 +18,15 @@ namespace <#= Model.Namespace #>
         public <#= Model.Name #>Prototype(Engine engine)
             : base(engine)
         {
-            FastAddProperty("toString", Engine.Wrap(ToString), true, true, true);
+            FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
 <# foreach (var method in Model.Methods) { #>
-            FastAddProperty("<#= method.Name #>", Engine.Wrap(<#= method.RefName #>), true, true, true);
+            FastAddProperty("<#= method.Name #>", Engine.AsValue(<#= method.RefName #>), true, true, true);
 <# } #>
 <# foreach (var property in Model.Properties) { #>
-            FastSetProperty("<#= property.Name #>", Engine.Wrap(<#= property.Getter.RefName #>, <#= property.Setter.RefName #>));
+            FastSetProperty("<#= property.Name #>", Engine.AsProperty(<#= property.Call #>));
 <# } #>
 <# foreach (var evt in Model.Events) { #>
-            FastSetProperty("<#= evt.Name #>", Engine.Wrap(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
+            FastSetProperty("<#= evt.Name #>", Engine.AsProperty(Get<#= evt.RefName #>, Set<#= evt.RefName #>));
 <# } #>
         }
 
@@ -46,7 +46,15 @@ namespace <#= Model.Namespace #>
         {
             var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
 <# foreach (var parameter in method.Parameters) { #>
+<# if (parameter.IsParams) { #>
+            var <#= parameter.Name #> = new <#= parameter.ParameterType.FullName #>[Math.Max(0, arguments.Length - <#= parameter.Index #>)];
+
+            for (var i = 0; i < <#= parameter.Name #>.Length; i++)
+                <#= parameter.Name #>[i] = <#= parameter.Converter #>(arguments.At(i + <#= parameter.Index #>));
+
+<# } else { #>
             var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
+<# } #>
 <# } #>
 <# if (method.IsVoid) { #>
             reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
@@ -57,26 +65,24 @@ namespace <#= Model.Namespace #>
         }
 <# } #>
 <# foreach (var property in Model.Properties) { #>
+<# if (!property.Getter.IsVoid) { #>
 
         JsValue <#= property.Getter.RefName #>(JsValue thisObj)
         {
-<# if (property.Getter.IsVoid) { #>
-            return JsValue.Undefined;
-<# } else { #>
             var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
             return Engine.Select(reference.<#= property.Getter.OriginalName #>);
-<# } #>
         }
+<# } #>
 
+<# if (!property.Setter.IsVoid) { #>
         void <#= property.Setter.RefName #>(JsValue thisObj, JsValue argument)
         {
-<# if (!property.Setter.IsVoid) { #>
 <# var parameter = property.Setter.Parameters.First(); #>
             var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
             var <#= parameter.Name #> = <#= parameter.Converter #>(argument);
             reference.<#= property.Setter.OriginalName #> = <#= parameter.Name #>;
-<# } #>
         }
+<# } #>
 <# } #>
 <# foreach (var evt in Model.Events) { #>
 

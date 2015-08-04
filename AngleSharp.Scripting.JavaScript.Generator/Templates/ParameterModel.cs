@@ -28,6 +28,12 @@
             set;
         }
 
+        public Boolean IsParams
+        {
+            get;
+            set;
+        }
+
         public Type ParameterType
         {
             get;

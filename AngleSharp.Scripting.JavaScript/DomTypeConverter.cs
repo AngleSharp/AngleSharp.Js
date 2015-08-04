@@ -19,6 +19,16 @@
             return null;
         }
 
+        public static NodeFilter ToNodeFilter(JsValue arg)
+        {
+            return null;
+        }
+
+        public static IAttr ToAttr(JsValue arg)
+        {
+            return null;
+        }
+
         public static IElement ToElement(JsValue arg)
         {
             return null;
@@ -60,11 +70,6 @@
         }
 
         public static INode ToNode(JsValue arg)
-        {
-            return null;
-        }
-
-        public static INode[] ToNodeArray(JsValue arg)
         {
             return null;
         }
@@ -147,6 +152,11 @@
         public static TextTrackMode ToTextTrackMode(JsValue arg)
         {
             return ToEnum<TextTrackMode>(arg);
+        }
+
+        public static FilterSettings ToFilterSettings(JsValue arg)
+        {
+            return ToEnum<FilterSettings>(arg);
         }
 
         public static T ToEnum<T>(JsValue arg)

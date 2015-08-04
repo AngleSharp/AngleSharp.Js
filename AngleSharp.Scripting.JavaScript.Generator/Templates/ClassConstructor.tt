@@ -19,7 +19,7 @@ namespace <#= Model.Namespace #>
             : base(engine, null, null, false)
         {
 <# foreach (var constant in Model.Constants) { #>
-            obj.FastAddProperty("<#= constant.Name #>", <#= constant.Value #>, false, false, false);
+            FastAddProperty("<#= constant.Name #>", <#= constant.Value #>, false, true, false);
 <# } #>
         }
 

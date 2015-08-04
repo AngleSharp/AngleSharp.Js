@@ -168,7 +168,8 @@
                         Index = 0,
                         IsOptional = false,
                         Name = "value",
-                        ParameterType = targetType
+                        ParameterType = targetType,
+                        IsParams = false
                     }
                 },
                 RefName = "Set" + refName,
@@ -219,7 +220,8 @@
                 Index = parameter.Position,
                 IsOptional = parameter.IsOptional,
                 Name = parameter.OriginalName,
-                ParameterType = parameter.ValueType
+                ParameterType = parameter.ValueType,
+                IsParams = parameter.IsParams
             };
         }
 
