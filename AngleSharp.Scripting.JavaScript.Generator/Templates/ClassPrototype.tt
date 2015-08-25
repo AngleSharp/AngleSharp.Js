@@ -15,9 +15,12 @@ namespace <#= Model.Namespace #>
 
     sealed partial class <#= Model.Name #>Prototype : <#= Model.Name #>Instance
     {
-        public <#= Model.Name #>Prototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public <#= Model.Name #>Prototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
 <# foreach (var method in Model.Methods) { #>
             FastAddProperty("<#= method.Name #>", Engine.AsValue(<#= method.RefName #>), true, true, true);
@@ -32,7 +35,7 @@ namespace <#= Model.Namespace #>
 
         public static <#= Model.Name #>Prototype CreatePrototypeObject(EngineInstance engine, <#= Model.Name #>Constructor constructor)
         {
-            var obj = new <#= Model.Name #>Prototype(engine.Jint)
+            var obj = new <#= Model.Name #>Prototype(engine)
             {
                 Prototype = <#= Model.Prototype #>,
                 Extensible = true,
@@ -60,7 +63,7 @@ namespace <#= Model.Namespace #>
             reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>);
             return JsValue.Undefined;
 <# } else { #>
-            return Engine.Select(reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>));
+            return _engine.GetDomNode(reference.<#= method.OriginalName #>(<#= method.Parameters.Stringify() #>));
 <# } #>
         }
 <# } #>
@@ -70,7 +73,7 @@ namespace <#= Model.Namespace #>
         JsValue <#= property.Getter.RefName #>(JsValue thisObj)
         {
             var reference = thisObj.TryCast<<#= Model.Name #>Instance>(Fail).Ref<#= Model.Name #>;
-            return Engine.Select(reference.<#= property.Getter.OriginalName #>);
+            return _engine.GetDomNode(reference.<#= property.Getter.OriginalName #>);
         }
 <# } #>
 

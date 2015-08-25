@@ -15,9 +15,12 @@ namespace <#= Model.Namespace #>
 
     sealed partial class <#= Model.Name #>Constructor : FunctionInstance, IConstructor
     {
-        public <#= Model.Name #>Constructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public <#= Model.Name #>Constructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
 <# foreach (var constant in Model.Constants) { #>
             FastAddProperty("<#= constant.Name #>", <#= constant.Value #>, false, true, false);
 <# } #>
@@ -31,7 +34,7 @@ namespace <#= Model.Namespace #>
 
         public static <#= Model.Name #>Constructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new <#= Model.Name #>Constructor(engine.Jint);
+            var obj = new <#= Model.Name #>Constructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = <#= Model.Name #>Prototype.CreatePrototypeObject(engine, obj);
@@ -54,7 +57,7 @@ namespace <#= Model.Namespace #>
                 var <#= parameter.Name #> = <#= parameter.Converter #>(arguments.At(<#= parameter.Index #>));
 <# } #>
                 var reference = new <#= Model.OriginalName #>(<#= constructor.Parameters.Stringify() #>);
-                return new <#= Model.Name #>Instance(Engine)
+                return new <#= Model.Name #>Instance(_engine)
                 {
                     Prototype = PrototypeObject,
                     Ref<#= Model.Name #> = reference,

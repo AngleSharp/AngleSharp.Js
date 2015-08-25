@@ -13,19 +13,22 @@ namespace <#= Model.Namespace #>
 
     partial class <#= Model.Name #>Instance : <#= Model.BaseName #>Instance
     {
-        public <#= Model.Name #>Instance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public <#= Model.Name #>Instance(EngineInstance engine)
+            : base(engine<#= (Model.BaseName == "Object" ? ".Jint" : "") #>)
         {
+            _engine = engine;
 <# foreach (var field in Model.Fields) { #>
             FastAddProperty("<#= field.Name #>", <#= field.Value #>, false, true, false);
 <# } #>
         }
 
-        public static <#= Model.Name #>Instance Create<#= Model.Name #>Object(Engine engine)
+        public static <#= Model.Name #>Instance Create<#= Model.Name #>Object(EngineInstance engine)
         {
             var obj = new <#= Model.Name #>Instance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -44,16 +47,16 @@ namespace <#= Model.Namespace #>
 
             if (Int32.TryParse(propertyName, out index))
 <# if (String.IsNullOrEmpty(method.RefName)) { #>
-                return Engine.Select(Ref<#= Model.Name #>[index]);
+                return _engine.GetDomNode(Ref<#= Model.Name #>[index]);
 <# } else { #>
-                return Engine.Select(Ref<#= Model.Name #>.<#= method.RefName #>(index));
+                return _engine.GetDomNode(Ref<#= Model.Name #>.<#= method.RefName #>(index));
 <# } #>
 <# } else if (type == typeof(String)) { #>
             if (propertyName != null)
 <# if (String.IsNullOrEmpty(method.RefName)) { #>
-                return Engine.Select(Ref<#= Model.Name #>[propertyName]);
+                return _engine.GetDomNode(Ref<#= Model.Name #>[propertyName]);
 <# } else { #>
-                return Engine.Select(Ref<#= Model.Name #>.<#= method.RefName #>(propertyName));
+                return _engine.GetDomNode(Ref<#= Model.Name #>.<#= method.RefName #>(propertyName));
 <# } #>
 
 <# } #>
