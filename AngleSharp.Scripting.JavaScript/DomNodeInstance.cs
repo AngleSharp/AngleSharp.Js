@@ -24,6 +24,7 @@
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
+            Prototype = engine.Jint.Object;
         }
 
         public EngineInstance Context
