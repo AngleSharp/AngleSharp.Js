@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLModElementPrototype : HTMLModElementInstance
     {
-        public HTMLModElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLModElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("cite", Engine.AsProperty(GetCite, SetCite));
             FastSetProperty("datetime", Engine.AsProperty(GetDatetime, SetDatetime));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLModElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLModElementConstructor constructor)
         {
-            var obj = new HTMLModElementPrototype(engine.Jint)
+            var obj = new HTMLModElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCite(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLModElementInstance>(Fail).RefHTMLModElement;
-            return Engine.Select(reference.Citation);
+            return _engine.GetDomNode(reference.Citation);
         }
 
         void SetCite(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDatetime(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLModElementInstance>(Fail).RefHTMLModElement;
-            return Engine.Select(reference.DateTime);
+            return _engine.GetDomNode(reference.DateTime);
         }
 
         void SetDatetime(JsValue thisObj, JsValue argument)

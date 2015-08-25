@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class AudioTrackInstance : ObjectInstance
     {
-        public AudioTrackInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public AudioTrackInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static AudioTrackInstance CreateAudioTrackObject(Engine engine)
+        public static AudioTrackInstance CreateAudioTrackObject(EngineInstance engine)
         {
             var obj = new AudioTrackInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

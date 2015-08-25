@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLObjectElementPrototype : HTMLObjectElementInstance
     {
-        public HTMLObjectElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLObjectElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("data", Engine.AsProperty(GetData, SetData));
             FastSetProperty("type", Engine.AsProperty(GetType, SetType));
@@ -29,7 +32,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLObjectElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLObjectElementConstructor constructor)
         {
-            var obj = new HTMLObjectElementPrototype(engine.Jint)
+            var obj = new HTMLObjectElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -41,7 +44,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetData(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetData(JsValue thisObj, JsValue argument)
@@ -54,7 +57,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -67,7 +70,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTypeMustMatch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.TypeMustMatch);
+            return _engine.GetDomNode(reference.TypeMustMatch);
         }
 
         void SetTypeMustMatch(JsValue thisObj, JsValue argument)
@@ -80,7 +83,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -93,7 +96,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUseMap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.UseMap);
+            return _engine.GetDomNode(reference.UseMap);
         }
 
         void SetUseMap(JsValue thisObj, JsValue argument)
@@ -106,14 +109,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.DisplayWidth);
+            return _engine.GetDomNode(reference.DisplayWidth);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -126,7 +129,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.DisplayHeight);
+            return _engine.GetDomNode(reference.DisplayHeight);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)
@@ -139,14 +142,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetContentDocument(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.ContentDocument);
+            return _engine.GetDomNode(reference.ContentDocument);
         }
 
 
         JsValue GetContentWindow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLObjectElementInstance>(Fail).RefHTMLObjectElement;
-            return Engine.Select(reference.ContentWindow);
+            return _engine.GetDomNode(reference.ContentWindow);
         }
 
 

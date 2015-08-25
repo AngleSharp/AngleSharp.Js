@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLImageElementPrototype : HTMLImageElementInstance
     {
-        public HTMLImageElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLImageElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("alt", Engine.AsProperty(GetAlt, SetAlt));
             FastSetProperty("currentSrc", Engine.AsProperty(GetCurrentSrc));
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLImageElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLImageElementConstructor constructor)
         {
-            var obj = new HTMLImageElementPrototype(engine.Jint)
+            var obj = new HTMLImageElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -44,7 +47,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlt(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.AlternativeText);
+            return _engine.GetDomNode(reference.AlternativeText);
         }
 
         void SetAlt(JsValue thisObj, JsValue argument)
@@ -57,14 +60,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCurrentSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.ActualSource);
+            return _engine.GetDomNode(reference.ActualSource);
         }
 
 
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrcset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.SourceSet);
+            return _engine.GetDomNode(reference.SourceSet);
         }
 
         void SetSrcset(JsValue thisObj, JsValue argument)
@@ -90,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSizes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.Sizes);
+            return _engine.GetDomNode(reference.Sizes);
         }
 
         void SetSizes(JsValue thisObj, JsValue argument)
@@ -103,7 +106,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCrossOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.CrossOrigin);
+            return _engine.GetDomNode(reference.CrossOrigin);
         }
 
         void SetCrossOrigin(JsValue thisObj, JsValue argument)
@@ -116,7 +119,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUseMap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.UseMap);
+            return _engine.GetDomNode(reference.UseMap);
         }
 
         void SetUseMap(JsValue thisObj, JsValue argument)
@@ -129,7 +132,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIsMap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.IsMap);
+            return _engine.GetDomNode(reference.IsMap);
         }
 
         void SetIsMap(JsValue thisObj, JsValue argument)
@@ -142,7 +145,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.DisplayWidth);
+            return _engine.GetDomNode(reference.DisplayWidth);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -155,7 +158,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.DisplayHeight);
+            return _engine.GetDomNode(reference.DisplayHeight);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)
@@ -168,21 +171,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNaturalWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.OriginalWidth);
+            return _engine.GetDomNode(reference.OriginalWidth);
         }
 
 
         JsValue GetNaturalHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.OriginalHeight);
+            return _engine.GetDomNode(reference.OriginalHeight);
         }
 
 
         JsValue GetComplete(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLImageElementInstance>(Fail).RefHTMLImageElement;
-            return Engine.Select(reference.IsCompleted);
+            return _engine.GetDomNode(reference.IsCompleted);
         }
 
 

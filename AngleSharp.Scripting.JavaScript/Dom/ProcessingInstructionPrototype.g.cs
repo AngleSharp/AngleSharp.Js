@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class ProcessingInstructionPrototype : ProcessingInstructionInstance
     {
-        public ProcessingInstructionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ProcessingInstructionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("target", Engine.AsProperty(GetTarget));
         }
 
         public static ProcessingInstructionPrototype CreatePrototypeObject(EngineInstance engine, ProcessingInstructionConstructor constructor)
         {
-            var obj = new ProcessingInstructionPrototype(engine.Jint)
+            var obj = new ProcessingInstructionPrototype(engine)
             {
                 Prototype = engine.Constructors.CharacterData.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ProcessingInstructionInstance>(Fail).RefProcessingInstruction;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 

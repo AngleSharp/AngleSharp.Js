@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSConditionRulePrototype : CSSConditionRuleInstance
     {
-        public CSSConditionRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSConditionRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("insertRule", Engine.AsValue(InsertRule), true, true, true);
             FastAddProperty("deleteRule", Engine.AsValue(DeleteRule), true, true, true);
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSConditionRulePrototype CreatePrototypeObject(EngineInstance engine, CSSConditionRuleConstructor constructor)
         {
-            var obj = new CSSConditionRulePrototype(engine.Jint)
+            var obj = new CSSConditionRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -37,7 +40,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<CSSConditionRuleInstance>(Fail).RefCSSConditionRule;
             var rule = TypeConverter.ToString(arguments.At(0));
             var index = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.Insert(rule, index));
+            return _engine.GetDomNode(reference.Insert(rule, index));
         }
 
         JsValue DeleteRule(JsValue thisObj, JsValue[] arguments)
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetConditionText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSConditionRuleInstance>(Fail).RefCSSConditionRule;
-            return Engine.Select(reference.ConditionText);
+            return _engine.GetDomNode(reference.ConditionText);
         }
 
         void SetConditionText(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCssRules(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSConditionRuleInstance>(Fail).RefCSSConditionRule;
-            return Engine.Select(reference.Rules);
+            return _engine.GetDomNode(reference.Rules);
         }
 
 

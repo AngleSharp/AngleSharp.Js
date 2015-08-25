@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackCuePrototype : TextTrackCueInstance
     {
-        public TextTrackCuePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackCuePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getCueAsHTML", Engine.AsValue(GetCueAsHTML), true, true, true);
             FastSetProperty("id", Engine.AsProperty(GetId, SetId));
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackCuePrototype CreatePrototypeObject(EngineInstance engine, TextTrackCueConstructor constructor)
         {
-            var obj = new TextTrackCuePrototype(engine.Jint)
+            var obj = new TextTrackCuePrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -46,13 +49,13 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCueAsHTML(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.AsHtml());
+            return _engine.GetDomNode(reference.AsHtml());
         }
 
         JsValue GetId(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Id);
+            return _engine.GetDomNode(reference.Id);
         }
 
         void SetId(JsValue thisObj, JsValue argument)
@@ -65,14 +68,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTrack(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Track);
+            return _engine.GetDomNode(reference.Track);
         }
 
 
         JsValue GetStartTime(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.StartTime);
+            return _engine.GetDomNode(reference.StartTime);
         }
 
         void SetStartTime(JsValue thisObj, JsValue argument)
@@ -85,7 +88,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEndTime(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.EndTime);
+            return _engine.GetDomNode(reference.EndTime);
         }
 
         void SetEndTime(JsValue thisObj, JsValue argument)
@@ -98,7 +101,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPauseOnExit(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.IsPausedOnExit);
+            return _engine.GetDomNode(reference.IsPausedOnExit);
         }
 
         void SetPauseOnExit(JsValue thisObj, JsValue argument)
@@ -111,7 +114,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVertical(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Vertical);
+            return _engine.GetDomNode(reference.Vertical);
         }
 
         void SetVertical(JsValue thisObj, JsValue argument)
@@ -124,7 +127,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSnapToLines(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.IsSnappedToLines);
+            return _engine.GetDomNode(reference.IsSnappedToLines);
         }
 
         void SetSnapToLines(JsValue thisObj, JsValue argument)
@@ -137,7 +140,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLine(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Line);
+            return _engine.GetDomNode(reference.Line);
         }
 
         void SetLine(JsValue thisObj, JsValue argument)
@@ -150,7 +153,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Position);
+            return _engine.GetDomNode(reference.Position);
         }
 
         void SetPosition(JsValue thisObj, JsValue argument)
@@ -163,7 +166,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Size);
+            return _engine.GetDomNode(reference.Size);
         }
 
         void SetSize(JsValue thisObj, JsValue argument)
@@ -176,7 +179,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlign(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Alignment);
+            return _engine.GetDomNode(reference.Alignment);
         }
 
         void SetAlign(JsValue thisObj, JsValue argument)
@@ -189,7 +192,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
         void SetText(JsValue thisObj, JsValue argument)
@@ -202,7 +205,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOnenter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Entered);
+            return _engine.GetDomNode(reference.Entered);
         }
 
         void SetOnenter(JsValue thisObj, JsValue argument)
@@ -215,7 +218,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOnexit(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueInstance>(Fail).RefTextTrackCue;
-            return Engine.Select(reference.Exited);
+            return _engine.GetDomNode(reference.Exited);
         }
 
         void SetOnexit(JsValue thisObj, JsValue argument)

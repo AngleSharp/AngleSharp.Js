@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOptionsCollectionPrototype : HTMLOptionsCollectionInstance
     {
-        public HTMLOptionsCollectionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOptionsCollectionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("add", Engine.AsValue(Add), true, true, true);
             FastAddProperty("remove", Engine.AsValue(Remove), true, true, true);
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOptionsCollectionPrototype CreatePrototypeObject(EngineInstance engine, HTMLOptionsCollectionConstructor constructor)
         {
-            var obj = new HTMLOptionsCollectionPrototype(engine.Jint)
+            var obj = new HTMLOptionsCollectionPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLCollection.PrototypeObject,
                 Extensible = true,
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectedIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionsCollectionInstance>(Fail).RefHTMLOptionsCollection;
-            return Engine.Select(reference.SelectedIndex);
+            return _engine.GetDomNode(reference.SelectedIndex);
         }
 
         void SetSelectedIndex(JsValue thisObj, JsValue argument)

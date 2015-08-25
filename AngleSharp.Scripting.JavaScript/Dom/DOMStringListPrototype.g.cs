@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMStringListPrototype : DOMStringListInstance
     {
-        public DOMStringListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMStringListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("contains", Engine.AsValue(Contains), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMStringListPrototype CreatePrototypeObject(EngineInstance engine, DOMStringListConstructor constructor)
         {
-            var obj = new DOMStringListPrototype(engine.Jint)
+            var obj = new DOMStringListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -34,13 +37,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DOMStringListInstance>(Fail).RefDOMStringList;
             var entry = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.Contains(entry));
+            return _engine.GetDomNode(reference.Contains(entry));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DOMStringListInstance>(Fail).RefDOMStringList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

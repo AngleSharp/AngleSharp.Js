@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class StyleSheetListConstructor : FunctionInstance, IConstructor
     {
-        public StyleSheetListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public StyleSheetListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public StyleSheetListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static StyleSheetListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new StyleSheetListConstructor(engine.Jint);
+            var obj = new StyleSheetListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = StyleSheetListPrototype.CreatePrototypeObject(engine, obj);

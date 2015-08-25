@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HashChangeEventConstructor : FunctionInstance, IConstructor
     {
-        public HashChangeEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HashChangeEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HashChangeEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HashChangeEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HashChangeEventConstructor(engine.Jint);
+            var obj = new HashChangeEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HashChangeEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new HashChangedEvent(type, eventInitDict);
-                return new HashChangeEventInstance(Engine)
+                return new HashChangeEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefHashChangeEvent = reference,

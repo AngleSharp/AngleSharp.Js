@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGCircleElementConstructor : FunctionInstance, IConstructor
     {
-        public SVGCircleElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public SVGCircleElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public SVGCircleElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static SVGCircleElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new SVGCircleElementConstructor(engine.Jint);
+            var obj = new SVGCircleElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = SVGCircleElementPrototype.CreatePrototypeObject(engine, obj);

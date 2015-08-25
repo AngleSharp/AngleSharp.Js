@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class VideoTrackListPrototype : VideoTrackListInstance
     {
-        public VideoTrackListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public VideoTrackListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getTrackById", Engine.AsValue(GetTrackById), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
@@ -25,7 +28,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static VideoTrackListPrototype CreatePrototypeObject(EngineInstance engine, VideoTrackListConstructor constructor)
         {
-            var obj = new VideoTrackListPrototype(engine.Jint)
+            var obj = new VideoTrackListPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -38,20 +41,20 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<VideoTrackListInstance>(Fail).RefVideoTrackList;
             var id = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetTrackById(id));
+            return _engine.GetDomNode(reference.GetTrackById(id));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackListInstance>(Fail).RefVideoTrackList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetSelectedIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackListInstance>(Fail).RefVideoTrackList;
-            return Engine.Select(reference.SelectedIndex);
+            return _engine.GetDomNode(reference.SelectedIndex);
         }
 
 

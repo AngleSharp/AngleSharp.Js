@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSCounterStyleRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSCounterStyleRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSCounterStyleRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSCounterStyleRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSCounterStyleRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSCounterStyleRuleConstructor(engine.Jint);
+            var obj = new CSSCounterStyleRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSCounterStyleRulePrototype.CreatePrototypeObject(engine, obj);

@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMExceptionPrototype : DOMExceptionInstance
     {
-        public DOMExceptionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMExceptionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("code", Engine.AsProperty(GetCode));
         }
 
         public static DOMExceptionPrototype CreatePrototypeObject(EngineInstance engine, DOMExceptionConstructor constructor)
         {
-            var obj = new DOMExceptionPrototype(engine.Jint)
+            var obj = new DOMExceptionPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DOMExceptionInstance>(Fail).RefDOMException;
-            return Engine.Select(reference.Code);
+            return _engine.GetDomNode(reference.Code);
         }
 
 

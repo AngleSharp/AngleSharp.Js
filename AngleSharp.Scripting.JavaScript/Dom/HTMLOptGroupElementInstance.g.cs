@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLOptGroupElementInstance : HTMLElementInstance
     {
-        public HTMLOptGroupElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOptGroupElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLOptGroupElementInstance CreateHTMLOptGroupElementObject(Engine engine)
+        public static HTMLOptGroupElementInstance CreateHTMLOptGroupElementObject(EngineInstance engine)
         {
             var obj = new HTMLOptGroupElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

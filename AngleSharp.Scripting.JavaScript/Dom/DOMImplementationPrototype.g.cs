@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMImplementationPrototype : DOMImplementationInstance
     {
-        public DOMImplementationPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMImplementationPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("createDocument", Engine.AsValue(CreateDocument), true, true, true);
             FastAddProperty("createHTMLDocument", Engine.AsValue(CreateHTMLDocument), true, true, true);
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMImplementationPrototype CreatePrototypeObject(EngineInstance engine, DOMImplementationConstructor constructor)
         {
-            var obj = new DOMImplementationPrototype(engine.Jint)
+            var obj = new DOMImplementationPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -38,14 +41,14 @@ namespace AngleSharp.Scripting.JavaScript
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var qualifiedName = TypeConverter.ToString(arguments.At(1));
             var doctype = DomTypeConverter.ToDoctype(arguments.At(2));
-            return Engine.Select(reference.CreateDocument(namespaceUri, qualifiedName, doctype));
+            return _engine.GetDomNode(reference.CreateDocument(namespaceUri, qualifiedName, doctype));
         }
 
         JsValue CreateHTMLDocument(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DOMImplementationInstance>(Fail).RefDOMImplementation;
             var title = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateHtmlDocument(title));
+            return _engine.GetDomNode(reference.CreateHtmlDocument(title));
         }
 
         JsValue CreateDocumentType(JsValue thisObj, JsValue[] arguments)
@@ -54,7 +57,7 @@ namespace AngleSharp.Scripting.JavaScript
             var qualifiedName = TypeConverter.ToString(arguments.At(0));
             var publicId = TypeConverter.ToString(arguments.At(1));
             var systemId = TypeConverter.ToString(arguments.At(2));
-            return Engine.Select(reference.CreateDocumentType(qualifiedName, publicId, systemId));
+            return _engine.GetDomNode(reference.CreateDocumentType(qualifiedName, publicId, systemId));
         }
 
         JsValue HasFeature(JsValue thisObj, JsValue[] arguments)
@@ -62,7 +65,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DOMImplementationInstance>(Fail).RefDOMImplementation;
             var feature = TypeConverter.ToString(arguments.At(0));
             var version = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.HasFeature(feature, version));
+            return _engine.GetDomNode(reference.HasFeature(feature, version));
         }
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)

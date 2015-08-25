@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLSourceElementPrototype : HTMLSourceElementInstance
     {
-        public HTMLSourceElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLSourceElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
             FastSetProperty("srcset", Engine.AsProperty(GetSrcset, SetSrcset));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLSourceElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLSourceElementConstructor constructor)
         {
-            var obj = new HTMLSourceElementPrototype(engine.Jint)
+            var obj = new HTMLSourceElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -36,7 +39,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSourceElementInstance>(Fail).RefHTMLSourceElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrcset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSourceElementInstance>(Fail).RefHTMLSourceElement;
-            return Engine.Select(reference.SourceSet);
+            return _engine.GetDomNode(reference.SourceSet);
         }
 
         void SetSrcset(JsValue thisObj, JsValue argument)
@@ -62,7 +65,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSizes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSourceElementInstance>(Fail).RefHTMLSourceElement;
-            return Engine.Select(reference.Sizes);
+            return _engine.GetDomNode(reference.Sizes);
         }
 
         void SetSizes(JsValue thisObj, JsValue argument)
@@ -75,7 +78,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSourceElementInstance>(Fail).RefHTMLSourceElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -88,7 +91,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSourceElementInstance>(Fail).RefHTMLSourceElement;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)

@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaErrorPrototype : MediaErrorInstance
     {
-        public MediaErrorPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MediaErrorPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("code", Engine.AsProperty(GetCode));
         }
 
         public static MediaErrorPrototype CreatePrototypeObject(EngineInstance engine, MediaErrorConstructor constructor)
         {
-            var obj = new MediaErrorPrototype(engine.Jint)
+            var obj = new MediaErrorPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaErrorInstance>(Fail).RefMediaError;
-            return Engine.Select(reference.Code);
+            return _engine.GetDomNode(reference.Code);
         }
 
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class RangeConstructor : FunctionInstance, IConstructor
     {
-        public RangeConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public RangeConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("START_TO_START", (UInt32)(AngleSharp.Dom.RangeType.StartToStart), false, true, false);
             FastAddProperty("START_TO_END", (UInt32)(AngleSharp.Dom.RangeType.StartToEnd), false, true, false);
             FastAddProperty("END_TO_END", (UInt32)(AngleSharp.Dom.RangeType.EndToEnd), false, true, false);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static RangeConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new RangeConstructor(engine.Jint);
+            var obj = new RangeConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = RangePrototype.CreatePrototypeObject(engine, obj);

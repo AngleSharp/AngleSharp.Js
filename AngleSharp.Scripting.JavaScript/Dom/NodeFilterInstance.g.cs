@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class NodeFilterInstance : ObjectInstance
     {
-        public NodeFilterInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public NodeFilterInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
             FastAddProperty("FILTER_ACCEPT", (UInt32)(AngleSharp.Dom.FilterResult.Accept), false, true, false);
             FastAddProperty("FILTER_REJECT", (UInt32)(AngleSharp.Dom.FilterResult.Reject), false, true, false);
             FastAddProperty("FILTER_SKIP", (UInt32)(AngleSharp.Dom.FilterResult.Skip), false, true, false);
@@ -30,11 +33,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("SHOW_NOTATION", (UInt32)(AngleSharp.Dom.FilterSettings.Notation), false, true, false);
         }
 
-        public static NodeFilterInstance CreateNodeFilterObject(Engine engine)
+        public static NodeFilterInstance CreateNodeFilterObject(EngineInstance engine)
         {
             var obj = new NodeFilterInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

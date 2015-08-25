@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLInputElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLInputElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLInputElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLInputElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLInputElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLInputElementConstructor(engine.Jint);
+            var obj = new HTMLInputElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLInputElementPrototype.CreatePrototypeObject(engine, obj);

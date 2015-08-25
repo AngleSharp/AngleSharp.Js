@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSImportRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSImportRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSImportRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSImportRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSImportRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSImportRuleConstructor(engine.Jint);
+            var obj = new CSSImportRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSImportRulePrototype.CreatePrototypeObject(engine, obj);

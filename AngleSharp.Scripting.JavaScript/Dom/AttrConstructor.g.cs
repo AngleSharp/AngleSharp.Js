@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class AttrConstructor : FunctionInstance, IConstructor
     {
-        public AttrConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public AttrConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public AttrPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static AttrConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new AttrConstructor(engine.Jint);
+            var obj = new AttrConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = AttrPrototype.CreatePrototypeObject(engine, obj);

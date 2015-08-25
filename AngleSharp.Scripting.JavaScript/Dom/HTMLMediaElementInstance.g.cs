@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLMediaElementInstance : HTMLElementInstance
     {
-        public HTMLMediaElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMediaElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("NETWORK_EMPTY", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Empty), false, true, false);
             FastAddProperty("NETWORK_IDLE", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Idle), false, true, false);
             FastAddProperty("NETWORK_LOADING", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Loading), false, true, false);
@@ -23,11 +26,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("HAVE_ENOUGH_DATA", (UInt32)(AngleSharp.Dom.Media.MediaReadyState.EnoughData), false, true, false);
         }
 
-        public static HTMLMediaElementInstance CreateHTMLMediaElementObject(Engine engine)
+        public static HTMLMediaElementInstance CreateHTMLMediaElementObject(EngineInstance engine)
         {
             var obj = new HTMLMediaElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

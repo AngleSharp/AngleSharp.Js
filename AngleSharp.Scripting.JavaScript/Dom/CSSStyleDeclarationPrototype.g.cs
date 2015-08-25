@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSStyleDeclarationPrototype : CSSStyleDeclarationInstance
     {
-        public CSSStyleDeclarationPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSStyleDeclarationPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getPropertyValue", Engine.AsValue(GetPropertyValue), true, true, true);
             FastAddProperty("getPropertyPriority", Engine.AsValue(GetPropertyPriority), true, true, true);
@@ -249,7 +252,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSStyleDeclarationPrototype CreatePrototypeObject(EngineInstance engine, CSSStyleDeclarationConstructor constructor)
         {
-            var obj = new CSSStyleDeclarationPrototype(engine.Jint)
+            var obj = new CSSStyleDeclarationPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -262,14 +265,14 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
             var propertyName = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetPropertyValue(propertyName));
+            return _engine.GetDomNode(reference.GetPropertyValue(propertyName));
         }
 
         JsValue GetPropertyPriority(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
             var propertyName = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetPropertyPriority(propertyName));
+            return _engine.GetDomNode(reference.GetPropertyPriority(propertyName));
         }
 
         JsValue SetProperty(JsValue thisObj, JsValue[] arguments)
@@ -286,13 +289,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
             var propertyName = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.RemoveProperty(propertyName));
+            return _engine.GetDomNode(reference.RemoveProperty(propertyName));
         }
 
         JsValue GetCssText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.CssText);
+            return _engine.GetDomNode(reference.CssText);
         }
 
         void SetCssText(JsValue thisObj, JsValue argument)
@@ -305,21 +308,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetParentRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Parent);
+            return _engine.GetDomNode(reference.Parent);
         }
 
 
         JsValue GetAccelerator(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Accelerator);
+            return _engine.GetDomNode(reference.Accelerator);
         }
 
         void SetAccelerator(JsValue thisObj, JsValue argument)
@@ -332,7 +335,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlignContent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AlignContent);
+            return _engine.GetDomNode(reference.AlignContent);
         }
 
         void SetAlignContent(JsValue thisObj, JsValue argument)
@@ -345,7 +348,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlignItems(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AlignItems);
+            return _engine.GetDomNode(reference.AlignItems);
         }
 
         void SetAlignItems(JsValue thisObj, JsValue argument)
@@ -358,7 +361,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlignmentBaseline(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AlignmentBaseline);
+            return _engine.GetDomNode(reference.AlignmentBaseline);
         }
 
         void SetAlignmentBaseline(JsValue thisObj, JsValue argument)
@@ -371,7 +374,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlignSelf(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AlignSelf);
+            return _engine.GetDomNode(reference.AlignSelf);
         }
 
         void SetAlignSelf(JsValue thisObj, JsValue argument)
@@ -384,7 +387,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimation(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Animation);
+            return _engine.GetDomNode(reference.Animation);
         }
 
         void SetAnimation(JsValue thisObj, JsValue argument)
@@ -397,7 +400,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationDelay(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationDelay);
+            return _engine.GetDomNode(reference.AnimationDelay);
         }
 
         void SetAnimationDelay(JsValue thisObj, JsValue argument)
@@ -410,7 +413,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationDirection(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationDirection);
+            return _engine.GetDomNode(reference.AnimationDirection);
         }
 
         void SetAnimationDirection(JsValue thisObj, JsValue argument)
@@ -423,7 +426,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationDuration(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationDuration);
+            return _engine.GetDomNode(reference.AnimationDuration);
         }
 
         void SetAnimationDuration(JsValue thisObj, JsValue argument)
@@ -436,7 +439,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationFillMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationFillMode);
+            return _engine.GetDomNode(reference.AnimationFillMode);
         }
 
         void SetAnimationFillMode(JsValue thisObj, JsValue argument)
@@ -449,7 +452,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationIterationCount(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationIterationCount);
+            return _engine.GetDomNode(reference.AnimationIterationCount);
         }
 
         void SetAnimationIterationCount(JsValue thisObj, JsValue argument)
@@ -462,7 +465,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationName);
+            return _engine.GetDomNode(reference.AnimationName);
         }
 
         void SetAnimationName(JsValue thisObj, JsValue argument)
@@ -475,7 +478,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationPlayState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationPlayState);
+            return _engine.GetDomNode(reference.AnimationPlayState);
         }
 
         void SetAnimationPlayState(JsValue thisObj, JsValue argument)
@@ -488,7 +491,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAnimationTimingFunction(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.AnimationTimingFunction);
+            return _engine.GetDomNode(reference.AnimationTimingFunction);
         }
 
         void SetAnimationTimingFunction(JsValue thisObj, JsValue argument)
@@ -501,7 +504,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackfaceVisibility(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackfaceVisibility);
+            return _engine.GetDomNode(reference.BackfaceVisibility);
         }
 
         void SetBackfaceVisibility(JsValue thisObj, JsValue argument)
@@ -514,7 +517,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackground(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Background);
+            return _engine.GetDomNode(reference.Background);
         }
 
         void SetBackground(JsValue thisObj, JsValue argument)
@@ -527,7 +530,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundAttachment(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundAttachment);
+            return _engine.GetDomNode(reference.BackgroundAttachment);
         }
 
         void SetBackgroundAttachment(JsValue thisObj, JsValue argument)
@@ -540,7 +543,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundClip(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundClip);
+            return _engine.GetDomNode(reference.BackgroundClip);
         }
 
         void SetBackgroundClip(JsValue thisObj, JsValue argument)
@@ -553,7 +556,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundColor);
+            return _engine.GetDomNode(reference.BackgroundColor);
         }
 
         void SetBackgroundColor(JsValue thisObj, JsValue argument)
@@ -566,7 +569,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundImage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundImage);
+            return _engine.GetDomNode(reference.BackgroundImage);
         }
 
         void SetBackgroundImage(JsValue thisObj, JsValue argument)
@@ -579,7 +582,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundOrigin);
+            return _engine.GetDomNode(reference.BackgroundOrigin);
         }
 
         void SetBackgroundOrigin(JsValue thisObj, JsValue argument)
@@ -592,7 +595,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundPosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundPosition);
+            return _engine.GetDomNode(reference.BackgroundPosition);
         }
 
         void SetBackgroundPosition(JsValue thisObj, JsValue argument)
@@ -605,7 +608,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundPositionX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundPositionX);
+            return _engine.GetDomNode(reference.BackgroundPositionX);
         }
 
         void SetBackgroundPositionX(JsValue thisObj, JsValue argument)
@@ -618,7 +621,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundPositionY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundPositionY);
+            return _engine.GetDomNode(reference.BackgroundPositionY);
         }
 
         void SetBackgroundPositionY(JsValue thisObj, JsValue argument)
@@ -631,7 +634,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundRepeat(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundRepeat);
+            return _engine.GetDomNode(reference.BackgroundRepeat);
         }
 
         void SetBackgroundRepeat(JsValue thisObj, JsValue argument)
@@ -644,7 +647,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBackgroundSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BackgroundSize);
+            return _engine.GetDomNode(reference.BackgroundSize);
         }
 
         void SetBackgroundSize(JsValue thisObj, JsValue argument)
@@ -657,7 +660,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBaselineShift(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BaselineShift);
+            return _engine.GetDomNode(reference.BaselineShift);
         }
 
         void SetBaselineShift(JsValue thisObj, JsValue argument)
@@ -670,7 +673,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBehavior(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Behavior);
+            return _engine.GetDomNode(reference.Behavior);
         }
 
         void SetBehavior(JsValue thisObj, JsValue argument)
@@ -683,7 +686,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorder(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Border);
+            return _engine.GetDomNode(reference.Border);
         }
 
         void SetBorder(JsValue thisObj, JsValue argument)
@@ -696,7 +699,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottom(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottom);
+            return _engine.GetDomNode(reference.BorderBottom);
         }
 
         void SetBorderBottom(JsValue thisObj, JsValue argument)
@@ -709,7 +712,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottomColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottomColor);
+            return _engine.GetDomNode(reference.BorderBottomColor);
         }
 
         void SetBorderBottomColor(JsValue thisObj, JsValue argument)
@@ -722,7 +725,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottomLeftRadius(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottomLeftRadius);
+            return _engine.GetDomNode(reference.BorderBottomLeftRadius);
         }
 
         void SetBorderBottomLeftRadius(JsValue thisObj, JsValue argument)
@@ -735,7 +738,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottomRightRadius(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottomRightRadius);
+            return _engine.GetDomNode(reference.BorderBottomRightRadius);
         }
 
         void SetBorderBottomRightRadius(JsValue thisObj, JsValue argument)
@@ -748,7 +751,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottomStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottomStyle);
+            return _engine.GetDomNode(reference.BorderBottomStyle);
         }
 
         void SetBorderBottomStyle(JsValue thisObj, JsValue argument)
@@ -761,7 +764,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderBottomWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderBottomWidth);
+            return _engine.GetDomNode(reference.BorderBottomWidth);
         }
 
         void SetBorderBottomWidth(JsValue thisObj, JsValue argument)
@@ -774,7 +777,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderCollapse(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderCollapse);
+            return _engine.GetDomNode(reference.BorderCollapse);
         }
 
         void SetBorderCollapse(JsValue thisObj, JsValue argument)
@@ -787,7 +790,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderColor);
+            return _engine.GetDomNode(reference.BorderColor);
         }
 
         void SetBorderColor(JsValue thisObj, JsValue argument)
@@ -800,7 +803,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImage);
+            return _engine.GetDomNode(reference.BorderImage);
         }
 
         void SetBorderImage(JsValue thisObj, JsValue argument)
@@ -813,7 +816,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImageOutset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImageOutset);
+            return _engine.GetDomNode(reference.BorderImageOutset);
         }
 
         void SetBorderImageOutset(JsValue thisObj, JsValue argument)
@@ -826,7 +829,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImageRepeat(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImageRepeat);
+            return _engine.GetDomNode(reference.BorderImageRepeat);
         }
 
         void SetBorderImageRepeat(JsValue thisObj, JsValue argument)
@@ -839,7 +842,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImageSlice(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImageSlice);
+            return _engine.GetDomNode(reference.BorderImageSlice);
         }
 
         void SetBorderImageSlice(JsValue thisObj, JsValue argument)
@@ -852,7 +855,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImageSource(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImageSource);
+            return _engine.GetDomNode(reference.BorderImageSource);
         }
 
         void SetBorderImageSource(JsValue thisObj, JsValue argument)
@@ -865,7 +868,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderImageWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderImageWidth);
+            return _engine.GetDomNode(reference.BorderImageWidth);
         }
 
         void SetBorderImageWidth(JsValue thisObj, JsValue argument)
@@ -878,7 +881,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderLeft(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderLeft);
+            return _engine.GetDomNode(reference.BorderLeft);
         }
 
         void SetBorderLeft(JsValue thisObj, JsValue argument)
@@ -891,7 +894,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderLeftColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderLeftColor);
+            return _engine.GetDomNode(reference.BorderLeftColor);
         }
 
         void SetBorderLeftColor(JsValue thisObj, JsValue argument)
@@ -904,7 +907,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderLeftStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderLeftStyle);
+            return _engine.GetDomNode(reference.BorderLeftStyle);
         }
 
         void SetBorderLeftStyle(JsValue thisObj, JsValue argument)
@@ -917,7 +920,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderLeftWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderLeftWidth);
+            return _engine.GetDomNode(reference.BorderLeftWidth);
         }
 
         void SetBorderLeftWidth(JsValue thisObj, JsValue argument)
@@ -930,7 +933,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderRadius(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderRadius);
+            return _engine.GetDomNode(reference.BorderRadius);
         }
 
         void SetBorderRadius(JsValue thisObj, JsValue argument)
@@ -943,7 +946,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderRight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderRight);
+            return _engine.GetDomNode(reference.BorderRight);
         }
 
         void SetBorderRight(JsValue thisObj, JsValue argument)
@@ -956,7 +959,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderRightColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderRightColor);
+            return _engine.GetDomNode(reference.BorderRightColor);
         }
 
         void SetBorderRightColor(JsValue thisObj, JsValue argument)
@@ -969,7 +972,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderRightStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderRightStyle);
+            return _engine.GetDomNode(reference.BorderRightStyle);
         }
 
         void SetBorderRightStyle(JsValue thisObj, JsValue argument)
@@ -982,7 +985,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderRightWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderRightWidth);
+            return _engine.GetDomNode(reference.BorderRightWidth);
         }
 
         void SetBorderRightWidth(JsValue thisObj, JsValue argument)
@@ -995,7 +998,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderSpacing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderSpacing);
+            return _engine.GetDomNode(reference.BorderSpacing);
         }
 
         void SetBorderSpacing(JsValue thisObj, JsValue argument)
@@ -1008,7 +1011,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderStyle);
+            return _engine.GetDomNode(reference.BorderStyle);
         }
 
         void SetBorderStyle(JsValue thisObj, JsValue argument)
@@ -1021,7 +1024,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTop);
+            return _engine.GetDomNode(reference.BorderTop);
         }
 
         void SetBorderTop(JsValue thisObj, JsValue argument)
@@ -1034,7 +1037,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTopColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTopColor);
+            return _engine.GetDomNode(reference.BorderTopColor);
         }
 
         void SetBorderTopColor(JsValue thisObj, JsValue argument)
@@ -1047,7 +1050,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTopLeftRadius(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTopLeftRadius);
+            return _engine.GetDomNode(reference.BorderTopLeftRadius);
         }
 
         void SetBorderTopLeftRadius(JsValue thisObj, JsValue argument)
@@ -1060,7 +1063,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTopRightRadius(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTopRightRadius);
+            return _engine.GetDomNode(reference.BorderTopRightRadius);
         }
 
         void SetBorderTopRightRadius(JsValue thisObj, JsValue argument)
@@ -1073,7 +1076,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTopStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTopStyle);
+            return _engine.GetDomNode(reference.BorderTopStyle);
         }
 
         void SetBorderTopStyle(JsValue thisObj, JsValue argument)
@@ -1086,7 +1089,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderTopWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderTopWidth);
+            return _engine.GetDomNode(reference.BorderTopWidth);
         }
 
         void SetBorderTopWidth(JsValue thisObj, JsValue argument)
@@ -1099,7 +1102,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBorderWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BorderWidth);
+            return _engine.GetDomNode(reference.BorderWidth);
         }
 
         void SetBorderWidth(JsValue thisObj, JsValue argument)
@@ -1112,7 +1115,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBoxShadow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BoxShadow);
+            return _engine.GetDomNode(reference.BoxShadow);
         }
 
         void SetBoxShadow(JsValue thisObj, JsValue argument)
@@ -1125,7 +1128,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBoxSizing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BoxSizing);
+            return _engine.GetDomNode(reference.BoxSizing);
         }
 
         void SetBoxSizing(JsValue thisObj, JsValue argument)
@@ -1138,7 +1141,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBreakAfter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BreakAfter);
+            return _engine.GetDomNode(reference.BreakAfter);
         }
 
         void SetBreakAfter(JsValue thisObj, JsValue argument)
@@ -1151,7 +1154,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBreakBefore(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BreakBefore);
+            return _engine.GetDomNode(reference.BreakBefore);
         }
 
         void SetBreakBefore(JsValue thisObj, JsValue argument)
@@ -1164,7 +1167,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBreakInside(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.BreakInside);
+            return _engine.GetDomNode(reference.BreakInside);
         }
 
         void SetBreakInside(JsValue thisObj, JsValue argument)
@@ -1177,7 +1180,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCaptionSide(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.CaptionSide);
+            return _engine.GetDomNode(reference.CaptionSide);
         }
 
         void SetCaptionSide(JsValue thisObj, JsValue argument)
@@ -1190,7 +1193,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClear(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Clear);
+            return _engine.GetDomNode(reference.Clear);
         }
 
         void SetClear(JsValue thisObj, JsValue argument)
@@ -1203,7 +1206,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClip(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Clip);
+            return _engine.GetDomNode(reference.Clip);
         }
 
         void SetClip(JsValue thisObj, JsValue argument)
@@ -1216,7 +1219,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipBottom(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipBottom);
+            return _engine.GetDomNode(reference.ClipBottom);
         }
 
         void SetClipBottom(JsValue thisObj, JsValue argument)
@@ -1229,7 +1232,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipLeft(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipLeft);
+            return _engine.GetDomNode(reference.ClipLeft);
         }
 
         void SetClipLeft(JsValue thisObj, JsValue argument)
@@ -1242,7 +1245,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipPath(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipPath);
+            return _engine.GetDomNode(reference.ClipPath);
         }
 
         void SetClipPath(JsValue thisObj, JsValue argument)
@@ -1255,7 +1258,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipRight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipRight);
+            return _engine.GetDomNode(reference.ClipRight);
         }
 
         void SetClipRight(JsValue thisObj, JsValue argument)
@@ -1268,7 +1271,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipRule);
+            return _engine.GetDomNode(reference.ClipRule);
         }
 
         void SetClipRule(JsValue thisObj, JsValue argument)
@@ -1281,7 +1284,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetClipTop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ClipTop);
+            return _engine.GetDomNode(reference.ClipTop);
         }
 
         void SetClipTop(JsValue thisObj, JsValue argument)
@@ -1294,7 +1297,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Color);
+            return _engine.GetDomNode(reference.Color);
         }
 
         void SetColor(JsValue thisObj, JsValue argument)
@@ -1307,7 +1310,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColorInterpolationFilters(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColorInterpolationFilters);
+            return _engine.GetDomNode(reference.ColorInterpolationFilters);
         }
 
         void SetColorInterpolationFilters(JsValue thisObj, JsValue argument)
@@ -1320,7 +1323,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnCount(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnCount);
+            return _engine.GetDomNode(reference.ColumnCount);
         }
 
         void SetColumnCount(JsValue thisObj, JsValue argument)
@@ -1333,7 +1336,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnFill(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnFill);
+            return _engine.GetDomNode(reference.ColumnFill);
         }
 
         void SetColumnFill(JsValue thisObj, JsValue argument)
@@ -1346,7 +1349,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnGap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnGap);
+            return _engine.GetDomNode(reference.ColumnGap);
         }
 
         void SetColumnGap(JsValue thisObj, JsValue argument)
@@ -1359,7 +1362,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnRule);
+            return _engine.GetDomNode(reference.ColumnRule);
         }
 
         void SetColumnRule(JsValue thisObj, JsValue argument)
@@ -1372,7 +1375,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnRuleColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnRuleColor);
+            return _engine.GetDomNode(reference.ColumnRuleColor);
         }
 
         void SetColumnRuleColor(JsValue thisObj, JsValue argument)
@@ -1385,7 +1388,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnRuleStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnRuleStyle);
+            return _engine.GetDomNode(reference.ColumnRuleStyle);
         }
 
         void SetColumnRuleStyle(JsValue thisObj, JsValue argument)
@@ -1398,7 +1401,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnRuleWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnRuleWidth);
+            return _engine.GetDomNode(reference.ColumnRuleWidth);
         }
 
         void SetColumnRuleWidth(JsValue thisObj, JsValue argument)
@@ -1411,7 +1414,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumns(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Columns);
+            return _engine.GetDomNode(reference.Columns);
         }
 
         void SetColumns(JsValue thisObj, JsValue argument)
@@ -1424,7 +1427,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnSpan(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnSpan);
+            return _engine.GetDomNode(reference.ColumnSpan);
         }
 
         void SetColumnSpan(JsValue thisObj, JsValue argument)
@@ -1437,7 +1440,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColumnWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ColumnWidth);
+            return _engine.GetDomNode(reference.ColumnWidth);
         }
 
         void SetColumnWidth(JsValue thisObj, JsValue argument)
@@ -1450,7 +1453,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetContent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Content);
+            return _engine.GetDomNode(reference.Content);
         }
 
         void SetContent(JsValue thisObj, JsValue argument)
@@ -1463,7 +1466,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCounterIncrement(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.CounterIncrement);
+            return _engine.GetDomNode(reference.CounterIncrement);
         }
 
         void SetCounterIncrement(JsValue thisObj, JsValue argument)
@@ -1476,7 +1479,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCounterReset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.CounterReset);
+            return _engine.GetDomNode(reference.CounterReset);
         }
 
         void SetCounterReset(JsValue thisObj, JsValue argument)
@@ -1489,7 +1492,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCursor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Cursor);
+            return _engine.GetDomNode(reference.Cursor);
         }
 
         void SetCursor(JsValue thisObj, JsValue argument)
@@ -1502,7 +1505,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDirection(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Direction);
+            return _engine.GetDomNode(reference.Direction);
         }
 
         void SetDirection(JsValue thisObj, JsValue argument)
@@ -1515,7 +1518,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisplay(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Display);
+            return _engine.GetDomNode(reference.Display);
         }
 
         void SetDisplay(JsValue thisObj, JsValue argument)
@@ -1528,7 +1531,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDominantBaseline(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.DominantBaseline);
+            return _engine.GetDomNode(reference.DominantBaseline);
         }
 
         void SetDominantBaseline(JsValue thisObj, JsValue argument)
@@ -1541,7 +1544,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEmptyCells(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.EmptyCells);
+            return _engine.GetDomNode(reference.EmptyCells);
         }
 
         void SetEmptyCells(JsValue thisObj, JsValue argument)
@@ -1554,7 +1557,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEnableBackground(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.EnableBackground);
+            return _engine.GetDomNode(reference.EnableBackground);
         }
 
         void SetEnableBackground(JsValue thisObj, JsValue argument)
@@ -1567,7 +1570,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFill(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Fill);
+            return _engine.GetDomNode(reference.Fill);
         }
 
         void SetFill(JsValue thisObj, JsValue argument)
@@ -1580,7 +1583,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFillOpacity(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FillOpacity);
+            return _engine.GetDomNode(reference.FillOpacity);
         }
 
         void SetFillOpacity(JsValue thisObj, JsValue argument)
@@ -1593,7 +1596,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFillRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FillRule);
+            return _engine.GetDomNode(reference.FillRule);
         }
 
         void SetFillRule(JsValue thisObj, JsValue argument)
@@ -1606,7 +1609,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFilter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Filter);
+            return _engine.GetDomNode(reference.Filter);
         }
 
         void SetFilter(JsValue thisObj, JsValue argument)
@@ -1619,7 +1622,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Flex);
+            return _engine.GetDomNode(reference.Flex);
         }
 
         void SetFlex(JsValue thisObj, JsValue argument)
@@ -1632,7 +1635,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexBasis(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexBasis);
+            return _engine.GetDomNode(reference.FlexBasis);
         }
 
         void SetFlexBasis(JsValue thisObj, JsValue argument)
@@ -1645,7 +1648,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexDirection(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexDirection);
+            return _engine.GetDomNode(reference.FlexDirection);
         }
 
         void SetFlexDirection(JsValue thisObj, JsValue argument)
@@ -1658,7 +1661,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexFlow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexFlow);
+            return _engine.GetDomNode(reference.FlexFlow);
         }
 
         void SetFlexFlow(JsValue thisObj, JsValue argument)
@@ -1671,7 +1674,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexGrow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexGrow);
+            return _engine.GetDomNode(reference.FlexGrow);
         }
 
         void SetFlexGrow(JsValue thisObj, JsValue argument)
@@ -1684,7 +1687,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexShrink(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexShrink);
+            return _engine.GetDomNode(reference.FlexShrink);
         }
 
         void SetFlexShrink(JsValue thisObj, JsValue argument)
@@ -1697,7 +1700,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFlexWrap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FlexWrap);
+            return _engine.GetDomNode(reference.FlexWrap);
         }
 
         void SetFlexWrap(JsValue thisObj, JsValue argument)
@@ -1710,7 +1713,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCssFloat(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Float);
+            return _engine.GetDomNode(reference.Float);
         }
 
         void SetCssFloat(JsValue thisObj, JsValue argument)
@@ -1723,7 +1726,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFont(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Font);
+            return _engine.GetDomNode(reference.Font);
         }
 
         void SetFont(JsValue thisObj, JsValue argument)
@@ -1736,7 +1739,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontFamily(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontFamily);
+            return _engine.GetDomNode(reference.FontFamily);
         }
 
         void SetFontFamily(JsValue thisObj, JsValue argument)
@@ -1749,7 +1752,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontFeatureSettings(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontFeatureSettings);
+            return _engine.GetDomNode(reference.FontFeatureSettings);
         }
 
         void SetFontFeatureSettings(JsValue thisObj, JsValue argument)
@@ -1762,7 +1765,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontSize);
+            return _engine.GetDomNode(reference.FontSize);
         }
 
         void SetFontSize(JsValue thisObj, JsValue argument)
@@ -1775,7 +1778,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontSizeAdjust(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontSizeAdjust);
+            return _engine.GetDomNode(reference.FontSizeAdjust);
         }
 
         void SetFontSizeAdjust(JsValue thisObj, JsValue argument)
@@ -1788,7 +1791,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontStretch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontStretch);
+            return _engine.GetDomNode(reference.FontStretch);
         }
 
         void SetFontStretch(JsValue thisObj, JsValue argument)
@@ -1801,7 +1804,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontStyle);
+            return _engine.GetDomNode(reference.FontStyle);
         }
 
         void SetFontStyle(JsValue thisObj, JsValue argument)
@@ -1814,7 +1817,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontVariant(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontVariant);
+            return _engine.GetDomNode(reference.FontVariant);
         }
 
         void SetFontVariant(JsValue thisObj, JsValue argument)
@@ -1827,7 +1830,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontWeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.FontWeight);
+            return _engine.GetDomNode(reference.FontWeight);
         }
 
         void SetFontWeight(JsValue thisObj, JsValue argument)
@@ -1840,7 +1843,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetGlyphOrientationHorizontal(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.GlyphOrientationHorizontal);
+            return _engine.GetDomNode(reference.GlyphOrientationHorizontal);
         }
 
         void SetGlyphOrientationHorizontal(JsValue thisObj, JsValue argument)
@@ -1853,7 +1856,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetGlyphOrientationVertical(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.GlyphOrientationVertical);
+            return _engine.GetDomNode(reference.GlyphOrientationVertical);
         }
 
         void SetGlyphOrientationVertical(JsValue thisObj, JsValue argument)
@@ -1866,7 +1869,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Height);
+            return _engine.GetDomNode(reference.Height);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)
@@ -1879,7 +1882,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetImeMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ImeMode);
+            return _engine.GetDomNode(reference.ImeMode);
         }
 
         void SetImeMode(JsValue thisObj, JsValue argument)
@@ -1892,7 +1895,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetJustifyContent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.JustifyContent);
+            return _engine.GetDomNode(reference.JustifyContent);
         }
 
         void SetJustifyContent(JsValue thisObj, JsValue argument)
@@ -1905,7 +1908,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLayoutGrid(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LayoutGrid);
+            return _engine.GetDomNode(reference.LayoutGrid);
         }
 
         void SetLayoutGrid(JsValue thisObj, JsValue argument)
@@ -1918,7 +1921,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLayoutGridChar(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LayoutGridChar);
+            return _engine.GetDomNode(reference.LayoutGridChar);
         }
 
         void SetLayoutGridChar(JsValue thisObj, JsValue argument)
@@ -1931,7 +1934,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLayoutGridLine(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LayoutGridLine);
+            return _engine.GetDomNode(reference.LayoutGridLine);
         }
 
         void SetLayoutGridLine(JsValue thisObj, JsValue argument)
@@ -1944,7 +1947,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLayoutGridMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LayoutGridMode);
+            return _engine.GetDomNode(reference.LayoutGridMode);
         }
 
         void SetLayoutGridMode(JsValue thisObj, JsValue argument)
@@ -1957,7 +1960,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLayoutGridType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LayoutGridType);
+            return _engine.GetDomNode(reference.LayoutGridType);
         }
 
         void SetLayoutGridType(JsValue thisObj, JsValue argument)
@@ -1970,7 +1973,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLeft(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Left);
+            return _engine.GetDomNode(reference.Left);
         }
 
         void SetLeft(JsValue thisObj, JsValue argument)
@@ -1983,7 +1986,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLetterSpacing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LetterSpacing);
+            return _engine.GetDomNode(reference.LetterSpacing);
         }
 
         void SetLetterSpacing(JsValue thisObj, JsValue argument)
@@ -1996,7 +1999,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLineHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.LineHeight);
+            return _engine.GetDomNode(reference.LineHeight);
         }
 
         void SetLineHeight(JsValue thisObj, JsValue argument)
@@ -2009,7 +2012,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetListStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ListStyle);
+            return _engine.GetDomNode(reference.ListStyle);
         }
 
         void SetListStyle(JsValue thisObj, JsValue argument)
@@ -2022,7 +2025,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetListStyleImage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ListStyleImage);
+            return _engine.GetDomNode(reference.ListStyleImage);
         }
 
         void SetListStyleImage(JsValue thisObj, JsValue argument)
@@ -2035,7 +2038,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetListStylePosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ListStylePosition);
+            return _engine.GetDomNode(reference.ListStylePosition);
         }
 
         void SetListStylePosition(JsValue thisObj, JsValue argument)
@@ -2048,7 +2051,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetListStyleType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ListStyleType);
+            return _engine.GetDomNode(reference.ListStyleType);
         }
 
         void SetListStyleType(JsValue thisObj, JsValue argument)
@@ -2061,7 +2064,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMargin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Margin);
+            return _engine.GetDomNode(reference.Margin);
         }
 
         void SetMargin(JsValue thisObj, JsValue argument)
@@ -2074,7 +2077,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarginBottom(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarginBottom);
+            return _engine.GetDomNode(reference.MarginBottom);
         }
 
         void SetMarginBottom(JsValue thisObj, JsValue argument)
@@ -2087,7 +2090,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarginLeft(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarginLeft);
+            return _engine.GetDomNode(reference.MarginLeft);
         }
 
         void SetMarginLeft(JsValue thisObj, JsValue argument)
@@ -2100,7 +2103,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarginRight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarginRight);
+            return _engine.GetDomNode(reference.MarginRight);
         }
 
         void SetMarginRight(JsValue thisObj, JsValue argument)
@@ -2113,7 +2116,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarginTop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarginTop);
+            return _engine.GetDomNode(reference.MarginTop);
         }
 
         void SetMarginTop(JsValue thisObj, JsValue argument)
@@ -2126,7 +2129,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarker(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Marker);
+            return _engine.GetDomNode(reference.Marker);
         }
 
         void SetMarker(JsValue thisObj, JsValue argument)
@@ -2139,7 +2142,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarkerEnd(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarkerEnd);
+            return _engine.GetDomNode(reference.MarkerEnd);
         }
 
         void SetMarkerEnd(JsValue thisObj, JsValue argument)
@@ -2152,7 +2155,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarkerMid(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarkerMid);
+            return _engine.GetDomNode(reference.MarkerMid);
         }
 
         void SetMarkerMid(JsValue thisObj, JsValue argument)
@@ -2165,7 +2168,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMarkerStart(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MarkerStart);
+            return _engine.GetDomNode(reference.MarkerStart);
         }
 
         void SetMarkerStart(JsValue thisObj, JsValue argument)
@@ -2178,7 +2181,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMask(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Mask);
+            return _engine.GetDomNode(reference.Mask);
         }
 
         void SetMask(JsValue thisObj, JsValue argument)
@@ -2191,7 +2194,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMaxHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MaxHeight);
+            return _engine.GetDomNode(reference.MaxHeight);
         }
 
         void SetMaxHeight(JsValue thisObj, JsValue argument)
@@ -2204,7 +2207,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMaxWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MaxWidth);
+            return _engine.GetDomNode(reference.MaxWidth);
         }
 
         void SetMaxWidth(JsValue thisObj, JsValue argument)
@@ -2217,7 +2220,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMinHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MinHeight);
+            return _engine.GetDomNode(reference.MinHeight);
         }
 
         void SetMinHeight(JsValue thisObj, JsValue argument)
@@ -2230,7 +2233,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMinWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.MinWidth);
+            return _engine.GetDomNode(reference.MinWidth);
         }
 
         void SetMinWidth(JsValue thisObj, JsValue argument)
@@ -2243,7 +2246,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOpacity(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Opacity);
+            return _engine.GetDomNode(reference.Opacity);
         }
 
         void SetOpacity(JsValue thisObj, JsValue argument)
@@ -2256,7 +2259,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOrder(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Order);
+            return _engine.GetDomNode(reference.Order);
         }
 
         void SetOrder(JsValue thisObj, JsValue argument)
@@ -2269,7 +2272,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOrphans(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Orphans);
+            return _engine.GetDomNode(reference.Orphans);
         }
 
         void SetOrphans(JsValue thisObj, JsValue argument)
@@ -2282,7 +2285,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOutline(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Outline);
+            return _engine.GetDomNode(reference.Outline);
         }
 
         void SetOutline(JsValue thisObj, JsValue argument)
@@ -2295,7 +2298,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOutlineColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.OutlineColor);
+            return _engine.GetDomNode(reference.OutlineColor);
         }
 
         void SetOutlineColor(JsValue thisObj, JsValue argument)
@@ -2308,7 +2311,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOutlineStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.OutlineStyle);
+            return _engine.GetDomNode(reference.OutlineStyle);
         }
 
         void SetOutlineStyle(JsValue thisObj, JsValue argument)
@@ -2321,7 +2324,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOutlineWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.OutlineWidth);
+            return _engine.GetDomNode(reference.OutlineWidth);
         }
 
         void SetOutlineWidth(JsValue thisObj, JsValue argument)
@@ -2334,7 +2337,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOverflow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Overflow);
+            return _engine.GetDomNode(reference.Overflow);
         }
 
         void SetOverflow(JsValue thisObj, JsValue argument)
@@ -2347,7 +2350,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOverflowX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.OverflowX);
+            return _engine.GetDomNode(reference.OverflowX);
         }
 
         void SetOverflowX(JsValue thisObj, JsValue argument)
@@ -2360,7 +2363,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOverflowY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.OverflowY);
+            return _engine.GetDomNode(reference.OverflowY);
         }
 
         void SetOverflowY(JsValue thisObj, JsValue argument)
@@ -2373,7 +2376,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPadding(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Padding);
+            return _engine.GetDomNode(reference.Padding);
         }
 
         void SetPadding(JsValue thisObj, JsValue argument)
@@ -2386,7 +2389,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPaddingBottom(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PaddingBottom);
+            return _engine.GetDomNode(reference.PaddingBottom);
         }
 
         void SetPaddingBottom(JsValue thisObj, JsValue argument)
@@ -2399,7 +2402,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPaddingLeft(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PaddingLeft);
+            return _engine.GetDomNode(reference.PaddingLeft);
         }
 
         void SetPaddingLeft(JsValue thisObj, JsValue argument)
@@ -2412,7 +2415,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPaddingRight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PaddingRight);
+            return _engine.GetDomNode(reference.PaddingRight);
         }
 
         void SetPaddingRight(JsValue thisObj, JsValue argument)
@@ -2425,7 +2428,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPaddingTop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PaddingTop);
+            return _engine.GetDomNode(reference.PaddingTop);
         }
 
         void SetPaddingTop(JsValue thisObj, JsValue argument)
@@ -2438,7 +2441,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPageBreakAfter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PageBreakAfter);
+            return _engine.GetDomNode(reference.PageBreakAfter);
         }
 
         void SetPageBreakAfter(JsValue thisObj, JsValue argument)
@@ -2451,7 +2454,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPageBreakBefore(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PageBreakBefore);
+            return _engine.GetDomNode(reference.PageBreakBefore);
         }
 
         void SetPageBreakBefore(JsValue thisObj, JsValue argument)
@@ -2464,7 +2467,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPageBreakInside(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PageBreakInside);
+            return _engine.GetDomNode(reference.PageBreakInside);
         }
 
         void SetPageBreakInside(JsValue thisObj, JsValue argument)
@@ -2477,7 +2480,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPerspective(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Perspective);
+            return _engine.GetDomNode(reference.Perspective);
         }
 
         void SetPerspective(JsValue thisObj, JsValue argument)
@@ -2490,7 +2493,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPerspectiveOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PerspectiveOrigin);
+            return _engine.GetDomNode(reference.PerspectiveOrigin);
         }
 
         void SetPerspectiveOrigin(JsValue thisObj, JsValue argument)
@@ -2503,7 +2506,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPointerEvents(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.PointerEvents);
+            return _engine.GetDomNode(reference.PointerEvents);
         }
 
         void SetPointerEvents(JsValue thisObj, JsValue argument)
@@ -2516,7 +2519,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Position);
+            return _engine.GetDomNode(reference.Position);
         }
 
         void SetPosition(JsValue thisObj, JsValue argument)
@@ -2529,7 +2532,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetQuotes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Quotes);
+            return _engine.GetDomNode(reference.Quotes);
         }
 
         void SetQuotes(JsValue thisObj, JsValue argument)
@@ -2542,7 +2545,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Right);
+            return _engine.GetDomNode(reference.Right);
         }
 
         void SetRight(JsValue thisObj, JsValue argument)
@@ -2555,7 +2558,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRubyAlign(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.RubyAlign);
+            return _engine.GetDomNode(reference.RubyAlign);
         }
 
         void SetRubyAlign(JsValue thisObj, JsValue argument)
@@ -2568,7 +2571,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRubyOverhang(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.RubyOverhang);
+            return _engine.GetDomNode(reference.RubyOverhang);
         }
 
         void SetRubyOverhang(JsValue thisObj, JsValue argument)
@@ -2581,7 +2584,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRubyPosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.RubyPosition);
+            return _engine.GetDomNode(reference.RubyPosition);
         }
 
         void SetRubyPosition(JsValue thisObj, JsValue argument)
@@ -2594,7 +2597,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbar3dLightColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Scrollbar3dLightColor);
+            return _engine.GetDomNode(reference.Scrollbar3dLightColor);
         }
 
         void SetScrollbar3dLightColor(JsValue thisObj, JsValue argument)
@@ -2607,7 +2610,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarArrowColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarArrowColor);
+            return _engine.GetDomNode(reference.ScrollbarArrowColor);
         }
 
         void SetScrollbarArrowColor(JsValue thisObj, JsValue argument)
@@ -2620,7 +2623,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarDarkShadowColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarDarkShadowColor);
+            return _engine.GetDomNode(reference.ScrollbarDarkShadowColor);
         }
 
         void SetScrollbarDarkShadowColor(JsValue thisObj, JsValue argument)
@@ -2633,7 +2636,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarFaceColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarFaceColor);
+            return _engine.GetDomNode(reference.ScrollbarFaceColor);
         }
 
         void SetScrollbarFaceColor(JsValue thisObj, JsValue argument)
@@ -2646,7 +2649,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarHighlightColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarHighlightColor);
+            return _engine.GetDomNode(reference.ScrollbarHighlightColor);
         }
 
         void SetScrollbarHighlightColor(JsValue thisObj, JsValue argument)
@@ -2659,7 +2662,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarShadowColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarShadowColor);
+            return _engine.GetDomNode(reference.ScrollbarShadowColor);
         }
 
         void SetScrollbarShadowColor(JsValue thisObj, JsValue argument)
@@ -2672,7 +2675,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScrollbarTrackColor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ScrollbarTrackColor);
+            return _engine.GetDomNode(reference.ScrollbarTrackColor);
         }
 
         void SetScrollbarTrackColor(JsValue thisObj, JsValue argument)
@@ -2685,7 +2688,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStroke(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Stroke);
+            return _engine.GetDomNode(reference.Stroke);
         }
 
         void SetStroke(JsValue thisObj, JsValue argument)
@@ -2698,7 +2701,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeDasharray(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeDasharray);
+            return _engine.GetDomNode(reference.StrokeDasharray);
         }
 
         void SetStrokeDasharray(JsValue thisObj, JsValue argument)
@@ -2711,7 +2714,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeDashoffset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeDashoffset);
+            return _engine.GetDomNode(reference.StrokeDashoffset);
         }
 
         void SetStrokeDashoffset(JsValue thisObj, JsValue argument)
@@ -2724,7 +2727,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeLinecap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeLinecap);
+            return _engine.GetDomNode(reference.StrokeLinecap);
         }
 
         void SetStrokeLinecap(JsValue thisObj, JsValue argument)
@@ -2737,7 +2740,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeLinejoin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeLinejoin);
+            return _engine.GetDomNode(reference.StrokeLinejoin);
         }
 
         void SetStrokeLinejoin(JsValue thisObj, JsValue argument)
@@ -2750,7 +2753,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeMiterlimit(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeMiterlimit);
+            return _engine.GetDomNode(reference.StrokeMiterlimit);
         }
 
         void SetStrokeMiterlimit(JsValue thisObj, JsValue argument)
@@ -2763,7 +2766,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeOpacity(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeOpacity);
+            return _engine.GetDomNode(reference.StrokeOpacity);
         }
 
         void SetStrokeOpacity(JsValue thisObj, JsValue argument)
@@ -2776,7 +2779,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStrokeWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.StrokeWidth);
+            return _engine.GetDomNode(reference.StrokeWidth);
         }
 
         void SetStrokeWidth(JsValue thisObj, JsValue argument)
@@ -2789,7 +2792,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTableLayout(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TableLayout);
+            return _engine.GetDomNode(reference.TableLayout);
         }
 
         void SetTableLayout(JsValue thisObj, JsValue argument)
@@ -2802,7 +2805,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextAlign(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextAlign);
+            return _engine.GetDomNode(reference.TextAlign);
         }
 
         void SetTextAlign(JsValue thisObj, JsValue argument)
@@ -2815,7 +2818,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextAlignLast(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextAlignLast);
+            return _engine.GetDomNode(reference.TextAlignLast);
         }
 
         void SetTextAlignLast(JsValue thisObj, JsValue argument)
@@ -2828,7 +2831,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextAnchor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextAnchor);
+            return _engine.GetDomNode(reference.TextAnchor);
         }
 
         void SetTextAnchor(JsValue thisObj, JsValue argument)
@@ -2841,7 +2844,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextAutospace(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextAutospace);
+            return _engine.GetDomNode(reference.TextAutospace);
         }
 
         void SetTextAutospace(JsValue thisObj, JsValue argument)
@@ -2854,7 +2857,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextDecoration(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextDecoration);
+            return _engine.GetDomNode(reference.TextDecoration);
         }
 
         void SetTextDecoration(JsValue thisObj, JsValue argument)
@@ -2867,7 +2870,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextIndent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextIndent);
+            return _engine.GetDomNode(reference.TextIndent);
         }
 
         void SetTextIndent(JsValue thisObj, JsValue argument)
@@ -2880,7 +2883,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextJustify(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextJustify);
+            return _engine.GetDomNode(reference.TextJustify);
         }
 
         void SetTextJustify(JsValue thisObj, JsValue argument)
@@ -2893,7 +2896,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextOverflow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextOverflow);
+            return _engine.GetDomNode(reference.TextOverflow);
         }
 
         void SetTextOverflow(JsValue thisObj, JsValue argument)
@@ -2906,7 +2909,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextShadow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextShadow);
+            return _engine.GetDomNode(reference.TextShadow);
         }
 
         void SetTextShadow(JsValue thisObj, JsValue argument)
@@ -2919,7 +2922,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextTransform(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextTransform);
+            return _engine.GetDomNode(reference.TextTransform);
         }
 
         void SetTextTransform(JsValue thisObj, JsValue argument)
@@ -2932,7 +2935,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextUnderlinePosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TextUnderlinePosition);
+            return _engine.GetDomNode(reference.TextUnderlinePosition);
         }
 
         void SetTextUnderlinePosition(JsValue thisObj, JsValue argument)
@@ -2945,7 +2948,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Top);
+            return _engine.GetDomNode(reference.Top);
         }
 
         void SetTop(JsValue thisObj, JsValue argument)
@@ -2958,7 +2961,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransform(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Transform);
+            return _engine.GetDomNode(reference.Transform);
         }
 
         void SetTransform(JsValue thisObj, JsValue argument)
@@ -2971,7 +2974,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransformOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransformOrigin);
+            return _engine.GetDomNode(reference.TransformOrigin);
         }
 
         void SetTransformOrigin(JsValue thisObj, JsValue argument)
@@ -2984,7 +2987,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransformStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransformStyle);
+            return _engine.GetDomNode(reference.TransformStyle);
         }
 
         void SetTransformStyle(JsValue thisObj, JsValue argument)
@@ -2997,7 +3000,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Transition);
+            return _engine.GetDomNode(reference.Transition);
         }
 
         void SetTransition(JsValue thisObj, JsValue argument)
@@ -3010,7 +3013,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransitionDelay(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransitionDelay);
+            return _engine.GetDomNode(reference.TransitionDelay);
         }
 
         void SetTransitionDelay(JsValue thisObj, JsValue argument)
@@ -3023,7 +3026,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransitionDuration(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransitionDuration);
+            return _engine.GetDomNode(reference.TransitionDuration);
         }
 
         void SetTransitionDuration(JsValue thisObj, JsValue argument)
@@ -3036,7 +3039,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransitionProperty(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransitionProperty);
+            return _engine.GetDomNode(reference.TransitionProperty);
         }
 
         void SetTransitionProperty(JsValue thisObj, JsValue argument)
@@ -3049,7 +3052,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTransitionTimingFunction(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.TransitionTimingFunction);
+            return _engine.GetDomNode(reference.TransitionTimingFunction);
         }
 
         void SetTransitionTimingFunction(JsValue thisObj, JsValue argument)
@@ -3062,7 +3065,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUnicodeBidi(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.UnicodeBidi);
+            return _engine.GetDomNode(reference.UnicodeBidi);
         }
 
         void SetUnicodeBidi(JsValue thisObj, JsValue argument)
@@ -3075,7 +3078,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVerticalAlign(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.VerticalAlign);
+            return _engine.GetDomNode(reference.VerticalAlign);
         }
 
         void SetVerticalAlign(JsValue thisObj, JsValue argument)
@@ -3088,7 +3091,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVisibility(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Visibility);
+            return _engine.GetDomNode(reference.Visibility);
         }
 
         void SetVisibility(JsValue thisObj, JsValue argument)
@@ -3101,7 +3104,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWhiteSpace(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.WhiteSpace);
+            return _engine.GetDomNode(reference.WhiteSpace);
         }
 
         void SetWhiteSpace(JsValue thisObj, JsValue argument)
@@ -3114,7 +3117,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidows(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Widows);
+            return _engine.GetDomNode(reference.Widows);
         }
 
         void SetWidows(JsValue thisObj, JsValue argument)
@@ -3127,7 +3130,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Width);
+            return _engine.GetDomNode(reference.Width);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -3140,7 +3143,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWordBreak(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.WordBreak);
+            return _engine.GetDomNode(reference.WordBreak);
         }
 
         void SetWordBreak(JsValue thisObj, JsValue argument)
@@ -3153,7 +3156,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWordSpacing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.WordSpacing);
+            return _engine.GetDomNode(reference.WordSpacing);
         }
 
         void SetWordSpacing(JsValue thisObj, JsValue argument)
@@ -3166,7 +3169,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWordWrap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.WordWrap);
+            return _engine.GetDomNode(reference.WordWrap);
         }
 
         void SetWordWrap(JsValue thisObj, JsValue argument)
@@ -3179,7 +3182,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWritingMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.WritingMode);
+            return _engine.GetDomNode(reference.WritingMode);
         }
 
         void SetWritingMode(JsValue thisObj, JsValue argument)
@@ -3192,7 +3195,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetZIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.ZIndex);
+            return _engine.GetDomNode(reference.ZIndex);
         }
 
         void SetZIndex(JsValue thisObj, JsValue argument)
@@ -3205,7 +3208,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetZoom(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleDeclarationInstance>(Fail).RefCSSStyleDeclaration;
-            return Engine.Select(reference.Zoom);
+            return _engine.GetDomNode(reference.Zoom);
         }
 
         void SetZoom(JsValue thisObj, JsValue argument)

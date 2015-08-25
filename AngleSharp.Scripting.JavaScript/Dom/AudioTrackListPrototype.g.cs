@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class AudioTrackListPrototype : AudioTrackListInstance
     {
-        public AudioTrackListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public AudioTrackListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getTrackById", Engine.AsValue(GetTrackById), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static AudioTrackListPrototype CreatePrototypeObject(EngineInstance engine, AudioTrackListConstructor constructor)
         {
-            var obj = new AudioTrackListPrototype(engine.Jint)
+            var obj = new AudioTrackListPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -37,13 +40,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<AudioTrackListInstance>(Fail).RefAudioTrackList;
             var id = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetTrackById(id));
+            return _engine.GetDomNode(reference.GetTrackById(id));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackListInstance>(Fail).RefAudioTrackList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

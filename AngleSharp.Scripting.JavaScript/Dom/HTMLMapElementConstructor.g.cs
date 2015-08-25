@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMapElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLMapElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLMapElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLMapElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMapElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLMapElementConstructor(engine.Jint);
+            var obj = new HTMLMapElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLMapElementPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTrackElementPrototype : HTMLTrackElementInstance
     {
-        public HTMLTrackElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTrackElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("kind", Engine.AsProperty(GetKind, SetKind));
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTrackElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTrackElementConstructor constructor)
         {
-            var obj = new HTMLTrackElementPrototype(engine.Jint)
+            var obj = new HTMLTrackElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -38,7 +41,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetKind(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.Kind);
+            return _engine.GetDomNode(reference.Kind);
         }
 
         void SetKind(JsValue thisObj, JsValue argument)
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrclang(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.SourceLanguage);
+            return _engine.GetDomNode(reference.SourceLanguage);
         }
 
         void SetSrclang(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
         void SetLabel(JsValue thisObj, JsValue argument)
@@ -90,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefault(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.IsDefault);
+            return _engine.GetDomNode(reference.IsDefault);
         }
 
         void SetDefault(JsValue thisObj, JsValue argument)
@@ -103,14 +106,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReadyState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.ReadyState);
+            return _engine.GetDomNode(reference.ReadyState);
         }
 
 
         JsValue GetTrack(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTrackElementInstance>(Fail).RefHTMLTrackElement;
-            return Engine.Select(reference.Track);
+            return _engine.GetDomNode(reference.Track);
         }
 
 

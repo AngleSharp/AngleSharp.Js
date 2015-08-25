@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLMapElementInstance : HTMLElementInstance
     {
-        public HTMLMapElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMapElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLMapElementInstance CreateHTMLMapElementObject(Engine engine)
+        public static HTMLMapElementInstance CreateHTMLMapElementObject(EngineInstance engine)
         {
             var obj = new HTMLMapElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

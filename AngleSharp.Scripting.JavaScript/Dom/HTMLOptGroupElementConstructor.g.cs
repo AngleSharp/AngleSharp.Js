@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOptGroupElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLOptGroupElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLOptGroupElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLOptGroupElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOptGroupElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLOptGroupElementConstructor(engine.Jint);
+            var obj = new HTMLOptGroupElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLOptGroupElementPrototype.CreatePrototypeObject(engine, obj);

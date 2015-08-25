@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLLinkElementInstance : HTMLElementInstance
     {
-        public HTMLLinkElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLinkElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLLinkElementInstance CreateHTMLLinkElementObject(Engine engine)
+        public static HTMLLinkElementInstance CreateHTMLLinkElementObject(EngineInstance engine)
         {
             var obj = new HTMLLinkElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

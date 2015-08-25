@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGDocumentConstructor : FunctionInstance, IConstructor
     {
-        public SVGDocumentConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public SVGDocumentConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public SVGDocumentPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static SVGDocumentConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new SVGDocumentConstructor(engine.Jint);
+            var obj = new SVGDocumentConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = SVGDocumentPrototype.CreatePrototypeObject(engine, obj);

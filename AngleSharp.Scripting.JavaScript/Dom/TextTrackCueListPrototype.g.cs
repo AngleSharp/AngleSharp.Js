@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackCueListPrototype : TextTrackCueListInstance
     {
-        public TextTrackCueListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackCueListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getCueById", Engine.AsValue(GetCueById), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackCueListPrototype CreatePrototypeObject(EngineInstance engine, TextTrackCueListConstructor constructor)
         {
-            var obj = new TextTrackCueListPrototype(engine.Jint)
+            var obj = new TextTrackCueListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -34,13 +37,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<TextTrackCueListInstance>(Fail).RefTextTrackCueList;
             var id = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetCueById(id));
+            return _engine.GetDomNode(reference.GetCueById(id));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackCueListInstance>(Fail).RefTextTrackCueList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

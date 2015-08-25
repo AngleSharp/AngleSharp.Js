@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLDialogElementInstance : HTMLElementInstance
     {
-        public HTMLDialogElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDialogElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLDialogElementInstance CreateHTMLDialogElementObject(Engine engine)
+        public static HTMLDialogElementInstance CreateHTMLDialogElementObject(EngineInstance engine)
         {
             var obj = new HTMLDialogElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

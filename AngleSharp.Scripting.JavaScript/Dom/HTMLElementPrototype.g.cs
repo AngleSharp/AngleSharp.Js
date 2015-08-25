@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLElementPrototype : HTMLElementInstance
     {
-        public HTMLElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("click", Engine.AsValue(Click), true, true, true);
             FastAddProperty("focus", Engine.AsValue(Focus), true, true, true);
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLElementConstructor constructor)
         {
-            var obj = new HTMLElementPrototype(engine.Jint)
+            var obj = new HTMLElementPrototype(engine)
             {
                 Prototype = engine.Constructors.Element.PrototypeObject,
                 Extensible = true,
@@ -79,7 +82,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLang(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Language);
+            return _engine.GetDomNode(reference.Language);
         }
 
         void SetLang(JsValue thisObj, JsValue argument)
@@ -92,7 +95,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTitle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Title);
+            return _engine.GetDomNode(reference.Title);
         }
 
         void SetTitle(JsValue thisObj, JsValue argument)
@@ -105,7 +108,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDir(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Direction);
+            return _engine.GetDomNode(reference.Direction);
         }
 
         void SetDir(JsValue thisObj, JsValue argument)
@@ -118,14 +121,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDataset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Dataset);
+            return _engine.GetDomNode(reference.Dataset);
         }
 
 
         JsValue GetTranslate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.IsTranslated);
+            return _engine.GetDomNode(reference.IsTranslated);
         }
 
         void SetTranslate(JsValue thisObj, JsValue argument)
@@ -138,7 +141,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTabIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.TabIndex);
+            return _engine.GetDomNode(reference.TabIndex);
         }
 
         void SetTabIndex(JsValue thisObj, JsValue argument)
@@ -151,7 +154,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSpellcheck(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.IsSpellChecked);
+            return _engine.GetDomNode(reference.IsSpellChecked);
         }
 
         void SetSpellcheck(JsValue thisObj, JsValue argument)
@@ -164,7 +167,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetContentEditable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.ContentEditable);
+            return _engine.GetDomNode(reference.ContentEditable);
         }
 
         void SetContentEditable(JsValue thisObj, JsValue argument)
@@ -177,14 +180,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIsContentEditable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.IsContentEditable);
+            return _engine.GetDomNode(reference.IsContentEditable);
         }
 
 
         JsValue GetHidden(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.IsHidden);
+            return _engine.GetDomNode(reference.IsHidden);
         }
 
         void SetHidden(JsValue thisObj, JsValue argument)
@@ -197,7 +200,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDraggable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.IsDraggable);
+            return _engine.GetDomNode(reference.IsDraggable);
         }
 
         void SetDraggable(JsValue thisObj, JsValue argument)
@@ -210,7 +213,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAccessKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.AccessKey);
+            return _engine.GetDomNode(reference.AccessKey);
         }
 
         void SetAccessKey(JsValue thisObj, JsValue argument)
@@ -223,14 +226,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAccessKeyLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.AccessKeyLabel);
+            return _engine.GetDomNode(reference.AccessKeyLabel);
         }
 
 
         JsValue GetContextMenu(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.ContextMenu);
+            return _engine.GetDomNode(reference.ContextMenu);
         }
 
         void SetContextMenu(JsValue thisObj, JsValue argument)
@@ -243,7 +246,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDropzone(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.DropZone);
+            return _engine.GetDomNode(reference.DropZone);
         }
 
         void SetDropzone(JsValue thisObj, JsValue argument)
@@ -256,7 +259,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLElementInstance>(Fail).RefHTMLElement;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
         void SetStyle(JsValue thisObj, JsValue argument)

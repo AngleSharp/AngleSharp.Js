@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TouchListPrototype : TouchListInstance
     {
-        public TouchListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TouchListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static TouchListPrototype CreatePrototypeObject(EngineInstance engine, TouchListConstructor constructor)
         {
-            var obj = new TouchListPrototype(engine.Jint)
+            var obj = new TouchListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchListInstance>(Fail).RefTouchList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

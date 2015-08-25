@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class BlobPrototype : BlobInstance
     {
-        public BlobPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public BlobPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("slice", Engine.AsValue(Slice), true, true, true);
             FastAddProperty("close", Engine.AsValue(Close), true, true, true);
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static BlobPrototype CreatePrototypeObject(EngineInstance engine, BlobConstructor constructor)
         {
-            var obj = new BlobPrototype(engine.Jint)
+            var obj = new BlobPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
             var start = TypeConverter.ToInt32(arguments.At(0));
             var end = TypeConverter.ToInt32(arguments.At(1));
             var contentType = TypeConverter.ToString(arguments.At(2));
-            return Engine.Select(reference.Slice(start, end, contentType));
+            return _engine.GetDomNode(reference.Slice(start, end, contentType));
         }
 
         JsValue Close(JsValue thisObj, JsValue[] arguments)
@@ -52,21 +55,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<BlobInstance>(Fail).RefBlob;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<BlobInstance>(Fail).RefBlob;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetIsClosed(JsValue thisObj)
         {
             var reference = thisObj.TryCast<BlobInstance>(Fail).RefBlob;
-            return Engine.Select(reference.IsClosed);
+            return _engine.GetDomNode(reference.IsClosed);
         }
 
 

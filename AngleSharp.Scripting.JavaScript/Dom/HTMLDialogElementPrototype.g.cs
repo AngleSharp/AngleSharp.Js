@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDialogElementPrototype : HTMLDialogElementInstance
     {
-        public HTMLDialogElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDialogElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("show", Engine.AsValue(Show), true, true, true);
             FastAddProperty("showModal", Engine.AsValue(ShowModal), true, true, true);
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLDialogElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLDialogElementConstructor constructor)
         {
-            var obj = new HTMLDialogElementPrototype(engine.Jint)
+            var obj = new HTMLDialogElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -60,7 +63,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOpen(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLDialogElementInstance>(Fail).RefHTMLDialogElement;
-            return Engine.Select(reference.Open);
+            return _engine.GetDomNode(reference.Open);
         }
 
         void SetOpen(JsValue thisObj, JsValue argument)
@@ -73,7 +76,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReturnValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLDialogElementInstance>(Fail).RefHTMLDialogElement;
-            return Engine.Select(reference.ReturnValue);
+            return _engine.GetDomNode(reference.ReturnValue);
         }
 
         void SetReturnValue(JsValue thisObj, JsValue argument)

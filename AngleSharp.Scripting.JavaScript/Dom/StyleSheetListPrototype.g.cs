@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class StyleSheetListPrototype : StyleSheetListInstance
     {
-        public StyleSheetListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public StyleSheetListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static StyleSheetListPrototype CreatePrototypeObject(EngineInstance engine, StyleSheetListConstructor constructor)
         {
-            var obj = new StyleSheetListPrototype(engine.Jint)
+            var obj = new StyleSheetListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetListInstance>(Fail).RefStyleSheetList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

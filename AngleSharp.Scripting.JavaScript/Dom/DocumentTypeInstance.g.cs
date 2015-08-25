@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DocumentTypeInstance : NodeInstance
     {
-        public DocumentTypeInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentTypeInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static DocumentTypeInstance CreateDocumentTypeObject(Engine engine)
+        public static DocumentTypeInstance CreateDocumentTypeObject(EngineInstance engine)
         {
             var obj = new DocumentTypeInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLVideoElementInstance : HTMLMediaElementInstance
     {
-        public HTMLVideoElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLVideoElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLVideoElementInstance CreateHTMLVideoElementObject(Engine engine)
+        public static HTMLVideoElementInstance CreateHTMLVideoElementObject(EngineInstance engine)
         {
             var obj = new HTMLVideoElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

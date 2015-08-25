@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeIteratorConstructor : FunctionInstance, IConstructor
     {
-        public NodeIteratorConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public NodeIteratorConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public NodeIteratorPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NodeIteratorConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new NodeIteratorConstructor(engine.Jint);
+            var obj = new NodeIteratorConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = NodeIteratorPrototype.CreatePrototypeObject(engine, obj);

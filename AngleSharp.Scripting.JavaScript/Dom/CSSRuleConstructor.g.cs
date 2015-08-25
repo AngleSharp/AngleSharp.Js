@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("STYLE_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Style), false, true, false);
             FastAddProperty("CHARSET_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Charset), false, true, false);
             FastAddProperty("IMPORT_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Import), false, true, false);
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSRuleConstructor(engine.Jint);
+            var obj = new CSSRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSRulePrototype.CreatePrototypeObject(engine, obj);

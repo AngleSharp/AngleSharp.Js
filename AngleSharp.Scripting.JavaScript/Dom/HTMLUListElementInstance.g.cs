@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLUListElementInstance : HTMLElementInstance
     {
-        public HTMLUListElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLUListElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLUListElementInstance CreateHTMLUListElementObject(Engine engine)
+        public static HTMLUListElementInstance CreateHTMLUListElementObject(EngineInstance engine)
         {
             var obj = new HTMLUListElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

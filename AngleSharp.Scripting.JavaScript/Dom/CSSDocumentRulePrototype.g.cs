@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSDocumentRulePrototype : CSSDocumentRuleInstance
     {
-        public CSSDocumentRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSDocumentRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static CSSDocumentRulePrototype CreatePrototypeObject(EngineInstance engine, CSSDocumentRuleConstructor constructor)
         {
-            var obj = new CSSDocumentRulePrototype(engine.Jint)
+            var obj = new CSSDocumentRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSConditionRule.PrototypeObject,
                 Extensible = true,

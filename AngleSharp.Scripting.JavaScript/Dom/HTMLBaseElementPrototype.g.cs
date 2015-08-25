@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLBaseElementPrototype : HTMLBaseElementInstance
     {
-        public HTMLBaseElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLBaseElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("href", Engine.AsProperty(GetHref, SetHref));
             FastSetProperty("Target", Engine.AsProperty(GetTarget, SetTarget));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLBaseElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLBaseElementConstructor constructor)
         {
-            var obj = new HTMLBaseElementPrototype(engine.Jint)
+            var obj = new HTMLBaseElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLBaseElementInstance>(Fail).RefHTMLBaseElement;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
         void SetHref(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLBaseElementInstance>(Fail).RefHTMLBaseElement;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
         void SetTarget(JsValue thisObj, JsValue argument)

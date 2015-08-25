@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSStyleDeclarationConstructor : FunctionInstance, IConstructor
     {
-        public CSSStyleDeclarationConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSStyleDeclarationConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSStyleDeclarationPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSStyleDeclarationConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSStyleDeclarationConstructor(engine.Jint);
+            var obj = new CSSStyleDeclarationConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSStyleDeclarationPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMTokenListPrototype : DOMTokenListInstance
     {
-        public DOMTokenListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMTokenListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("contains", Engine.AsValue(Contains), true, true, true);
             FastAddProperty("add", Engine.AsValue(Add), true, true, true);
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMTokenListPrototype CreatePrototypeObject(EngineInstance engine, DOMTokenListConstructor constructor)
         {
-            var obj = new DOMTokenListPrototype(engine.Jint)
+            var obj = new DOMTokenListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -37,7 +40,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DOMTokenListInstance>(Fail).RefDOMTokenList;
             var token = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.Contains(token));
+            return _engine.GetDomNode(reference.Contains(token));
         }
 
         JsValue Add(JsValue thisObj, JsValue[] arguments)
@@ -69,13 +72,13 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DOMTokenListInstance>(Fail).RefDOMTokenList;
             var token = TypeConverter.ToString(arguments.At(0));
             var force = TypeConverter.ToBoolean(arguments.At(1));
-            return Engine.Select(reference.Toggle(token, force));
+            return _engine.GetDomNode(reference.Toggle(token, force));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DOMTokenListInstance>(Fail).RefDOMTokenList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

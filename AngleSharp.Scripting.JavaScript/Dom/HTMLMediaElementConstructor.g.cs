@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMediaElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLMediaElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLMediaElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("NETWORK_EMPTY", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Empty), false, true, false);
             FastAddProperty("NETWORK_IDLE", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Idle), false, true, false);
             FastAddProperty("NETWORK_LOADING", (UInt32)(AngleSharp.Dom.Media.MediaNetworkState.Loading), false, true, false);
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMediaElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLMediaElementConstructor(engine.Jint);
+            var obj = new HTMLMediaElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLMediaElementPrototype.CreatePrototypeObject(engine, obj);

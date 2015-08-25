@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class MediaListInstance : ObjectInstance
     {
-        public MediaListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public MediaListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static MediaListInstance CreateMediaListObject(Engine engine)
+        public static MediaListInstance CreateMediaListObject(EngineInstance engine)
         {
             var obj = new MediaListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefMediaList[index]);
+                return _engine.GetDomNode(RefMediaList[index]);
             return base.Get(propertyName);
         }
 

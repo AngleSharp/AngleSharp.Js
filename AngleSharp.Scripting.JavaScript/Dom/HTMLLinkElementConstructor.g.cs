@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLinkElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLLinkElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLLinkElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLLinkElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLinkElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLLinkElementConstructor(engine.Jint);
+            var obj = new HTMLLinkElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLLinkElementPrototype.CreatePrototypeObject(engine, obj);

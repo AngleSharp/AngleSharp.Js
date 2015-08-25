@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMErrorPrototype : DOMErrorInstance
     {
-        public DOMErrorPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMErrorPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static DOMErrorPrototype CreatePrototypeObject(EngineInstance engine, DOMErrorConstructor constructor)
         {
-            var obj = new DOMErrorPrototype(engine.Jint)
+            var obj = new DOMErrorPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLProgressElementInstance : HTMLElementInstance
     {
-        public HTMLProgressElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLProgressElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLProgressElementInstance CreateHTMLProgressElementObject(Engine engine)
+        public static HTMLProgressElementInstance CreateHTMLProgressElementObject(EngineInstance engine)
         {
             var obj = new HTMLProgressElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

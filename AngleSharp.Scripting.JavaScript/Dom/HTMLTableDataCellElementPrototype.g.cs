@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableDataCellElementPrototype : HTMLTableDataCellElementInstance
     {
-        public HTMLTableDataCellElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableDataCellElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLTableDataCellElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableDataCellElementConstructor constructor)
         {
-            var obj = new HTMLTableDataCellElementPrototype(engine.Jint)
+            var obj = new HTMLTableDataCellElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLTableCellElement.PrototypeObject,
                 Extensible = true,

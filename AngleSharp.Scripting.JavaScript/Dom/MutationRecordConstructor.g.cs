@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MutationRecordConstructor : FunctionInstance, IConstructor
     {
-        public MutationRecordConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MutationRecordConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MutationRecordPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MutationRecordConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MutationRecordConstructor(engine.Jint);
+            var obj = new MutationRecordConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MutationRecordPrototype.CreatePrototypeObject(engine, obj);

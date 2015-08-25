@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TreeWalkerInstance : ObjectInstance
     {
-        public TreeWalkerInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public TreeWalkerInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static TreeWalkerInstance CreateTreeWalkerObject(Engine engine)
+        public static TreeWalkerInstance CreateTreeWalkerObject(EngineInstance engine)
         {
             var obj = new TreeWalkerInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

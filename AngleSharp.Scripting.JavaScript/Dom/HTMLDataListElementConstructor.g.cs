@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDataListElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLDataListElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLDataListElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLDataListElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLDataListElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLDataListElementConstructor(engine.Jint);
+            var obj = new HTMLDataListElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLDataListElementPrototype.CreatePrototypeObject(engine, obj);

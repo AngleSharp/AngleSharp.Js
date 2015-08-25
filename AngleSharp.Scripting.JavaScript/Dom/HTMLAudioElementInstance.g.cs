@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLAudioElementInstance : HTMLMediaElementInstance
     {
-        public HTMLAudioElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLAudioElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLAudioElementInstance CreateHTMLAudioElementObject(Engine engine)
+        public static HTMLAudioElementInstance CreateHTMLAudioElementObject(EngineInstance engine)
         {
             var obj = new HTMLAudioElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

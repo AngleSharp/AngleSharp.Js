@@ -12,7 +12,7 @@
 
     static class Extensions
     {
-        public static JsValue ToJsValue(this Object obj, Engine engine)
+        public static JsValue ToJsValue(this Object obj, EngineInstance engine)
         {
             if (obj == null)
                 return JsValue.Undefined;
@@ -32,12 +32,7 @@
             else if (obj is Enum)
                 return new JsValue(Convert.ToInt32(obj));
 
-            return engine.Select(obj);
-        }
-
-        public static DomNodeInstance Select(this Engine engine, Object obj)
-        {
-            return JavaScriptEngine.Instance.GetCache(engine).GetDomNode(obj);
+            return engine.GetDomNode(obj);
         }
 
         public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
@@ -86,7 +81,7 @@
             return val.ToObject();
         }
 
-        public static Object As(this Object value, Type targetType)
+        public static Object As(this Object value, Type targetType, EngineInstance engine)
         {
             if (value == null)
                 return value;
@@ -97,7 +92,7 @@
                 return value;
 
             if (targetType.IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
-                return targetType.ToDelegate((FunctionInstance)value);
+                return targetType.ToDelegate((FunctionInstance)value, engine);
 
             var method = sourceType.PrepareConvert(targetType);
 

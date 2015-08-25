@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class AttrInstance : ObjectInstance
     {
-        public AttrInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public AttrInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static AttrInstance CreateAttrObject(Engine engine)
+        public static AttrInstance CreateAttrObject(EngineInstance engine)
         {
             var obj = new AttrInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

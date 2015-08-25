@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class MediaControllerInstance : ObjectInstance
     {
-        public MediaControllerInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public MediaControllerInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static MediaControllerInstance CreateMediaControllerObject(Engine engine)
+        public static MediaControllerInstance CreateMediaControllerObject(EngineInstance engine)
         {
             var obj = new MediaControllerInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

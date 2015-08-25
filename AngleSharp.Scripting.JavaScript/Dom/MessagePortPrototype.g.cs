@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MessagePortPrototype : MessagePortInstance
     {
-        public MessagePortPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MessagePortPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("postMessage", Engine.AsValue(PostMessage), true, true, true);
             FastAddProperty("start", Engine.AsValue(Start), true, true, true);
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MessagePortPrototype CreatePrototypeObject(EngineInstance engine, MessagePortConstructor constructor)
         {
-            var obj = new MessagePortPrototype(engine.Jint)
+            var obj = new MessagePortPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,

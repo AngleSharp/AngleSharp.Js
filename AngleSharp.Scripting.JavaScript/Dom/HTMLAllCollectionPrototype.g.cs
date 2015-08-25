@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLAllCollectionPrototype : HTMLAllCollectionInstance
     {
-        public HTMLAllCollectionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLAllCollectionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLAllCollectionPrototype CreatePrototypeObject(EngineInstance engine, HTMLAllCollectionConstructor constructor)
         {
-            var obj = new HTMLAllCollectionPrototype(engine.Jint)
+            var obj = new HTMLAllCollectionPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLCollection.PrototypeObject,
                 Extensible = true,

@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeFilterPrototype : NodeFilterInstance
     {
-        public NodeFilterPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public NodeFilterPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static NodeFilterPrototype CreatePrototypeObject(EngineInstance engine, NodeFilterConstructor constructor)
         {
-            var obj = new NodeFilterPrototype(engine.Jint)
+            var obj = new NodeFilterPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

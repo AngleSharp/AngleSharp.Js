@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class BlobInstance : ObjectInstance
     {
-        public BlobInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public BlobInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static BlobInstance CreateBlobObject(Engine engine)
+        public static BlobInstance CreateBlobObject(EngineInstance engine)
         {
             var obj = new BlobInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MouseEventPrototype : MouseEventInstance
     {
-        public MouseEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MouseEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getModifierState", Engine.AsValue(GetModifierState), true, true, true);
             FastAddProperty("initMouseEvent", Engine.AsValue(InitMouseEvent), true, true, true);
@@ -48,7 +51,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MouseEventPrototype CreatePrototypeObject(EngineInstance engine, MouseEventConstructor constructor)
         {
-            var obj = new MouseEventPrototype(engine.Jint)
+            var obj = new MouseEventPrototype(engine)
             {
                 Prototype = engine.Constructors.UIEvent.PrototypeObject,
                 Extensible = true,
@@ -61,7 +64,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
             var key = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetModifierState(key));
+            return _engine.GetDomNode(reference.GetModifierState(key));
         }
 
         JsValue InitMouseEvent(JsValue thisObj, JsValue[] arguments)
@@ -132,147 +135,147 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScreenX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.ScreenX);
+            return _engine.GetDomNode(reference.ScreenX);
         }
 
 
         JsValue GetScreenY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.ScreenY);
+            return _engine.GetDomNode(reference.ScreenY);
         }
 
 
         JsValue GetClientX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.ClientX);
+            return _engine.GetDomNode(reference.ClientX);
         }
 
 
         JsValue GetClientY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.ClientY);
+            return _engine.GetDomNode(reference.ClientY);
         }
 
 
         JsValue GetCtrlKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsCtrlPressed);
+            return _engine.GetDomNode(reference.IsCtrlPressed);
         }
 
 
         JsValue GetShiftKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsShiftPressed);
+            return _engine.GetDomNode(reference.IsShiftPressed);
         }
 
 
         JsValue GetAltKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsAltPressed);
+            return _engine.GetDomNode(reference.IsAltPressed);
         }
 
 
         JsValue GetMetaKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsMetaPressed);
+            return _engine.GetDomNode(reference.IsMetaPressed);
         }
 
 
         JsValue GetButton(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Button);
+            return _engine.GetDomNode(reference.Button);
         }
 
 
         JsValue GetButtons(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Buttons);
+            return _engine.GetDomNode(reference.Buttons);
         }
 
 
         JsValue GetRelatedTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 
         JsValue GetView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.View);
+            return _engine.GetDomNode(reference.View);
         }
 
 
         JsValue GetDetail(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Detail);
+            return _engine.GetDomNode(reference.Detail);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -285,7 +288,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MouseEventInstance>(Fail).RefMouseEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

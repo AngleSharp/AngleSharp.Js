@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableCaptionElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLTableCaptionElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLTableCaptionElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLTableCaptionElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableCaptionElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLTableCaptionElementConstructor(engine.Jint);
+            var obj = new HTMLTableCaptionElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLTableCaptionElementPrototype.CreatePrototypeObject(engine, obj);

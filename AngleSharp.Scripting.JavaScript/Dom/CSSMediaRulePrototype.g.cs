@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSMediaRulePrototype : CSSMediaRuleInstance
     {
-        public CSSMediaRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSMediaRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("media", Engine.AsProperty(GetMedia, SetMedia));
         }
 
         public static CSSMediaRulePrototype CreatePrototypeObject(EngineInstance engine, CSSMediaRuleConstructor constructor)
         {
-            var obj = new CSSMediaRulePrototype(engine.Jint)
+            var obj = new CSSMediaRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSConditionRule.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSMediaRuleInstance>(Fail).RefCSSMediaRule;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)

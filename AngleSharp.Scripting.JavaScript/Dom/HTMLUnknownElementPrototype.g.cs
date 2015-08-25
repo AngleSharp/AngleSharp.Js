@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLUnknownElementPrototype : HTMLUnknownElementInstance
     {
-        public HTMLUnknownElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLUnknownElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLUnknownElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLUnknownElementConstructor constructor)
         {
-            var obj = new HTMLUnknownElementPrototype(engine.Jint)
+            var obj = new HTMLUnknownElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

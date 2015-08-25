@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSRuleListConstructor : FunctionInstance, IConstructor
     {
-        public CSSRuleListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSRuleListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSRuleListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSRuleListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSRuleListConstructor(engine.Jint);
+            var obj = new CSSRuleListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSRuleListPrototype.CreatePrototypeObject(engine, obj);

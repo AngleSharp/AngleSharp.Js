@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class InputEventConstructor : FunctionInstance, IConstructor
     {
-        public InputEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public InputEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public InputEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static InputEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new InputEventConstructor(engine.Jint);
+            var obj = new InputEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = InputEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new InputEvent(type, eventInitDict);
-                return new InputEventInstance(Engine)
+                return new InputEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefInputEvent = reference,

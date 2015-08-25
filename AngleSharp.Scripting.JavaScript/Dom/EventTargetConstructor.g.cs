@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class EventTargetConstructor : FunctionInstance, IConstructor
     {
-        public EventTargetConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public EventTargetConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public EventTargetPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static EventTargetConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new EventTargetConstructor(engine.Jint);
+            var obj = new EventTargetConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = EventTargetPrototype.CreatePrototypeObject(engine, obj);

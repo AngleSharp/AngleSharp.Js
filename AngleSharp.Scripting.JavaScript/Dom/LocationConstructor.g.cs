@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class LocationConstructor : FunctionInstance, IConstructor
     {
-        public LocationConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public LocationConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public LocationPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static LocationConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new LocationConstructor(engine.Jint);
+            var obj = new LocationConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = LocationPrototype.CreatePrototypeObject(engine, obj);

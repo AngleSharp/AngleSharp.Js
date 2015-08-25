@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGDocumentPrototype : SVGDocumentInstance
     {
-        public SVGDocumentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGDocumentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("rootElement", Engine.AsProperty(GetRootElement));
         }
 
         public static SVGDocumentPrototype CreatePrototypeObject(EngineInstance engine, SVGDocumentConstructor constructor)
         {
-            var obj = new SVGDocumentPrototype(engine.Jint)
+            var obj = new SVGDocumentPrototype(engine)
             {
                 Prototype = engine.Constructors.Document.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRootElement(JsValue thisObj)
         {
             var reference = thisObj.TryCast<SVGDocumentInstance>(Fail).RefSVGDocument;
-            return Engine.Select(reference.RootElement);
+            return _engine.GetDomNode(reference.RootElement);
         }
 
 

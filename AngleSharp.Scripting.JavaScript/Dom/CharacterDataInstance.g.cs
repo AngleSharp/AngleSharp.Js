@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CharacterDataInstance : NodeInstance
     {
-        public CharacterDataInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CharacterDataInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CharacterDataInstance CreateCharacterDataObject(Engine engine)
+        public static CharacterDataInstance CreateCharacterDataObject(EngineInstance engine)
         {
             var obj = new CharacterDataInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

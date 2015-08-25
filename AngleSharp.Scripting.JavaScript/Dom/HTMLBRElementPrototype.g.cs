@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLBRElementPrototype : HTMLBRElementInstance
     {
-        public HTMLBRElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLBRElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLBRElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLBRElementConstructor constructor)
         {
-            var obj = new HTMLBRElementPrototype(engine.Jint)
+            var obj = new HTMLBRElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

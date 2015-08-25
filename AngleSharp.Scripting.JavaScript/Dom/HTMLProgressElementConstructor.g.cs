@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLProgressElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLProgressElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLProgressElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLProgressElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLProgressElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLProgressElementConstructor(engine.Jint);
+            var obj = new HTMLProgressElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLProgressElementPrototype.CreatePrototypeObject(engine, obj);

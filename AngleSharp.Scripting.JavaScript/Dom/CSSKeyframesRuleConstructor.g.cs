@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSKeyframesRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSKeyframesRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSKeyframesRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSKeyframesRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSKeyframesRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSKeyframesRuleConstructor(engine.Jint);
+            var obj = new CSSKeyframesRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSKeyframesRulePrototype.CreatePrototypeObject(engine, obj);

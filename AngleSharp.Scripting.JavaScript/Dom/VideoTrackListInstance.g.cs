@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class VideoTrackListInstance : EventTargetInstance
     {
-        public VideoTrackListInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public VideoTrackListInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static VideoTrackListInstance CreateVideoTrackListObject(Engine engine)
+        public static VideoTrackListInstance CreateVideoTrackListObject(EngineInstance engine)
         {
             var obj = new VideoTrackListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefVideoTrackList[index]);
+                return _engine.GetDomNode(RefVideoTrackList[index]);
             return base.Get(propertyName);
         }
 

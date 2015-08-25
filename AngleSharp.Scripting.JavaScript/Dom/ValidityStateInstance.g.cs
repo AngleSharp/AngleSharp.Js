@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class ValidityStateInstance : ObjectInstance
     {
-        public ValidityStateInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public ValidityStateInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static ValidityStateInstance CreateValidityStateObject(Engine engine)
+        public static ValidityStateInstance CreateValidityStateObject(EngineInstance engine)
         {
             var obj = new ValidityStateInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

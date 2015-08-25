@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGCircleElementPrototype : SVGCircleElementInstance
     {
-        public SVGCircleElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGCircleElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static SVGCircleElementPrototype CreatePrototypeObject(EngineInstance engine, SVGCircleElementConstructor constructor)
         {
-            var obj = new SVGCircleElementPrototype(engine.Jint)
+            var obj = new SVGCircleElementPrototype(engine)
             {
                 Prototype = engine.Constructors.SVGElement.PrototypeObject,
                 Extensible = true,

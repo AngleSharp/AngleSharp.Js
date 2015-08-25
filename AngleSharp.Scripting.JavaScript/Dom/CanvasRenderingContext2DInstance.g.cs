@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CanvasRenderingContext2DInstance : RenderingContextInstance
     {
-        public CanvasRenderingContext2DInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CanvasRenderingContext2DInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CanvasRenderingContext2DInstance CreateCanvasRenderingContext2DObject(Engine engine)
+        public static CanvasRenderingContext2DInstance CreateCanvasRenderingContext2DObject(EngineInstance engine)
         {
             var obj = new CanvasRenderingContext2DInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

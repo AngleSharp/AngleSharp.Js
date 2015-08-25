@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableElementPrototype : HTMLTableElementInstance
     {
-        public HTMLTableElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("createCaption", Engine.AsValue(CreateCaption), true, true, true);
             FastAddProperty("deleteCaption", Engine.AsValue(DeleteCaption), true, true, true);
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableElementConstructor constructor)
         {
-            var obj = new HTMLTableElementPrototype(engine.Jint)
+            var obj = new HTMLTableElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CreateCaption(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.CreateCaption());
+            return _engine.GetDomNode(reference.CreateCaption());
         }
 
         JsValue DeleteCaption(JsValue thisObj, JsValue[] arguments)
@@ -59,7 +62,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CreateTHead(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.CreateHead());
+            return _engine.GetDomNode(reference.CreateHead());
         }
 
         JsValue DeleteTHead(JsValue thisObj, JsValue[] arguments)
@@ -72,7 +75,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CreateTFoot(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.CreateFoot());
+            return _engine.GetDomNode(reference.CreateFoot());
         }
 
         JsValue DeleteTFoot(JsValue thisObj, JsValue[] arguments)
@@ -85,14 +88,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CreateTBody(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.CreateBody());
+            return _engine.GetDomNode(reference.CreateBody());
         }
 
         JsValue InsertRow(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
             var index = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.InsertRowAt(index));
+            return _engine.GetDomNode(reference.InsertRowAt(index));
         }
 
         JsValue DeleteRow(JsValue thisObj, JsValue[] arguments)
@@ -106,7 +109,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCaption(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Caption);
+            return _engine.GetDomNode(reference.Caption);
         }
 
         void SetCaption(JsValue thisObj, JsValue argument)
@@ -119,7 +122,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTHead(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Head);
+            return _engine.GetDomNode(reference.Head);
         }
 
         void SetTHead(JsValue thisObj, JsValue argument)
@@ -132,7 +135,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTFoot(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Foot);
+            return _engine.GetDomNode(reference.Foot);
         }
 
         void SetTFoot(JsValue thisObj, JsValue argument)
@@ -145,21 +148,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTBodies(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Bodies);
+            return _engine.GetDomNode(reference.Bodies);
         }
 
 
         JsValue GetRows(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Rows);
+            return _engine.GetDomNode(reference.Rows);
         }
 
 
         JsValue GetBorder(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableElementInstance>(Fail).RefHTMLTableElement;
-            return Engine.Select(reference.Border);
+            return _engine.GetDomNode(reference.Border);
         }
 
         void SetBorder(JsValue thisObj, JsValue argument)

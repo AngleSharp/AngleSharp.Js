@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTimeElementPrototype : HTMLTimeElementInstance
     {
-        public HTMLTimeElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTimeElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("datetime", Engine.AsProperty(GetDatetime, SetDatetime));
         }
 
         public static HTMLTimeElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTimeElementConstructor constructor)
         {
-            var obj = new HTMLTimeElementPrototype(engine.Jint)
+            var obj = new HTMLTimeElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDatetime(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTimeElementInstance>(Fail).RefHTMLTimeElement;
-            return Engine.Select(reference.DateTime);
+            return _engine.GetDomNode(reference.DateTime);
         }
 
         void SetDatetime(JsValue thisObj, JsValue argument)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSImportRulePrototype : CSSImportRuleInstance
     {
-        public CSSImportRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSImportRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("href", Engine.AsProperty(GetHref));
             FastSetProperty("media", Engine.AsProperty(GetMedia, SetMedia));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSImportRulePrototype CreatePrototypeObject(EngineInstance engine, CSSImportRuleConstructor constructor)
         {
-            var obj = new CSSImportRulePrototype(engine.Jint)
+            var obj = new CSSImportRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -34,14 +37,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSImportRuleInstance>(Fail).RefCSSImportRule;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
 
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSImportRuleInstance>(Fail).RefCSSImportRule;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)
@@ -54,7 +57,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyleSheet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSImportRuleInstance>(Fail).RefCSSImportRule;
-            return Engine.Select(reference.Sheet);
+            return _engine.GetDomNode(reference.Sheet);
         }
 
 

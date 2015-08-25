@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLegendElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLLegendElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLLegendElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLLegendElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLegendElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLLegendElementConstructor(engine.Jint);
+            var obj = new HTMLLegendElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLLegendElementPrototype.CreatePrototypeObject(engine, obj);

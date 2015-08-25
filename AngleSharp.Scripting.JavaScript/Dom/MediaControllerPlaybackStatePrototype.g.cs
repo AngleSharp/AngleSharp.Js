@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaControllerPlaybackStatePrototype : MediaControllerPlaybackStateInstance
     {
-        public MediaControllerPlaybackStatePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MediaControllerPlaybackStatePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static MediaControllerPlaybackStatePrototype CreatePrototypeObject(EngineInstance engine, MediaControllerPlaybackStateConstructor constructor)
         {
-            var obj = new MediaControllerPlaybackStatePrototype(engine.Jint)
+            var obj = new MediaControllerPlaybackStatePrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

@@ -52,7 +52,7 @@
             var domNodeInstance = default(DomNodeInstance);
 
             if (_objects.TryGetValue(obj, out domNodeInstance) == false)
-                _objects.Add(obj, domNodeInstance = new DomNodeInstance(_engine, obj));
+                _objects.Add(obj, domNodeInstance = new DomNodeInstance(this, obj));
             
             return domNodeInstance;
         }

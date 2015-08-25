@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMExceptionConstructor : FunctionInstance, IConstructor
     {
-        public DOMExceptionConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMExceptionConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DOMExceptionPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMExceptionConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMExceptionConstructor(engine.Jint);
+            var obj = new DOMExceptionConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMExceptionPrototype.CreatePrototypeObject(engine, obj);

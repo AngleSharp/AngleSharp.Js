@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLegendElementPrototype : HTMLLegendElementInstance
     {
-        public HTMLLegendElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLegendElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("form", Engine.AsProperty(GetForm));
         }
 
         public static HTMLLegendElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLLegendElementConstructor constructor)
         {
-            var obj = new HTMLLegendElementPrototype(engine.Jint)
+            var obj = new HTMLLegendElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLegendElementInstance>(Fail).RefHTMLLegendElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 

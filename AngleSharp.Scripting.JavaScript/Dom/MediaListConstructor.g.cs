@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaListConstructor : FunctionInstance, IConstructor
     {
-        public MediaListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MediaListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MediaListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MediaListConstructor(engine.Jint);
+            var obj = new MediaListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MediaListPrototype.CreatePrototypeObject(engine, obj);

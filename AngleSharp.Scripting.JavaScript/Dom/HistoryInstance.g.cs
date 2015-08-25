@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HistoryInstance : ObjectInstance
     {
-        public HistoryInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public HistoryInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static HistoryInstance CreateHistoryObject(Engine engine)
+        public static HistoryInstance CreateHistoryObject(EngineInstance engine)
         {
             var obj = new HistoryInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

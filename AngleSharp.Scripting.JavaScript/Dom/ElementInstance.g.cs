@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class ElementInstance : NodeInstance
     {
-        public ElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static ElementInstance CreateElementObject(Engine engine)
+        public static ElementInstance CreateElementObject(EngineInstance engine)
         {
             var obj = new ElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

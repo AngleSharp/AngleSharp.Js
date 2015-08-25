@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMenuElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLMenuElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLMenuElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLMenuElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMenuElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLMenuElementConstructor(engine.Jint);
+            var obj = new HTMLMenuElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLMenuElementPrototype.CreatePrototypeObject(engine, obj);

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class NodeIteratorInstance : ObjectInstance
     {
-        public NodeIteratorInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public NodeIteratorInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static NodeIteratorInstance CreateNodeIteratorObject(Engine engine)
+        public static NodeIteratorInstance CreateNodeIteratorObject(EngineInstance engine)
         {
             var obj = new NodeIteratorInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class EventTargetPrototype : EventTargetInstance
     {
-        public EventTargetPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public EventTargetPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("addEventListener", Engine.AsValue(AddEventListener), true, true, true);
             FastAddProperty("removeEventListener", Engine.AsValue(RemoveEventListener), true, true, true);
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static EventTargetPrototype CreatePrototypeObject(EngineInstance engine, EventTargetConstructor constructor)
         {
-            var obj = new EventTargetPrototype(engine.Jint)
+            var obj = new EventTargetPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -55,7 +58,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<EventTargetInstance>(Fail).RefEventTarget;
             var ev = DomTypeConverter.ToEvent(arguments.At(0));
-            return Engine.Select(reference.Dispatch(ev));
+            return _engine.GetDomNode(reference.Dispatch(ev));
         }
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)

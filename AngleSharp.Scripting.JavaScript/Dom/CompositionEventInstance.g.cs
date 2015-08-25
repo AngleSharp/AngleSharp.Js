@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CompositionEventInstance : UIEventInstance
     {
-        public CompositionEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CompositionEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CompositionEventInstance CreateCompositionEventObject(Engine engine)
+        public static CompositionEventInstance CreateCompositionEventObject(EngineInstance engine)
         {
             var obj = new CompositionEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

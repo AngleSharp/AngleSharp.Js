@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLTimeElementInstance : HTMLElementInstance
     {
-        public HTMLTimeElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTimeElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLTimeElementInstance CreateHTMLTimeElementObject(Engine engine)
+        public static HTMLTimeElementInstance CreateHTMLTimeElementObject(EngineInstance engine)
         {
             var obj = new HTMLTimeElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

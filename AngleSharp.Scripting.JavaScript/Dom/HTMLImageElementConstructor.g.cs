@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLImageElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLImageElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLImageElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLImageElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLImageElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLImageElementConstructor(engine.Jint);
+            var obj = new HTMLImageElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLImageElementPrototype.CreatePrototypeObject(engine, obj);

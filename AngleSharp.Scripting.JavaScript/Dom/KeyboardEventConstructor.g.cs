@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class KeyboardEventConstructor : FunctionInstance, IConstructor
     {
-        public KeyboardEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public KeyboardEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("DOM_KEY_LOCATION_STANDARD", (UInt32)(AngleSharp.Dom.Events.KeyboardLocation.Standard), false, true, false);
             FastAddProperty("DOM_KEY_LOCATION_LEFT", (UInt32)(AngleSharp.Dom.Events.KeyboardLocation.Left), false, true, false);
             FastAddProperty("DOM_KEY_LOCATION_RIGHT", (UInt32)(AngleSharp.Dom.Events.KeyboardLocation.Right), false, true, false);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static KeyboardEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new KeyboardEventConstructor(engine.Jint);
+            var obj = new KeyboardEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = KeyboardEventPrototype.CreatePrototypeObject(engine, obj);
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new KeyboardEvent(type, eventInitDict);
-                return new KeyboardEventInstance(Engine)
+                return new KeyboardEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefKeyboardEvent = reference,

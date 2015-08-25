@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class FocusEventPrototype : FocusEventInstance
     {
-        public FocusEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public FocusEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("initFocusEvent", Engine.AsValue(InitFocusEvent), true, true, true);
             FastAddProperty("initUIEvent", Engine.AsValue(InitUIEvent), true, true, true);
@@ -37,7 +40,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static FocusEventPrototype CreatePrototypeObject(EngineInstance engine, FocusEventConstructor constructor)
         {
-            var obj = new FocusEventPrototype(engine.Jint)
+            var obj = new FocusEventPrototype(engine)
             {
                 Prototype = engine.Constructors.UIEvent.PrototypeObject,
                 Extensible = true,
@@ -105,77 +108,77 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRelatedTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 
         JsValue GetView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.View);
+            return _engine.GetDomNode(reference.View);
         }
 
 
         JsValue GetDetail(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.Detail);
+            return _engine.GetDomNode(reference.Detail);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -188,7 +191,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FocusEventInstance>(Fail).RefFocusEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

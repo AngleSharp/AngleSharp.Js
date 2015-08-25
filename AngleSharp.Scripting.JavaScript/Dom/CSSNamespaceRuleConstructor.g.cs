@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSNamespaceRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSNamespaceRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSNamespaceRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSNamespaceRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSNamespaceRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSNamespaceRuleConstructor(engine.Jint);
+            var obj = new CSSNamespaceRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSNamespaceRulePrototype.CreatePrototypeObject(engine, obj);

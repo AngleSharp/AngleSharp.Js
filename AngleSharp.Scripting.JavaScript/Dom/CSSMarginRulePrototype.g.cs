@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSMarginRulePrototype : CSSMarginRuleInstance
     {
-        public CSSMarginRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSMarginRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("name", Engine.AsProperty(GetName));
             FastSetProperty("style", Engine.AsProperty(GetStyle, SetStyle));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSMarginRulePrototype CreatePrototypeObject(EngineInstance engine, CSSMarginRuleConstructor constructor)
         {
-            var obj = new CSSMarginRulePrototype(engine.Jint)
+            var obj = new CSSMarginRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -33,14 +36,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSMarginRuleInstance>(Fail).RefCSSMarginRule;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
 
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSMarginRuleInstance>(Fail).RefCSSMarginRule;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
         void SetStyle(JsValue thisObj, JsValue argument)

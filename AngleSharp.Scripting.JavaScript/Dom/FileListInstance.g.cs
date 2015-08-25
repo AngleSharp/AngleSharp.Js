@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class FileListInstance : ObjectInstance
     {
-        public FileListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public FileListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static FileListInstance CreateFileListObject(Engine engine)
+        public static FileListInstance CreateFileListObject(EngineInstance engine)
         {
             var obj = new FileListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefFileList[index]);
+                return _engine.GetDomNode(RefFileList[index]);
             return base.Get(propertyName);
         }
 

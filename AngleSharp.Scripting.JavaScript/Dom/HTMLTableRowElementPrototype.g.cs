@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableRowElementPrototype : HTMLTableRowElementInstance
     {
-        public HTMLTableRowElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableRowElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("insertCell", Engine.AsValue(InsertCell), true, true, true);
             FastAddProperty("deleteCell", Engine.AsValue(DeleteCell), true, true, true);
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableRowElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableRowElementConstructor constructor)
         {
-            var obj = new HTMLTableRowElementPrototype(engine.Jint)
+            var obj = new HTMLTableRowElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -37,7 +40,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLTableRowElementInstance>(Fail).RefHTMLTableRowElement;
             var index = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.InsertCellAt(index));
+            return _engine.GetDomNode(reference.InsertCellAt(index));
         }
 
         JsValue DeleteCell(JsValue thisObj, JsValue[] arguments)
@@ -51,21 +54,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRowIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableRowElementInstance>(Fail).RefHTMLTableRowElement;
-            return Engine.Select(reference.Index);
+            return _engine.GetDomNode(reference.Index);
         }
 
 
         JsValue GetSectionRowIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableRowElementInstance>(Fail).RefHTMLTableRowElement;
-            return Engine.Select(reference.IndexInSection);
+            return _engine.GetDomNode(reference.IndexInSection);
         }
 
 
         JsValue GetCells(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableRowElementInstance>(Fail).RefHTMLTableRowElement;
-            return Engine.Select(reference.Cells);
+            return _engine.GetDomNode(reference.Cells);
         }
 
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSStyleSheetPrototype : CSSStyleSheetInstance
     {
-        public CSSStyleSheetPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSStyleSheetPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("insertRule", Engine.AsValue(InsertRule), true, true, true);
             FastAddProperty("deleteRule", Engine.AsValue(DeleteRule), true, true, true);
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSStyleSheetPrototype CreatePrototypeObject(EngineInstance engine, CSSStyleSheetConstructor constructor)
         {
-            var obj = new CSSStyleSheetPrototype(engine.Jint)
+            var obj = new CSSStyleSheetPrototype(engine)
             {
                 Prototype = engine.Constructors.StyleSheet.PrototypeObject,
                 Extensible = true,
@@ -37,7 +40,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<CSSStyleSheetInstance>(Fail).RefCSSStyleSheet;
             var rule = TypeConverter.ToString(arguments.At(0));
             var index = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.Insert(rule, index));
+            return _engine.GetDomNode(reference.Insert(rule, index));
         }
 
         JsValue DeleteRule(JsValue thisObj, JsValue[] arguments)
@@ -51,14 +54,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOwnerRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleSheetInstance>(Fail).RefCSSStyleSheet;
-            return Engine.Select(reference.OwnerRule);
+            return _engine.GetDomNode(reference.OwnerRule);
         }
 
 
         JsValue GetCssRules(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSStyleSheetInstance>(Fail).RefCSSStyleSheet;
-            return Engine.Select(reference.Rules);
+            return _engine.GetDomNode(reference.Rules);
         }
 
 

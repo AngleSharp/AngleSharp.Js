@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLCanvasElementPrototype : HTMLCanvasElementInstance
     {
-        public HTMLCanvasElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLCanvasElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("toDataURL", Engine.AsValue(ToDataURL), true, true, true);
             FastAddProperty("toBlob", Engine.AsValue(ToBlob), true, true, true);
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLCanvasElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLCanvasElementConstructor constructor)
         {
-            var obj = new HTMLCanvasElementPrototype(engine.Jint)
+            var obj = new HTMLCanvasElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLCanvasElementInstance>(Fail).RefHTMLCanvasElement;
             var type = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.ToDataUrl(type));
+            return _engine.GetDomNode(reference.ToDataUrl(type));
         }
 
         JsValue ToBlob(JsValue thisObj, JsValue[] arguments)
@@ -55,7 +58,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLCanvasElementInstance>(Fail).RefHTMLCanvasElement;
             var contextId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetContext(contextId));
+            return _engine.GetDomNode(reference.GetContext(contextId));
         }
 
         JsValue SetContext(JsValue thisObj, JsValue[] arguments)
@@ -70,13 +73,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLCanvasElementInstance>(Fail).RefHTMLCanvasElement;
             var contextId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.IsSupportingContext(contextId));
+            return _engine.GetDomNode(reference.IsSupportingContext(contextId));
         }
 
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCanvasElementInstance>(Fail).RefHTMLCanvasElement;
-            return Engine.Select(reference.Width);
+            return _engine.GetDomNode(reference.Width);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -89,7 +92,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCanvasElementInstance>(Fail).RefHTMLCanvasElement;
-            return Engine.Select(reference.Height);
+            return _engine.GetDomNode(reference.Height);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)

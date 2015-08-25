@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TrackEventPrototype : TrackEventInstance
     {
-        public TrackEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TrackEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("initTrackEvent", Engine.AsValue(InitTrackEvent), true, true, true);
             FastAddProperty("stopPropagation", Engine.AsValue(StopPropagation), true, true, true);
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TrackEventPrototype CreatePrototypeObject(EngineInstance engine, TrackEventConstructor constructor)
         {
-            var obj = new TrackEventPrototype(engine.Jint)
+            var obj = new TrackEventPrototype(engine)
             {
                 Prototype = engine.Constructors.Event.PrototypeObject,
                 Extensible = true,
@@ -88,63 +91,63 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTrack(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.Track);
+            return _engine.GetDomNode(reference.Track);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -157,7 +160,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TrackEventInstance>(Fail).RefTrackEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

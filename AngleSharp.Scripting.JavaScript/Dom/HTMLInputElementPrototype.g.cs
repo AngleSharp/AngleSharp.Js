@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLInputElementPrototype : HTMLInputElementInstance
     {
-        public HTMLInputElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLInputElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("stepUp", Engine.AsValue(StepUp), true, true, true);
             FastAddProperty("stepDown", Engine.AsValue(StepDown), true, true, true);
@@ -63,7 +66,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLInputElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLInputElementConstructor constructor)
         {
-            var obj = new HTMLInputElementPrototype(engine.Jint)
+            var obj = new HTMLInputElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -108,7 +111,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutofocus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Autofocus);
+            return _engine.GetDomNode(reference.Autofocus);
         }
 
         void SetAutofocus(JsValue thisObj, JsValue argument)
@@ -121,7 +124,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAccept(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Accept);
+            return _engine.GetDomNode(reference.Accept);
         }
 
         void SetAccept(JsValue thisObj, JsValue argument)
@@ -134,7 +137,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutocomplete(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Autocomplete);
+            return _engine.GetDomNode(reference.Autocomplete);
         }
 
         void SetAutocomplete(JsValue thisObj, JsValue argument)
@@ -147,7 +150,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -160,28 +163,28 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetFiles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Files);
+            return _engine.GetDomNode(reference.Files);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -194,7 +197,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -207,7 +210,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRequired(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsRequired);
+            return _engine.GetDomNode(reference.IsRequired);
         }
 
         void SetRequired(JsValue thisObj, JsValue argument)
@@ -220,7 +223,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReadOnly(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsReadOnly);
+            return _engine.GetDomNode(reference.IsReadOnly);
         }
 
         void SetReadOnly(JsValue thisObj, JsValue argument)
@@ -233,7 +236,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAlt(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.AlternativeText);
+            return _engine.GetDomNode(reference.AlternativeText);
         }
 
         void SetAlt(JsValue thisObj, JsValue argument)
@@ -246,7 +249,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -259,7 +262,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMax(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Maximum);
+            return _engine.GetDomNode(reference.Maximum);
         }
 
         void SetMax(JsValue thisObj, JsValue argument)
@@ -272,7 +275,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Minimum);
+            return _engine.GetDomNode(reference.Minimum);
         }
 
         void SetMin(JsValue thisObj, JsValue argument)
@@ -285,7 +288,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPattern(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Pattern);
+            return _engine.GetDomNode(reference.Pattern);
         }
 
         void SetPattern(JsValue thisObj, JsValue argument)
@@ -298,7 +301,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStep(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Step);
+            return _engine.GetDomNode(reference.Step);
         }
 
         void SetStep(JsValue thisObj, JsValue argument)
@@ -311,14 +314,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetList(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.List);
+            return _engine.GetDomNode(reference.List);
         }
 
 
         JsValue GetFormAction(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.FormAction);
+            return _engine.GetDomNode(reference.FormAction);
         }
 
         void SetFormAction(JsValue thisObj, JsValue argument)
@@ -331,7 +334,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormEncType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.FormEncType);
+            return _engine.GetDomNode(reference.FormEncType);
         }
 
         void SetFormEncType(JsValue thisObj, JsValue argument)
@@ -344,7 +347,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormMethod(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.FormMethod);
+            return _engine.GetDomNode(reference.FormMethod);
         }
 
         void SetFormMethod(JsValue thisObj, JsValue argument)
@@ -357,7 +360,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormNoValidate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.FormNoValidate);
+            return _engine.GetDomNode(reference.FormNoValidate);
         }
 
         void SetFormNoValidate(JsValue thisObj, JsValue argument)
@@ -370,7 +373,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.FormTarget);
+            return _engine.GetDomNode(reference.FormTarget);
         }
 
         void SetFormTarget(JsValue thisObj, JsValue argument)
@@ -383,7 +386,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.DefaultValue);
+            return _engine.GetDomNode(reference.DefaultValue);
         }
 
         void SetDefaultValue(JsValue thisObj, JsValue argument)
@@ -396,7 +399,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -409,7 +412,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValueAsNumber(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.ValueAsNumber);
+            return _engine.GetDomNode(reference.ValueAsNumber);
         }
 
         void SetValueAsNumber(JsValue thisObj, JsValue argument)
@@ -422,7 +425,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValueAsDate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.ValueAsDate);
+            return _engine.GetDomNode(reference.ValueAsDate);
         }
 
         void SetValueAsDate(JsValue thisObj, JsValue argument)
@@ -435,7 +438,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIndeterminate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsIndeterminate);
+            return _engine.GetDomNode(reference.IsIndeterminate);
         }
 
         void SetIndeterminate(JsValue thisObj, JsValue argument)
@@ -448,7 +451,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultChecked(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsDefaultChecked);
+            return _engine.GetDomNode(reference.IsDefaultChecked);
         }
 
         void SetDefaultChecked(JsValue thisObj, JsValue argument)
@@ -461,7 +464,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetChecked(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsChecked);
+            return _engine.GetDomNode(reference.IsChecked);
         }
 
         void SetChecked(JsValue thisObj, JsValue argument)
@@ -474,7 +477,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Size);
+            return _engine.GetDomNode(reference.Size);
         }
 
         void SetSize(JsValue thisObj, JsValue argument)
@@ -487,7 +490,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMultiple(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.IsMultiple);
+            return _engine.GetDomNode(reference.IsMultiple);
         }
 
         void SetMultiple(JsValue thisObj, JsValue argument)
@@ -500,7 +503,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMaxLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.MaxLength);
+            return _engine.GetDomNode(reference.MaxLength);
         }
 
         void SetMaxLength(JsValue thisObj, JsValue argument)
@@ -513,7 +516,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPlaceholder(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.Placeholder);
+            return _engine.GetDomNode(reference.Placeholder);
         }
 
         void SetPlaceholder(JsValue thisObj, JsValue argument)
@@ -526,7 +529,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.DisplayWidth);
+            return _engine.GetDomNode(reference.DisplayWidth);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -539,7 +542,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.DisplayHeight);
+            return _engine.GetDomNode(reference.DisplayHeight);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)
@@ -552,14 +555,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionDirection(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.SelectionDirection);
+            return _engine.GetDomNode(reference.SelectionDirection);
         }
 
 
         JsValue GetDirName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.DirectionName);
+            return _engine.GetDomNode(reference.DirectionName);
         }
 
         void SetDirName(JsValue thisObj, JsValue argument)
@@ -572,7 +575,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionStart(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.SelectionStart);
+            return _engine.GetDomNode(reference.SelectionStart);
         }
 
         void SetSelectionStart(JsValue thisObj, JsValue argument)
@@ -585,7 +588,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionEnd(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLInputElementInstance>(Fail).RefHTMLInputElement;
-            return Engine.Select(reference.SelectionEnd);
+            return _engine.GetDomNode(reference.SelectionEnd);
         }
 
         void SetSelectionEnd(JsValue thisObj, JsValue argument)

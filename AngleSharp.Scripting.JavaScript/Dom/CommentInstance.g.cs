@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CommentInstance : CharacterDataInstance
     {
-        public CommentInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CommentInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CommentInstance CreateCommentObject(Engine engine)
+        public static CommentInstance CreateCommentObject(EngineInstance engine)
         {
             var obj = new CommentInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

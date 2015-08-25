@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLabelElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLLabelElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLLabelElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLLabelElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLabelElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLLabelElementConstructor(engine.Jint);
+            var obj = new HTMLLabelElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLLabelElementPrototype.CreatePrototypeObject(engine, obj);

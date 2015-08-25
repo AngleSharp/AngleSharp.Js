@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NamedNodeMapConstructor : FunctionInstance, IConstructor
     {
-        public NamedNodeMapConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public NamedNodeMapConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public NamedNodeMapPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NamedNodeMapConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new NamedNodeMapConstructor(engine.Jint);
+            var obj = new NamedNodeMapConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = NamedNodeMapPrototype.CreatePrototypeObject(engine, obj);

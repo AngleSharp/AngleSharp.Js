@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class RenderingContextInstance : ObjectInstance
     {
-        public RenderingContextInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public RenderingContextInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static RenderingContextInstance CreateRenderingContextObject(Engine engine)
+        public static RenderingContextInstance CreateRenderingContextObject(EngineInstance engine)
         {
             var obj = new RenderingContextInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DocumentInstance : NodeInstance
     {
-        public DocumentInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("DOCUMENT_POSITION_DISCONNECTED", (UInt32)(AngleSharp.Dom.DocumentPositions.Disconnected), false, true, false);
             FastAddProperty("DOCUMENT_POSITION_PRECEDING", (UInt32)(AngleSharp.Dom.DocumentPositions.Preceding), false, true, false);
             FastAddProperty("DOCUMENT_POSITION_FOLLOWING", (UInt32)(AngleSharp.Dom.DocumentPositions.Following), false, true, false);
@@ -32,11 +35,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("NOTATION_NODE", (UInt32)(AngleSharp.Dom.NodeType.Notation), false, true, false);
         }
 
-        public static DocumentInstance CreateDocumentObject(Engine engine)
+        public static DocumentInstance CreateDocumentObject(EngineInstance engine)
         {
             var obj = new DocumentInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

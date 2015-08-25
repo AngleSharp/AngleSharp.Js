@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSCounterStyleRuleInstance : CSSRuleInstance
     {
-        public CSSCounterStyleRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSCounterStyleRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSCounterStyleRuleInstance CreateCSSCounterStyleRuleObject(Engine engine)
+        public static CSSCounterStyleRuleInstance CreateCSSCounterStyleRuleObject(EngineInstance engine)
         {
             var obj = new CSSCounterStyleRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

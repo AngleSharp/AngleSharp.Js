@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLVideoElementPrototype : HTMLVideoElementInstance
     {
-        public HTMLVideoElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLVideoElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("width", Engine.AsProperty(GetWidth, SetWidth));
             FastSetProperty("height", Engine.AsProperty(GetHeight, SetHeight));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLVideoElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLVideoElementConstructor constructor)
         {
-            var obj = new HTMLVideoElementPrototype(engine.Jint)
+            var obj = new HTMLVideoElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLMediaElement.PrototypeObject,
                 Extensible = true,
@@ -36,7 +39,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLVideoElementInstance>(Fail).RefHTMLVideoElement;
-            return Engine.Select(reference.DisplayWidth);
+            return _engine.GetDomNode(reference.DisplayWidth);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLVideoElementInstance>(Fail).RefHTMLVideoElement;
-            return Engine.Select(reference.DisplayHeight);
+            return _engine.GetDomNode(reference.DisplayHeight);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)
@@ -62,21 +65,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVideoWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLVideoElementInstance>(Fail).RefHTMLVideoElement;
-            return Engine.Select(reference.OriginalWidth);
+            return _engine.GetDomNode(reference.OriginalWidth);
         }
 
 
         JsValue GetVideoHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLVideoElementInstance>(Fail).RefHTMLVideoElement;
-            return Engine.Select(reference.OriginalHeight);
+            return _engine.GetDomNode(reference.OriginalHeight);
         }
 
 
         JsValue GetPoster(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLVideoElementInstance>(Fail).RefHTMLVideoElement;
-            return Engine.Select(reference.Poster);
+            return _engine.GetDomNode(reference.Poster);
         }
 
         void SetPoster(JsValue thisObj, JsValue argument)

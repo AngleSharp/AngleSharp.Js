@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMetaElementPrototype : HTMLMetaElementInstance
     {
-        public HTMLMetaElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMetaElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("name", Engine.AsProperty(GetName, SetName));
             FastSetProperty("httpEquiv", Engine.AsProperty(GetHttpEquiv, SetHttpEquiv));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMetaElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMetaElementConstructor constructor)
         {
-            var obj = new HTMLMetaElementPrototype(engine.Jint)
+            var obj = new HTMLMetaElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMetaElementInstance>(Fail).RefHTMLMetaElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -47,7 +50,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHttpEquiv(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMetaElementInstance>(Fail).RefHTMLMetaElement;
-            return Engine.Select(reference.HttpEquivalent);
+            return _engine.GetDomNode(reference.HttpEquivalent);
         }
 
         void SetHttpEquiv(JsValue thisObj, JsValue argument)
@@ -60,7 +63,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetContent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMetaElementInstance>(Fail).RefHTMLMetaElement;
-            return Engine.Select(reference.Content);
+            return _engine.GetDomNode(reference.Content);
         }
 
         void SetContent(JsValue thisObj, JsValue argument)

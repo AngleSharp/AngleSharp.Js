@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSStyleDeclarationInstance : ObjectInstance
     {
-        public CSSStyleDeclarationInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public CSSStyleDeclarationInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static CSSStyleDeclarationInstance CreateCSSStyleDeclarationObject(Engine engine)
+        public static CSSStyleDeclarationInstance CreateCSSStyleDeclarationObject(EngineInstance engine)
         {
             var obj = new CSSStyleDeclarationInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefCSSStyleDeclaration[index]);
+                return _engine.GetDomNode(RefCSSStyleDeclaration[index]);
             return base.Get(propertyName);
         }
 

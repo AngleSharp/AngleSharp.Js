@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class StyleSheetListInstance : ObjectInstance
     {
-        public StyleSheetListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public StyleSheetListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static StyleSheetListInstance CreateStyleSheetListObject(Engine engine)
+        public static StyleSheetListInstance CreateStyleSheetListObject(EngineInstance engine)
         {
             var obj = new StyleSheetListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefStyleSheetList[index]);
+                return _engine.GetDomNode(RefStyleSheetList[index]);
             return base.Get(propertyName);
         }
 

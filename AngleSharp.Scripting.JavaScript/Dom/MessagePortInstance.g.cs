@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class MessagePortInstance : EventTargetInstance
     {
-        public MessagePortInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MessagePortInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static MessagePortInstance CreateMessagePortObject(Engine engine)
+        public static MessagePortInstance CreateMessagePortObject(EngineInstance engine)
         {
             var obj = new MessagePortInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

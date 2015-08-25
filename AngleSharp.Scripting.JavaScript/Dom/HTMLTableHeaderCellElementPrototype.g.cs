@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableHeaderCellElementPrototype : HTMLTableHeaderCellElementInstance
     {
-        public HTMLTableHeaderCellElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableHeaderCellElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("scope", Engine.AsProperty(GetScope, SetScope));
         }
 
         public static HTMLTableHeaderCellElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableHeaderCellElementConstructor constructor)
         {
-            var obj = new HTMLTableHeaderCellElementPrototype(engine.Jint)
+            var obj = new HTMLTableHeaderCellElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLTableCellElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScope(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableHeaderCellElementInstance>(Fail).RefHTMLTableHeaderCellElement;
-            return Engine.Select(reference.Scope);
+            return _engine.GetDomNode(reference.Scope);
         }
 
         void SetScope(JsValue thisObj, JsValue argument)

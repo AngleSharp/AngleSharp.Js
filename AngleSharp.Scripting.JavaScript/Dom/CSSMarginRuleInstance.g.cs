@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSMarginRuleInstance : CSSRuleInstance
     {
-        public CSSMarginRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSMarginRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSMarginRuleInstance CreateCSSMarginRuleObject(Engine engine)
+        public static CSSMarginRuleInstance CreateCSSMarginRuleObject(EngineInstance engine)
         {
             var obj = new CSSMarginRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

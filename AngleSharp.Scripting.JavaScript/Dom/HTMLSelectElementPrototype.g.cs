@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLSelectElementPrototype : HTMLSelectElementInstance
     {
-        public HTMLSelectElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLSelectElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("add", Engine.AsValue(Add), true, true, true);
             FastAddProperty("remove", Engine.AsValue(Remove), true, true, true);
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLSelectElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLSelectElementConstructor constructor)
         {
-            var obj = new HTMLSelectElementPrototype(engine.Jint)
+            var obj = new HTMLSelectElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutofocus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Autofocus);
+            return _engine.GetDomNode(reference.Autofocus);
         }
 
         void SetAutofocus(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -90,21 +93,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -117,7 +120,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -130,14 +133,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetRequired(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.IsRequired);
+            return _engine.GetDomNode(reference.IsRequired);
         }
 
         void SetRequired(JsValue thisObj, JsValue argument)
@@ -150,14 +153,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectedOptions(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.SelectedOptions);
+            return _engine.GetDomNode(reference.SelectedOptions);
         }
 
 
         JsValue GetSize(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Size);
+            return _engine.GetDomNode(reference.Size);
         }
 
         void SetSize(JsValue thisObj, JsValue argument)
@@ -170,21 +173,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOptions(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Options);
+            return _engine.GetDomNode(reference.Options);
         }
 
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetMultiple(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.IsMultiple);
+            return _engine.GetDomNode(reference.IsMultiple);
         }
 
         void SetMultiple(JsValue thisObj, JsValue argument)
@@ -197,7 +200,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectedIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLSelectElementInstance>(Fail).RefHTMLSelectElement;
-            return Engine.Select(reference.SelectedIndex);
+            return _engine.GetDomNode(reference.SelectedIndex);
         }
 
 

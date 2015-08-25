@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TrackEventConstructor : FunctionInstance, IConstructor
     {
-        public TrackEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public TrackEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public TrackEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TrackEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new TrackEventConstructor(engine.Jint);
+            var obj = new TrackEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = TrackEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new TrackEvent(type, eventInitDict);
-                return new TrackEventInstance(Engine)
+                return new TrackEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefTrackEvent = reference,

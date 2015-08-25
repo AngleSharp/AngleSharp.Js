@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class ApplicationCacheInstance : EventTargetInstance
     {
-        public ApplicationCacheInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ApplicationCacheInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("UNCACHED", (UInt32)(AngleSharp.Dom.CacheStatus.Uncached), false, true, false);
             FastAddProperty("IDLE", (UInt32)(AngleSharp.Dom.CacheStatus.Idle), false, true, false);
             FastAddProperty("CHECKING", (UInt32)(AngleSharp.Dom.CacheStatus.Checking), false, true, false);
@@ -20,11 +23,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("OBSOLETE", (UInt32)(AngleSharp.Dom.CacheStatus.Obsolete), false, true, false);
         }
 
-        public static ApplicationCacheInstance CreateApplicationCacheObject(Engine engine)
+        public static ApplicationCacheInstance CreateApplicationCacheObject(EngineInstance engine)
         {
             var obj = new ApplicationCacheInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

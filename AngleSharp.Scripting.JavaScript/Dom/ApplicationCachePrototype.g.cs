@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class ApplicationCachePrototype : ApplicationCacheInstance
     {
-        public ApplicationCachePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ApplicationCachePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("update", Engine.AsValue(Update), true, true, true);
             FastAddProperty("abort", Engine.AsValue(Abort), true, true, true);
@@ -31,7 +34,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static ApplicationCachePrototype CreatePrototypeObject(EngineInstance engine, ApplicationCacheConstructor constructor)
         {
-            var obj = new ApplicationCachePrototype(engine.Jint)
+            var obj = new ApplicationCachePrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStatus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ApplicationCacheInstance>(Fail).RefApplicationCache;
-            return Engine.Select(reference.Status);
+            return _engine.GetDomNode(reference.Status);
         }
 
 

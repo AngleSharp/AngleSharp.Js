@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSFontFaceRuleInstance : CSSRuleInstance
     {
-        public CSSFontFaceRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSFontFaceRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSFontFaceRuleInstance CreateCSSFontFaceRuleObject(Engine engine)
+        public static CSSFontFaceRuleInstance CreateCSSFontFaceRuleObject(EngineInstance engine)
         {
             var obj = new CSSFontFaceRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

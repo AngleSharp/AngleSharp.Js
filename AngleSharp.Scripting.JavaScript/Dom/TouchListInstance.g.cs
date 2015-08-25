@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TouchListInstance : ObjectInstance
     {
-        public TouchListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public TouchListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static TouchListInstance CreateTouchListObject(Engine engine)
+        public static TouchListInstance CreateTouchListObject(EngineInstance engine)
         {
             var obj = new TouchListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefTouchList[index]);
+                return _engine.GetDomNode(RefTouchList[index]);
             return base.Get(propertyName);
         }
 

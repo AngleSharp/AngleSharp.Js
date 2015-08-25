@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLHeadElementPrototype : HTMLHeadElementInstance
     {
-        public HTMLHeadElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLHeadElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLHeadElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLHeadElementConstructor constructor)
         {
-            var obj = new HTMLHeadElementPrototype(engine.Jint)
+            var obj = new HTMLHeadElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

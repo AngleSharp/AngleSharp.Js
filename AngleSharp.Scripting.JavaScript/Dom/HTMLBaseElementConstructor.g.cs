@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLBaseElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLBaseElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLBaseElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLBaseElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLBaseElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLBaseElementConstructor(engine.Jint);
+            var obj = new HTMLBaseElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLBaseElementPrototype.CreatePrototypeObject(engine, obj);

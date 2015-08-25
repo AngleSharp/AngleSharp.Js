@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLAnchorElementPrototype : HTMLAnchorElementInstance
     {
-        public HTMLAnchorElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLAnchorElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("target", Engine.AsProperty(GetTarget, SetTarget));
             FastSetProperty("download", Engine.AsProperty(GetDownload, SetDownload));
@@ -38,7 +41,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLAnchorElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLAnchorElementConstructor constructor)
         {
-            var obj = new HTMLAnchorElementPrototype(engine.Jint)
+            var obj = new HTMLAnchorElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -50,7 +53,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
         void SetTarget(JsValue thisObj, JsValue argument)
@@ -63,7 +66,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDownload(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Download);
+            return _engine.GetDomNode(reference.Download);
         }
 
         void SetDownload(JsValue thisObj, JsValue argument)
@@ -76,14 +79,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Ping);
+            return _engine.GetDomNode(reference.Ping);
         }
 
 
         JsValue GetRel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Relation);
+            return _engine.GetDomNode(reference.Relation);
         }
 
         void SetRel(JsValue thisObj, JsValue argument)
@@ -96,14 +99,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRelList(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.RelationList);
+            return _engine.GetDomNode(reference.RelationList);
         }
 
 
         JsValue GetHreflang(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.TargetLanguage);
+            return _engine.GetDomNode(reference.TargetLanguage);
         }
 
         void SetHreflang(JsValue thisObj, JsValue argument)
@@ -116,21 +119,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
 
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
         void SetHref(JsValue thisObj, JsValue argument)
@@ -143,7 +146,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetProtocol(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Protocol);
+            return _engine.GetDomNode(reference.Protocol);
         }
 
         void SetProtocol(JsValue thisObj, JsValue argument)
@@ -156,7 +159,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHost(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Host);
+            return _engine.GetDomNode(reference.Host);
         }
 
         void SetHost(JsValue thisObj, JsValue argument)
@@ -169,7 +172,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHostname(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.HostName);
+            return _engine.GetDomNode(reference.HostName);
         }
 
         void SetHostname(JsValue thisObj, JsValue argument)
@@ -182,7 +185,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPort(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Port);
+            return _engine.GetDomNode(reference.Port);
         }
 
         void SetPort(JsValue thisObj, JsValue argument)
@@ -195,7 +198,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPathname(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.PathName);
+            return _engine.GetDomNode(reference.PathName);
         }
 
         void SetPathname(JsValue thisObj, JsValue argument)
@@ -208,7 +211,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSearch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Search);
+            return _engine.GetDomNode(reference.Search);
         }
 
         void SetSearch(JsValue thisObj, JsValue argument)
@@ -221,7 +224,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHash(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Hash);
+            return _engine.GetDomNode(reference.Hash);
         }
 
         void SetHash(JsValue thisObj, JsValue argument)
@@ -234,7 +237,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUsername(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.UserName);
+            return _engine.GetDomNode(reference.UserName);
         }
 
         void SetUsername(JsValue thisObj, JsValue argument)
@@ -247,7 +250,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPassword(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Password);
+            return _engine.GetDomNode(reference.Password);
         }
 
         void SetPassword(JsValue thisObj, JsValue argument)
@@ -260,7 +263,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLAnchorElementInstance>(Fail).RefHTMLAnchorElement;
-            return Engine.Select(reference.Origin);
+            return _engine.GetDomNode(reference.Origin);
         }
 
 

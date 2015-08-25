@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLAudioElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLAudioElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLAudioElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLAudioElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLAudioElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLAudioElementConstructor(engine.Jint);
+            var obj = new HTMLAudioElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLAudioElementPrototype.CreatePrototypeObject(engine, obj);

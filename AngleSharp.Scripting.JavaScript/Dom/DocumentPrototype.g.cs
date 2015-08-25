@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DocumentPrototype : DocumentInstance
     {
-        public DocumentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("open", Engine.AsValue(Open), true, true, true);
             FastAddProperty("close", Engine.AsValue(Close), true, true, true);
@@ -155,7 +158,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DocumentPrototype CreatePrototypeObject(EngineInstance engine, DocumentConstructor constructor)
         {
-            var obj = new DocumentPrototype(engine.Jint)
+            var obj = new DocumentPrototype(engine)
             {
                 Prototype = engine.Constructors.Node.PrototypeObject,
                 Extensible = true,
@@ -169,7 +172,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var type = TypeConverter.ToString(arguments.At(0));
             var replace = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.Open(type, replace));
+            return _engine.GetDomNode(reference.Open(type, replace));
         }
 
         JsValue Close(JsValue thisObj, JsValue[] arguments)
@@ -207,21 +210,21 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var name = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetElementsByName(name));
+            return _engine.GetDomNode(reference.GetElementsByName(name));
         }
 
         JsValue GetElementsByClassName(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var classNames = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetElementsByClassName(classNames));
+            return _engine.GetDomNode(reference.GetElementsByClassName(classNames));
         }
 
         JsValue GetElementsByTagName(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var tagName = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetElementsByTagName(tagName));
+            return _engine.GetDomNode(reference.GetElementsByTagName(tagName));
         }
 
         JsValue GetElementsByTagNameNS(JsValue thisObj, JsValue[] arguments)
@@ -229,40 +232,40 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var tagName = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.GetElementsByTagName(namespaceUri, tagName));
+            return _engine.GetDomNode(reference.GetElementsByTagName(namespaceUri, tagName));
         }
 
         JsValue CreateEvent(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var type = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateEvent(type));
+            return _engine.GetDomNode(reference.CreateEvent(type));
         }
 
         JsValue CreateRange(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.CreateRange());
+            return _engine.GetDomNode(reference.CreateRange());
         }
 
         JsValue CreateComment(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var data = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateComment(data));
+            return _engine.GetDomNode(reference.CreateComment(data));
         }
 
         JsValue CreateDocumentFragment(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.CreateDocumentFragment());
+            return _engine.GetDomNode(reference.CreateDocumentFragment());
         }
 
         JsValue CreateElement(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var name = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateElement(name));
+            return _engine.GetDomNode(reference.CreateElement(name));
         }
 
         JsValue CreateElementNS(JsValue thisObj, JsValue[] arguments)
@@ -270,14 +273,14 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var name = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.CreateElement(namespaceUri, name));
+            return _engine.GetDomNode(reference.CreateElement(namespaceUri, name));
         }
 
         JsValue CreateAttribute(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var name = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateAttribute(name));
+            return _engine.GetDomNode(reference.CreateAttribute(name));
         }
 
         JsValue CreateAttributeNS(JsValue thisObj, JsValue[] arguments)
@@ -285,7 +288,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var name = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.CreateAttribute(namespaceUri, name));
+            return _engine.GetDomNode(reference.CreateAttribute(namespaceUri, name));
         }
 
         JsValue CreateProcessingInstruction(JsValue thisObj, JsValue[] arguments)
@@ -293,14 +296,14 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var target = TypeConverter.ToString(arguments.At(0));
             var data = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.CreateProcessingInstruction(target, data));
+            return _engine.GetDomNode(reference.CreateProcessingInstruction(target, data));
         }
 
         JsValue CreateTextNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var data = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CreateTextNode(data));
+            return _engine.GetDomNode(reference.CreateTextNode(data));
         }
 
         JsValue CreateNodeIterator(JsValue thisObj, JsValue[] arguments)
@@ -309,7 +312,7 @@ namespace AngleSharp.Scripting.JavaScript
             var root = DomTypeConverter.ToNode(arguments.At(0));
             var settings = DomTypeConverter.ToFilterSettings(arguments.At(1));
             var filter = DomTypeConverter.ToNodeFilter(arguments.At(2));
-            return Engine.Select(reference.CreateNodeIterator(root, settings, filter));
+            return _engine.GetDomNode(reference.CreateNodeIterator(root, settings, filter));
         }
 
         JsValue CreateTreeWalker(JsValue thisObj, JsValue[] arguments)
@@ -318,7 +321,7 @@ namespace AngleSharp.Scripting.JavaScript
             var root = DomTypeConverter.ToNode(arguments.At(0));
             var settings = DomTypeConverter.ToFilterSettings(arguments.At(1));
             var filter = DomTypeConverter.ToNodeFilter(arguments.At(2));
-            return Engine.Select(reference.CreateTreeWalker(root, settings, filter));
+            return _engine.GetDomNode(reference.CreateTreeWalker(root, settings, filter));
         }
 
         JsValue ImportNode(JsValue thisObj, JsValue[] arguments)
@@ -326,20 +329,20 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var externalNode = DomTypeConverter.ToNode(arguments.At(0));
             var deep = TypeConverter.ToBoolean(arguments.At(1));
-            return Engine.Select(reference.Import(externalNode, deep));
+            return _engine.GetDomNode(reference.Import(externalNode, deep));
         }
 
         JsValue AdoptNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var externalNode = DomTypeConverter.ToNode(arguments.At(0));
-            return Engine.Select(reference.Adopt(externalNode));
+            return _engine.GetDomNode(reference.Adopt(externalNode));
         }
 
         JsValue HasFocus(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.HasFocus());
+            return _engine.GetDomNode(reference.HasFocus());
         }
 
         JsValue ExecCommand(JsValue thisObj, JsValue[] arguments)
@@ -348,42 +351,42 @@ namespace AngleSharp.Scripting.JavaScript
             var commandId = TypeConverter.ToString(arguments.At(0));
             var showUserInterface = TypeConverter.ToBoolean(arguments.At(1));
             var value = TypeConverter.ToString(arguments.At(2));
-            return Engine.Select(reference.ExecuteCommand(commandId, showUserInterface, value));
+            return _engine.GetDomNode(reference.ExecuteCommand(commandId, showUserInterface, value));
         }
 
         JsValue QueryCommandEnabled(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var commandId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.IsCommandEnabled(commandId));
+            return _engine.GetDomNode(reference.IsCommandEnabled(commandId));
         }
 
         JsValue QueryCommandIndeterm(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var commandId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.IsCommandIndeterminate(commandId));
+            return _engine.GetDomNode(reference.IsCommandIndeterminate(commandId));
         }
 
         JsValue QueryCommandState(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var commandId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.IsCommandExecuted(commandId));
+            return _engine.GetDomNode(reference.IsCommandExecuted(commandId));
         }
 
         JsValue QueryCommandSupported(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var commandId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.IsCommandSupported(commandId));
+            return _engine.GetDomNode(reference.IsCommandSupported(commandId));
         }
 
         JsValue QueryCommandValue(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var commandId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetCommandValue(commandId));
+            return _engine.GetDomNode(reference.GetCommandValue(commandId));
         }
 
         JsValue Append(JsValue thisObj, JsValue[] arguments)
@@ -414,14 +417,14 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelector(selectors));
+            return _engine.GetDomNode(reference.QuerySelector(selectors));
         }
 
         JsValue QuerySelectorAll(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelectorAll(selectors));
+            return _engine.GetDomNode(reference.QuerySelectorAll(selectors));
         }
 
         JsValue EnableStyleSheetsForSet(JsValue thisObj, JsValue[] arguments)
@@ -436,34 +439,34 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
             var elementId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetElementById(elementId));
+            return _engine.GetDomNode(reference.GetElementById(elementId));
         }
 
         JsValue GetAll(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.All);
+            return _engine.GetDomNode(reference.All);
         }
 
 
         JsValue GetAnchors(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Anchors);
+            return _engine.GetDomNode(reference.Anchors);
         }
 
 
         JsValue GetImplementation(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Implementation);
+            return _engine.GetDomNode(reference.Implementation);
         }
 
 
         JsValue GetDesignMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.DesignMode);
+            return _engine.GetDomNode(reference.DesignMode);
         }
 
         void SetDesignMode(JsValue thisObj, JsValue argument)
@@ -476,7 +479,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDir(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Direction);
+            return _engine.GetDomNode(reference.Direction);
         }
 
         void SetDir(JsValue thisObj, JsValue argument)
@@ -489,126 +492,126 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDocumentURI(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.DocumentUri);
+            return _engine.GetDomNode(reference.DocumentUri);
         }
 
 
         JsValue GetCharacterSet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.CharacterSet);
+            return _engine.GetDomNode(reference.CharacterSet);
         }
 
 
         JsValue GetCompatMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.CompatMode);
+            return _engine.GetDomNode(reference.CompatMode);
         }
 
 
         JsValue GetURL(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Url);
+            return _engine.GetDomNode(reference.Url);
         }
 
 
         JsValue GetContentType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.ContentType);
+            return _engine.GetDomNode(reference.ContentType);
         }
 
 
         JsValue GetDoctype(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Doctype);
+            return _engine.GetDomNode(reference.Doctype);
         }
 
 
         JsValue GetDocumentElement(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.DocumentElement);
+            return _engine.GetDomNode(reference.DocumentElement);
         }
 
 
         JsValue GetLastModified(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.LastModified);
+            return _engine.GetDomNode(reference.LastModified);
         }
 
 
         JsValue GetReadyState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.ReadyState);
+            return _engine.GetDomNode(reference.ReadyState);
         }
 
 
         JsValue GetLocation(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Location);
+            return _engine.GetDomNode(reference.Location);
         }
 
 
         JsValue GetForms(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Forms);
+            return _engine.GetDomNode(reference.Forms);
         }
 
 
         JsValue GetImages(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Images);
+            return _engine.GetDomNode(reference.Images);
         }
 
 
         JsValue GetScripts(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Scripts);
+            return _engine.GetDomNode(reference.Scripts);
         }
 
 
         JsValue GetEmbeds(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Plugins);
+            return _engine.GetDomNode(reference.Plugins);
         }
 
 
         JsValue GetPlugins(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Plugins);
+            return _engine.GetDomNode(reference.Plugins);
         }
 
 
         JsValue GetCommands(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Commands);
+            return _engine.GetDomNode(reference.Commands);
         }
 
 
         JsValue GetLinks(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Links);
+            return _engine.GetDomNode(reference.Links);
         }
 
 
         JsValue GetTitle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Title);
+            return _engine.GetDomNode(reference.Title);
         }
 
         void SetTitle(JsValue thisObj, JsValue argument)
@@ -621,14 +624,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHead(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Head);
+            return _engine.GetDomNode(reference.Head);
         }
 
 
         JsValue GetBody(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Body);
+            return _engine.GetDomNode(reference.Body);
         }
 
         void SetBody(JsValue thisObj, JsValue argument)
@@ -641,7 +644,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCookie(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Cookie);
+            return _engine.GetDomNode(reference.Cookie);
         }
 
         void SetCookie(JsValue thisObj, JsValue argument)
@@ -654,14 +657,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Origin);
+            return _engine.GetDomNode(reference.Origin);
         }
 
 
         JsValue GetDomain(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Domain);
+            return _engine.GetDomNode(reference.Domain);
         }
 
         void SetDomain(JsValue thisObj, JsValue argument)
@@ -674,70 +677,70 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReferrer(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Referrer);
+            return _engine.GetDomNode(reference.Referrer);
         }
 
 
         JsValue GetActiveElement(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.ActiveElement);
+            return _engine.GetDomNode(reference.ActiveElement);
         }
 
 
         JsValue GetCurrentScript(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.CurrentScript);
+            return _engine.GetDomNode(reference.CurrentScript);
         }
 
 
         JsValue GetDefaultView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.DefaultView);
+            return _engine.GetDomNode(reference.DefaultView);
         }
 
 
         JsValue GetChildren(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.Children);
+            return _engine.GetDomNode(reference.Children);
         }
 
 
         JsValue GetFirstElementChild(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.FirstElementChild);
+            return _engine.GetDomNode(reference.FirstElementChild);
         }
 
 
         JsValue GetLastElementChild(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.LastElementChild);
+            return _engine.GetDomNode(reference.LastElementChild);
         }
 
 
         JsValue GetChildElementCount(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.ChildElementCount);
+            return _engine.GetDomNode(reference.ChildElementCount);
         }
 
 
         JsValue GetStyleSheets(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.StyleSheets);
+            return _engine.GetDomNode(reference.StyleSheets);
         }
 
 
         JsValue GetSelectedStyleSheetSet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.SelectedStyleSheetSet);
+            return _engine.GetDomNode(reference.SelectedStyleSheetSet);
         }
 
         void SetSelectedStyleSheetSet(JsValue thisObj, JsValue argument)
@@ -750,21 +753,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLastStyleSheetSet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.LastStyleSheetSet);
+            return _engine.GetDomNode(reference.LastStyleSheetSet);
         }
 
 
         JsValue GetPreferredStyleSheetSet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.PreferredStyleSheetSet);
+            return _engine.GetDomNode(reference.PreferredStyleSheetSet);
         }
 
 
         JsValue GetStyleSheetSets(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentInstance>(Fail).RefDocument;
-            return Engine.Select(reference.StyleSheetSets);
+            return _engine.GetDomNode(reference.StyleSheetSets);
         }
 
 

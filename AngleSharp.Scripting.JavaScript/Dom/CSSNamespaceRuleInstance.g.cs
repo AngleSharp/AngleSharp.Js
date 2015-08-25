@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSNamespaceRuleInstance : CSSRuleInstance
     {
-        public CSSNamespaceRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSNamespaceRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSNamespaceRuleInstance CreateCSSNamespaceRuleObject(Engine engine)
+        public static CSSNamespaceRuleInstance CreateCSSNamespaceRuleObject(EngineInstance engine)
         {
             var obj = new CSSNamespaceRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

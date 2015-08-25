@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class FocusEventInstance : UIEventInstance
     {
-        public FocusEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public FocusEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static FocusEventInstance CreateFocusEventObject(Engine engine)
+        public static FocusEventInstance CreateFocusEventObject(EngineInstance engine)
         {
             var obj = new FocusEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

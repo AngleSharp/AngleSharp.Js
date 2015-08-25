@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLOptionsCollectionInstance : HTMLCollectionInstance
     {
-        public HTMLOptionsCollectionInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOptionsCollectionInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLOptionsCollectionInstance CreateHTMLOptionsCollectionObject(Engine engine)
+        public static HTMLOptionsCollectionInstance CreateHTMLOptionsCollectionObject(EngineInstance engine)
         {
             var obj = new HTMLOptionsCollectionInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefHTMLOptionsCollection.GetOptionAt(index));
+                return _engine.GetDomNode(RefHTMLOptionsCollection.GetOptionAt(index));
             return base.Get(propertyName);
         }
 

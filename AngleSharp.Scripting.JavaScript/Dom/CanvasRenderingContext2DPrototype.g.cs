@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CanvasRenderingContext2DPrototype : CanvasRenderingContext2DInstance
     {
-        public CanvasRenderingContext2DPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CanvasRenderingContext2DPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("save", Engine.AsValue(Save), true, true, true);
             FastAddProperty("restore", Engine.AsValue(Restore), true, true, true);
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CanvasRenderingContext2DPrototype CreatePrototypeObject(EngineInstance engine, CanvasRenderingContext2DConstructor constructor)
         {
-            var obj = new CanvasRenderingContext2DPrototype(engine.Jint)
+            var obj = new CanvasRenderingContext2DPrototype(engine)
             {
                 Prototype = engine.Constructors.RenderingContext.PrototypeObject,
                 Extensible = true,
@@ -50,14 +53,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCanvas(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CanvasRenderingContext2DInstance>(Fail).RefCanvasRenderingContext2D;
-            return Engine.Select(reference.Canvas);
+            return _engine.GetDomNode(reference.Canvas);
         }
 
 
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CanvasRenderingContext2DInstance>(Fail).RefCanvasRenderingContext2D;
-            return Engine.Select(reference.Width);
+            return _engine.GetDomNode(reference.Width);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -70,7 +73,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CanvasRenderingContext2DInstance>(Fail).RefCanvasRenderingContext2D;
-            return Engine.Select(reference.Height);
+            return _engine.GetDomNode(reference.Height);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)

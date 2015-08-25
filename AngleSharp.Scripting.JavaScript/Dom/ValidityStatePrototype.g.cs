@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class ValidityStatePrototype : ValidityStateInstance
     {
-        public ValidityStatePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ValidityStatePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("valueMissing", Engine.AsProperty(GetValueMissing));
             FastSetProperty("typeMismatch", Engine.AsProperty(GetTypeMismatch));
@@ -30,7 +33,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static ValidityStatePrototype CreatePrototypeObject(EngineInstance engine, ValidityStateConstructor constructor)
         {
-            var obj = new ValidityStatePrototype(engine.Jint)
+            var obj = new ValidityStatePrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -42,77 +45,77 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValueMissing(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsValueMissing);
+            return _engine.GetDomNode(reference.IsValueMissing);
         }
 
 
         JsValue GetTypeMismatch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsTypeMismatch);
+            return _engine.GetDomNode(reference.IsTypeMismatch);
         }
 
 
         JsValue GetPatternMismatch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsPatternMismatch);
+            return _engine.GetDomNode(reference.IsPatternMismatch);
         }
 
 
         JsValue GetTooLong(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsTooLong);
+            return _engine.GetDomNode(reference.IsTooLong);
         }
 
 
         JsValue GetTooShort(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsTooShort);
+            return _engine.GetDomNode(reference.IsTooShort);
         }
 
 
         JsValue GetBadInput(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsBadInput);
+            return _engine.GetDomNode(reference.IsBadInput);
         }
 
 
         JsValue GetRangeUnderflow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsRangeUnderflow);
+            return _engine.GetDomNode(reference.IsRangeUnderflow);
         }
 
 
         JsValue GetRangeOverflow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsRangeOverflow);
+            return _engine.GetDomNode(reference.IsRangeOverflow);
         }
 
 
         JsValue GetStepMismatch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsStepMismatch);
+            return _engine.GetDomNode(reference.IsStepMismatch);
         }
 
 
         JsValue GetCustomError(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsCustomError);
+            return _engine.GetDomNode(reference.IsCustomError);
         }
 
 
         JsValue GetValid(JsValue thisObj)
         {
             var reference = thisObj.TryCast<ValidityStateInstance>(Fail).RefValidityState;
-            return Engine.Select(reference.IsValid);
+            return _engine.GetDomNode(reference.IsValid);
         }
 
 

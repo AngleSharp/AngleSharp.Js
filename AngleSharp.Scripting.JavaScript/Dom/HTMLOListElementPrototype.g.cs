@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOListElementPrototype : HTMLOListElementInstance
     {
-        public HTMLOListElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOListElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("reversed", Engine.AsProperty(GetReversed, SetReversed));
             FastSetProperty("start", Engine.AsProperty(GetStart, SetStart));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOListElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLOListElementConstructor constructor)
         {
-            var obj = new HTMLOListElementPrototype(engine.Jint)
+            var obj = new HTMLOListElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReversed(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOListElementInstance>(Fail).RefHTMLOListElement;
-            return Engine.Select(reference.IsReversed);
+            return _engine.GetDomNode(reference.IsReversed);
         }
 
         void SetReversed(JsValue thisObj, JsValue argument)
@@ -47,7 +50,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStart(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOListElementInstance>(Fail).RefHTMLOListElement;
-            return Engine.Select(reference.Start);
+            return _engine.GetDomNode(reference.Start);
         }
 
         void SetStart(JsValue thisObj, JsValue argument)
@@ -60,7 +63,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOListElementInstance>(Fail).RefHTMLOListElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)

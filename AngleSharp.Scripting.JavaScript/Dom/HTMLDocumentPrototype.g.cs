@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDocumentPrototype : HTMLDocumentInstance
     {
-        public HTMLDocumentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDocumentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLDocumentPrototype CreatePrototypeObject(EngineInstance engine, HTMLDocumentConstructor constructor)
         {
-            var obj = new HTMLDocumentPrototype(engine.Jint)
+            var obj = new HTMLDocumentPrototype(engine)
             {
                 Prototype = engine.Constructors.Document.PrototypeObject,
                 Extensible = true,

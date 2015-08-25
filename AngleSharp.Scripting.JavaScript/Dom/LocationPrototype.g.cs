@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class LocationPrototype : LocationInstance
     {
-        public LocationPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public LocationPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("assign", Engine.AsValue(Assign), true, true, true);
             FastAddProperty("replace", Engine.AsValue(Replace), true, true, true);
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static LocationPrototype CreatePrototypeObject(EngineInstance engine, LocationConstructor constructor)
         {
-            var obj = new LocationPrototype(engine.Jint)
+            var obj = new LocationPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -68,7 +71,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
         void SetHref(JsValue thisObj, JsValue argument)
@@ -81,7 +84,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetProtocol(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Protocol);
+            return _engine.GetDomNode(reference.Protocol);
         }
 
         void SetProtocol(JsValue thisObj, JsValue argument)
@@ -94,7 +97,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHost(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Host);
+            return _engine.GetDomNode(reference.Host);
         }
 
         void SetHost(JsValue thisObj, JsValue argument)
@@ -107,7 +110,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHostname(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.HostName);
+            return _engine.GetDomNode(reference.HostName);
         }
 
         void SetHostname(JsValue thisObj, JsValue argument)
@@ -120,7 +123,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPort(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Port);
+            return _engine.GetDomNode(reference.Port);
         }
 
         void SetPort(JsValue thisObj, JsValue argument)
@@ -133,7 +136,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPathname(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.PathName);
+            return _engine.GetDomNode(reference.PathName);
         }
 
         void SetPathname(JsValue thisObj, JsValue argument)
@@ -146,7 +149,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSearch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Search);
+            return _engine.GetDomNode(reference.Search);
         }
 
         void SetSearch(JsValue thisObj, JsValue argument)
@@ -159,7 +162,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHash(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Hash);
+            return _engine.GetDomNode(reference.Hash);
         }
 
         void SetHash(JsValue thisObj, JsValue argument)
@@ -172,7 +175,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUsername(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.UserName);
+            return _engine.GetDomNode(reference.UserName);
         }
 
         void SetUsername(JsValue thisObj, JsValue argument)
@@ -185,7 +188,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPassword(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Password);
+            return _engine.GetDomNode(reference.Password);
         }
 
         void SetPassword(JsValue thisObj, JsValue argument)
@@ -198,7 +201,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<LocationInstance>(Fail).RefLocation;
-            return Engine.Select(reference.Origin);
+            return _engine.GetDomNode(reference.Origin);
         }
 
 

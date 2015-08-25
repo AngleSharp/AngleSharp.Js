@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSKeyframesRuleInstance : CSSRuleInstance
     {
-        public CSSKeyframesRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSKeyframesRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSKeyframesRuleInstance CreateCSSKeyframesRuleObject(Engine engine)
+        public static CSSKeyframesRuleInstance CreateCSSKeyframesRuleObject(EngineInstance engine)
         {
             var obj = new CSSKeyframesRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

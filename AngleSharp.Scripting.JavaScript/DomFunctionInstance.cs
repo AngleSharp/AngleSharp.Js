@@ -33,7 +33,7 @@
                 {
                     try
                     {
-                        return _method.Invoke(node.Value, BuildArgs(arguments)).ToJsValue(Engine);
+                        return _method.Invoke(node.Value, BuildArgs(arguments)).ToJsValue(_host.Context);
                     }
                     catch
                     {
@@ -57,7 +57,7 @@
             var n = Math.Min(arguments.Length, max);
 
             for (int i = 0; i < n; i++)
-                args[i] = arguments[i].FromJsValue().As(parameters[i].ParameterType);
+                args[i] = arguments[i].FromJsValue().As(parameters[i].ParameterType, _host.Context);
 
             for (int i = n; i < max; i++)
                 args[i] = parameters[i].IsOptional ? parameters[i].DefaultValue : parameters[i].ParameterType.GetDefaultValue();

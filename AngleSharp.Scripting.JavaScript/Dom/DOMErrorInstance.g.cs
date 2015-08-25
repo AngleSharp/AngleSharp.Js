@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMErrorInstance : ObjectInstance
     {
-        public DOMErrorInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMErrorInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
             FastAddProperty("INDEX_SIZE_ERR", (UInt32)(AngleSharp.Dom.DomError.IndexSizeError), false, true, false);
             FastAddProperty("DOMSTRING_SIZE_ERR", (UInt32)(AngleSharp.Dom.DomError.DomStringSize), false, true, false);
             FastAddProperty("HIERARCHY_REQUEST_ERR", (UInt32)(AngleSharp.Dom.DomError.HierarchyRequest), false, true, false);
@@ -39,11 +42,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("DATA_CLONE_ERR", (UInt32)(AngleSharp.Dom.DomError.DataClone), false, true, false);
         }
 
-        public static DOMErrorInstance CreateDOMErrorObject(Engine engine)
+        public static DOMErrorInstance CreateDOMErrorObject(EngineInstance engine)
         {
             var obj = new DOMErrorInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

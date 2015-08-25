@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NavigatorConstructor : FunctionInstance, IConstructor
     {
-        public NavigatorConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public NavigatorConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public NavigatorPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NavigatorConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new NavigatorConstructor(engine.Jint);
+            var obj = new NavigatorConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = NavigatorPrototype.CreatePrototypeObject(engine, obj);

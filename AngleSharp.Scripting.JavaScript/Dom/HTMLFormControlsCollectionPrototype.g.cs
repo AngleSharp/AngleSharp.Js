@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLFormControlsCollectionPrototype : HTMLFormControlsCollectionInstance
     {
-        public HTMLFormControlsCollectionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFormControlsCollectionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLFormControlsCollectionPrototype CreatePrototypeObject(EngineInstance engine, HTMLFormControlsCollectionConstructor constructor)
         {
-            var obj = new HTMLFormControlsCollectionPrototype(engine.Jint)
+            var obj = new HTMLFormControlsCollectionPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLCollection.PrototypeObject,
                 Extensible = true,

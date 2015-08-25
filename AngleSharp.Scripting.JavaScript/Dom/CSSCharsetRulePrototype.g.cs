@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSCharsetRulePrototype : CSSCharsetRuleInstance
     {
-        public CSSCharsetRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSCharsetRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("encoding", Engine.AsProperty(GetEncoding, SetEncoding));
         }
 
         public static CSSCharsetRulePrototype CreatePrototypeObject(EngineInstance engine, CSSCharsetRuleConstructor constructor)
         {
-            var obj = new CSSCharsetRulePrototype(engine.Jint)
+            var obj = new CSSCharsetRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEncoding(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCharsetRuleInstance>(Fail).RefCSSCharsetRule;
-            return Engine.Select(reference.CharacterSet);
+            return _engine.GetDomNode(reference.CharacterSet);
         }
 
         void SetEncoding(JsValue thisObj, JsValue argument)

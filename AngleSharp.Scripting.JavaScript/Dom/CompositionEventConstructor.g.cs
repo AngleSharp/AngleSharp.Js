@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CompositionEventConstructor : FunctionInstance, IConstructor
     {
-        public CompositionEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CompositionEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CompositionEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CompositionEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CompositionEventConstructor(engine.Jint);
+            var obj = new CompositionEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CompositionEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new CompositionEvent(type, eventInitDict);
-                return new CompositionEventInstance(Engine)
+                return new CompositionEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefCompositionEvent = reference,

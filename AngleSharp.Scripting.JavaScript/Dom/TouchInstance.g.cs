@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TouchInstance : ObjectInstance
     {
-        public TouchInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public TouchInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static TouchInstance CreateTouchObject(Engine engine)
+        public static TouchInstance CreateTouchObject(EngineInstance engine)
         {
             var obj = new TouchInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

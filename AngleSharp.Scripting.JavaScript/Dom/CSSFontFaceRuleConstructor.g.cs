@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSFontFaceRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSFontFaceRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSFontFaceRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSFontFaceRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSFontFaceRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSFontFaceRuleConstructor(engine.Jint);
+            var obj = new CSSFontFaceRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSFontFaceRulePrototype.CreatePrototypeObject(engine, obj);

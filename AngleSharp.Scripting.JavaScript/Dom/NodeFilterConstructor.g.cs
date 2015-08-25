@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeFilterConstructor : FunctionInstance, IConstructor
     {
-        public NodeFilterConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public NodeFilterConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("FILTER_ACCEPT", (UInt32)(AngleSharp.Dom.FilterResult.Accept), false, true, false);
             FastAddProperty("FILTER_REJECT", (UInt32)(AngleSharp.Dom.FilterResult.Reject), false, true, false);
             FastAddProperty("FILTER_SKIP", (UInt32)(AngleSharp.Dom.FilterResult.Skip), false, true, false);
@@ -40,7 +43,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NodeFilterConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new NodeFilterConstructor(engine.Jint);
+            var obj = new NodeFilterConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = NodeFilterPrototype.CreatePrototypeObject(engine, obj);

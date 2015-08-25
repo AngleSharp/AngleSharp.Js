@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class AttrPrototype : AttrInstance
     {
-        public AttrPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public AttrPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("localName", Engine.AsProperty(GetLocalName));
             FastSetProperty("name", Engine.AsProperty(GetName));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static AttrPrototype CreatePrototypeObject(EngineInstance engine, AttrConstructor constructor)
         {
-            var obj = new AttrPrototype(engine.Jint)
+            var obj = new AttrPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -36,21 +39,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLocalName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AttrInstance>(Fail).RefAttr;
-            return Engine.Select(reference.LocalName);
+            return _engine.GetDomNode(reference.LocalName);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AttrInstance>(Fail).RefAttr;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
 
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AttrInstance>(Fail).RefAttr;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -63,14 +66,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNamespaceURI(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AttrInstance>(Fail).RefAttr;
-            return Engine.Select(reference.NamespaceUri);
+            return _engine.GetDomNode(reference.NamespaceUri);
         }
 
 
         JsValue GetPrefix(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AttrInstance>(Fail).RefAttr;
-            return Engine.Select(reference.Prefix);
+            return _engine.GetDomNode(reference.Prefix);
         }
 
 

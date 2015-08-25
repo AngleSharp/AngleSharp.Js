@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLKeygenElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLKeygenElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLKeygenElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLKeygenElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLKeygenElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLKeygenElementConstructor(engine.Jint);
+            var obj = new HTMLKeygenElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLKeygenElementPrototype.CreatePrototypeObject(engine, obj);

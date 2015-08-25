@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class VideoTrackListConstructor : FunctionInstance, IConstructor
     {
-        public VideoTrackListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public VideoTrackListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public VideoTrackListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static VideoTrackListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new VideoTrackListConstructor(engine.Jint);
+            var obj = new VideoTrackListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = VideoTrackListPrototype.CreatePrototypeObject(engine, obj);

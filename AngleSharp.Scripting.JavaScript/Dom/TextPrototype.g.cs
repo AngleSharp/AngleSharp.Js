@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextPrototype : TextInstance
     {
-        public TextPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("splitText", Engine.AsValue(SplitText), true, true, true);
             FastSetProperty("wholeText", Engine.AsProperty(GetWholeText));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextPrototype CreatePrototypeObject(EngineInstance engine, TextConstructor constructor)
         {
-            var obj = new TextPrototype(engine.Jint)
+            var obj = new TextPrototype(engine)
             {
                 Prototype = engine.Constructors.CharacterData.PrototypeObject,
                 Extensible = true,
@@ -34,13 +37,13 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<TextInstance>(Fail).RefText;
             var offset = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.Split(offset));
+            return _engine.GetDomNode(reference.Split(offset));
         }
 
         JsValue GetWholeText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextInstance>(Fail).RefText;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
 

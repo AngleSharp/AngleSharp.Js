@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTemplateElementPrototype : HTMLTemplateElementInstance
     {
-        public HTMLTemplateElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTemplateElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("content", Engine.AsProperty(GetContent));
         }
 
         public static HTMLTemplateElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTemplateElementConstructor constructor)
         {
-            var obj = new HTMLTemplateElementPrototype(engine.Jint)
+            var obj = new HTMLTemplateElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetContent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTemplateElementInstance>(Fail).RefHTMLTemplateElement;
-            return Engine.Select(reference.Content);
+            return _engine.GetDomNode(reference.Content);
         }
 
 

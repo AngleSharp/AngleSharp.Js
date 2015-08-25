@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMeterElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLMeterElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLMeterElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLMeterElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMeterElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLMeterElementConstructor(engine.Jint);
+            var obj = new HTMLMeterElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLMeterElementPrototype.CreatePrototypeObject(engine, obj);

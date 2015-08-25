@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaErrorConstructor : FunctionInstance, IConstructor
     {
-        public MediaErrorConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MediaErrorConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("MEDIA_ERR_ABORTED", (UInt32)(AngleSharp.Dom.Media.MediaErrorCode.Aborted), false, true, false);
             FastAddProperty("MEDIA_ERR_NETWORK", (UInt32)(AngleSharp.Dom.Media.MediaErrorCode.Network), false, true, false);
             FastAddProperty("MEDIA_ERR_DECODE", (UInt32)(AngleSharp.Dom.Media.MediaErrorCode.Decode), false, true, false);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaErrorConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MediaErrorConstructor(engine.Jint);
+            var obj = new MediaErrorConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MediaErrorPrototype.CreatePrototypeObject(engine, obj);

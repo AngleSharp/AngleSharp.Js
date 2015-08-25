@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLSpanElementInstance : HTMLElementInstance
     {
-        public HTMLSpanElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLSpanElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLSpanElementInstance CreateHTMLSpanElementObject(Engine engine)
+        public static HTMLSpanElementInstance CreateHTMLSpanElementObject(EngineInstance engine)
         {
             var obj = new HTMLSpanElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

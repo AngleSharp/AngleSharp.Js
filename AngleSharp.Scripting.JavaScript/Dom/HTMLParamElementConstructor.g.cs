@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLParamElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLParamElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLParamElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLParamElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLParamElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLParamElementConstructor(engine.Jint);
+            var obj = new HTMLParamElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLParamElementPrototype.CreatePrototypeObject(engine, obj);

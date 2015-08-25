@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLCollectionPrototype : HTMLCollectionInstance
     {
-        public HTMLCollectionPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLCollectionPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static HTMLCollectionPrototype CreatePrototypeObject(EngineInstance engine, HTMLCollectionConstructor constructor)
         {
-            var obj = new HTMLCollectionPrototype(engine.Jint)
+            var obj = new HTMLCollectionPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCollectionInstance>(Fail).RefHTMLCollection;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

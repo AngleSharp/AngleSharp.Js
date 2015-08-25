@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLFormElementInstance : HTMLElementInstance
     {
-        public HTMLFormElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFormElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLFormElementInstance CreateHTMLFormElementObject(Engine engine)
+        public static HTMLFormElementInstance CreateHTMLFormElementObject(EngineInstance engine)
         {
             var obj = new HTMLFormElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,9 +35,9 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefHTMLFormElement[index]);
+                return _engine.GetDomNode(RefHTMLFormElement[index]);
             if (propertyName != null)
-                return Engine.Select(RefHTMLFormElement[propertyName]);
+                return _engine.GetDomNode(RefHTMLFormElement[propertyName]);
 
             return base.Get(propertyName);
         }

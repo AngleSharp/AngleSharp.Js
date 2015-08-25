@@ -9,9 +9,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSRuleInstance : ObjectInstance
     {
-        public CSSRuleInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public CSSRuleInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
             FastAddProperty("STYLE_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Style), false, true, false);
             FastAddProperty("CHARSET_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Charset), false, true, false);
             FastAddProperty("IMPORT_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.Import), false, true, false);
@@ -29,11 +32,11 @@ namespace AngleSharp.Scripting.JavaScript
             FastAddProperty("REGION_STYLE_RULE", (UInt32)(AngleSharp.Dom.Css.CssRuleType.RegionStyle), false, true, false);
         }
 
-        public static CSSRuleInstance CreateCSSRuleObject(Engine engine)
+        public static CSSRuleInstance CreateCSSRuleObject(EngineInstance engine)
         {
             var obj = new CSSRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

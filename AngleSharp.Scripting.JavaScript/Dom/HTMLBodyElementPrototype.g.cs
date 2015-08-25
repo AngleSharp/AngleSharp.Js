@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLBodyElementPrototype : HTMLBodyElementInstance
     {
-        public HTMLBodyElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLBodyElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("onafterprint", Engine.AsProperty(GetPrintedEvent, SetPrintedEvent));
             FastSetProperty("onbeforeprint", Engine.AsProperty(GetPrintingEvent, SetPrintingEvent));
@@ -31,7 +34,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLBodyElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLBodyElementConstructor constructor)
         {
-            var obj = new HTMLBodyElementPrototype(engine.Jint)
+            var obj = new HTMLBodyElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

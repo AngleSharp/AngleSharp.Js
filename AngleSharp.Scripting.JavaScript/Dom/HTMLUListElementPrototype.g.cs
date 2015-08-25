@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLUListElementPrototype : HTMLUListElementInstance
     {
-        public HTMLUListElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLUListElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLUListElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLUListElementConstructor constructor)
         {
-            var obj = new HTMLUListElementPrototype(engine.Jint)
+            var obj = new HTMLUListElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

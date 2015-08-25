@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLKeygenElementPrototype : HTMLKeygenElementInstance
     {
-        public HTMLKeygenElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLKeygenElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("autofocus", Engine.AsProperty(GetAutofocus, SetAutofocus));
             FastSetProperty("labels", Engine.AsProperty(GetLabels));
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLKeygenElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLKeygenElementConstructor constructor)
         {
-            var obj = new HTMLKeygenElementPrototype(engine.Jint)
+            var obj = new HTMLKeygenElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutofocus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Autofocus);
+            return _engine.GetDomNode(reference.Autofocus);
         }
 
         void SetAutofocus(JsValue thisObj, JsValue argument)
@@ -52,14 +55,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -72,14 +75,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -92,14 +95,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetKeytype(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.KeyEncryption);
+            return _engine.GetDomNode(reference.KeyEncryption);
         }
 
         void SetKeytype(JsValue thisObj, JsValue argument)
@@ -112,7 +115,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetChallenge(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLKeygenElementInstance>(Fail).RefHTMLKeygenElement;
-            return Engine.Select(reference.Challenge);
+            return _engine.GetDomNode(reference.Challenge);
         }
 
         void SetChallenge(JsValue thisObj, JsValue argument)

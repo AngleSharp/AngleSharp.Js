@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TimeRangesInstance : ObjectInstance
     {
-        public TimeRangesInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public TimeRangesInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static TimeRangesInstance CreateTimeRangesObject(Engine engine)
+        public static TimeRangesInstance CreateTimeRangesObject(EngineInstance engine)
         {
             var obj = new TimeRangesInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -9,20 +9,19 @@
 
     static class DomDelegates
     {
-        public static Delegate ToDelegate(this Type type, FunctionInstance function)
+        public static Delegate ToDelegate(this Type type, FunctionInstance function, EngineInstance engine)
         {
             if (type == typeof(DomEventHandler))
-                return function.ToListener();
+                return function.ToListener(engine);
 
             var method = typeof(DomDelegates).GetMethod("ToCallback").MakeGenericMethod(type);
             return method.Invoke(null, new Object[] { function }) as Delegate;
         }
 
-        public static DomEventHandler ToListener(this FunctionInstance function)
+        public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine)
         {
             return (obj, ev) =>
             {
-                var engine = function.Engine;
                 function.Call(obj.ToJsValue(engine), new [] { ev.ToJsValue(engine) });
             };
         }

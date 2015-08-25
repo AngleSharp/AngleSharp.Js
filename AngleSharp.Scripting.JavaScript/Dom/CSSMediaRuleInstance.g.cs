@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSMediaRuleInstance : CSSConditionRuleInstance
     {
-        public CSSMediaRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSMediaRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSMediaRuleInstance CreateCSSMediaRuleObject(Engine engine)
+        public static CSSMediaRuleInstance CreateCSSMediaRuleObject(EngineInstance engine)
         {
             var obj = new CSSMediaRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

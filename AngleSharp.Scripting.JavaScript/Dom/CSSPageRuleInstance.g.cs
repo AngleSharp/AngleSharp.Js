@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSPageRuleInstance : CSSRuleInstance
     {
-        public CSSPageRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSPageRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSPageRuleInstance CreateCSSPageRuleObject(Engine engine)
+        public static CSSPageRuleInstance CreateCSSPageRuleObject(EngineInstance engine)
         {
             var obj = new CSSPageRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

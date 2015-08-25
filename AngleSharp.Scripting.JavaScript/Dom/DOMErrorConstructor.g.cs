@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMErrorConstructor : FunctionInstance, IConstructor
     {
-        public DOMErrorConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMErrorConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("INDEX_SIZE_ERR", (UInt32)(AngleSharp.Dom.DomError.IndexSizeError), false, true, false);
             FastAddProperty("DOMSTRING_SIZE_ERR", (UInt32)(AngleSharp.Dom.DomError.DomStringSize), false, true, false);
             FastAddProperty("HIERARCHY_REQUEST_ERR", (UInt32)(AngleSharp.Dom.DomError.HierarchyRequest), false, true, false);
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMErrorConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMErrorConstructor(engine.Jint);
+            var obj = new DOMErrorConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMErrorPrototype.CreatePrototypeObject(engine, obj);

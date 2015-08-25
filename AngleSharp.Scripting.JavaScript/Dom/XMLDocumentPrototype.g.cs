@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class XMLDocumentPrototype : XMLDocumentInstance
     {
-        public XMLDocumentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public XMLDocumentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static XMLDocumentPrototype CreatePrototypeObject(EngineInstance engine, XMLDocumentConstructor constructor)
         {
-            var obj = new XMLDocumentPrototype(engine.Jint)
+            var obj = new XMLDocumentPrototype(engine)
             {
                 Prototype = engine.Constructors.Document.PrototypeObject,
                 Extensible = true,

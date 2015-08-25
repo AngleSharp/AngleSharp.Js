@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLSelectElementInstance : HTMLElementInstance
     {
-        public HTMLSelectElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLSelectElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLSelectElementInstance CreateHTMLSelectElementObject(Engine engine)
+        public static HTMLSelectElementInstance CreateHTMLSelectElementObject(EngineInstance engine)
         {
             var obj = new HTMLSelectElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefHTMLSelectElement[index]);
+                return _engine.GetDomNode(RefHTMLSelectElement[index]);
             return base.Get(propertyName);
         }
 

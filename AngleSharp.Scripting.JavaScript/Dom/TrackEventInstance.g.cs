@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TrackEventInstance : EventInstance
     {
-        public TrackEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TrackEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static TrackEventInstance CreateTrackEventObject(Engine engine)
+        public static TrackEventInstance CreateTrackEventObject(EngineInstance engine)
         {
             var obj = new TrackEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

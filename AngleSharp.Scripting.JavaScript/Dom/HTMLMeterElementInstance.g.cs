@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLMeterElementInstance : HTMLElementInstance
     {
-        public HTMLMeterElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMeterElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLMeterElementInstance CreateHTMLMeterElementObject(Engine engine)
+        public static HTMLMeterElementInstance CreateHTMLMeterElementObject(EngineInstance engine)
         {
             var obj = new HTMLMeterElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLMetaElementInstance : HTMLElementInstance
     {
-        public HTMLMetaElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMetaElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLMetaElementInstance CreateHTMLMetaElementObject(Engine engine)
+        public static HTMLMetaElementInstance CreateHTMLMetaElementObject(EngineInstance engine)
         {
             var obj = new HTMLMetaElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

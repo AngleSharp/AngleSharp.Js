@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class FocusEventConstructor : FunctionInstance, IConstructor
     {
-        public FocusEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public FocusEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public FocusEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static FocusEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new FocusEventConstructor(engine.Jint);
+            var obj = new FocusEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = FocusEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new FocusEvent(type, eventInitDict);
-                return new FocusEventInstance(Engine)
+                return new FocusEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefFocusEvent = reference,

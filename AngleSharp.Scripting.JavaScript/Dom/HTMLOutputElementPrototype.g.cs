@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOutputElementPrototype : HTMLOutputElementInstance
     {
-        public HTMLOutputElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOutputElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("htmlFor", Engine.AsProperty(GetHtmlFor));
             FastSetProperty("defaultValue", Engine.AsProperty(GetDefaultValue, SetDefaultValue));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOutputElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLOutputElementConstructor constructor)
         {
-            var obj = new HTMLOutputElementPrototype(engine.Jint)
+            var obj = new HTMLOutputElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -38,14 +41,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHtmlFor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.HtmlFor);
+            return _engine.GetDomNode(reference.HtmlFor);
         }
 
 
         JsValue GetDefaultValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.DefaultValue);
+            return _engine.GetDomNode(reference.DefaultValue);
         }
 
         void SetDefaultValue(JsValue thisObj, JsValue argument)
@@ -58,7 +61,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -71,28 +74,28 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOutputElementInstance>(Fail).RefHTMLOutputElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)

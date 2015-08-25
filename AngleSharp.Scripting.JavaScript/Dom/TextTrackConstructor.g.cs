@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackConstructor : FunctionInstance, IConstructor
     {
-        public TextTrackConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public TextTrackConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public TextTrackPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new TextTrackConstructor(engine.Jint);
+            var obj = new TextTrackConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = TextTrackPrototype.CreatePrototypeObject(engine, obj);

@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLAudioElementPrototype : HTMLAudioElementInstance
     {
-        public HTMLAudioElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLAudioElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLAudioElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLAudioElementConstructor constructor)
         {
-            var obj = new HTMLAudioElementPrototype(engine.Jint)
+            var obj = new HTMLAudioElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLMediaElement.PrototypeObject,
                 Extensible = true,

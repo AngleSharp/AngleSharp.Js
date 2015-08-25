@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLCommandElementPrototype : HTMLCommandElementInstance
     {
-        public HTMLCommandElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLCommandElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("type", Engine.AsProperty(GetType, SetType));
             FastSetProperty("label", Engine.AsProperty(GetLabel, SetLabel));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLCommandElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLCommandElementConstructor constructor)
         {
-            var obj = new HTMLCommandElementPrototype(engine.Jint)
+            var obj = new HTMLCommandElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -38,7 +41,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
         void SetLabel(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIcon(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.Icon);
+            return _engine.GetDomNode(reference.Icon);
         }
 
         void SetIcon(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -90,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetChecked(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.IsChecked);
+            return _engine.GetDomNode(reference.IsChecked);
         }
 
         void SetChecked(JsValue thisObj, JsValue argument)
@@ -103,7 +106,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRadiogroup(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.RadioGroup);
+            return _engine.GetDomNode(reference.RadioGroup);
         }
 
         void SetRadiogroup(JsValue thisObj, JsValue argument)
@@ -116,7 +119,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCommand(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLCommandElementInstance>(Fail).RefHTMLCommandElement;
-            return Engine.Select(reference.Command);
+            return _engine.GetDomNode(reference.Command);
         }
 
 

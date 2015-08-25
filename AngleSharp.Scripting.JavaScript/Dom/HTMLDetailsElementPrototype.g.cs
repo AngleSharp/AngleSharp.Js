@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDetailsElementPrototype : HTMLDetailsElementInstance
     {
-        public HTMLDetailsElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDetailsElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("open", Engine.AsProperty(GetOpen, SetOpen));
         }
 
         public static HTMLDetailsElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLDetailsElementConstructor constructor)
         {
-            var obj = new HTMLDetailsElementPrototype(engine.Jint)
+            var obj = new HTMLDetailsElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOpen(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLDetailsElementInstance>(Fail).RefHTMLDetailsElement;
-            return Engine.Select(reference.IsOpen);
+            return _engine.GetDomNode(reference.IsOpen);
         }
 
         void SetOpen(JsValue thisObj, JsValue argument)

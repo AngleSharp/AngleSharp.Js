@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaListPrototype : MediaListInstance
     {
-        public MediaListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MediaListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("appendMedium", Engine.AsValue(AppendMedium), true, true, true);
             FastAddProperty("removeMedium", Engine.AsValue(RemoveMedium), true, true, true);
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaListPrototype CreatePrototypeObject(EngineInstance engine, MediaListConstructor constructor)
         {
-            var obj = new MediaListPrototype(engine.Jint)
+            var obj = new MediaListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMediaText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaListInstance>(Fail).RefMediaList;
-            return Engine.Select(reference.MediaText);
+            return _engine.GetDomNode(reference.MediaText);
         }
 
         void SetMediaText(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaListInstance>(Fail).RefMediaList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

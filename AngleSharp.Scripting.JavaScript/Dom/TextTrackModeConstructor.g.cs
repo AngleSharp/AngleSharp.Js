@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackModeConstructor : FunctionInstance, IConstructor
     {
-        public TextTrackModeConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public TextTrackModeConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("disabled", (UInt32)(AngleSharp.Dom.Media.TextTrackMode.Disabled), false, true, false);
             FastAddProperty("hidden", (UInt32)(AngleSharp.Dom.Media.TextTrackMode.Hidden), false, true, false);
             FastAddProperty("showing", (UInt32)(AngleSharp.Dom.Media.TextTrackMode.Showing), false, true, false);
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackModeConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new TextTrackModeConstructor(engine.Jint);
+            var obj = new TextTrackModeConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = TextTrackModePrototype.CreatePrototypeObject(engine, obj);

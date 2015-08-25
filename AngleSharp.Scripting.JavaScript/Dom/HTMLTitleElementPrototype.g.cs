@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTitleElementPrototype : HTMLTitleElementInstance
     {
-        public HTMLTitleElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTitleElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("text", Engine.AsProperty(GetText, SetText));
         }
 
         public static HTMLTitleElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTitleElementConstructor constructor)
         {
-            var obj = new HTMLTitleElementPrototype(engine.Jint)
+            var obj = new HTMLTitleElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTitleElementInstance>(Fail).RefHTMLTitleElement;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
         void SetText(JsValue thisObj, JsValue argument)

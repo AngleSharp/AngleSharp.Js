@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class VideoTrackInstance : ObjectInstance
     {
-        public VideoTrackInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public VideoTrackInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static VideoTrackInstance CreateVideoTrackObject(Engine engine)
+        public static VideoTrackInstance CreateVideoTrackObject(EngineInstance engine)
         {
             var obj = new VideoTrackInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

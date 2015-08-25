@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLEmbedElementPrototype : HTMLEmbedElementInstance
     {
-        public HTMLEmbedElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLEmbedElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
             FastSetProperty("type", Engine.AsProperty(GetType, SetType));
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLEmbedElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLEmbedElementConstructor constructor)
         {
-            var obj = new HTMLEmbedElementPrototype(engine.Jint)
+            var obj = new HTMLEmbedElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLEmbedElementInstance>(Fail).RefHTMLEmbedElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -48,7 +51,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLEmbedElementInstance>(Fail).RefHTMLEmbedElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -61,7 +64,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLEmbedElementInstance>(Fail).RefHTMLEmbedElement;
-            return Engine.Select(reference.DisplayWidth);
+            return _engine.GetDomNode(reference.DisplayWidth);
         }
 
         void SetWidth(JsValue thisObj, JsValue argument)
@@ -74,7 +77,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLEmbedElementInstance>(Fail).RefHTMLEmbedElement;
-            return Engine.Select(reference.DisplayHeight);
+            return _engine.GetDomNode(reference.DisplayHeight);
         }
 
         void SetHeight(JsValue thisObj, JsValue argument)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMenuElementPrototype : HTMLMenuElementInstance
     {
-        public HTMLMenuElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMenuElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("label", Engine.AsProperty(GetLabel, SetLabel));
             FastSetProperty("type", Engine.AsProperty(GetType, SetType));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMenuElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMenuElementConstructor constructor)
         {
-            var obj = new HTMLMenuElementPrototype(engine.Jint)
+            var obj = new HTMLMenuElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMenuElementInstance>(Fail).RefHTMLMenuElement;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
         void SetLabel(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMenuElementInstance>(Fail).RefHTMLMenuElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DocumentFragmentConstructor : FunctionInstance, IConstructor
     {
-        public DocumentFragmentConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DocumentFragmentConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DocumentFragmentPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DocumentFragmentConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DocumentFragmentConstructor(engine.Jint);
+            var obj = new DocumentFragmentConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DocumentFragmentPrototype.CreatePrototypeObject(engine, obj);

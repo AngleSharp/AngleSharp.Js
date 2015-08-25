@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class FileListPrototype : FileListInstance
     {
-        public FileListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public FileListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static FileListPrototype CreatePrototypeObject(EngineInstance engine, FileListConstructor constructor)
         {
-            var obj = new FileListPrototype(engine.Jint)
+            var obj = new FileListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FileListInstance>(Fail).RefFileList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

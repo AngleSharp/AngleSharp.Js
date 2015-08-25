@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class VideoTrackPrototype : VideoTrackInstance
     {
-        public VideoTrackPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public VideoTrackPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("id", Engine.AsProperty(GetId));
             FastSetProperty("kind", Engine.AsProperty(GetKind));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static VideoTrackPrototype CreatePrototypeObject(EngineInstance engine, VideoTrackConstructor constructor)
         {
-            var obj = new VideoTrackPrototype(engine.Jint)
+            var obj = new VideoTrackPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -36,35 +39,35 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetId(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackInstance>(Fail).RefVideoTrack;
-            return Engine.Select(reference.Id);
+            return _engine.GetDomNode(reference.Id);
         }
 
 
         JsValue GetKind(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackInstance>(Fail).RefVideoTrack;
-            return Engine.Select(reference.Kind);
+            return _engine.GetDomNode(reference.Kind);
         }
 
 
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackInstance>(Fail).RefVideoTrack;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
 
         JsValue GetLanguage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackInstance>(Fail).RefVideoTrack;
-            return Engine.Select(reference.Language);
+            return _engine.GetDomNode(reference.Language);
         }
 
 
         JsValue GetSelected(JsValue thisObj)
         {
             var reference = thisObj.TryCast<VideoTrackInstance>(Fail).RefVideoTrack;
-            return Engine.Select(reference.IsSelected);
+            return _engine.GetDomNode(reference.IsSelected);
         }
 
         void SetSelected(JsValue thisObj, JsValue argument)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeConstructor : FunctionInstance, IConstructor
     {
-        public NodeConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public NodeConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public NodePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NodeConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new NodeConstructor(engine.Jint);
+            var obj = new NodeConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = NodePrototype.CreatePrototypeObject(engine, obj);

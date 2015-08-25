@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class RenderingContextConstructor : FunctionInstance, IConstructor
     {
-        public RenderingContextConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public RenderingContextConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public RenderingContextPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static RenderingContextConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new RenderingContextConstructor(engine.Jint);
+            var obj = new RenderingContextConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = RenderingContextPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TimeRangesConstructor : FunctionInstance, IConstructor
     {
-        public TimeRangesConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public TimeRangesConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public TimeRangesPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TimeRangesConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new TimeRangesConstructor(engine.Jint);
+            var obj = new TimeRangesConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = TimeRangesPrototype.CreatePrototypeObject(engine, obj);

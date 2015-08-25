@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSMarginRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSMarginRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSMarginRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSMarginRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSMarginRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSMarginRuleConstructor(engine.Jint);
+            var obj = new CSSMarginRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSMarginRulePrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class FilePrototype : FileInstance
     {
-        public FilePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public FilePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("name", Engine.AsProperty(GetName));
             FastSetProperty("lastModified", Engine.AsProperty(GetLastModified));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static FilePrototype CreatePrototypeObject(EngineInstance engine, FileConstructor constructor)
         {
-            var obj = new FilePrototype(engine.Jint)
+            var obj = new FilePrototype(engine)
             {
                 Prototype = engine.Constructors.Blob.PrototypeObject,
                 Extensible = true,
@@ -33,14 +36,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FileInstance>(Fail).RefFile;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
 
         JsValue GetLastModified(JsValue thisObj)
         {
             var reference = thisObj.TryCast<FileInstance>(Fail).RefFile;
-            return Engine.Select(reference.LastModified);
+            return _engine.GetDomNode(reference.LastModified);
         }
 
 

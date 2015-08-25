@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLHeadElementInstance : HTMLElementInstance
     {
-        public HTMLHeadElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLHeadElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLHeadElementInstance CreateHTMLHeadElementObject(Engine engine)
+        public static HTMLHeadElementInstance CreateHTMLHeadElementObject(EngineInstance engine)
         {
             var obj = new HTMLHeadElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

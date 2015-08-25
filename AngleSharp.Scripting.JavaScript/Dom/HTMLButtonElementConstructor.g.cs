@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLButtonElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLButtonElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLButtonElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLButtonElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLButtonElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLButtonElementConstructor(engine.Jint);
+            var obj = new HTMLButtonElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLButtonElementPrototype.CreatePrototypeObject(engine, obj);

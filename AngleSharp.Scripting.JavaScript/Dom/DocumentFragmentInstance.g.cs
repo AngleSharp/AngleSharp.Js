@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DocumentFragmentInstance : NodeInstance
     {
-        public DocumentFragmentInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentFragmentInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static DocumentFragmentInstance CreateDocumentFragmentObject(Engine engine)
+        public static DocumentFragmentInstance CreateDocumentFragmentObject(EngineInstance engine)
         {
             var obj = new DocumentFragmentInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

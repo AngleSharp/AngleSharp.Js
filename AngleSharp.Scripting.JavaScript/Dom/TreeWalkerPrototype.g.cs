@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TreeWalkerPrototype : TreeWalkerInstance
     {
-        public TreeWalkerPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TreeWalkerPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("nextNode", Engine.AsValue(NextNode), true, true, true);
             FastAddProperty("previousNode", Engine.AsValue(PreviousNode), true, true, true);
@@ -30,7 +33,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TreeWalkerPrototype CreatePrototypeObject(EngineInstance engine, TreeWalkerConstructor constructor)
         {
-            var obj = new TreeWalkerPrototype(engine.Jint)
+            var obj = new TreeWalkerPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -42,56 +45,56 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue NextNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToNext());
+            return _engine.GetDomNode(reference.ToNext());
         }
 
         JsValue PreviousNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToPrevious());
+            return _engine.GetDomNode(reference.ToPrevious());
         }
 
         JsValue ParentNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToParent());
+            return _engine.GetDomNode(reference.ToParent());
         }
 
         JsValue FirstChild(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToFirst());
+            return _engine.GetDomNode(reference.ToFirst());
         }
 
         JsValue LastChild(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToLast());
+            return _engine.GetDomNode(reference.ToLast());
         }
 
         JsValue PreviousSibling(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToPreviousSibling());
+            return _engine.GetDomNode(reference.ToPreviousSibling());
         }
 
         JsValue NextSibling(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.ToNextSibling());
+            return _engine.GetDomNode(reference.ToNextSibling());
         }
 
         JsValue GetRoot(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.Root);
+            return _engine.GetDomNode(reference.Root);
         }
 
 
         JsValue GetCurrentNode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.Current);
+            return _engine.GetDomNode(reference.Current);
         }
 
         void SetCurrentNode(JsValue thisObj, JsValue argument)
@@ -104,14 +107,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWhatToShow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.Settings);
+            return _engine.GetDomNode(reference.Settings);
         }
 
 
         JsValue GetFilter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TreeWalkerInstance>(Fail).RefTreeWalker;
-            return Engine.Select(reference.Filter);
+            return _engine.GetDomNode(reference.Filter);
         }
 
 

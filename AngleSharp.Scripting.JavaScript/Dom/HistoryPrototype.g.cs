@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HistoryPrototype : HistoryInstance
     {
-        public HistoryPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HistoryPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("go", Engine.AsValue(Go), true, true, true);
             FastAddProperty("back", Engine.AsValue(Back), true, true, true);
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HistoryPrototype CreatePrototypeObject(EngineInstance engine, HistoryConstructor constructor)
         {
-            var obj = new HistoryPrototype(engine.Jint)
+            var obj = new HistoryPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -80,14 +83,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HistoryInstance>(Fail).RefHistory;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HistoryInstance>(Fail).RefHistory;
-            return Engine.Select(reference.State);
+            return _engine.GetDomNode(reference.State);
         }
 
 

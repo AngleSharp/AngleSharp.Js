@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLCanvasElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLCanvasElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLCanvasElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLCanvasElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLCanvasElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLCanvasElementConstructor(engine.Jint);
+            var obj = new HTMLCanvasElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLCanvasElementPrototype.CreatePrototypeObject(engine, obj);

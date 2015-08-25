@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLButtonElementPrototype : HTMLButtonElementInstance
     {
-        public HTMLButtonElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLButtonElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("autofocus", Engine.AsProperty(GetAutofocus, SetAutofocus));
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
@@ -31,7 +34,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLButtonElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLButtonElementConstructor constructor)
         {
-            var obj = new HTMLButtonElementPrototype(engine.Jint)
+            var obj = new HTMLButtonElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -43,7 +46,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutofocus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Autofocus);
+            return _engine.GetDomNode(reference.Autofocus);
         }
 
         void SetAutofocus(JsValue thisObj, JsValue argument)
@@ -56,7 +59,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -69,21 +72,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -96,7 +99,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -109,7 +112,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -122,7 +125,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormAction(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.FormAction);
+            return _engine.GetDomNode(reference.FormAction);
         }
 
         void SetFormAction(JsValue thisObj, JsValue argument)
@@ -135,7 +138,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormEncType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.FormEncType);
+            return _engine.GetDomNode(reference.FormEncType);
         }
 
         void SetFormEncType(JsValue thisObj, JsValue argument)
@@ -148,7 +151,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormMethod(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.FormMethod);
+            return _engine.GetDomNode(reference.FormMethod);
         }
 
         void SetFormMethod(JsValue thisObj, JsValue argument)
@@ -161,7 +164,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormNoValidate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.FormNoValidate);
+            return _engine.GetDomNode(reference.FormNoValidate);
         }
 
         void SetFormNoValidate(JsValue thisObj, JsValue argument)
@@ -174,7 +177,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFormTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLButtonElementInstance>(Fail).RefHTMLButtonElement;
-            return Engine.Select(reference.FormTarget);
+            return _engine.GetDomNode(reference.FormTarget);
         }
 
         void SetFormTarget(JsValue thisObj, JsValue argument)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class RangePrototype : RangeInstance
     {
-        public RangePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public RangePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("setStart", Engine.AsValue(SetStart), true, true, true);
             FastAddProperty("setEnd", Engine.AsValue(SetEnd), true, true, true);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static RangePrototype CreatePrototypeObject(EngineInstance engine, RangeConstructor constructor)
         {
-            var obj = new RangePrototype(engine.Jint)
+            var obj = new RangePrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -138,13 +141,13 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue ExtractContents(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.ExtractContent());
+            return _engine.GetDomNode(reference.ExtractContent());
         }
 
         JsValue CloneContents(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.CopyContent());
+            return _engine.GetDomNode(reference.CopyContent());
         }
 
         JsValue InsertNode(JsValue thisObj, JsValue[] arguments)
@@ -166,7 +169,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CloneRange(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.Clone());
+            return _engine.GetDomNode(reference.Clone());
         }
 
         JsValue Detach(JsValue thisObj, JsValue[] arguments)
@@ -181,7 +184,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
             var node = DomTypeConverter.ToNode(arguments.At(0));
             var offset = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.Contains(node, offset));
+            return _engine.GetDomNode(reference.Contains(node, offset));
         }
 
         JsValue CompareBoundaryPoints(JsValue thisObj, JsValue[] arguments)
@@ -189,7 +192,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
             var how = DomTypeConverter.ToRangeType(arguments.At(0));
             var sourceRange = DomTypeConverter.ToRange(arguments.At(1));
-            return Engine.Select(reference.CompareBoundaryTo(how, sourceRange));
+            return _engine.GetDomNode(reference.CompareBoundaryTo(how, sourceRange));
         }
 
         JsValue ComparePoint(JsValue thisObj, JsValue[] arguments)
@@ -197,55 +200,55 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
             var node = DomTypeConverter.ToNode(arguments.At(0));
             var offset = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.CompareTo(node, offset));
+            return _engine.GetDomNode(reference.CompareTo(node, offset));
         }
 
         JsValue IntersectsNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
             var node = DomTypeConverter.ToNode(arguments.At(0));
-            return Engine.Select(reference.Intersects(node));
+            return _engine.GetDomNode(reference.Intersects(node));
         }
 
         JsValue GetStartContainer(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.Head);
+            return _engine.GetDomNode(reference.Head);
         }
 
 
         JsValue GetStartOffset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.Start);
+            return _engine.GetDomNode(reference.Start);
         }
 
 
         JsValue GetEndContainer(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.Tail);
+            return _engine.GetDomNode(reference.Tail);
         }
 
 
         JsValue GetEndOffset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.End);
+            return _engine.GetDomNode(reference.End);
         }
 
 
         JsValue GetCollapsed(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.IsCollapsed);
+            return _engine.GetDomNode(reference.IsCollapsed);
         }
 
 
         JsValue GetCommonAncestorContainer(JsValue thisObj)
         {
             var reference = thisObj.TryCast<RangeInstance>(Fail).RefRange;
-            return Engine.Select(reference.CommonAncestor);
+            return _engine.GetDomNode(reference.CommonAncestor);
         }
 
 

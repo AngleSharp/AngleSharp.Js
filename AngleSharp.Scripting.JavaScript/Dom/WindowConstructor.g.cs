@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class WindowConstructor : FunctionInstance, IConstructor
     {
-        public WindowConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public WindowConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public WindowPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static WindowConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new WindowConstructor(engine.Jint);
+            var obj = new WindowConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = WindowPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSCharsetRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSCharsetRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSCharsetRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSCharsetRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSCharsetRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSCharsetRuleConstructor(engine.Jint);
+            var obj = new CSSCharsetRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSCharsetRulePrototype.CreatePrototypeObject(engine, obj);

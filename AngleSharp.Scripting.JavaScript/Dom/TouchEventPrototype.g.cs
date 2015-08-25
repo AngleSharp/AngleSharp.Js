@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TouchEventPrototype : TouchEventInstance
     {
-        public TouchEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TouchEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("initUIEvent", Engine.AsValue(InitUIEvent), true, true, true);
             FastAddProperty("stopPropagation", Engine.AsValue(StopPropagation), true, true, true);
@@ -42,7 +45,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TouchEventPrototype CreatePrototypeObject(EngineInstance engine, TouchEventConstructor constructor)
         {
-            var obj = new TouchEventPrototype(engine.Jint)
+            var obj = new TouchEventPrototype(engine)
             {
                 Prototype = engine.Constructors.UIEvent.PrototypeObject,
                 Extensible = true,
@@ -97,119 +100,119 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTouches(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.Touches);
+            return _engine.GetDomNode(reference.Touches);
         }
 
 
         JsValue GetTargetTouches(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.TargetTouches);
+            return _engine.GetDomNode(reference.TargetTouches);
         }
 
 
         JsValue GetChangedTouches(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.ChangedTouches);
+            return _engine.GetDomNode(reference.ChangedTouches);
         }
 
 
         JsValue GetAltKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsAltPressed);
+            return _engine.GetDomNode(reference.IsAltPressed);
         }
 
 
         JsValue GetMetaKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsMetaPressed);
+            return _engine.GetDomNode(reference.IsMetaPressed);
         }
 
 
         JsValue GetCtrlKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsCtrlPressed);
+            return _engine.GetDomNode(reference.IsCtrlPressed);
         }
 
 
         JsValue GetShiftKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsShiftPressed);
+            return _engine.GetDomNode(reference.IsShiftPressed);
         }
 
 
         JsValue GetView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.View);
+            return _engine.GetDomNode(reference.View);
         }
 
 
         JsValue GetDetail(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.Detail);
+            return _engine.GetDomNode(reference.Detail);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -222,7 +225,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchEventInstance>(Fail).RefTouchEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

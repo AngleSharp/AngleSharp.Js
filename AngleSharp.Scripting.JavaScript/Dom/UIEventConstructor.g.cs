@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class UIEventConstructor : FunctionInstance, IConstructor
     {
-        public UIEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public UIEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public UIEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static UIEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new UIEventConstructor(engine.Jint);
+            var obj = new UIEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = UIEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new UiEvent(type, eventInitDict);
-                return new UIEventInstance(Engine)
+                return new UIEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefUIEvent = reference,

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLFieldSetElementInstance : HTMLElementInstance
     {
-        public HTMLFieldSetElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFieldSetElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLFieldSetElementInstance CreateHTMLFieldSetElementObject(Engine engine)
+        public static HTMLFieldSetElementInstance CreateHTMLFieldSetElementObject(EngineInstance engine)
         {
             var obj = new HTMLFieldSetElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

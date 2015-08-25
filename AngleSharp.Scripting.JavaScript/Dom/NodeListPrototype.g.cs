@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeListPrototype : NodeListInstance
     {
-        public NodeListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public NodeListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static NodeListPrototype CreatePrototypeObject(EngineInstance engine, NodeListConstructor constructor)
         {
-            var obj = new NodeListPrototype(engine.Jint)
+            var obj = new NodeListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeListInstance>(Fail).RefNodeList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class LocationInstance : ObjectInstance
     {
-        public LocationInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public LocationInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static LocationInstance CreateLocationObject(Engine engine)
+        public static LocationInstance CreateLocationObject(EngineInstance engine)
         {
             var obj = new LocationInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

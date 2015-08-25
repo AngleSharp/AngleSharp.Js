@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLStyleElementPrototype : HTMLStyleElementInstance
     {
-        public HTMLStyleElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLStyleElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
             FastSetProperty("media", Engine.AsProperty(GetMedia, SetMedia));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLStyleElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLStyleElementConstructor constructor)
         {
-            var obj = new HTMLStyleElementPrototype(engine.Jint)
+            var obj = new HTMLStyleElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -36,7 +39,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLStyleElementInstance>(Fail).RefHTMLStyleElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLStyleElementInstance>(Fail).RefHTMLStyleElement;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)
@@ -62,7 +65,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLStyleElementInstance>(Fail).RefHTMLStyleElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -75,7 +78,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetScoped(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLStyleElementInstance>(Fail).RefHTMLStyleElement;
-            return Engine.Select(reference.IsScoped);
+            return _engine.GetDomNode(reference.IsScoped);
         }
 
         void SetScoped(JsValue thisObj, JsValue argument)
@@ -88,7 +91,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSheet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLStyleElementInstance>(Fail).RefHTMLStyleElement;
-            return Engine.Select(reference.Sheet);
+            return _engine.GetDomNode(reference.Sheet);
         }
 
 

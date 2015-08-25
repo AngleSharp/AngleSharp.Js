@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLKeygenElementInstance : HTMLElementInstance
     {
-        public HTMLKeygenElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLKeygenElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLKeygenElementInstance CreateHTMLKeygenElementObject(Engine engine)
+        public static HTMLKeygenElementInstance CreateHTMLKeygenElementObject(EngineInstance engine)
         {
             var obj = new HTMLKeygenElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

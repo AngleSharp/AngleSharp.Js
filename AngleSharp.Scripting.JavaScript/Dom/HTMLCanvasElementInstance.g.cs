@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLCanvasElementInstance : HTMLElementInstance
     {
-        public HTMLCanvasElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLCanvasElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLCanvasElementInstance CreateHTMLCanvasElementObject(Engine engine)
+        public static HTMLCanvasElementInstance CreateHTMLCanvasElementObject(EngineInstance engine)
         {
             var obj = new HTMLCanvasElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

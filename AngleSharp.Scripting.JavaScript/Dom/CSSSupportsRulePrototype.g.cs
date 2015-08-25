@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSSupportsRulePrototype : CSSSupportsRuleInstance
     {
-        public CSSSupportsRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSSupportsRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static CSSSupportsRulePrototype CreatePrototypeObject(EngineInstance engine, CSSSupportsRuleConstructor constructor)
         {
-            var obj = new CSSSupportsRulePrototype(engine.Jint)
+            var obj = new CSSSupportsRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSConditionRule.PrototypeObject,
                 Extensible = true,

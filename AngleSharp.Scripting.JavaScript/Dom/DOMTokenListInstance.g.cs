@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMTokenListInstance : ObjectInstance
     {
-        public DOMTokenListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMTokenListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static DOMTokenListInstance CreateDOMTokenListObject(Engine engine)
+        public static DOMTokenListInstance CreateDOMTokenListObject(EngineInstance engine)
         {
             var obj = new DOMTokenListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefDOMTokenList[index]);
+                return _engine.GetDomNode(RefDOMTokenList[index]);
             return base.Get(propertyName);
         }
 

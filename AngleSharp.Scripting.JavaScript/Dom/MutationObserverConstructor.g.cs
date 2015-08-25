@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MutationObserverConstructor : FunctionInstance, IConstructor
     {
-        public MutationObserverConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MutationObserverConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MutationObserverPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MutationObserverConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MutationObserverConstructor(engine.Jint);
+            var obj = new MutationObserverConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MutationObserverPrototype.CreatePrototypeObject(engine, obj);
@@ -44,7 +47,7 @@ namespace AngleSharp.Scripting.JavaScript
             {
                 var callback = DomTypeConverter.ToMutationCallback(arguments.At(0));
                 var reference = new MutationObserver(callback);
-                return new MutationObserverInstance(Engine)
+                return new MutationObserverInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefMutationObserver = reference,

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTrackElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLTrackElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLTrackElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("NONE", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.None), false, true, false);
             FastAddProperty("LOADING", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.Loading), false, true, false);
             FastAddProperty("LOADED", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.Loaded), false, true, false);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTrackElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLTrackElementConstructor(engine.Jint);
+            var obj = new HTMLTrackElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLTrackElementPrototype.CreatePrototypeObject(engine, obj);

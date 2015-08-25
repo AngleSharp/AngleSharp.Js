@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOptionElementPrototype : HTMLOptionElementInstance
     {
-        public HTMLOptionElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOptionElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
             FastSetProperty("form", Engine.AsProperty(GetForm));
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOptionElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLOptionElementConstructor constructor)
         {
-            var obj = new HTMLOptionElementPrototype(engine.Jint)
+            var obj = new HTMLOptionElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -52,14 +55,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
         void SetLabel(JsValue thisObj, JsValue argument)
@@ -72,7 +75,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultSelected(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.IsDefaultSelected);
+            return _engine.GetDomNode(reference.IsDefaultSelected);
         }
 
         void SetDefaultSelected(JsValue thisObj, JsValue argument)
@@ -85,7 +88,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelected(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.IsSelected);
+            return _engine.GetDomNode(reference.IsSelected);
         }
 
         void SetSelected(JsValue thisObj, JsValue argument)
@@ -98,7 +101,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -111,7 +114,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
         void SetText(JsValue thisObj, JsValue argument)
@@ -124,7 +127,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptionElementInstance>(Fail).RefHTMLOptionElement;
-            return Engine.Select(reference.Index);
+            return _engine.GetDomNode(reference.Index);
         }
 
 

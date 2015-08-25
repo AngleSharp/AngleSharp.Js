@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class ApplicationCacheConstructor : FunctionInstance, IConstructor
     {
-        public ApplicationCacheConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public ApplicationCacheConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("UNCACHED", (UInt32)(AngleSharp.Dom.CacheStatus.Uncached), false, true, false);
             FastAddProperty("IDLE", (UInt32)(AngleSharp.Dom.CacheStatus.Idle), false, true, false);
             FastAddProperty("CHECKING", (UInt32)(AngleSharp.Dom.CacheStatus.Checking), false, true, false);
@@ -30,7 +33,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static ApplicationCacheConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new ApplicationCacheConstructor(engine.Jint);
+            var obj = new ApplicationCacheConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = ApplicationCachePrototype.CreatePrototypeObject(engine, obj);

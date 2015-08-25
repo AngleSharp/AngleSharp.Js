@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMSettableTokenListPrototype : DOMSettableTokenListInstance
     {
-        public DOMSettableTokenListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMSettableTokenListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("value", Engine.AsProperty(GetValue, SetValue));
         }
 
         public static DOMSettableTokenListPrototype CreatePrototypeObject(EngineInstance engine, DOMSettableTokenListConstructor constructor)
         {
-            var obj = new DOMSettableTokenListPrototype(engine.Jint)
+            var obj = new DOMSettableTokenListPrototype(engine)
             {
                 Prototype = engine.Constructors.DOMTokenList.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DOMSettableTokenListInstance>(Fail).RefDOMSettableTokenList;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)

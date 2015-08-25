@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableSectionElementPrototype : HTMLTableSectionElementInstance
     {
-        public HTMLTableSectionElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableSectionElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("insertRow", Engine.AsValue(InsertRow), true, true, true);
             FastAddProperty("deleteRow", Engine.AsValue(DeleteRow), true, true, true);
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableSectionElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableSectionElementConstructor constructor)
         {
-            var obj = new HTMLTableSectionElementPrototype(engine.Jint)
+            var obj = new HTMLTableSectionElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLTableSectionElementInstance>(Fail).RefHTMLTableSectionElement;
             var index = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.InsertRowAt(index));
+            return _engine.GetDomNode(reference.InsertRowAt(index));
         }
 
         JsValue DeleteRow(JsValue thisObj, JsValue[] arguments)
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRows(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableSectionElementInstance>(Fail).RefHTMLTableSectionElement;
-            return Engine.Select(reference.Rows);
+            return _engine.GetDomNode(reference.Rows);
         }
 
 

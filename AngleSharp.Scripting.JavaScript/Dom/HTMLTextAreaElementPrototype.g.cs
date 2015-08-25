@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTextAreaElementPrototype : HTMLTextAreaElementInstance
     {
-        public HTMLTextAreaElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTextAreaElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("select", Engine.AsValue(Select), true, true, true);
             FastAddProperty("setSelectionRange", Engine.AsValue(SetSelectionRange), true, true, true);
@@ -41,7 +44,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTextAreaElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTextAreaElementConstructor constructor)
         {
-            var obj = new HTMLTextAreaElementPrototype(engine.Jint)
+            var obj = new HTMLTextAreaElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -70,7 +73,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutofocus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Autofocus);
+            return _engine.GetDomNode(reference.Autofocus);
         }
 
         void SetAutofocus(JsValue thisObj, JsValue argument)
@@ -83,7 +86,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -96,21 +99,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -123,14 +126,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetRequired(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.IsRequired);
+            return _engine.GetDomNode(reference.IsRequired);
         }
 
         void SetRequired(JsValue thisObj, JsValue argument)
@@ -143,7 +146,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetReadOnly(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.IsReadOnly);
+            return _engine.GetDomNode(reference.IsReadOnly);
         }
 
         void SetReadOnly(JsValue thisObj, JsValue argument)
@@ -156,7 +159,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.DefaultValue);
+            return _engine.GetDomNode(reference.DefaultValue);
         }
 
         void SetDefaultValue(JsValue thisObj, JsValue argument)
@@ -169,7 +172,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -182,7 +185,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWrap(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Wrap);
+            return _engine.GetDomNode(reference.Wrap);
         }
 
         void SetWrap(JsValue thisObj, JsValue argument)
@@ -195,14 +198,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTextLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.TextLength);
+            return _engine.GetDomNode(reference.TextLength);
         }
 
 
         JsValue GetRows(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Rows);
+            return _engine.GetDomNode(reference.Rows);
         }
 
         void SetRows(JsValue thisObj, JsValue argument)
@@ -215,7 +218,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCols(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Columns);
+            return _engine.GetDomNode(reference.Columns);
         }
 
         void SetCols(JsValue thisObj, JsValue argument)
@@ -228,7 +231,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMaxLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.MaxLength);
+            return _engine.GetDomNode(reference.MaxLength);
         }
 
         void SetMaxLength(JsValue thisObj, JsValue argument)
@@ -241,7 +244,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPlaceholder(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.Placeholder);
+            return _engine.GetDomNode(reference.Placeholder);
         }
 
         void SetPlaceholder(JsValue thisObj, JsValue argument)
@@ -254,14 +257,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionDirection(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.SelectionDirection);
+            return _engine.GetDomNode(reference.SelectionDirection);
         }
 
 
         JsValue GetDirName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.DirectionName);
+            return _engine.GetDomNode(reference.DirectionName);
         }
 
         void SetDirName(JsValue thisObj, JsValue argument)
@@ -274,7 +277,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionStart(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.SelectionStart);
+            return _engine.GetDomNode(reference.SelectionStart);
         }
 
         void SetSelectionStart(JsValue thisObj, JsValue argument)
@@ -287,7 +290,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectionEnd(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTextAreaElementInstance>(Fail).RefHTMLTextAreaElement;
-            return Engine.Select(reference.SelectionEnd);
+            return _engine.GetDomNode(reference.SelectionEnd);
         }
 
         void SetSelectionEnd(JsValue thisObj, JsValue argument)

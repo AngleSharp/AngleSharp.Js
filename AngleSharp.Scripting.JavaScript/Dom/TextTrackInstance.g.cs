@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TextTrackInstance : EventTargetInstance
     {
-        public TextTrackInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static TextTrackInstance CreateTextTrackObject(Engine engine)
+        public static TextTrackInstance CreateTextTrackObject(EngineInstance engine)
         {
             var obj = new TextTrackInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class RenderingContextPrototype : RenderingContextInstance
     {
-        public RenderingContextPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public RenderingContextPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static RenderingContextPrototype CreatePrototypeObject(EngineInstance engine, RenderingContextConstructor constructor)
         {
-            var obj = new RenderingContextPrototype(engine.Jint)
+            var obj = new RenderingContextPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

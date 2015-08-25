@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGDescElementConstructor : FunctionInstance, IConstructor
     {
-        public SVGDescElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public SVGDescElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public SVGDescElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static SVGDescElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new SVGDescElementConstructor(engine.Jint);
+            var obj = new SVGDescElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = SVGDescElementPrototype.CreatePrototypeObject(engine, obj);

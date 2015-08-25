@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMImplementationConstructor : FunctionInstance, IConstructor
     {
-        public DOMImplementationConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMImplementationConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DOMImplementationPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMImplementationConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMImplementationConstructor(engine.Jint);
+            var obj = new DOMImplementationConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMImplementationPrototype.CreatePrototypeObject(engine, obj);

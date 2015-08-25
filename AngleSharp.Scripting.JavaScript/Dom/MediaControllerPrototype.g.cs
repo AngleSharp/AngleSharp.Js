@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaControllerPrototype : MediaControllerInstance
     {
-        public MediaControllerPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MediaControllerPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("play", Engine.AsValue(Play), true, true, true);
             FastAddProperty("pause", Engine.AsValue(Pause), true, true, true);
@@ -47,7 +50,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaControllerPrototype CreatePrototypeObject(EngineInstance engine, MediaControllerConstructor constructor)
         {
-            var obj = new MediaControllerPrototype(engine.Jint)
+            var obj = new MediaControllerPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -73,35 +76,35 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetBuffered(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.BufferedTime);
+            return _engine.GetDomNode(reference.BufferedTime);
         }
 
 
         JsValue GetSeekable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.SeekableTime);
+            return _engine.GetDomNode(reference.SeekableTime);
         }
 
 
         JsValue GetPlayed(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.PlayedTime);
+            return _engine.GetDomNode(reference.PlayedTime);
         }
 
 
         JsValue GetDuration(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.Duration);
+            return _engine.GetDomNode(reference.Duration);
         }
 
 
         JsValue GetCurrentTime(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.CurrentTime);
+            return _engine.GetDomNode(reference.CurrentTime);
         }
 
         void SetCurrentTime(JsValue thisObj, JsValue argument)
@@ -114,7 +117,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultPlaybackRate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.DefaultPlaybackRate);
+            return _engine.GetDomNode(reference.DefaultPlaybackRate);
         }
 
         void SetDefaultPlaybackRate(JsValue thisObj, JsValue argument)
@@ -127,7 +130,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPlaybackRate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.PlaybackRate);
+            return _engine.GetDomNode(reference.PlaybackRate);
         }
 
         void SetPlaybackRate(JsValue thisObj, JsValue argument)
@@ -140,7 +143,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVolume(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.Volume);
+            return _engine.GetDomNode(reference.Volume);
         }
 
         void SetVolume(JsValue thisObj, JsValue argument)
@@ -153,7 +156,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMuted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.IsMuted);
+            return _engine.GetDomNode(reference.IsMuted);
         }
 
         void SetMuted(JsValue thisObj, JsValue argument)
@@ -166,21 +169,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPaused(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.IsPaused);
+            return _engine.GetDomNode(reference.IsPaused);
         }
 
 
         JsValue GetReadyState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.ReadyState);
+            return _engine.GetDomNode(reference.ReadyState);
         }
 
 
         JsValue GetPlaybackState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MediaControllerInstance>(Fail).RefMediaController;
-            return Engine.Select(reference.PlaybackState);
+            return _engine.GetDomNode(reference.PlaybackState);
         }
 
 

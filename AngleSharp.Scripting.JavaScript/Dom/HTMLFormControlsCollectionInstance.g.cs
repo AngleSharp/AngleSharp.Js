@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLFormControlsCollectionInstance : HTMLCollectionInstance
     {
-        public HTMLFormControlsCollectionInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFormControlsCollectionInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLFormControlsCollectionInstance CreateHTMLFormControlsCollectionObject(Engine engine)
+        public static HTMLFormControlsCollectionInstance CreateHTMLFormControlsCollectionObject(EngineInstance engine)
         {
             var obj = new HTMLFormControlsCollectionInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

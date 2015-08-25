@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDataListElementPrototype : HTMLDataListElementInstance
     {
-        public HTMLDataListElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDataListElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("options", Engine.AsProperty(GetOptions));
         }
 
         public static HTMLDataListElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLDataListElementConstructor constructor)
         {
-            var obj = new HTMLDataListElementPrototype(engine.Jint)
+            var obj = new HTMLDataListElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOptions(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLDataListElementInstance>(Fail).RefHTMLDataListElement;
-            return Engine.Select(reference.Options);
+            return _engine.GetDomNode(reference.Options);
         }
 
 

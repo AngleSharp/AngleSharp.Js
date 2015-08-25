@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSCounterStyleRulePrototype : CSSCounterStyleRuleInstance
     {
-        public CSSCounterStyleRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSCounterStyleRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("name", Engine.AsProperty(GetName, SetName));
             FastSetProperty("system", Engine.AsProperty(GetSystem, SetSystem));
@@ -30,7 +33,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSCounterStyleRulePrototype CreatePrototypeObject(EngineInstance engine, CSSCounterStyleRuleConstructor constructor)
         {
-            var obj = new CSSCounterStyleRulePrototype(engine.Jint)
+            var obj = new CSSCounterStyleRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -42,7 +45,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -55,7 +58,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSystem(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.System);
+            return _engine.GetDomNode(reference.System);
         }
 
         void SetSystem(JsValue thisObj, JsValue argument)
@@ -68,7 +71,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSymbols(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Symbols);
+            return _engine.GetDomNode(reference.Symbols);
         }
 
         void SetSymbols(JsValue thisObj, JsValue argument)
@@ -81,7 +84,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAdditiveSymbols(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.AdditiveSymbols);
+            return _engine.GetDomNode(reference.AdditiveSymbols);
         }
 
         void SetAdditiveSymbols(JsValue thisObj, JsValue argument)
@@ -94,7 +97,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNegative(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Negative);
+            return _engine.GetDomNode(reference.Negative);
         }
 
         void SetNegative(JsValue thisObj, JsValue argument)
@@ -107,7 +110,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPrefix(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Prefix);
+            return _engine.GetDomNode(reference.Prefix);
         }
 
         void SetPrefix(JsValue thisObj, JsValue argument)
@@ -120,7 +123,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSuffix(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Suffix);
+            return _engine.GetDomNode(reference.Suffix);
         }
 
         void SetSuffix(JsValue thisObj, JsValue argument)
@@ -133,7 +136,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRange(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Range);
+            return _engine.GetDomNode(reference.Range);
         }
 
         void SetRange(JsValue thisObj, JsValue argument)
@@ -146,7 +149,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPad(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Pad);
+            return _engine.GetDomNode(reference.Pad);
         }
 
         void SetPad(JsValue thisObj, JsValue argument)
@@ -159,7 +162,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSpeakAs(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.SpeakAs);
+            return _engine.GetDomNode(reference.SpeakAs);
         }
 
         void SetSpeakAs(JsValue thisObj, JsValue argument)
@@ -172,7 +175,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFallback(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSCounterStyleRuleInstance>(Fail).RefCSSCounterStyleRule;
-            return Engine.Select(reference.Fallback);
+            return _engine.GetDomNode(reference.Fallback);
         }
 
         void SetFallback(JsValue thisObj, JsValue argument)

@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLIElementPrototype : HTMLLIElementInstance
     {
-        public HTMLLIElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLIElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("value", Engine.AsProperty(GetValue, SetValue));
         }
 
         public static HTMLLIElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLLIElementConstructor constructor)
         {
-            var obj = new HTMLLIElementPrototype(engine.Jint)
+            var obj = new HTMLLIElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLIElementInstance>(Fail).RefHTMLLIElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)

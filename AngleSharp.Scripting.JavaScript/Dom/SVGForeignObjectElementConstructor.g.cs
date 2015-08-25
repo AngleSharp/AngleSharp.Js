@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGForeignObjectElementConstructor : FunctionInstance, IConstructor
     {
-        public SVGForeignObjectElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public SVGForeignObjectElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public SVGForeignObjectElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static SVGForeignObjectElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new SVGForeignObjectElementConstructor(engine.Jint);
+            var obj = new SVGForeignObjectElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = SVGForeignObjectElementPrototype.CreatePrototypeObject(engine, obj);

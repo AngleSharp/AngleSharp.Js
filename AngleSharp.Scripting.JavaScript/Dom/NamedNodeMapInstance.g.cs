@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class NamedNodeMapInstance : ObjectInstance
     {
-        public NamedNodeMapInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public NamedNodeMapInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static NamedNodeMapInstance CreateNamedNodeMapObject(Engine engine)
+        public static NamedNodeMapInstance CreateNamedNodeMapObject(EngineInstance engine)
         {
             var obj = new NamedNodeMapInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,9 +35,9 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefNamedNodeMap[index]);
+                return _engine.GetDomNode(RefNamedNodeMap[index]);
             if (propertyName != null)
-                return Engine.Select(RefNamedNodeMap[propertyName]);
+                return _engine.GetDomNode(RefNamedNodeMap[propertyName]);
 
             return base.Get(propertyName);
         }

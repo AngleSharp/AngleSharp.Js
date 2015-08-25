@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TextTrackCueListInstance : ObjectInstance
     {
-        public TextTrackCueListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackCueListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static TextTrackCueListInstance CreateTextTrackCueListObject(Engine engine)
+        public static TextTrackCueListInstance CreateTextTrackCueListObject(EngineInstance engine)
         {
             var obj = new TextTrackCueListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

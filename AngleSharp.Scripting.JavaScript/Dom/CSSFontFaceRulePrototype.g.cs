@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSFontFaceRulePrototype : CSSFontFaceRuleInstance
     {
-        public CSSFontFaceRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSFontFaceRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("family", Engine.AsProperty(GetFamily, SetFamily));
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSFontFaceRulePrototype CreatePrototypeObject(EngineInstance engine, CSSFontFaceRuleConstructor constructor)
         {
-            var obj = new CSSFontFaceRulePrototype(engine.Jint)
+            var obj = new CSSFontFaceRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -39,7 +42,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFamily(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Family);
+            return _engine.GetDomNode(reference.Family);
         }
 
         void SetFamily(JsValue thisObj, JsValue argument)
@@ -52,7 +55,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -65,7 +68,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
         void SetStyle(JsValue thisObj, JsValue argument)
@@ -78,7 +81,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetWeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Weight);
+            return _engine.GetDomNode(reference.Weight);
         }
 
         void SetWeight(JsValue thisObj, JsValue argument)
@@ -91,7 +94,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStretch(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Stretch);
+            return _engine.GetDomNode(reference.Stretch);
         }
 
         void SetStretch(JsValue thisObj, JsValue argument)
@@ -104,7 +107,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetUnicodeRange(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Range);
+            return _engine.GetDomNode(reference.Range);
         }
 
         void SetUnicodeRange(JsValue thisObj, JsValue argument)
@@ -117,7 +120,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetVariant(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Variant);
+            return _engine.GetDomNode(reference.Variant);
         }
 
         void SetVariant(JsValue thisObj, JsValue argument)
@@ -130,7 +133,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFeatureSettings(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFaceRuleInstance>(Fail).RefCSSFontFaceRule;
-            return Engine.Select(reference.Features);
+            return _engine.GetDomNode(reference.Features);
         }
 
         void SetFeatureSettings(JsValue thisObj, JsValue argument)

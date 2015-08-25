@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSImportRuleInstance : CSSRuleInstance
     {
-        public CSSImportRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSImportRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSImportRuleInstance CreateCSSImportRuleObject(Engine engine)
+        public static CSSImportRuleInstance CreateCSSImportRuleObject(EngineInstance engine)
         {
             var obj = new CSSImportRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

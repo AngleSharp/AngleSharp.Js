@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class KeyboardEventPrototype : KeyboardEventInstance
     {
-        public KeyboardEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public KeyboardEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getModifierState", Engine.AsValue(GetModifierState), true, true, true);
             FastAddProperty("initKeyboardEvent", Engine.AsValue(InitKeyboardEvent), true, true, true);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static KeyboardEventPrototype CreatePrototypeObject(EngineInstance engine, KeyboardEventConstructor constructor)
         {
-            var obj = new KeyboardEventPrototype(engine.Jint)
+            var obj = new KeyboardEventPrototype(engine)
             {
                 Prototype = engine.Constructors.UIEvent.PrototypeObject,
                 Extensible = true,
@@ -58,7 +61,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
             var key = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetModifierState(key));
+            return _engine.GetDomNode(reference.GetModifierState(key));
         }
 
         JsValue InitKeyboardEvent(JsValue thisObj, JsValue[] arguments)
@@ -123,126 +126,126 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Key);
+            return _engine.GetDomNode(reference.Key);
         }
 
 
         JsValue GetLocation(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Location);
+            return _engine.GetDomNode(reference.Location);
         }
 
 
         JsValue GetCtrlKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsCtrlPressed);
+            return _engine.GetDomNode(reference.IsCtrlPressed);
         }
 
 
         JsValue GetShiftKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsShiftPressed);
+            return _engine.GetDomNode(reference.IsShiftPressed);
         }
 
 
         JsValue GetAltKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsAltPressed);
+            return _engine.GetDomNode(reference.IsAltPressed);
         }
 
 
         JsValue GetMetaKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsMetaPressed);
+            return _engine.GetDomNode(reference.IsMetaPressed);
         }
 
 
         JsValue GetRepeat(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsRepeated);
+            return _engine.GetDomNode(reference.IsRepeated);
         }
 
 
         JsValue GetLocale(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Locale);
+            return _engine.GetDomNode(reference.Locale);
         }
 
 
         JsValue GetView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.View);
+            return _engine.GetDomNode(reference.View);
         }
 
 
         JsValue GetDetail(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Detail);
+            return _engine.GetDomNode(reference.Detail);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -255,7 +258,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<KeyboardEventInstance>(Fail).RefKeyboardEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

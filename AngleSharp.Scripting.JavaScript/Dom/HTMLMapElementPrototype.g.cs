@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMapElementPrototype : HTMLMapElementInstance
     {
-        public HTMLMapElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMapElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("name", Engine.AsProperty(GetName, SetName));
             FastSetProperty("areas", Engine.AsProperty(GetAreas));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMapElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMapElementConstructor constructor)
         {
-            var obj = new HTMLMapElementPrototype(engine.Jint)
+            var obj = new HTMLMapElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMapElementInstance>(Fail).RefHTMLMapElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -47,14 +50,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAreas(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMapElementInstance>(Fail).RefHTMLMapElement;
-            return Engine.Select(reference.Areas);
+            return _engine.GetDomNode(reference.Areas);
         }
 
 
         JsValue GetImages(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMapElementInstance>(Fail).RefHTMLMapElement;
-            return Engine.Select(reference.Images);
+            return _engine.GetDomNode(reference.Images);
         }
 
 

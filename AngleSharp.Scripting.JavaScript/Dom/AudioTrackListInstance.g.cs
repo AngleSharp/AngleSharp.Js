@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class AudioTrackListInstance : EventTargetInstance
     {
-        public AudioTrackListInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public AudioTrackListInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static AudioTrackListInstance CreateAudioTrackListObject(Engine engine)
+        public static AudioTrackListInstance CreateAudioTrackListObject(EngineInstance engine)
         {
             var obj = new AudioTrackListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefAudioTrackList[index]);
+                return _engine.GetDomNode(RefAudioTrackList[index]);
             return base.Get(propertyName);
         }
 

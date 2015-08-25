@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HistoryConstructor : FunctionInstance, IConstructor
     {
-        public HistoryConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HistoryConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HistoryPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HistoryConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HistoryConstructor(engine.Jint);
+            var obj = new HistoryConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HistoryPrototype.CreatePrototypeObject(engine, obj);

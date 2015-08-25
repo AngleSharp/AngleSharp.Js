@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLUnknownElementInstance : HTMLElementInstance
     {
-        public HTMLUnknownElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLUnknownElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLUnknownElementInstance CreateHTMLUnknownElementObject(Engine engine)
+        public static HTMLUnknownElementInstance CreateHTMLUnknownElementObject(EngineInstance engine)
         {
             var obj = new HTMLUnknownElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

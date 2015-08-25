@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaControllerConstructor : FunctionInstance, IConstructor
     {
-        public MediaControllerConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MediaControllerConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MediaControllerPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaControllerConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MediaControllerConstructor(engine.Jint);
+            var obj = new MediaControllerConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MediaControllerPrototype.CreatePrototypeObject(engine, obj);

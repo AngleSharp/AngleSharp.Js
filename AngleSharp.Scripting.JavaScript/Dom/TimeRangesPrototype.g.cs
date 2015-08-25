@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TimeRangesPrototype : TimeRangesInstance
     {
-        public TimeRangesPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TimeRangesPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("start", Engine.AsValue(Start), true, true, true);
             FastAddProperty("end", Engine.AsValue(End), true, true, true);
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TimeRangesPrototype CreatePrototypeObject(EngineInstance engine, TimeRangesConstructor constructor)
         {
-            var obj = new TimeRangesPrototype(engine.Jint)
+            var obj = new TimeRangesPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -35,20 +38,20 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<TimeRangesInstance>(Fail).RefTimeRanges;
             var index = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.Start(index));
+            return _engine.GetDomNode(reference.Start(index));
         }
 
         JsValue End(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<TimeRangesInstance>(Fail).RefTimeRanges;
             var index = TypeConverter.ToInt32(arguments.At(0));
-            return Engine.Select(reference.End(index));
+            return _engine.GetDomNode(reference.End(index));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TimeRangesInstance>(Fail).RefTimeRanges;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

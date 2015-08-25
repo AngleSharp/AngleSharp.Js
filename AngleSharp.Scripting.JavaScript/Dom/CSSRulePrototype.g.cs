@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSRulePrototype : CSSRuleInstance
     {
-        public CSSRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("type", Engine.AsProperty(GetType));
             FastSetProperty("cssText", Engine.AsProperty(GetCssText, SetCssText));
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSRulePrototype CreatePrototypeObject(EngineInstance engine, CSSRuleConstructor constructor)
         {
-            var obj = new CSSRulePrototype(engine.Jint)
+            var obj = new CSSRulePrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -35,14 +38,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSRuleInstance>(Fail).RefCSSRule;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetCssText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSRuleInstance>(Fail).RefCSSRule;
-            return Engine.Select(reference.CssText);
+            return _engine.GetDomNode(reference.CssText);
         }
 
         void SetCssText(JsValue thisObj, JsValue argument)
@@ -55,14 +58,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetParentRule(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSRuleInstance>(Fail).RefCSSRule;
-            return Engine.Select(reference.Parent);
+            return _engine.GetDomNode(reference.Parent);
         }
 
 
         JsValue GetParentStyleSheet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSRuleInstance>(Fail).RefCSSRule;
-            return Engine.Select(reference.Owner);
+            return _engine.GetDomNode(reference.Owner);
         }
 
 

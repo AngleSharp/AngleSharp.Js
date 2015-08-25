@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CharacterDataPrototype : CharacterDataInstance
     {
-        public CharacterDataPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CharacterDataPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("substringData", Engine.AsValue(SubstringData), true, true, true);
             FastAddProperty("appendData", Engine.AsValue(AppendData), true, true, true);
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CharacterDataPrototype CreatePrototypeObject(EngineInstance engine, CharacterDataConstructor constructor)
         {
-            var obj = new CharacterDataPrototype(engine.Jint)
+            var obj = new CharacterDataPrototype(engine)
             {
                 Prototype = engine.Constructors.Node.PrototypeObject,
                 Extensible = true,
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<CharacterDataInstance>(Fail).RefCharacterData;
             var offset = TypeConverter.ToInt32(arguments.At(0));
             var count = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.Substring(offset, count));
+            return _engine.GetDomNode(reference.Substring(offset, count));
         }
 
         JsValue AppendData(JsValue thisObj, JsValue[] arguments)
@@ -131,7 +134,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetData(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CharacterDataInstance>(Fail).RefCharacterData;
-            return Engine.Select(reference.Data);
+            return _engine.GetDomNode(reference.Data);
         }
 
         void SetData(JsValue thisObj, JsValue argument)
@@ -144,21 +147,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CharacterDataInstance>(Fail).RefCharacterData;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetNextElementSibling(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CharacterDataInstance>(Fail).RefCharacterData;
-            return Engine.Select(reference.NextElementSibling);
+            return _engine.GetDomNode(reference.NextElementSibling);
         }
 
 
         JsValue GetPreviousElementSibling(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CharacterDataInstance>(Fail).RefCharacterData;
-            return Engine.Select(reference.PreviousElementSibling);
+            return _engine.GetDomNode(reference.PreviousElementSibling);
         }
 
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MessagePortConstructor : FunctionInstance, IConstructor
     {
-        public MessagePortConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MessagePortConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MessagePortPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MessagePortConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MessagePortConstructor(engine.Jint);
+            var obj = new MessagePortConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MessagePortPrototype.CreatePrototypeObject(engine, obj);

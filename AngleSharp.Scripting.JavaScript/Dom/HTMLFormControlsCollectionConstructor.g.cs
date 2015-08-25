@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLFormControlsCollectionConstructor : FunctionInstance, IConstructor
     {
-        public HTMLFormControlsCollectionConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLFormControlsCollectionConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLFormControlsCollectionPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLFormControlsCollectionConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLFormControlsCollectionConstructor(engine.Jint);
+            var obj = new HTMLFormControlsCollectionConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLFormControlsCollectionPrototype.CreatePrototypeObject(engine, obj);

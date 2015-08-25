@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLOutputElementInstance : HTMLElementInstance
     {
-        public HTMLOutputElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOutputElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLOutputElementInstance CreateHTMLOutputElementObject(Engine engine)
+        public static HTMLOutputElementInstance CreateHTMLOutputElementObject(EngineInstance engine)
         {
             var obj = new HTMLOutputElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMExceptionInstance : ObjectInstance
     {
-        public DOMExceptionInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMExceptionInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static DOMExceptionInstance CreateDOMExceptionObject(Engine engine)
+        public static DOMExceptionInstance CreateDOMExceptionObject(EngineInstance engine)
         {
             var obj = new DOMExceptionInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

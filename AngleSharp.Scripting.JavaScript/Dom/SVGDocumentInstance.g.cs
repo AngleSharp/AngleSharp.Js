@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class SVGDocumentInstance : DocumentInstance
     {
-        public SVGDocumentInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGDocumentInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static SVGDocumentInstance CreateSVGDocumentObject(Engine engine)
+        public static SVGDocumentInstance CreateSVGDocumentObject(EngineInstance engine)
         {
             var obj = new SVGDocumentInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

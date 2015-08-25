@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableDataCellElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLTableDataCellElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLTableDataCellElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLTableDataCellElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableDataCellElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLTableDataCellElementConstructor(engine.Jint);
+            var obj = new HTMLTableDataCellElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLTableDataCellElementPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLSpanElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLSpanElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLSpanElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLSpanElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLSpanElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLSpanElementConstructor(engine.Jint);
+            var obj = new HTMLSpanElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLSpanElementPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSKeyframeRulePrototype : CSSKeyframeRuleInstance
     {
-        public CSSKeyframeRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSKeyframeRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("keyText", Engine.AsProperty(GetKeyText, SetKeyText));
             FastSetProperty("style", Engine.AsProperty(GetStyle));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSKeyframeRulePrototype CreatePrototypeObject(EngineInstance engine, CSSKeyframeRuleConstructor constructor)
         {
-            var obj = new CSSKeyframeRulePrototype(engine.Jint)
+            var obj = new CSSKeyframeRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetKeyText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSKeyframeRuleInstance>(Fail).RefCSSKeyframeRule;
-            return Engine.Select(reference.KeyText);
+            return _engine.GetDomNode(reference.KeyText);
         }
 
         void SetKeyText(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSKeyframeRuleInstance>(Fail).RefCSSKeyframeRule;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
 

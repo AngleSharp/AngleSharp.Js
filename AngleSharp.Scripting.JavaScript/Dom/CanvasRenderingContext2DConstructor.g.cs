@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CanvasRenderingContext2DConstructor : FunctionInstance, IConstructor
     {
-        public CanvasRenderingContext2DConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CanvasRenderingContext2DConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CanvasRenderingContext2DPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CanvasRenderingContext2DConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CanvasRenderingContext2DConstructor(engine.Jint);
+            var obj = new CanvasRenderingContext2DConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CanvasRenderingContext2DPrototype.CreatePrototypeObject(engine, obj);

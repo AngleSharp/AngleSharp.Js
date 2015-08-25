@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DocumentFragmentPrototype : DocumentFragmentInstance
     {
-        public DocumentFragmentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentFragmentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("append", Engine.AsValue(Append), true, true, true);
             FastAddProperty("prepend", Engine.AsValue(Prepend), true, true, true);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DocumentFragmentPrototype CreatePrototypeObject(EngineInstance engine, DocumentFragmentConstructor constructor)
         {
-            var obj = new DocumentFragmentPrototype(engine.Jint)
+            var obj = new DocumentFragmentPrototype(engine)
             {
                 Prototype = engine.Constructors.Node.PrototypeObject,
                 Extensible = true,
@@ -65,48 +68,48 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
             var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelector(selectors));
+            return _engine.GetDomNode(reference.QuerySelector(selectors));
         }
 
         JsValue QuerySelectorAll(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
             var selectors = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.QuerySelectorAll(selectors));
+            return _engine.GetDomNode(reference.QuerySelectorAll(selectors));
         }
 
         JsValue GetElementById(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
             var elementId = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetElementById(elementId));
+            return _engine.GetDomNode(reference.GetElementById(elementId));
         }
 
         JsValue GetChildren(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
-            return Engine.Select(reference.Children);
+            return _engine.GetDomNode(reference.Children);
         }
 
 
         JsValue GetFirstElementChild(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
-            return Engine.Select(reference.FirstElementChild);
+            return _engine.GetDomNode(reference.FirstElementChild);
         }
 
 
         JsValue GetLastElementChild(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
-            return Engine.Select(reference.LastElementChild);
+            return _engine.GetDomNode(reference.LastElementChild);
         }
 
 
         JsValue GetChildElementCount(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentFragmentInstance>(Fail).RefDocumentFragment;
-            return Engine.Select(reference.ChildElementCount);
+            return _engine.GetDomNode(reference.ChildElementCount);
         }
 
 

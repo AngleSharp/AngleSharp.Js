@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLBRElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLBRElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLBRElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLBRElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLBRElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLBRElementConstructor(engine.Jint);
+            var obj = new HTMLBRElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLBRElementPrototype.CreatePrototypeObject(engine, obj);

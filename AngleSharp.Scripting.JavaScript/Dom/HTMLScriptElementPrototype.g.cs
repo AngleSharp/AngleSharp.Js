@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLScriptElementPrototype : HTMLScriptElementInstance
     {
-        public HTMLScriptElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLScriptElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("src", Engine.AsProperty(GetSrc, SetSrc));
             FastSetProperty("async", Engine.AsProperty(GetAsync, SetAsync));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLScriptElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLScriptElementConstructor constructor)
         {
-            var obj = new HTMLScriptElementPrototype(engine.Jint)
+            var obj = new HTMLScriptElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -38,7 +41,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAsync(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.IsAsync);
+            return _engine.GetDomNode(reference.IsAsync);
         }
 
         void SetAsync(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefer(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.IsDeferred);
+            return _engine.GetDomNode(reference.IsDeferred);
         }
 
         void SetDefer(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -90,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCharset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.CharacterSet);
+            return _engine.GetDomNode(reference.CharacterSet);
         }
 
         void SetCharset(JsValue thisObj, JsValue argument)
@@ -103,7 +106,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCrossOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.CrossOrigin);
+            return _engine.GetDomNode(reference.CrossOrigin);
         }
 
         void SetCrossOrigin(JsValue thisObj, JsValue argument)
@@ -116,7 +119,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLScriptElementInstance>(Fail).RefHTMLScriptElement;
-            return Engine.Select(reference.Text);
+            return _engine.GetDomNode(reference.Text);
         }
 
         void SetText(JsValue thisObj, JsValue argument)

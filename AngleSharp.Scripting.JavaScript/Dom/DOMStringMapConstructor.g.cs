@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMStringMapConstructor : FunctionInstance, IConstructor
     {
-        public DOMStringMapConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMStringMapConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DOMStringMapPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMStringMapConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMStringMapConstructor(engine.Jint);
+            var obj = new DOMStringMapConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMStringMapPrototype.CreatePrototypeObject(engine, obj);

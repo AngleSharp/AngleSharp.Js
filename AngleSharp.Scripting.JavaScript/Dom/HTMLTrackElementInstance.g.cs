@@ -9,20 +9,23 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLTrackElementInstance : HTMLElementInstance
     {
-        public HTMLTrackElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTrackElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("NONE", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.None), false, true, false);
             FastAddProperty("LOADING", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.Loading), false, true, false);
             FastAddProperty("LOADED", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.Loaded), false, true, false);
             FastAddProperty("ERROR", (UInt32)(AngleSharp.Dom.Html.TrackReadyState.Error), false, true, false);
         }
 
-        public static HTMLTrackElementInstance CreateHTMLTrackElementObject(Engine engine)
+        public static HTMLTrackElementInstance CreateHTMLTrackElementObject(EngineInstance engine)
         {
             var obj = new HTMLTrackElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

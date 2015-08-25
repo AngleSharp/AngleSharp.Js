@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSFontFeatureValuesRulePrototype : CSSFontFeatureValuesRuleInstance
     {
-        public CSSFontFeatureValuesRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSFontFeatureValuesRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("fontFamily", Engine.AsProperty(GetFontFamily, SetFontFamily));
         }
 
         public static CSSFontFeatureValuesRulePrototype CreatePrototypeObject(EngineInstance engine, CSSFontFeatureValuesRuleConstructor constructor)
         {
-            var obj = new CSSFontFeatureValuesRulePrototype(engine.Jint)
+            var obj = new CSSFontFeatureValuesRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetFontFamily(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSFontFeatureValuesRuleInstance>(Fail).RefCSSFontFeatureValuesRule;
-            return Engine.Select(reference.Family);
+            return _engine.GetDomNode(reference.Family);
         }
 
         void SetFontFamily(JsValue thisObj, JsValue argument)

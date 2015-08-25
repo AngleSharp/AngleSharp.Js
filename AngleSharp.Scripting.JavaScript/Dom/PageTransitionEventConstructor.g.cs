@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class PageTransitionEventConstructor : FunctionInstance, IConstructor
     {
-        public PageTransitionEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public PageTransitionEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public PageTransitionEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static PageTransitionEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new PageTransitionEventConstructor(engine.Jint);
+            var obj = new PageTransitionEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = PageTransitionEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new PageTransitionEvent(type, eventInitDict);
-                return new PageTransitionEventInstance(Engine)
+                return new PageTransitionEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefPageTransitionEvent = reference,

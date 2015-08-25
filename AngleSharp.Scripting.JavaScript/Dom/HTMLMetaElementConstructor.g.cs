@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMetaElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLMetaElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLMetaElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLMetaElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMetaElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLMetaElementConstructor(engine.Jint);
+            var obj = new HTMLMetaElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLMetaElementPrototype.CreatePrototypeObject(engine, obj);

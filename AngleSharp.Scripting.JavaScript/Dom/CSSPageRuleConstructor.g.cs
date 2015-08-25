@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSPageRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSPageRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSPageRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSPageRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSPageRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSPageRuleConstructor(engine.Jint);
+            var obj = new CSSPageRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSPageRulePrototype.CreatePrototypeObject(engine, obj);

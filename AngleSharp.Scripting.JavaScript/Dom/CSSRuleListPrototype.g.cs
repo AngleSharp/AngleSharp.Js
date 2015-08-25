@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSRuleListPrototype : CSSRuleListInstance
     {
-        public CSSRuleListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSRuleListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
         }
 
         public static CSSRuleListPrototype CreatePrototypeObject(EngineInstance engine, CSSRuleListConstructor constructor)
         {
-            var obj = new CSSRuleListPrototype(engine.Jint)
+            var obj = new CSSRuleListPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSRuleListInstance>(Fail).RefCSSRuleList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

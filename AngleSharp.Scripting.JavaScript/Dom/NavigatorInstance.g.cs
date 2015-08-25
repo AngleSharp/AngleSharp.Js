@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class NavigatorInstance : ObjectInstance
     {
-        public NavigatorInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public NavigatorInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static NavigatorInstance CreateNavigatorObject(Engine engine)
+        public static NavigatorInstance CreateNavigatorObject(EngineInstance engine)
         {
             var obj = new NavigatorInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class ProcessingInstructionConstructor : FunctionInstance, IConstructor
     {
-        public ProcessingInstructionConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public ProcessingInstructionConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public ProcessingInstructionPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static ProcessingInstructionConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new ProcessingInstructionConstructor(engine.Jint);
+            var obj = new ProcessingInstructionConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = ProcessingInstructionPrototype.CreatePrototypeObject(engine, obj);

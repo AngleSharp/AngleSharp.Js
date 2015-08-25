@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMeterElementPrototype : HTMLMeterElementInstance
     {
-        public HTMLMeterElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMeterElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("value", Engine.AsProperty(GetValue, SetValue));
             FastSetProperty("min", Engine.AsProperty(GetMin, SetMin));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMeterElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMeterElementConstructor constructor)
         {
-            var obj = new HTMLMeterElementPrototype(engine.Jint)
+            var obj = new HTMLMeterElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -38,7 +41,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -51,7 +54,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Minimum);
+            return _engine.GetDomNode(reference.Minimum);
         }
 
         void SetMin(JsValue thisObj, JsValue argument)
@@ -64,7 +67,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMax(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Maximum);
+            return _engine.GetDomNode(reference.Maximum);
         }
 
         void SetMax(JsValue thisObj, JsValue argument)
@@ -77,7 +80,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Low);
+            return _engine.GetDomNode(reference.Low);
         }
 
         void SetLow(JsValue thisObj, JsValue argument)
@@ -90,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHigh(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.High);
+            return _engine.GetDomNode(reference.High);
         }
 
         void SetHigh(JsValue thisObj, JsValue argument)
@@ -103,7 +106,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOptimum(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Optimum);
+            return _engine.GetDomNode(reference.Optimum);
         }
 
         void SetOptimum(JsValue thisObj, JsValue argument)
@@ -116,7 +119,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMeterElementInstance>(Fail).RefHTMLMeterElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 

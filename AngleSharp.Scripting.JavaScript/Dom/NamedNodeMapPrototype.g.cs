@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NamedNodeMapPrototype : NamedNodeMapInstance
     {
-        public NamedNodeMapPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public NamedNodeMapPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getNamedItem", Engine.AsValue(GetNamedItem), true, true, true);
             FastAddProperty("setNamedItem", Engine.AsValue(SetNamedItem), true, true, true);
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NamedNodeMapPrototype CreatePrototypeObject(EngineInstance engine, NamedNodeMapConstructor constructor)
         {
-            var obj = new NamedNodeMapPrototype(engine.Jint)
+            var obj = new NamedNodeMapPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -39,21 +42,21 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var name = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetNamedItem(name));
+            return _engine.GetDomNode(reference.GetNamedItem(name));
         }
 
         JsValue SetNamedItem(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var item = DomTypeConverter.ToAttr(arguments.At(0));
-            return Engine.Select(reference.SetNamedItem(item));
+            return _engine.GetDomNode(reference.SetNamedItem(item));
         }
 
         JsValue RemoveNamedItem(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var name = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.RemoveNamedItem(name));
+            return _engine.GetDomNode(reference.RemoveNamedItem(name));
         }
 
         JsValue GetNamedItemNS(JsValue thisObj, JsValue[] arguments)
@@ -61,14 +64,14 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var localName = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.GetNamedItem(namespaceUri, localName));
+            return _engine.GetDomNode(reference.GetNamedItem(namespaceUri, localName));
         }
 
         JsValue SetNamedItemNS(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var item = DomTypeConverter.ToAttr(arguments.At(0));
-            return Engine.Select(reference.SetNamedItemWithNamespaceUri(item));
+            return _engine.GetDomNode(reference.SetNamedItemWithNamespaceUri(item));
         }
 
         JsValue RemoveNamedItemNS(JsValue thisObj, JsValue[] arguments)
@@ -76,13 +79,13 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
             var namespaceUri = TypeConverter.ToString(arguments.At(0));
             var localName = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.RemoveNamedItem(namespaceUri, localName));
+            return _engine.GetDomNode(reference.RemoveNamedItem(namespaceUri, localName));
         }
 
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NamedNodeMapInstance>(Fail).RefNamedNodeMap;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

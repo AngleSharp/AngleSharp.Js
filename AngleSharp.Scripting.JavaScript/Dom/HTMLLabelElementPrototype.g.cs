@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLabelElementPrototype : HTMLLabelElementInstance
     {
-        public HTMLLabelElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLabelElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("form", Engine.AsProperty(GetForm));
             FastSetProperty("htmlFor", Engine.AsProperty(GetHtmlFor, SetHtmlFor));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLabelElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLLabelElementConstructor constructor)
         {
-            var obj = new HTMLLabelElementPrototype(engine.Jint)
+            var obj = new HTMLLabelElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -34,14 +37,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLabelElementInstance>(Fail).RefHTMLLabelElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetHtmlFor(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLabelElementInstance>(Fail).RefHTMLLabelElement;
-            return Engine.Select(reference.HtmlFor);
+            return _engine.GetDomNode(reference.HtmlFor);
         }
 
         void SetHtmlFor(JsValue thisObj, JsValue argument)
@@ -54,7 +57,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetControl(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLabelElementInstance>(Fail).RefHTMLLabelElement;
-            return Engine.Select(reference.Control);
+            return _engine.GetDomNode(reference.Control);
         }
 
 

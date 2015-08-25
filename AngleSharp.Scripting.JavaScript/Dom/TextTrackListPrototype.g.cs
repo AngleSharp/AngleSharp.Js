@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackListPrototype : TextTrackListInstance
     {
-        public TextTrackListPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackListPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("length", Engine.AsProperty(GetLength));
             FastSetProperty("onaddtrack", Engine.AsProperty(GetTrackAddedEvent, SetTrackAddedEvent));
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackListPrototype CreatePrototypeObject(EngineInstance engine, TextTrackListConstructor constructor)
         {
-            var obj = new TextTrackListPrototype(engine.Jint)
+            var obj = new TextTrackListPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -34,7 +37,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackListInstance>(Fail).RefTextTrackList;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 

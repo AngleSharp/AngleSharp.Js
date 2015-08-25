@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class StyleSheetInstance : ObjectInstance
     {
-        public StyleSheetInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public StyleSheetInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static StyleSheetInstance CreateStyleSheetObject(Engine engine)
+        public static StyleSheetInstance CreateStyleSheetObject(EngineInstance engine)
         {
             var obj = new StyleSheetInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

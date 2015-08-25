@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSPageRulePrototype : CSSPageRuleInstance
     {
-        public CSSPageRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSPageRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("selectorText", Engine.AsProperty(GetSelectorText, SetSelectorText));
             FastSetProperty("style", Engine.AsProperty(GetStyle, SetStyle));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSPageRulePrototype CreatePrototypeObject(EngineInstance engine, CSSPageRuleConstructor constructor)
         {
-            var obj = new CSSPageRulePrototype(engine.Jint)
+            var obj = new CSSPageRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSelectorText(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSPageRuleInstance>(Fail).RefCSSPageRule;
-            return Engine.Select(reference.SelectorText);
+            return _engine.GetDomNode(reference.SelectorText);
         }
 
         void SetSelectorText(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSPageRuleInstance>(Fail).RefCSSPageRule;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
         void SetStyle(JsValue thisObj, JsValue argument)

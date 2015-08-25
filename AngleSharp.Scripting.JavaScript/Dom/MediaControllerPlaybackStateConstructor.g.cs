@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MediaControllerPlaybackStateConstructor : FunctionInstance, IConstructor
     {
-        public MediaControllerPlaybackStateConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MediaControllerPlaybackStateConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("waiting", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Waiting), false, true, false);
             FastAddProperty("playing", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Playing), false, true, false);
             FastAddProperty("ended", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Ended), false, true, false);
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MediaControllerPlaybackStateConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MediaControllerPlaybackStateConstructor(engine.Jint);
+            var obj = new MediaControllerPlaybackStateConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MediaControllerPlaybackStatePrototype.CreatePrototypeObject(engine, obj);

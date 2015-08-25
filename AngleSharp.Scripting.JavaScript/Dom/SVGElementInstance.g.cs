@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class SVGElementInstance : ElementInstance
     {
-        public SVGElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static SVGElementInstance CreateSVGElementObject(Engine engine)
+        public static SVGElementInstance CreateSVGElementObject(EngineInstance engine)
         {
             var obj = new SVGElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

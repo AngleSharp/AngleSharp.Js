@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackModePrototype : TextTrackModeInstance
     {
-        public TextTrackModePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackModePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static TextTrackModePrototype CreatePrototypeObject(EngineInstance engine, TextTrackModeConstructor constructor)
         {
-            var obj = new TextTrackModePrototype(engine.Jint)
+            var obj = new TextTrackModePrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

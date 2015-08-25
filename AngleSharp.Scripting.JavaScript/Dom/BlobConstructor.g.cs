@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class BlobConstructor : FunctionInstance, IConstructor
     {
-        public BlobConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public BlobConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public BlobPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static BlobConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new BlobConstructor(engine.Jint);
+            var obj = new BlobConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = BlobPrototype.CreatePrototypeObject(engine, obj);

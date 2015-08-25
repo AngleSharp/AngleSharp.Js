@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSNamespaceRulePrototype : CSSNamespaceRuleInstance
     {
-        public CSSNamespaceRulePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSNamespaceRulePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("namespaceURI", Engine.AsProperty(GetNamespaceURI, SetNamespaceURI));
             FastSetProperty("prefix", Engine.AsProperty(GetPrefix, SetPrefix));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSNamespaceRulePrototype CreatePrototypeObject(EngineInstance engine, CSSNamespaceRuleConstructor constructor)
         {
-            var obj = new CSSNamespaceRulePrototype(engine.Jint)
+            var obj = new CSSNamespaceRulePrototype(engine)
             {
                 Prototype = engine.Constructors.CSSRule.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNamespaceURI(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSNamespaceRuleInstance>(Fail).RefCSSNamespaceRule;
-            return Engine.Select(reference.NamespaceUri);
+            return _engine.GetDomNode(reference.NamespaceUri);
         }
 
         void SetNamespaceURI(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPrefix(JsValue thisObj)
         {
             var reference = thisObj.TryCast<CSSNamespaceRuleInstance>(Fail).RefCSSNamespaceRule;
-            return Engine.Select(reference.Prefix);
+            return _engine.GetDomNode(reference.Prefix);
         }
 
         void SetPrefix(JsValue thisObj, JsValue argument)

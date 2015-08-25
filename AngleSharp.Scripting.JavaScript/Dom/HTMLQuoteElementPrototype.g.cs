@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLQuoteElementPrototype : HTMLQuoteElementInstance
     {
-        public HTMLQuoteElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLQuoteElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("cite", Engine.AsProperty(GetCite, SetCite));
         }
 
         public static HTMLQuoteElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLQuoteElementConstructor constructor)
         {
-            var obj = new HTMLQuoteElementPrototype(engine.Jint)
+            var obj = new HTMLQuoteElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCite(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLQuoteElementInstance>(Fail).RefHTMLQuoteElement;
-            return Engine.Select(reference.Citation);
+            return _engine.GetDomNode(reference.Citation);
         }
 
         void SetCite(JsValue thisObj, JsValue argument)

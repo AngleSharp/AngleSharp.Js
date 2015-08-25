@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTimeElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLTimeElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLTimeElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLTimeElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTimeElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLTimeElementConstructor(engine.Jint);
+            var obj = new HTMLTimeElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLTimeElementPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MutationRecordPrototype : MutationRecordInstance
     {
-        public MutationRecordPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MutationRecordPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("type", Engine.AsProperty(GetType));
             FastSetProperty("target", Engine.AsProperty(GetTarget));
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MutationRecordPrototype CreatePrototypeObject(EngineInstance engine, MutationRecordConstructor constructor)
         {
-            var obj = new MutationRecordPrototype(engine.Jint)
+            var obj = new MutationRecordPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -40,63 +43,63 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 
         JsValue GetAddedNodes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.Added);
+            return _engine.GetDomNode(reference.Added);
         }
 
 
         JsValue GetRemovedNodes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.Removed);
+            return _engine.GetDomNode(reference.Removed);
         }
 
 
         JsValue GetPreviousSibling(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.PreviousSibling);
+            return _engine.GetDomNode(reference.PreviousSibling);
         }
 
 
         JsValue GetNextSibling(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.NextSibling);
+            return _engine.GetDomNode(reference.NextSibling);
         }
 
 
         JsValue GetAttributeName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.AttributeName);
+            return _engine.GetDomNode(reference.AttributeName);
         }
 
 
         JsValue GetAttributeNamespace(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.AttributeNamespace);
+            return _engine.GetDomNode(reference.AttributeNamespace);
         }
 
 
         JsValue GetOldValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<MutationRecordInstance>(Fail).RefMutationRecord;
-            return Engine.Select(reference.PreviousValue);
+            return _engine.GetDomNode(reference.PreviousValue);
         }
 
 

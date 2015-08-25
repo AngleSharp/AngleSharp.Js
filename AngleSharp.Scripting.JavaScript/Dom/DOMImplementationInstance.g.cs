@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMImplementationInstance : ObjectInstance
     {
-        public DOMImplementationInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMImplementationInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static DOMImplementationInstance CreateDOMImplementationObject(Engine engine)
+        public static DOMImplementationInstance CreateDOMImplementationObject(EngineInstance engine)
         {
             var obj = new DOMImplementationInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

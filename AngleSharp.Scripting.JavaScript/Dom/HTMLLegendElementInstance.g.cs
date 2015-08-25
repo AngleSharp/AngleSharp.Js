@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLLegendElementInstance : HTMLElementInstance
     {
-        public HTMLLegendElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLegendElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLLegendElementInstance CreateHTMLLegendElementObject(Engine engine)
+        public static HTMLLegendElementInstance CreateHTMLLegendElementObject(EngineInstance engine)
         {
             var obj = new HTMLLegendElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

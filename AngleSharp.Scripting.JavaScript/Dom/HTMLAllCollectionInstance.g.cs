@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLAllCollectionInstance : HTMLCollectionInstance
     {
-        public HTMLAllCollectionInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLAllCollectionInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLAllCollectionInstance CreateHTMLAllCollectionObject(Engine engine)
+        public static HTMLAllCollectionInstance CreateHTMLAllCollectionObject(EngineInstance engine)
         {
             var obj = new HTMLAllCollectionInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGElementPrototype : SVGElementInstance
     {
-        public SVGElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("style", Engine.AsProperty(GetStyle, SetStyle));
         }
 
         public static SVGElementPrototype CreatePrototypeObject(EngineInstance engine, SVGElementConstructor constructor)
         {
-            var obj = new SVGElementPrototype(engine.Jint)
+            var obj = new SVGElementPrototype(engine)
             {
                 Prototype = engine.Constructors.Element.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStyle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<SVGElementInstance>(Fail).RefSVGElement;
-            return Engine.Select(reference.Style);
+            return _engine.GetDomNode(reference.Style);
         }
 
         void SetStyle(JsValue thisObj, JsValue argument)

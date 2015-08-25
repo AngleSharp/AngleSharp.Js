@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TouchPrototype : TouchInstance
     {
-        public TouchPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TouchPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("identifier", Engine.AsProperty(GetIdentifier));
             FastSetProperty("target", Engine.AsProperty(GetTarget));
@@ -27,7 +30,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TouchPrototype CreatePrototypeObject(EngineInstance engine, TouchConstructor constructor)
         {
-            var obj = new TouchPrototype(engine.Jint)
+            var obj = new TouchPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -39,56 +42,56 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetIdentifier(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.Id);
+            return _engine.GetDomNode(reference.Id);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 
         JsValue GetScreenX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.ScreenX);
+            return _engine.GetDomNode(reference.ScreenX);
         }
 
 
         JsValue GetScreenY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.ScreenY);
+            return _engine.GetDomNode(reference.ScreenY);
         }
 
 
         JsValue GetClientX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.ClientX);
+            return _engine.GetDomNode(reference.ClientX);
         }
 
 
         JsValue GetClientY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.ClientY);
+            return _engine.GetDomNode(reference.ClientY);
         }
 
 
         JsValue GetPageX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.PageX);
+            return _engine.GetDomNode(reference.PageX);
         }
 
 
         JsValue GetPageY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TouchInstance>(Fail).RefTouch;
-            return Engine.Select(reference.PageY);
+            return _engine.GetDomNode(reference.PageY);
         }
 
 

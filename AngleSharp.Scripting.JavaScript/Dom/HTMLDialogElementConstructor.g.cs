@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDialogElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLDialogElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLDialogElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLDialogElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLDialogElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLDialogElementConstructor(engine.Jint);
+            var obj = new HTMLDialogElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLDialogElementPrototype.CreatePrototypeObject(engine, obj);

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class WheelEventPrototype : WheelEventInstance
     {
-        public WheelEventPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public WheelEventPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("initWheelEvent", Engine.AsValue(InitWheelEvent), true, true, true);
             FastAddProperty("getModifierState", Engine.AsValue(GetModifierState), true, true, true);
@@ -53,7 +56,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static WheelEventPrototype CreatePrototypeObject(EngineInstance engine, WheelEventConstructor constructor)
         {
-            var obj = new WheelEventPrototype(engine.Jint)
+            var obj = new WheelEventPrototype(engine)
             {
                 Prototype = engine.Constructors.MouseEvent.PrototypeObject,
                 Extensible = true,
@@ -89,7 +92,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
             var key = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.GetModifierState(key));
+            return _engine.GetDomNode(reference.GetModifierState(key));
         }
 
         JsValue InitMouseEvent(JsValue thisObj, JsValue[] arguments)
@@ -160,175 +163,175 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDeltaX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.DeltaX);
+            return _engine.GetDomNode(reference.DeltaX);
         }
 
 
         JsValue GetDeltaY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.DeltaY);
+            return _engine.GetDomNode(reference.DeltaY);
         }
 
 
         JsValue GetDeltaZ(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.DeltaZ);
+            return _engine.GetDomNode(reference.DeltaZ);
         }
 
 
         JsValue GetDeltaMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.DeltaMode);
+            return _engine.GetDomNode(reference.DeltaMode);
         }
 
 
         JsValue GetScreenX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.ScreenX);
+            return _engine.GetDomNode(reference.ScreenX);
         }
 
 
         JsValue GetScreenY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.ScreenY);
+            return _engine.GetDomNode(reference.ScreenY);
         }
 
 
         JsValue GetClientX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.ClientX);
+            return _engine.GetDomNode(reference.ClientX);
         }
 
 
         JsValue GetClientY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.ClientY);
+            return _engine.GetDomNode(reference.ClientY);
         }
 
 
         JsValue GetCtrlKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsCtrlPressed);
+            return _engine.GetDomNode(reference.IsCtrlPressed);
         }
 
 
         JsValue GetShiftKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsShiftPressed);
+            return _engine.GetDomNode(reference.IsShiftPressed);
         }
 
 
         JsValue GetAltKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsAltPressed);
+            return _engine.GetDomNode(reference.IsAltPressed);
         }
 
 
         JsValue GetMetaKey(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsMetaPressed);
+            return _engine.GetDomNode(reference.IsMetaPressed);
         }
 
 
         JsValue GetButton(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Button);
+            return _engine.GetDomNode(reference.Button);
         }
 
 
         JsValue GetButtons(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Buttons);
+            return _engine.GetDomNode(reference.Buttons);
         }
 
 
         JsValue GetRelatedTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
 
         JsValue GetView(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.View);
+            return _engine.GetDomNode(reference.View);
         }
 
 
         JsValue GetDetail(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Detail);
+            return _engine.GetDomNode(reference.Detail);
         }
 
 
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.OriginalTarget);
+            return _engine.GetDomNode(reference.OriginalTarget);
         }
 
 
         JsValue GetCurrentTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.CurrentTarget);
+            return _engine.GetDomNode(reference.CurrentTarget);
         }
 
 
         JsValue GetEventPhase(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Phase);
+            return _engine.GetDomNode(reference.Phase);
         }
 
 
         JsValue GetBubbles(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsBubbling);
+            return _engine.GetDomNode(reference.IsBubbling);
         }
 
 
         JsValue GetCancelable(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsCancelable);
+            return _engine.GetDomNode(reference.IsCancelable);
         }
 
 
         JsValue GetDefaultPrevented(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsDefaultPrevented);
+            return _engine.GetDomNode(reference.IsDefaultPrevented);
         }
 
 
         JsValue GetIsTrusted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.IsTrusted);
+            return _engine.GetDomNode(reference.IsTrusted);
         }
 
         void SetIsTrusted(JsValue thisObj, JsValue argument)
@@ -341,7 +344,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTimeStamp(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WheelEventInstance>(Fail).RefWheelEvent;
-            return Engine.Select(reference.Time);
+            return _engine.GetDomNode(reference.Time);
         }
 
 

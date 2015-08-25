@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableCellElementPrototype : HTMLTableCellElementInstance
     {
-        public HTMLTableCellElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableCellElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("colSpan", Engine.AsProperty(GetColSpan, SetColSpan));
             FastSetProperty("rowSpan", Engine.AsProperty(GetRowSpan, SetRowSpan));
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLTableCellElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableCellElementConstructor constructor)
         {
-            var obj = new HTMLTableCellElementPrototype(engine.Jint)
+            var obj = new HTMLTableCellElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetColSpan(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableCellElementInstance>(Fail).RefHTMLTableCellElement;
-            return Engine.Select(reference.ColumnSpan);
+            return _engine.GetDomNode(reference.ColumnSpan);
         }
 
         void SetColSpan(JsValue thisObj, JsValue argument)
@@ -48,7 +51,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRowSpan(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableCellElementInstance>(Fail).RefHTMLTableCellElement;
-            return Engine.Select(reference.RowSpan);
+            return _engine.GetDomNode(reference.RowSpan);
         }
 
         void SetRowSpan(JsValue thisObj, JsValue argument)
@@ -61,14 +64,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHeaders(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableCellElementInstance>(Fail).RefHTMLTableCellElement;
-            return Engine.Select(reference.Headers);
+            return _engine.GetDomNode(reference.Headers);
         }
 
 
         JsValue GetCellIndex(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableCellElementInstance>(Fail).RefHTMLTableCellElement;
-            return Engine.Select(reference.Index);
+            return _engine.GetDomNode(reference.Index);
         }
 
 

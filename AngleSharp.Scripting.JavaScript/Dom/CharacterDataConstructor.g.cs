@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CharacterDataConstructor : FunctionInstance, IConstructor
     {
-        public CharacterDataConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CharacterDataConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CharacterDataPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CharacterDataConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CharacterDataConstructor(engine.Jint);
+            var obj = new CharacterDataConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CharacterDataPrototype.CreatePrototypeObject(engine, obj);

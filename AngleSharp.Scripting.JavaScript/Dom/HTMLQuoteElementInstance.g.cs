@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLQuoteElementInstance : HTMLElementInstance
     {
-        public HTMLQuoteElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLQuoteElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLQuoteElementInstance CreateHTMLQuoteElementObject(Engine engine)
+        public static HTMLQuoteElementInstance CreateHTMLQuoteElementObject(EngineInstance engine)
         {
             var obj = new HTMLQuoteElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

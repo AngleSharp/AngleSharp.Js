@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CommentPrototype : CommentInstance
     {
-        public CommentPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CommentPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static CommentPrototype CreatePrototypeObject(EngineInstance engine, CommentConstructor constructor)
         {
-            var obj = new CommentPrototype(engine.Jint)
+            var obj = new CommentPrototype(engine)
             {
                 Prototype = engine.Constructors.CharacterData.PrototypeObject,
                 Extensible = true,

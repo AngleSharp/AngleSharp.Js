@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TextTrackPrototype : TextTrackInstance
     {
-        public TextTrackPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("addCue", Engine.AsValue(AddCue), true, true, true);
             FastAddProperty("removeCue", Engine.AsValue(RemoveCue), true, true, true);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TextTrackPrototype CreatePrototypeObject(EngineInstance engine, TextTrackConstructor constructor)
         {
-            var obj = new TextTrackPrototype(engine.Jint)
+            var obj = new TextTrackPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -56,28 +59,28 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetKind(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.Kind);
+            return _engine.GetDomNode(reference.Kind);
         }
 
 
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
 
         JsValue GetLanguage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.Language);
+            return _engine.GetDomNode(reference.Language);
         }
 
 
         JsValue GetMode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.Mode);
+            return _engine.GetDomNode(reference.Mode);
         }
 
         void SetMode(JsValue thisObj, JsValue argument)
@@ -90,14 +93,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCues(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.Cues);
+            return _engine.GetDomNode(reference.Cues);
         }
 
 
         JsValue GetActiveCues(JsValue thisObj)
         {
             var reference = thisObj.TryCast<TextTrackInstance>(Fail).RefTextTrack;
-            return Engine.Select(reference.ActiveCues);
+            return _engine.GetDomNode(reference.ActiveCues);
         }
 
 

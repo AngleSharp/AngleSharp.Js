@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class FileListConstructor : FunctionInstance, IConstructor
     {
-        public FileListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public FileListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public FileListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static FileListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new FileListConstructor(engine.Jint);
+            var obj = new FileListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = FileListPrototype.CreatePrototypeObject(engine, obj);

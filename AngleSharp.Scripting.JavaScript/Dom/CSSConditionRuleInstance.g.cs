@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class CSSConditionRuleInstance : CSSRuleInstance
     {
-        public CSSConditionRuleInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public CSSConditionRuleInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static CSSConditionRuleInstance CreateCSSConditionRuleObject(Engine engine)
+        public static CSSConditionRuleInstance CreateCSSConditionRuleObject(EngineInstance engine)
         {
             var obj = new CSSConditionRuleInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NavigatorPrototype : NavigatorInstance
     {
-        public NavigatorPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public NavigatorPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("registerProtocolHandler", Engine.AsValue(RegisterProtocolHandler), true, true, true);
             FastAddProperty("registerContentHandler", Engine.AsValue(RegisterContentHandler), true, true, true);
@@ -31,7 +34,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NavigatorPrototype CreatePrototypeObject(EngineInstance engine, NavigatorConstructor constructor)
         {
-            var obj = new NavigatorPrototype(engine.Jint)
+            var obj = new NavigatorPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -65,7 +68,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
             var scheme = TypeConverter.ToString(arguments.At(0));
             var url = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.IsProtocolHandlerRegistered(scheme, url));
+            return _engine.GetDomNode(reference.IsProtocolHandlerRegistered(scheme, url));
         }
 
         JsValue IsContentHandlerRegistered(JsValue thisObj, JsValue[] arguments)
@@ -73,7 +76,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
             var mimeType = TypeConverter.ToString(arguments.At(0));
             var url = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.IsContentHandlerRegistered(mimeType, url));
+            return _engine.GetDomNode(reference.IsContentHandlerRegistered(mimeType, url));
         }
 
         JsValue UnregisterProtocolHandler(JsValue thisObj, JsValue[] arguments)
@@ -104,35 +107,35 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAppName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
 
         JsValue GetAppVersion(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
-            return Engine.Select(reference.Version);
+            return _engine.GetDomNode(reference.Version);
         }
 
 
         JsValue GetPlatform(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
-            return Engine.Select(reference.Platform);
+            return _engine.GetDomNode(reference.Platform);
         }
 
 
         JsValue GetUserAgent(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
-            return Engine.Select(reference.UserAgent);
+            return _engine.GetDomNode(reference.UserAgent);
         }
 
 
         JsValue GetOnLine(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NavigatorInstance>(Fail).RefNavigator;
-            return Engine.Select(reference.IsOnline);
+            return _engine.GetDomNode(reference.IsOnline);
         }
 
 

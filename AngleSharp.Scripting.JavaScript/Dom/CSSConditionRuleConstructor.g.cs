@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSConditionRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSConditionRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSConditionRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSConditionRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSConditionRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSConditionRuleConstructor(engine.Jint);
+            var obj = new CSSConditionRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSConditionRulePrototype.CreatePrototypeObject(engine, obj);

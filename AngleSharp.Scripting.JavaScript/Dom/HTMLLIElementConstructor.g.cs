@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLIElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLLIElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLLIElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLLIElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLIElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLLIElementConstructor(engine.Jint);
+            var obj = new HTMLLIElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLLIElementPrototype.CreatePrototypeObject(engine, obj);

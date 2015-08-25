@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLFieldSetElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLFieldSetElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLFieldSetElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLFieldSetElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLFieldSetElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLFieldSetElementConstructor(engine.Jint);
+            var obj = new HTMLFieldSetElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLFieldSetElementPrototype.CreatePrototypeObject(engine, obj);

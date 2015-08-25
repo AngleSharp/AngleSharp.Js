@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLInputElementInstance : HTMLElementInstance
     {
-        public HTMLInputElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLInputElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLInputElementInstance CreateHTMLInputElementObject(Engine engine)
+        public static HTMLInputElementInstance CreateHTMLInputElementObject(EngineInstance engine)
         {
             var obj = new HTMLInputElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

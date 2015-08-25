@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class SVGCircleElementInstance : SVGElementInstance
     {
-        public SVGCircleElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGCircleElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static SVGCircleElementInstance CreateSVGCircleElementObject(Engine engine)
+        public static SVGCircleElementInstance CreateSVGCircleElementObject(EngineInstance engine)
         {
             var obj = new SVGCircleElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DocumentConstructor : FunctionInstance, IConstructor
     {
-        public DocumentConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DocumentConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("DOCUMENT_POSITION_DISCONNECTED", (UInt32)(AngleSharp.Dom.DocumentPositions.Disconnected), false, true, false);
             FastAddProperty("DOCUMENT_POSITION_PRECEDING", (UInt32)(AngleSharp.Dom.DocumentPositions.Preceding), false, true, false);
             FastAddProperty("DOCUMENT_POSITION_FOLLOWING", (UInt32)(AngleSharp.Dom.DocumentPositions.Following), false, true, false);
@@ -42,7 +45,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DocumentConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DocumentConstructor(engine.Jint);
+            var obj = new DocumentConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DocumentPrototype.CreatePrototypeObject(engine, obj);

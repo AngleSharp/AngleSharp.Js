@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DocumentTypePrototype : DocumentTypeInstance
     {
-        public DocumentTypePrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DocumentTypePrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("before", Engine.AsValue(Before), true, true, true);
             FastAddProperty("after", Engine.AsValue(After), true, true, true);
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DocumentTypePrototype CreatePrototypeObject(EngineInstance engine, DocumentTypeConstructor constructor)
         {
-            var obj = new DocumentTypePrototype(engine.Jint)
+            var obj = new DocumentTypePrototype(engine)
             {
                 Prototype = engine.Constructors.Node.PrototypeObject,
                 Extensible = true,
@@ -81,21 +84,21 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
 
         JsValue GetPublicId(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            return Engine.Select(reference.PublicIdentifier);
+            return _engine.GetDomNode(reference.PublicIdentifier);
         }
 
 
         JsValue GetSystemId(JsValue thisObj)
         {
             var reference = thisObj.TryCast<DocumentTypeInstance>(Fail).RefDocumentType;
-            return Engine.Select(reference.SystemIdentifier);
+            return _engine.GetDomNode(reference.SystemIdentifier);
         }
 
 

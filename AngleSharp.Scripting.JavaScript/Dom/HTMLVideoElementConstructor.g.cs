@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLVideoElementConstructor : FunctionInstance, IConstructor
     {
-        public HTMLVideoElementConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public HTMLVideoElementConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public HTMLVideoElementPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLVideoElementConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new HTMLVideoElementConstructor(engine.Jint);
+            var obj = new HTMLVideoElementConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = HTMLVideoElementPrototype.CreatePrototypeObject(engine, obj);

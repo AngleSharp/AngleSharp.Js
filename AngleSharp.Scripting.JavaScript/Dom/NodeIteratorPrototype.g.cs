@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class NodeIteratorPrototype : NodeIteratorInstance
     {
-        public NodeIteratorPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public NodeIteratorPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("nextNode", Engine.AsValue(NextNode), true, true, true);
             FastAddProperty("previousNode", Engine.AsValue(PreviousNode), true, true, true);
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static NodeIteratorPrototype CreatePrototypeObject(EngineInstance engine, NodeIteratorConstructor constructor)
         {
-            var obj = new NodeIteratorPrototype(engine.Jint)
+            var obj = new NodeIteratorPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -38,47 +41,47 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue NextNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Next());
+            return _engine.GetDomNode(reference.Next());
         }
 
         JsValue PreviousNode(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Previous());
+            return _engine.GetDomNode(reference.Previous());
         }
 
         JsValue GetRoot(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Root);
+            return _engine.GetDomNode(reference.Root);
         }
 
 
         JsValue GetReferenceNode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Reference);
+            return _engine.GetDomNode(reference.Reference);
         }
 
 
         JsValue GetPointerBeforeReferenceNode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.IsBeforeReference);
+            return _engine.GetDomNode(reference.IsBeforeReference);
         }
 
 
         JsValue GetWhatToShow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Settings);
+            return _engine.GetDomNode(reference.Settings);
         }
 
 
         JsValue GetFilter(JsValue thisObj)
         {
             var reference = thisObj.TryCast<NodeIteratorInstance>(Fail).RefNodeIterator;
-            return Engine.Select(reference.Filter);
+            return _engine.GetDomNode(reference.Filter);
         }
 
 

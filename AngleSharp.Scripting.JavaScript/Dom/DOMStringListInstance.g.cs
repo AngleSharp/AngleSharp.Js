@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMStringListInstance : ObjectInstance
     {
-        public DOMStringListInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMStringListInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static DOMStringListInstance CreateDOMStringListObject(Engine engine)
+        public static DOMStringListInstance CreateDOMStringListObject(EngineInstance engine)
         {
             var obj = new DOMStringListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefDOMStringList[index]);
+                return _engine.GetDomNode(RefDOMStringList[index]);
             return base.Get(propertyName);
         }
 

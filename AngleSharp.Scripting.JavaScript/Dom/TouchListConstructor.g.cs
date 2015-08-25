@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class TouchListConstructor : FunctionInstance, IConstructor
     {
-        public TouchListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public TouchListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public TouchListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static TouchListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new TouchListConstructor(engine.Jint);
+            var obj = new TouchListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = TouchListPrototype.CreatePrototypeObject(engine, obj);

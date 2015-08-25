@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMSettableTokenListConstructor : FunctionInstance, IConstructor
     {
-        public DOMSettableTokenListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMSettableTokenListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DOMSettableTokenListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMSettableTokenListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMSettableTokenListConstructor(engine.Jint);
+            var obj = new DOMSettableTokenListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMSettableTokenListPrototype.CreatePrototypeObject(engine, obj);

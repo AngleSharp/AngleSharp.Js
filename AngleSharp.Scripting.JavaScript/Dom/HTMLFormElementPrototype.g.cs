@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLFormElementPrototype : HTMLFormElementInstance
     {
-        public HTMLFormElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFormElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("submit", Engine.AsValue(Submit), true, true, true);
             FastAddProperty("reset", Engine.AsValue(Reset), true, true, true);
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLFormElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLFormElementConstructor constructor)
         {
-            var obj = new HTMLFormElementPrototype(engine.Jint)
+            var obj = new HTMLFormElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -47,7 +50,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue Submit(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Submit());
+            return _engine.GetDomNode(reference.Submit());
         }
 
         JsValue Reset(JsValue thisObj, JsValue[] arguments)
@@ -60,13 +63,13 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue CheckValidity(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.CheckValidity());
+            return _engine.GetDomNode(reference.CheckValidity());
         }
 
         JsValue ReportValidity(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.ReportValidity());
+            return _engine.GetDomNode(reference.ReportValidity());
         }
 
         JsValue RequestAutocomplete(JsValue thisObj, JsValue[] arguments)
@@ -79,7 +82,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAcceptCharset(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.AcceptCharset);
+            return _engine.GetDomNode(reference.AcceptCharset);
         }
 
         void SetAcceptCharset(JsValue thisObj, JsValue argument)
@@ -92,7 +95,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAction(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Action);
+            return _engine.GetDomNode(reference.Action);
         }
 
         void SetAction(JsValue thisObj, JsValue argument)
@@ -105,7 +108,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetAutocomplete(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Autocomplete);
+            return _engine.GetDomNode(reference.Autocomplete);
         }
 
         void SetAutocomplete(JsValue thisObj, JsValue argument)
@@ -118,7 +121,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEnctype(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Enctype);
+            return _engine.GetDomNode(reference.Enctype);
         }
 
         void SetEnctype(JsValue thisObj, JsValue argument)
@@ -131,7 +134,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetEncoding(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Encoding);
+            return _engine.GetDomNode(reference.Encoding);
         }
 
         void SetEncoding(JsValue thisObj, JsValue argument)
@@ -144,7 +147,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMethod(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Method);
+            return _engine.GetDomNode(reference.Method);
         }
 
         void SetMethod(JsValue thisObj, JsValue argument)
@@ -157,7 +160,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -170,7 +173,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNoValidate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.NoValidate);
+            return _engine.GetDomNode(reference.NoValidate);
         }
 
         void SetNoValidate(JsValue thisObj, JsValue argument)
@@ -183,7 +186,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetTarget(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Target);
+            return _engine.GetDomNode(reference.Target);
         }
 
         void SetTarget(JsValue thisObj, JsValue argument)
@@ -196,14 +199,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLength(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Length);
+            return _engine.GetDomNode(reference.Length);
         }
 
 
         JsValue GetElements(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFormElementInstance>(Fail).RefHTMLFormElement;
-            return Engine.Select(reference.Elements);
+            return _engine.GetDomNode(reference.Elements);
         }
 
 

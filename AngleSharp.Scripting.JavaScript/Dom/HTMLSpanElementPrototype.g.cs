@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLSpanElementPrototype : HTMLSpanElementInstance
     {
-        public HTMLSpanElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLSpanElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static HTMLSpanElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLSpanElementConstructor constructor)
         {
-            var obj = new HTMLSpanElementPrototype(engine.Jint)
+            var obj = new HTMLSpanElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,

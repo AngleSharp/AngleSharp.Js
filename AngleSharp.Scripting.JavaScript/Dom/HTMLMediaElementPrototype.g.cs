@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLMediaElementPrototype : HTMLMediaElementInstance
     {
-        public HTMLMediaElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMediaElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("load", Engine.AsValue(Load), true, true, true);
             FastAddProperty("canPlayType", Engine.AsValue(CanPlayType), true, true, true);
@@ -40,7 +43,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLMediaElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLMediaElementConstructor constructor)
         {
-            var obj = new HTMLMediaElementPrototype(engine.Jint)
+            var obj = new HTMLMediaElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -60,7 +63,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
             var type = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.CanPlayType(type));
+            return _engine.GetDomNode(reference.CanPlayType(type));
         }
 
         JsValue AddTextTrack(JsValue thisObj, JsValue[] arguments)
@@ -69,13 +72,13 @@ namespace AngleSharp.Scripting.JavaScript
             var kind = TypeConverter.ToString(arguments.At(0));
             var label = TypeConverter.ToString(arguments.At(1));
             var language = TypeConverter.ToString(arguments.At(2));
-            return Engine.Select(reference.AddTextTrack(kind, label, language));
+            return _engine.GetDomNode(reference.AddTextTrack(kind, label, language));
         }
 
         JsValue GetSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Source);
+            return _engine.GetDomNode(reference.Source);
         }
 
         void SetSrc(JsValue thisObj, JsValue argument)
@@ -88,7 +91,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetCrossOrigin(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.CrossOrigin);
+            return _engine.GetDomNode(reference.CrossOrigin);
         }
 
         void SetCrossOrigin(JsValue thisObj, JsValue argument)
@@ -101,7 +104,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPreload(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Preload);
+            return _engine.GetDomNode(reference.Preload);
         }
 
         void SetPreload(JsValue thisObj, JsValue argument)
@@ -114,7 +117,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMediaGroup(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.MediaGroup);
+            return _engine.GetDomNode(reference.MediaGroup);
         }
 
         void SetMediaGroup(JsValue thisObj, JsValue argument)
@@ -127,49 +130,49 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetNetworkState(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.NetworkState);
+            return _engine.GetDomNode(reference.NetworkState);
         }
 
 
         JsValue GetSeeking(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsSeeking);
+            return _engine.GetDomNode(reference.IsSeeking);
         }
 
 
         JsValue GetCurrentSrc(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.CurrentSource);
+            return _engine.GetDomNode(reference.CurrentSource);
         }
 
 
         JsValue GetError(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Error);
+            return _engine.GetDomNode(reference.Error);
         }
 
 
         JsValue GetController(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.Controller);
+            return _engine.GetDomNode(reference.Controller);
         }
 
 
         JsValue GetEnded(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsEnded);
+            return _engine.GetDomNode(reference.IsEnded);
         }
 
 
         JsValue GetAutoplay(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsAutoplay);
+            return _engine.GetDomNode(reference.IsAutoplay);
         }
 
         void SetAutoplay(JsValue thisObj, JsValue argument)
@@ -182,7 +185,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLoop(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsLoop);
+            return _engine.GetDomNode(reference.IsLoop);
         }
 
         void SetLoop(JsValue thisObj, JsValue argument)
@@ -195,7 +198,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetControls(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsShowingControls);
+            return _engine.GetDomNode(reference.IsShowingControls);
         }
 
         void SetControls(JsValue thisObj, JsValue argument)
@@ -208,7 +211,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDefaultMuted(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.IsDefaultMuted);
+            return _engine.GetDomNode(reference.IsDefaultMuted);
         }
 
         void SetDefaultMuted(JsValue thisObj, JsValue argument)
@@ -221,28 +224,28 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetStartDate(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.StartDate);
+            return _engine.GetDomNode(reference.StartDate);
         }
 
 
         JsValue GetAudioTracks(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.AudioTracks);
+            return _engine.GetDomNode(reference.AudioTracks);
         }
 
 
         JsValue GetVideoTracks(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.VideoTracks);
+            return _engine.GetDomNode(reference.VideoTracks);
         }
 
 
         JsValue GetTextTracks(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLMediaElementInstance>(Fail).RefHTMLMediaElement;
-            return Engine.Select(reference.TextTracks);
+            return _engine.GetDomNode(reference.TextTracks);
         }
 
 

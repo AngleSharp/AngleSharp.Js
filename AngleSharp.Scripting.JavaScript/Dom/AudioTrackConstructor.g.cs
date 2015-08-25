@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class AudioTrackConstructor : FunctionInstance, IConstructor
     {
-        public AudioTrackConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public AudioTrackConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public AudioTrackPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static AudioTrackConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new AudioTrackConstructor(engine.Jint);
+            var obj = new AudioTrackConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = AudioTrackPrototype.CreatePrototypeObject(engine, obj);

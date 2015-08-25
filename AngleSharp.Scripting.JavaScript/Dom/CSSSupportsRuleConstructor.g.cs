@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSSupportsRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSSupportsRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSSupportsRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSSupportsRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSSupportsRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSSupportsRuleConstructor(engine.Jint);
+            var obj = new CSSSupportsRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSSupportsRulePrototype.CreatePrototypeObject(engine, obj);

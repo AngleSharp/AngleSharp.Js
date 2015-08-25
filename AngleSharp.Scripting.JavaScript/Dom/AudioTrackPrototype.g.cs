@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class AudioTrackPrototype : AudioTrackInstance
     {
-        public AudioTrackPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public AudioTrackPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("id", Engine.AsProperty(GetId));
             FastSetProperty("kind", Engine.AsProperty(GetKind));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static AudioTrackPrototype CreatePrototypeObject(EngineInstance engine, AudioTrackConstructor constructor)
         {
-            var obj = new AudioTrackPrototype(engine.Jint)
+            var obj = new AudioTrackPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -36,35 +39,35 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetId(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackInstance>(Fail).RefAudioTrack;
-            return Engine.Select(reference.Id);
+            return _engine.GetDomNode(reference.Id);
         }
 
 
         JsValue GetKind(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackInstance>(Fail).RefAudioTrack;
-            return Engine.Select(reference.Kind);
+            return _engine.GetDomNode(reference.Kind);
         }
 
 
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackInstance>(Fail).RefAudioTrack;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
 
         JsValue GetLanguage(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackInstance>(Fail).RefAudioTrack;
-            return Engine.Select(reference.Language);
+            return _engine.GetDomNode(reference.Language);
         }
 
 
         JsValue GetEnabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<AudioTrackInstance>(Fail).RefAudioTrack;
-            return Engine.Select(reference.IsEnabled);
+            return _engine.GetDomNode(reference.IsEnabled);
         }
 
         void SetEnabled(JsValue thisObj, JsValue argument)

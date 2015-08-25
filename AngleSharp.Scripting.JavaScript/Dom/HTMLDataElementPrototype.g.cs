@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLDataElementPrototype : HTMLDataElementInstance
     {
-        public HTMLDataElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLDataElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("value", Engine.AsProperty(GetValue, SetValue));
         }
 
         public static HTMLDataElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLDataElementConstructor constructor)
         {
-            var obj = new HTMLDataElementPrototype(engine.Jint)
+            var obj = new HTMLDataElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLDataElementInstance>(Fail).RefHTMLDataElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)

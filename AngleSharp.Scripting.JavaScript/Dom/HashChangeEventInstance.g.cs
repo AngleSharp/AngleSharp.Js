@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HashChangeEventInstance : EventInstance
     {
-        public HashChangeEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HashChangeEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HashChangeEventInstance CreateHashChangeEventObject(Engine engine)
+        public static HashChangeEventInstance CreateHashChangeEventObject(EngineInstance engine)
         {
             var obj = new HashChangeEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

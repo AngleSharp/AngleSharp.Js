@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MutationObserverPrototype : MutationObserverInstance
     {
-        public MutationObserverPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public MutationObserverPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("disconnect", Engine.AsValue(Disconnect), true, true, true);
             FastAddProperty("observe", Engine.AsValue(Observe), true, true, true);
@@ -22,7 +25,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MutationObserverPrototype CreatePrototypeObject(EngineInstance engine, MutationObserverConstructor constructor)
         {
-            var obj = new MutationObserverPrototype(engine.Jint)
+            var obj = new MutationObserverPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -50,7 +53,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue TakeRecords(JsValue thisObj, JsValue[] arguments)
         {
             var reference = thisObj.TryCast<MutationObserverInstance>(Fail).RefMutationObserver;
-            return Engine.Select(reference.Flush());
+            return _engine.GetDomNode(reference.Flush());
         }
 
         JsValue ToString(JsValue thisObj, JsValue[] arguments)

@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLOptGroupElementPrototype : HTMLOptGroupElementInstance
     {
-        public HTMLOptGroupElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLOptGroupElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
             FastSetProperty("label", Engine.AsProperty(GetLabel, SetLabel));
@@ -21,7 +24,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLOptGroupElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLOptGroupElementConstructor constructor)
         {
-            var obj = new HTMLOptGroupElementPrototype(engine.Jint)
+            var obj = new HTMLOptGroupElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -33,7 +36,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptGroupElementInstance>(Fail).RefHTMLOptGroupElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -46,7 +49,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetLabel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLOptGroupElementInstance>(Fail).RefHTMLOptGroupElement;
-            return Engine.Select(reference.Label);
+            return _engine.GetDomNode(reference.Label);
         }
 
         void SetLabel(JsValue thisObj, JsValue argument)

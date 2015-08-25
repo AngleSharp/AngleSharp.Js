@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class EventConstructor : FunctionInstance, IConstructor
     {
-        public EventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public EventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
             FastAddProperty("NONE", (UInt32)(AngleSharp.Dom.Events.EventPhase.None), false, true, false);
             FastAddProperty("CAPTURING_PHASE", (UInt32)(AngleSharp.Dom.Events.EventPhase.Capturing), false, true, false);
             FastAddProperty("AT_TARGET", (UInt32)(AngleSharp.Dom.Events.EventPhase.AtTarget), false, true, false);
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static EventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new EventConstructor(engine.Jint);
+            var obj = new EventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = EventPrototype.CreatePrototypeObject(engine, obj);
@@ -49,7 +52,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new Event(type, eventInitDict);
-                return new EventInstance(Engine)
+                return new EventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefEvent = reference,

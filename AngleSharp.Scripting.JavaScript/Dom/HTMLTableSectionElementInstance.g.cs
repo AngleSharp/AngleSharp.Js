@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLTableSectionElementInstance : HTMLElementInstance
     {
-        public HTMLTableSectionElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableSectionElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLTableSectionElementInstance CreateHTMLTableSectionElementObject(Engine engine)
+        public static HTMLTableSectionElementInstance CreateHTMLTableSectionElementObject(EngineInstance engine)
         {
             var obj = new HTMLTableSectionElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

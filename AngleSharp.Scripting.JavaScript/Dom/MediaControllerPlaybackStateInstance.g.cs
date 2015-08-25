@@ -9,19 +9,22 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class MediaControllerPlaybackStateInstance : ObjectInstance
     {
-        public MediaControllerPlaybackStateInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public MediaControllerPlaybackStateInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
             FastAddProperty("waiting", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Waiting), false, true, false);
             FastAddProperty("playing", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Playing), false, true, false);
             FastAddProperty("ended", (UInt32)(AngleSharp.Dom.Media.MediaControllerPlaybackState.Ended), false, true, false);
         }
 
-        public static MediaControllerPlaybackStateInstance CreateMediaControllerPlaybackStateObject(Engine engine)
+        public static MediaControllerPlaybackStateInstance CreateMediaControllerPlaybackStateObject(EngineInstance engine)
         {
             var obj = new MediaControllerPlaybackStateInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMStringMapPrototype : DOMStringMapInstance
     {
-        public DOMStringMapPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public DOMStringMapPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static DOMStringMapPrototype CreatePrototypeObject(EngineInstance engine, DOMStringMapConstructor constructor)
         {
-            var obj = new DOMStringMapPrototype(engine.Jint)
+            var obj = new DOMStringMapPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,

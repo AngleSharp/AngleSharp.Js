@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLProgressElementPrototype : HTMLProgressElementInstance
     {
-        public HTMLProgressElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLProgressElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("value", Engine.AsProperty(GetValue, SetValue));
             FastSetProperty("max", Engine.AsProperty(GetMax, SetMax));
@@ -23,7 +26,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLProgressElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLProgressElementConstructor constructor)
         {
-            var obj = new HTMLProgressElementPrototype(engine.Jint)
+            var obj = new HTMLProgressElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -35,7 +38,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetValue(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLProgressElementInstance>(Fail).RefHTMLProgressElement;
-            return Engine.Select(reference.Value);
+            return _engine.GetDomNode(reference.Value);
         }
 
         void SetValue(JsValue thisObj, JsValue argument)
@@ -48,7 +51,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetMax(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLProgressElementInstance>(Fail).RefHTMLProgressElement;
-            return Engine.Select(reference.Maximum);
+            return _engine.GetDomNode(reference.Maximum);
         }
 
         void SetMax(JsValue thisObj, JsValue argument)
@@ -61,14 +64,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetPosition(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLProgressElementInstance>(Fail).RefHTMLProgressElement;
-            return Engine.Select(reference.Position);
+            return _engine.GetDomNode(reference.Position);
         }
 
 
         JsValue GetLabels(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLProgressElementInstance>(Fail).RefHTMLProgressElement;
-            return Engine.Select(reference.Labels);
+            return _engine.GetDomNode(reference.Labels);
         }
 
 

@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class UIEventInstance : EventInstance
     {
-        public UIEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public UIEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static UIEventInstance CreateUIEventObject(Engine engine)
+        public static UIEventInstance CreateUIEventObject(EngineInstance engine)
         {
             var obj = new UIEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

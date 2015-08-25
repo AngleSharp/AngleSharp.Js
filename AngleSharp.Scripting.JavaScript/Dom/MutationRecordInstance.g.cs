@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class MutationRecordInstance : ObjectInstance
     {
-        public MutationRecordInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public MutationRecordInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static MutationRecordInstance CreateMutationRecordObject(Engine engine)
+        public static MutationRecordInstance CreateMutationRecordObject(EngineInstance engine)
         {
             var obj = new MutationRecordInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

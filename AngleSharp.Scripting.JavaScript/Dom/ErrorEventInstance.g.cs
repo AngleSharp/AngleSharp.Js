@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class ErrorEventInstance : EventInstance
     {
-        public ErrorEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ErrorEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static ErrorEventInstance CreateErrorEventObject(Engine engine)
+        public static ErrorEventInstance CreateErrorEventObject(EngineInstance engine)
         {
             var obj = new ErrorEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

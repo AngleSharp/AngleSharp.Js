@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class CSSMediaRuleConstructor : FunctionInstance, IConstructor
     {
-        public CSSMediaRuleConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public CSSMediaRuleConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public CSSMediaRulePrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static CSSMediaRuleConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new CSSMediaRuleConstructor(engine.Jint);
+            var obj = new CSSMediaRuleConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = CSSMediaRulePrototype.CreatePrototypeObject(engine, obj);

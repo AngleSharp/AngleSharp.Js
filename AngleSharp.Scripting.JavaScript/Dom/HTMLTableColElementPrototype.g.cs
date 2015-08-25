@@ -11,16 +11,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLTableColElementPrototype : HTMLTableColElementInstance
     {
-        public HTMLTableColElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLTableColElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("span", Engine.AsProperty(GetSpan, SetSpan));
         }
 
         public static HTMLTableColElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLTableColElementConstructor constructor)
         {
-            var obj = new HTMLTableColElementPrototype(engine.Jint)
+            var obj = new HTMLTableColElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSpan(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLTableColElementInstance>(Fail).RefHTMLTableColElement;
-            return Engine.Select(reference.Span);
+            return _engine.GetDomNode(reference.Span);
         }
 
         void SetSpan(JsValue thisObj, JsValue argument)

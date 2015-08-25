@@ -11,15 +11,18 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class SVGTitleElementPrototype : SVGTitleElementInstance
     {
-        public SVGTitleElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public SVGTitleElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
         }
 
         public static SVGTitleElementPrototype CreatePrototypeObject(EngineInstance engine, SVGTitleElementConstructor constructor)
         {
-            var obj = new SVGTitleElementPrototype(engine.Jint)
+            var obj = new SVGTitleElementPrototype(engine)
             {
                 Prototype = engine.Constructors.SVGElement.PrototypeObject,
                 Extensible = true,

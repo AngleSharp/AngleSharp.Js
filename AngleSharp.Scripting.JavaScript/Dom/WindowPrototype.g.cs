@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class WindowPrototype : WindowInstance
     {
-        public WindowPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public WindowPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastAddProperty("getComputedStyle", Engine.AsValue(GetComputedStyle), true, true, true);
             FastAddProperty("close", Engine.AsValue(Close), true, true, true);
@@ -115,7 +118,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static WindowPrototype CreatePrototypeObject(EngineInstance engine, WindowConstructor constructor)
         {
-            var obj = new WindowPrototype(engine.Jint)
+            var obj = new WindowPrototype(engine)
             {
                 Prototype = engine.Constructors.EventTarget.PrototypeObject,
                 Extensible = true,
@@ -129,7 +132,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
             var element = DomTypeConverter.ToElement(arguments.At(0));
             var pseudo = TypeConverter.ToString(arguments.At(1));
-            return Engine.Select(reference.GetComputedStyle(element, pseudo));
+            return _engine.GetDomNode(reference.GetComputedStyle(element, pseudo));
         }
 
         JsValue Close(JsValue thisObj, JsValue[] arguments)
@@ -172,7 +175,7 @@ namespace AngleSharp.Scripting.JavaScript
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
             var message = TypeConverter.ToString(arguments.At(0));
-            return Engine.Select(reference.Confirm(message));
+            return _engine.GetDomNode(reference.Confirm(message));
         }
 
         JsValue Print(JsValue thisObj, JsValue[] arguments)
@@ -187,7 +190,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
             var handler = DomTypeConverter.ToTimer(arguments.At(0));
             var timeout = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.SetTimeout(handler, timeout));
+            return _engine.GetDomNode(reference.SetTimeout(handler, timeout));
         }
 
         JsValue ClearTimeout(JsValue thisObj, JsValue[] arguments)
@@ -203,7 +206,7 @@ namespace AngleSharp.Scripting.JavaScript
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
             var handler = DomTypeConverter.ToTimer(arguments.At(0));
             var timeout = TypeConverter.ToInt32(arguments.At(1));
-            return Engine.Select(reference.SetInterval(handler, timeout));
+            return _engine.GetDomNode(reference.SetInterval(handler, timeout));
         }
 
         JsValue ClearInterval(JsValue thisObj, JsValue[] arguments)
@@ -217,28 +220,28 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDocument(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Document);
+            return _engine.GetDomNode(reference.Document);
         }
 
 
         JsValue GetLocation(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Location);
+            return _engine.GetDomNode(reference.Location);
         }
 
 
         JsValue GetClosed(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.IsClosed);
+            return _engine.GetDomNode(reference.IsClosed);
         }
 
 
         JsValue GetStatus(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Status);
+            return _engine.GetDomNode(reference.Status);
         }
 
         void SetStatus(JsValue thisObj, JsValue argument)
@@ -251,7 +254,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -264,63 +267,63 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetOuterHeight(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.OuterHeight);
+            return _engine.GetDomNode(reference.OuterHeight);
         }
 
 
         JsValue GetOuterWidth(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.OuterWidth);
+            return _engine.GetDomNode(reference.OuterWidth);
         }
 
 
         JsValue GetScreenX(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.ScreenX);
+            return _engine.GetDomNode(reference.ScreenX);
         }
 
 
         JsValue GetScreenY(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.ScreenY);
+            return _engine.GetDomNode(reference.ScreenY);
         }
 
 
         JsValue GetFrames(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Proxy);
+            return _engine.GetDomNode(reference.Proxy);
         }
 
 
         JsValue GetSelf(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Proxy);
+            return _engine.GetDomNode(reference.Proxy);
         }
 
 
         JsValue GetWindow(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Proxy);
+            return _engine.GetDomNode(reference.Proxy);
         }
 
 
         JsValue GetNavigator(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.Navigator);
+            return _engine.GetDomNode(reference.Navigator);
         }
 
 
         JsValue GetHistory(JsValue thisObj)
         {
             var reference = thisObj.TryCast<WindowInstance>(Fail).RefWindow;
-            return Engine.Select(reference.History);
+            return _engine.GetDomNode(reference.History);
         }
 
 

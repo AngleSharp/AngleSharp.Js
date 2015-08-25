@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class MessageEventConstructor : FunctionInstance, IConstructor
     {
-        public MessageEventConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public MessageEventConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public MessageEventPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static MessageEventConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new MessageEventConstructor(engine.Jint);
+            var obj = new MessageEventConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = MessageEventPrototype.CreatePrototypeObject(engine, obj);
@@ -45,7 +48,7 @@ namespace AngleSharp.Scripting.JavaScript
                 var type = TypeConverter.ToString(arguments.At(0));
                 var eventInitDict = SystemTypeConverter.ToObjBag(arguments.At(1));
                 var reference = new MessageEvent(type, eventInitDict);
-                return new MessageEventInstance(Engine)
+                return new MessageEventInstance(_engine)
                 {
                     Prototype = PrototypeObject,
                     RefMessageEvent = reference,

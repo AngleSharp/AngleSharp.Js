@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLLinkElementPrototype : HTMLLinkElementInstance
     {
-        public HTMLLinkElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLLinkElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
             FastSetProperty("href", Engine.AsProperty(GetHref, SetHref));
@@ -28,7 +31,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLLinkElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLLinkElementConstructor constructor)
         {
-            var obj = new HTMLLinkElementPrototype(engine.Jint)
+            var obj = new HTMLLinkElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -40,7 +43,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -53,7 +56,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
         void SetHref(JsValue thisObj, JsValue argument)
@@ -66,7 +69,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRel(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Relation);
+            return _engine.GetDomNode(reference.Relation);
         }
 
         void SetRel(JsValue thisObj, JsValue argument)
@@ -79,14 +82,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetRelList(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.RelationList);
+            return _engine.GetDomNode(reference.RelationList);
         }
 
 
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)
@@ -99,7 +102,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetHreflang(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.TargetLanguage);
+            return _engine.GetDomNode(reference.TargetLanguage);
         }
 
         void SetHreflang(JsValue thisObj, JsValue argument)
@@ -112,7 +115,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
         void SetType(JsValue thisObj, JsValue argument)
@@ -125,14 +128,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetSizes(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Sizes);
+            return _engine.GetDomNode(reference.Sizes);
         }
 
 
         JsValue GetSheet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLLinkElementInstance>(Fail).RefHTMLLinkElement;
-            return Engine.Select(reference.Sheet);
+            return _engine.GetDomNode(reference.Sheet);
         }
 
 

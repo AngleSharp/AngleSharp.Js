@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class DOMStringListConstructor : FunctionInstance, IConstructor
     {
-        public DOMStringListConstructor(Engine engine)
-            : base(engine, null, null, false)
+        readonly EngineInstance _engine;
+
+        public DOMStringListConstructor(EngineInstance engine)
+            : base(engine.Jint, null, null, false)
         {
+            _engine = engine;
         }
 
         public DOMStringListPrototype PrototypeObject 
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static DOMStringListConstructor CreateConstructor(EngineInstance engine)
         {
-            var obj = new DOMStringListConstructor(engine.Jint);
+            var obj = new DOMStringListConstructor(engine);
             obj.Extensible = true;
             obj.Prototype = engine.Jint.Function.PrototypeObject;
             obj.PrototypeObject = DOMStringListPrototype.CreatePrototypeObject(engine, obj);

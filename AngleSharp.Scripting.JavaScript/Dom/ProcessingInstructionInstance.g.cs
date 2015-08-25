@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class ProcessingInstructionInstance : CharacterDataInstance
     {
-        public ProcessingInstructionInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public ProcessingInstructionInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static ProcessingInstructionInstance CreateProcessingInstructionObject(Engine engine)
+        public static ProcessingInstructionInstance CreateProcessingInstructionObject(EngineInstance engine)
         {
             var obj = new ProcessingInstructionInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

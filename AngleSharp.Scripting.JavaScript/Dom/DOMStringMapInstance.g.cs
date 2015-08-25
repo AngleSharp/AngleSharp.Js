@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class DOMStringMapInstance : ObjectInstance
     {
-        public DOMStringMapInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public DOMStringMapInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static DOMStringMapInstance CreateDOMStringMapObject(Engine engine)
+        public static DOMStringMapInstance CreateDOMStringMapObject(EngineInstance engine)
         {
             var obj = new DOMStringMapInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -30,7 +33,7 @@ namespace AngleSharp.Scripting.JavaScript
         public override JsValue Get(String propertyName)
         {
             if (propertyName != null)
-                return Engine.Select(RefDOMStringMap[propertyName]);
+                return _engine.GetDomNode(RefDOMStringMap[propertyName]);
 
             return base.Get(propertyName);
         }

@@ -1,7 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Attributes;
-    using Jint;
     using Jint.Native.Object;
     using Jint.Runtime.Descriptors;
     using System;
@@ -12,17 +11,24 @@
     sealed class DomNodeInstance : ObjectInstance
     {
         readonly Object _value;
+        readonly EngineInstance _engine;
         PropertyInfo _numericIndexer;
         PropertyInfo _stringIndexer;
 
-        public DomNodeInstance(Engine engine, Object value)
-            : base(engine)
+        public DomNodeInstance(EngineInstance engine, Object value)
+            : base(engine.Jint)
         {
+            _engine = engine;
             _value = value;
             SetMembers(value.GetType());
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
+        }
+
+        public EngineInstance Context
+        {
+            get { return _engine; }
         }
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
@@ -31,7 +37,7 @@
             int numericIndex;
 
             if (_numericIndexer != null && int.TryParse(propertyName, out numericIndex))
-                return new PropertyDescriptor(_numericIndexer.GetMethod.Invoke(_value, new Object[] { numericIndex }).ToJsValue(Engine), false, false, false);
+                return new PropertyDescriptor(_numericIndexer.GetMethod.Invoke(_value, new Object[] { numericIndex }).ToJsValue(_engine), false, false, false);
 
             //  Else a string property
             //  If we have a string indexer and no property exists for this name then use the string indexer
@@ -40,7 +46,7 @@
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
             if (_stringIndexer != null && Properties.ContainsKey(propertyName) == false)
-                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] {propertyName}).ToJsValue(Engine), false, false, false);
+                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] {propertyName}).ToJsValue(_engine), false, false, false);
             
             //  Else try to return a registered property
             return base.GetOwnProperty(propertyName);

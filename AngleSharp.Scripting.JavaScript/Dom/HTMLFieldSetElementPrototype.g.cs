@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class HTMLFieldSetElementPrototype : HTMLFieldSetElementInstance
     {
-        public HTMLFieldSetElementPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLFieldSetElementPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("disabled", Engine.AsProperty(GetDisabled, SetDisabled));
             FastSetProperty("form", Engine.AsProperty(GetForm));
@@ -24,7 +27,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static HTMLFieldSetElementPrototype CreatePrototypeObject(EngineInstance engine, HTMLFieldSetElementConstructor constructor)
         {
-            var obj = new HTMLFieldSetElementPrototype(engine.Jint)
+            var obj = new HTMLFieldSetElementPrototype(engine)
             {
                 Prototype = engine.Constructors.HTMLElement.PrototypeObject,
                 Extensible = true,
@@ -36,7 +39,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFieldSetElementInstance>(Fail).RefHTMLFieldSetElement;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)
@@ -49,14 +52,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetForm(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFieldSetElementInstance>(Fail).RefHTMLFieldSetElement;
-            return Engine.Select(reference.Form);
+            return _engine.GetDomNode(reference.Form);
         }
 
 
         JsValue GetName(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFieldSetElementInstance>(Fail).RefHTMLFieldSetElement;
-            return Engine.Select(reference.Name);
+            return _engine.GetDomNode(reference.Name);
         }
 
         void SetName(JsValue thisObj, JsValue argument)
@@ -69,14 +72,14 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFieldSetElementInstance>(Fail).RefHTMLFieldSetElement;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetElements(JsValue thisObj)
         {
             var reference = thisObj.TryCast<HTMLFieldSetElementInstance>(Fail).RefHTMLFieldSetElement;
-            return Engine.Select(reference.Elements);
+            return _engine.GetDomNode(reference.Elements);
         }
 
 

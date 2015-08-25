@@ -11,9 +11,12 @@ namespace AngleSharp.Scripting.JavaScript
 
     sealed partial class StyleSheetPrototype : StyleSheetInstance
     {
-        public StyleSheetPrototype(Engine engine)
+        readonly EngineInstance _engine;
+
+        public StyleSheetPrototype(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
             FastAddProperty("toString", Engine.AsValue(ToString), true, true, true);
             FastSetProperty("type", Engine.AsProperty(GetType));
             FastSetProperty("href", Engine.AsProperty(GetHref));
@@ -26,7 +29,7 @@ namespace AngleSharp.Scripting.JavaScript
 
         public static StyleSheetPrototype CreatePrototypeObject(EngineInstance engine, StyleSheetConstructor constructor)
         {
-            var obj = new StyleSheetPrototype(engine.Jint)
+            var obj = new StyleSheetPrototype(engine)
             {
                 Prototype = engine.Constructors.Object.PrototypeObject,
                 Extensible = true,
@@ -38,42 +41,42 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetType(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.Type);
+            return _engine.GetDomNode(reference.Type);
         }
 
 
         JsValue GetHref(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.Href);
+            return _engine.GetDomNode(reference.Href);
         }
 
 
         JsValue GetOwnerNode(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.OwnerNode);
+            return _engine.GetDomNode(reference.OwnerNode);
         }
 
 
         JsValue GetParentStyleSheet(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.Parent);
+            return _engine.GetDomNode(reference.Parent);
         }
 
 
         JsValue GetTitle(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.Title);
+            return _engine.GetDomNode(reference.Title);
         }
 
 
         JsValue GetMedia(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.Media);
+            return _engine.GetDomNode(reference.Media);
         }
 
         void SetMedia(JsValue thisObj, JsValue argument)
@@ -86,7 +89,7 @@ namespace AngleSharp.Scripting.JavaScript
         JsValue GetDisabled(JsValue thisObj)
         {
             var reference = thisObj.TryCast<StyleSheetInstance>(Fail).RefStyleSheet;
-            return Engine.Select(reference.IsDisabled);
+            return _engine.GetDomNode(reference.IsDisabled);
         }
 
         void SetDisabled(JsValue thisObj, JsValue argument)

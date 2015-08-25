@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class PageTransitionEventInstance : EventInstance
     {
-        public PageTransitionEventInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public PageTransitionEventInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static PageTransitionEventInstance CreatePageTransitionEventObject(Engine engine)
+        public static PageTransitionEventInstance CreatePageTransitionEventObject(EngineInstance engine)
         {
             var obj = new PageTransitionEventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

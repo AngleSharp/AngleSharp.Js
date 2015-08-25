@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class EventTargetInstance : ObjectInstance
     {
-        public EventTargetInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public EventTargetInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
         }
 
-        public static EventTargetInstance CreateEventTargetObject(Engine engine)
+        public static EventTargetInstance CreateEventTargetObject(EngineInstance engine)
         {
             var obj = new EventTargetInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

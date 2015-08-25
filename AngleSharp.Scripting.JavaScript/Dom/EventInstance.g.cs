@@ -9,20 +9,23 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class EventInstance : ObjectInstance
     {
-        public EventInstance(Engine engine)
-            : base(engine)
+        readonly EngineInstance _engine;
+
+        public EventInstance(EngineInstance engine)
+            : base(engine.Jint)
         {
+            _engine = engine;
             FastAddProperty("NONE", (UInt32)(AngleSharp.Dom.Events.EventPhase.None), false, true, false);
             FastAddProperty("CAPTURING_PHASE", (UInt32)(AngleSharp.Dom.Events.EventPhase.Capturing), false, true, false);
             FastAddProperty("AT_TARGET", (UInt32)(AngleSharp.Dom.Events.EventPhase.AtTarget), false, true, false);
             FastAddProperty("BUBBLING_PHASE", (UInt32)(AngleSharp.Dom.Events.EventPhase.Bubbling), false, true, false);
         }
 
-        public static EventInstance CreateEventObject(Engine engine)
+        public static EventInstance CreateEventObject(EngineInstance engine)
         {
             var obj = new EventInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 

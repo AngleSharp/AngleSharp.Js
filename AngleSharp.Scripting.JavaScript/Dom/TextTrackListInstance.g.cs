@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class TextTrackListInstance : EventTargetInstance
     {
-        public TextTrackListInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public TextTrackListInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static TextTrackListInstance CreateTextTrackListObject(Engine engine)
+        public static TextTrackListInstance CreateTextTrackListObject(EngineInstance engine)
         {
             var obj = new TextTrackListInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
@@ -32,7 +35,7 @@ namespace AngleSharp.Scripting.JavaScript
             var index = default(Int32);
 
             if (Int32.TryParse(propertyName, out index))
-                return Engine.Select(RefTextTrackList[index]);
+                return _engine.GetDomNode(RefTextTrackList[index]);
             return base.Get(propertyName);
         }
 

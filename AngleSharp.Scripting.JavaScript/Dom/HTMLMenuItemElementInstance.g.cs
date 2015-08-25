@@ -9,16 +9,19 @@ namespace AngleSharp.Scripting.JavaScript
 
     partial class HTMLMenuItemElementInstance : HTMLElementInstance
     {
-        public HTMLMenuItemElementInstance(Engine engine)
+        readonly EngineInstance _engine;
+
+        public HTMLMenuItemElementInstance(EngineInstance engine)
             : base(engine)
         {
+            _engine = engine;
         }
 
-        public static HTMLMenuItemElementInstance CreateHTMLMenuItemElementObject(Engine engine)
+        public static HTMLMenuItemElementInstance CreateHTMLMenuItemElementObject(EngineInstance engine)
         {
             var obj = new HTMLMenuItemElementInstance(engine);
             obj.Extensible = true;
-            obj.Prototype = engine.Object.PrototypeObject;            
+            obj.Prototype = engine.Jint.Object.PrototypeObject;            
             return obj;
         }
 
