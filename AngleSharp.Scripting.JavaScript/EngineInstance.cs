@@ -15,11 +15,15 @@
         readonly DomNodeInstance _this;
         readonly DomConstructors _constructors;
 
-        public EngineInstance(IWindow @this)
+        public EngineInstance(IWindow @this, IDictionary<String, Object> assignments)
         {
             _objects = new Dictionary<Object, DomNodeInstance>();
             _engine = new Engine();
             _engine.SetValue("console", new ConsoleInstance(_engine));
+
+            foreach (var assignment in assignments)
+                _engine.SetValue(assignment.Key, assignment.Value);
+
             _this = GetDomNode(@this);
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _this, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);

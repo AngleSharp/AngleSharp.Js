@@ -5,6 +5,7 @@
     using AngleSharp.Services.Scripting;
     using Jint;
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text;
@@ -15,6 +16,7 @@
     public class JavaScriptEngine : IScriptEngine
     {
         readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
+        readonly Dictionary<String, Object> _external;
 
         /// <summary>
         /// Creates a new JavaScript engine.
@@ -22,6 +24,15 @@
         public JavaScriptEngine()
         {
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
+            _external = new Dictionary<String, Object>();
+        }
+
+        /// <summary>
+        /// Gets the external assignments.
+        /// </summary>
+        public IDictionary<String, Object> External
+        {
+            get { return _external; }
         }
 
         /// <summary>
@@ -58,7 +69,7 @@
             var instance = default(EngineInstance);
 
             if (_contexts.TryGetValue(objectContext, out instance) == false)
-                _contexts.Add(objectContext, instance = new EngineInstance(objectContext));
+                _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
 
             instance.RunScript(source);
         }
