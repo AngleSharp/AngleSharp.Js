@@ -41,5 +41,12 @@
             var result = await EvaluateComplexScriptAsync("(function () { var a = 5; })();", SetResult("a.toString()"));
             Assert.AreEqual("", result);
         }
+
+        [Test]
+        public async Task ExtendingWindowExplicitlyShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("window.foo = 'bla';", SetResult("window.foo"));
+            Assert.AreEqual("bla", result);
+        }
     }
 }
