@@ -15,21 +15,14 @@
     public class JavaScriptEngine : IScriptEngine
     {
         readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
-        readonly ConditionalWeakTable<Engine, EngineInstance> _engines;
 
         /// <summary>
         /// Creates a new JavaScript engine.
         /// </summary>
-        JavaScriptEngine()
+        public JavaScriptEngine()
         {
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
-            _engines = new ConditionalWeakTable<Engine, EngineInstance>();
         }
-
-        /// <summary>
-        /// The instance of the JavaScript engine.
-        /// </summary>
-        public static readonly JavaScriptEngine Instance = new JavaScriptEngine();
 
         /// <summary>
         /// Gets the engine's mime-type.
@@ -37,6 +30,21 @@
         public String Type
         {
             get { return MimeTypes.DefaultJavaScript; }
+        }
+
+        /// <summary>
+        /// Gets the associated Jint engine, if any.
+        /// </summary>
+        /// <param name="document">The current document.</param>
+        /// <returns>The engine object, if any.</returns>
+        public Engine GetJint(IDocument document)
+        {
+            var instance = default(EngineInstance);
+
+            if (_contexts.TryGetValue(document.DefaultView, out instance))
+                return instance.Jint;
+
+            return null;
         }
 
         /// <summary>
@@ -50,10 +58,7 @@
             var instance = default(EngineInstance);
 
             if (_contexts.TryGetValue(objectContext, out instance) == false)
-            {
                 _contexts.Add(objectContext, instance = new EngineInstance(objectContext));
-                _engines.Add(instance.Jint, instance);
-            }
 
             instance.RunScript(source);
         }
@@ -69,16 +74,6 @@
             var content = reader.ReadToEnd();
             reader.Close();
             Evaluate(content, options);
-        }
-
-        /// <summary>
-        /// Gets a context cache for the provided engine.
-        /// </summary>
-        internal EngineInstance GetCache(Engine engine)
-        {
-            var instance = default(EngineInstance);
-            _engines.TryGetValue(engine, out instance);
-            return instance;
         }
     }
 }
