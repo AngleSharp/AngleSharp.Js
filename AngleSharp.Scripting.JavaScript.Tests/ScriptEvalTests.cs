@@ -48,5 +48,22 @@
             var result = await EvaluateComplexScriptAsync("window.foo = 'bla';", SetResult("window.foo"));
             Assert.AreEqual("bla", result);
         }
+
+        //TODO - enable if bug fixed / feature implemented in AngleSharp itself
+        //[Test]
+        public async Task SetContentOfIFrameElement()
+        {
+            var cfg = Configuration.Default.WithJavaScript();
+            var html = @"<!doctype html><iframe id=myframe></iframe><script>
+var iframe = document.querySelector('#myframe');
+var doc = iframe.contentWindow.document;
+doc.open();
+doc.write('<html><head><title></title></head><body>Hello world.</body></html>');
+doc.close();
+</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var result = document.GetElementById("myframe");
+            Assert.AreEqual("Hello World.", result);
+        }
     }
 }
