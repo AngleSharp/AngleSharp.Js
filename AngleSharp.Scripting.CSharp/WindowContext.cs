@@ -91,6 +91,11 @@
 
         #region Methods
 
+        public IMediaQueryList MatchMedia(String media)
+        {
+            return _window.MatchMedia(media);
+        }
+
         public void Alert(String message)
         {
             _window.Alert(message);
