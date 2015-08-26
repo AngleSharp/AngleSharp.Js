@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>AngleSharp.Scripting.JavaScript</id>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <authors>Florian Rappl</authors>
     <owners>Florian Rappl</owners>
     <licenseUrl>https://github.com/AngleSharp/AngleSharp.Scripting/blob/master/LICENSE</licenseUrl>
