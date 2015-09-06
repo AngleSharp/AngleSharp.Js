@@ -90,6 +90,8 @@
 
             if (sourceType == targetType || sourceType.IsSubclassOf(targetType) || targetType.IsInstanceOfType(value) || targetType.IsAssignableFrom(sourceType))
                 return value;
+            else if (sourceType == typeof(Double) && targetType == typeof(Int32))
+                return (Int32)(Double)value;
 
             if (targetType.IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
                 return targetType.ToDelegate((FunctionInstance)value, engine);
@@ -99,7 +101,7 @@
             if (method != null)
                 return method.Invoke(value, null);
 
-            throw new JavaScriptException(null);
+            throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
         }
 
         public static Object GetDefaultValue(this Type type)
