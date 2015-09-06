@@ -1,6 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
-    using Attributes;
+    using AngleSharp.Attributes;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;

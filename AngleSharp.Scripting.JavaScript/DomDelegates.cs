@@ -15,7 +15,7 @@
                 return function.ToListener(engine);
 
             var method = typeof(DomDelegates).GetMethod("ToCallback").MakeGenericMethod(type);
-            return method.Invoke(null, new Object[] { function }) as Delegate;
+            return method.Invoke(null, new Object[] { function, engine }) as Delegate;
         }
 
         public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine)
@@ -26,7 +26,7 @@
             };
         }
 
-        public static T ToCallback<T>(this FunctionInstance function)
+        public static T ToCallback<T>(this FunctionInstance function, EngineInstance engine)
         {
             var type = typeof(T);
             var methodInfo = type.GetMethod("Invoke");
@@ -37,12 +37,12 @@
             for (var i = 0; i < mps.Length; i++)
                 parameters[i] = Expression.Parameter(mps[i].ParameterType, mps[i].Name);
 
-            var obj = Expression.Constant(function);
-            var engine = Expression.Property(obj, "Engine");
-            var call = Expression.Call(obj, "Call", new Type[0], new Expression[]
+            var objExpr = Expression.Constant(function);
+            var engineExpr = Expression.Constant(engine);
+            var call = Expression.Call(objExpr, "Call", new Type[0], new Expression[]
             {
-                Expression.Call(convert, parameters[0], engine),
-                Expression.NewArrayInit(typeof(JsValue), parameters.Skip(1).Select(m => Expression.Call(convert, m, engine)).ToArray())
+                Expression.Call(convert, parameters[0], engineExpr),
+                Expression.NewArrayInit(typeof(JsValue), parameters.Skip(1).Select(m => Expression.Call(convert, m, engineExpr)).ToArray())
             });
 
             return Expression.Lambda<T>(call, parameters).Compile();
