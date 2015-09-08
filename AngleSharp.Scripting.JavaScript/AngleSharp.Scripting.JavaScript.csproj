@@ -53,6 +53,11 @@
     <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />
     <Compile Include="DomConstructors.cs" />
+    <Compile Include="Dom\RequesterState.cs" />
+    <Compile Include="Dom\XmlHttpRequest.cs" />
+    <Compile Include="Dom\XmlHttpRequestEventTarget.cs" />
+    <Compile Include="Dom\XmlHttpRequestResponseType.cs" />
+    <Compile Include="Dom\XmlHttpRequestUpload.cs" />
     <Compile Include="EngineInstance.cs" />
     <Compile Include="DomDelegates.cs" />
     <Compile Include="DomFunctionInstance.cs" />
