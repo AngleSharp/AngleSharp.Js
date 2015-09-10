@@ -8,9 +8,9 @@
     /// Represents the basis for the XHR.
     /// </summary>
     [DomName("XMLHttpRequestEventTarget")]
-    //[DomExposed("Window")]
-    //[DomExposed("DedicatedWorker")]
-    //[DomExposed("SharedWorker")]
+    [DomExposed("Window")]
+    [DomExposed("DedicatedWorker")]
+    [DomExposed("SharedWorker")]
     public class XmlHttpRequestEventTarget : EventTarget
     {
         #region Event Names

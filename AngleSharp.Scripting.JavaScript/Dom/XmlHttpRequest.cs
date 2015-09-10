@@ -10,9 +10,9 @@
     /// https://xhr.spec.whatwg.org/#interface-xmlhttprequest
     /// </summary>
     [DomName("XMLHttpRequest")]
-    //[DomExposed("Window")]
-    //[DomExposed("DedicatedWorker")]
-    //[DomExposed("SharedWorker")]
+    [DomExposed("Window")]
+    [DomExposed("DedicatedWorker")]
+    [DomExposed("SharedWorker")]
     public sealed class XmlHttpRequest : XmlHttpRequestEventTarget
     {
         #region Fields
