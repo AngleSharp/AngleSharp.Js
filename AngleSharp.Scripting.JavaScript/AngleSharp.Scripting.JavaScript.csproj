@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />
+    <Compile Include="DomConstructorInstance.cs" />
     <Compile Include="DomConstructors.cs" />
     <Compile Include="Dom\RequesterState.cs" />
     <Compile Include="Dom\XmlHttpRequest.cs" />

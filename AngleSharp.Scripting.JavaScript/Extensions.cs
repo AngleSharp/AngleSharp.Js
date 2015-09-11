@@ -1,12 +1,15 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
+    using AngleSharp.Attributes;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
 
@@ -121,6 +124,61 @@
             {
                 return null;
             }
+        }
+
+        public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
+        {
+            var parameters = method.GetParameters();
+            var max = parameters.Length;
+            var args = new Object[max];
+
+            if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
+                max--;
+
+            var n = Math.Min(arguments.Length, max);
+
+            for (int i = 0; i < n; i++)
+                args[i] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+
+            for (int i = n; i < max; i++)
+                args[i] = parameters[i].IsOptional ? parameters[i].DefaultValue : parameters[i].ParameterType.GetDefaultValue();
+
+            if (max != parameters.Length)
+            {
+                var array = Array.CreateInstance(parameters[max].ParameterType.GetElementType(), Math.Max(0, arguments.Length - max));
+
+                for (int i = max; i < arguments.Length; i++)
+                    array.SetValue(arguments[i].FromJsValue(), i - max);
+
+                args[max] = array;
+            }
+
+            return args;
+        }
+
+        public static String[] GetParameterNames(this MethodInfo method)
+        {
+            return method != null ? method.GetParameters().Select(m => m.Name).ToArray() : null;
+        }
+
+        public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            var info = type.GetConstructors().FirstOrDefault(m => 
+                m.GetCustomAttributes<DomConstructorAttribute>().Any());
+
+            if (info != null)
+            {
+                var name = type.GetOfficialName();
+                var constructor = new DomConstructorInstance(engine, info);
+                obj.FastSetProperty(name, new PropertyDescriptor(constructor, false, true, false));
+            }
+        }
+
+        public static String GetOfficialName(this MemberInfo member)
+        {
+            var names = member.GetCustomAttributes<DomNameAttribute>();
+            var officalNameAttribute = names.FirstOrDefault();
+            return officalNameAttribute != null ? officalNameAttribute.OfficialName : member.Name;
         }
     }
 }

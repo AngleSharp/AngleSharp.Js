@@ -1,12 +1,9 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
-    using AngleSharp.Attributes;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
     using Jint.Runtime.Interop;
-    using System;
-    using System.Linq;
     using System.Reflection;
 
     sealed class DomFunctionInstance : FunctionInstance
@@ -15,7 +12,7 @@
         readonly DomNodeInstance _host;
 
         public DomFunctionInstance(DomNodeInstance host, MethodInfo method)
-            : base(host.Engine, GetParameters(method), null, false)
+            : base(host.Engine, method.GetParameterNames(), null, false)
         {
             _host = host;
             _method = method;
@@ -33,7 +30,9 @@
                 {
                     try
                     {
-                        return _method.Invoke(node.Value, BuildArgs(arguments)).ToJsValue(_host.Context);
+                        var engine = _host.Context;
+                        var parameters = engine.BuildArgs(_method, arguments);
+                        return _method.Invoke(node.Value, parameters).ToJsValue(engine);
                     }
                     catch
                     {
@@ -45,62 +44,15 @@
             return JsValue.Undefined;
         }
 
-        Object[] BuildArgs(JsValue[] arguments)
-        {
-            var parameters = _method.GetParameters();
-            var max = parameters.Length;
-            var args = new Object[max];
-
-            if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
-                max--;
-
-            var n = Math.Min(arguments.Length, max);
-
-            for (int i = 0; i < n; i++)
-                args[i] = arguments[i].FromJsValue().As(parameters[i].ParameterType, _host.Context);
-
-            for (int i = n; i < max; i++)
-                args[i] = parameters[i].IsOptional ? parameters[i].DefaultValue : parameters[i].ParameterType.GetDefaultValue();
-
-            if (max != parameters.Length)
-            {
-                var array = Array.CreateInstance(parameters[max].ParameterType.GetElementType(), Math.Max(0, arguments.Length - max));
-
-                for (int i = max; i < arguments.Length; i++)
-                    array.SetValue(arguments[i].FromJsValue(), i - max);
-
-                args[max] = array;
-            }
-
-            return args;
-        }
-
-        static String[] GetParameters(MethodInfo method)
-        {
-            if (method == null)
-                return new String[0];
-
-            return method.GetParameters().Select(m => m.Name).ToArray();
-        }
-
         private JsValue ToString(JsValue thisObj, JsValue[] arguments)
         {
             var func = thisObj.TryCast<FunctionInstance>();
 
             if (func == null)
-            {
                 throw new JavaScriptException(Engine.TypeError, "Function object expected.");
-            }
 
-            var names = _method.GetCustomAttributes<DomNameAttribute>();
-
-            var officialName = _method.Name;
-            var officalNameAttribute = names.FirstOrDefault();
-
-            if (officalNameAttribute != null)
-                officialName = officalNameAttribute.OfficialName;
-
-            return string.Format("function {0}() {{ [native code] }}", officialName);
+            var officialName = _method.GetOfficialName();
+            return string.Format("function {0} () {{ [native code] }}", officialName);
         }
     }
 }
