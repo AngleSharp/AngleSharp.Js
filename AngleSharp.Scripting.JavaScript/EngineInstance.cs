@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
     using Jint;
     using Jint.Runtime.Environments;
     using System;
@@ -12,10 +13,10 @@
         readonly Engine _engine;
         readonly LexicalEnvironment _lexicals;
         readonly LexicalEnvironment _variables;
-        readonly DomNodeInstance _this;
+        readonly DomNodeInstance _window;
         readonly DomConstructors _constructors;
 
-        public EngineInstance(IWindow @this, IDictionary<String, Object> assignments)
+        public EngineInstance(IWindow window, IDictionary<String, Object> assignments)
         {
             _objects = new Dictionary<Object, DomNodeInstance>();
             _engine = new Engine();
@@ -24,11 +25,14 @@
             foreach (var assignment in assignments)
                 _engine.SetValue(assignment.Key, assignment.Value);
 
-            _this = GetDomNode(@this);
-            _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _this, _engine.ExecutionContext.LexicalEnvironment, true);
+            _window = GetDomNode(window);
+            _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _window, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
             _constructors = new DomConstructors(this);
             _constructors.Configure();
+
+            this.AddConstructor(_window, typeof(Event));
+            this.AddConstructor(_window, typeof(CustomEvent));
         }
 
         public DomConstructors Constructors
@@ -63,7 +67,7 @@
 
         public void RunScript(String source)
         {
-            _engine.EnterExecutionContext(Lexicals, Variables, _this);
+            _engine.EnterExecutionContext(Lexicals, Variables, _window);
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
         }
