@@ -21,6 +21,9 @@
         Int32 _timeout;
         Boolean _credentials;
         IResponse _response;
+        HttpMethod _method;
+        Url _url;
+        Boolean _async;
 
         #endregion
 
@@ -32,7 +35,9 @@
         [DomConstructor]
         public XmlHttpRequest()
         {
-            //TODO
+            _async = true;
+            _method = HttpMethod.Get;
+            _url = null;
             _response = null;
             _readyState = RequesterState.Unsent;
             _credentials = false;
@@ -175,7 +180,10 @@
         [DomName("open")]
         public void Open(String method, String url)
         {
-            //TODO
+            if (Enum.TryParse(method, true, out _method) == false)
+                _method = HttpMethod.Get;
+
+            _url = Url.Create(url);
         }
 
         /// <summary>
@@ -189,7 +197,11 @@
         [DomName("open")]
         public void Open(String method, String url, Boolean async, String username = null, String password = null)
         {
-            //TODO
+            Open(method, url);
+
+            _async = async;
+            _url.UserName = username;
+            _url.Password = password;
         }
 
         /// <summary>
