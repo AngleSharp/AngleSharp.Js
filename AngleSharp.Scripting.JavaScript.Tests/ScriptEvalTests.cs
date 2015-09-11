@@ -1,5 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
+    using AngleSharp.Dom.Html;
     using NUnit.Framework;
     using System;
     using System.Threading.Tasks;
@@ -49,21 +50,18 @@
             Assert.AreEqual("bla", result);
         }
 
-        //TODO - enable if bug fixed / feature implemented in AngleSharp itself
-        //[Test]
+        [Test]
         public async Task SetContentOfIFrameElement()
         {
             var cfg = Configuration.Default.WithJavaScript();
-            var html = @"<!doctype html><iframe id=myframe></iframe><script>
+            var html = @"<!doctype html><iframe id=myframe srcdoc=''></iframe><script>
 var iframe = document.querySelector('#myframe');
 var doc = iframe.contentWindow.document;
-doc.open();
-doc.write('<html><head><title></title></head><body>Hello world.</body></html>');
-doc.close();
+doc.body.textContent = 'Hello world.';
 </script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var result = document.GetElementById("myframe");
-            Assert.AreEqual("Hello World.", result);
+            var result = document.GetElementById("myframe") as IHtmlInlineFrameElement;
+            Assert.AreEqual("Hello world.", result.ContentDocument.Body.TextContent);
         }
     }
 }
