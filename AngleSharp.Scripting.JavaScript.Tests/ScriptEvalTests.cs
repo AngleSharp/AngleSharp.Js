@@ -51,6 +51,20 @@
         }
 
         [Test]
+        public async Task CreateCustomEventViaGeneralConstructorShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("var ev = new Event('foo');", SetResult("ev.type"));
+            Assert.AreEqual("foo", result);
+        }
+
+        [Test]
+        public async Task CreateCustomEventViaCustomConstructorWithDetailShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("var ev = new CustomEvent('bar', false, false, 'baz');", SetResult("ev.type + ev.detail"));
+            Assert.AreEqual("barbaz", result);
+        }
+
+        [Test]
         public async Task SetContentOfIFrameElement()
         {
             var cfg = Configuration.Default.WithJavaScript();
