@@ -20,6 +20,8 @@
         #region Fields
 
         readonly Dictionary<String, String> _headers;
+        readonly IWindow _window;
+
         RequesterState _readyState;
         Int32 _timeout;
         Boolean _credentials;
@@ -38,8 +40,9 @@
         /// Creates a new XHR.
         /// </summary>
         [DomConstructor]
-        public XmlHttpRequest()
+        public XmlHttpRequest(IWindow window)
         {
+            _window = window;
             _async = true;
             _method = HttpMethod.Get;
             _url = null;

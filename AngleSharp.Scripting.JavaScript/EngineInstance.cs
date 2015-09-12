@@ -34,6 +34,11 @@
             this.AddConstructors(_window, this.GetType());
         }
 
+        public DomNodeInstance Window
+        {
+            get { return _window; }
+        }
+
         public DomConstructors Constructors
         {
             get { return _constructors; }

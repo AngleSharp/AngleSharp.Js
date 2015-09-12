@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Dom;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
@@ -131,16 +132,20 @@
             var parameters = method.GetParameters();
             var max = parameters.Length;
             var args = new Object[max];
+            var offset = 0;
+
+            if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
+                args[offset++] = context.Window.Value;
 
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
                 max--;
 
-            var n = Math.Min(arguments.Length, max);
+            var n = Math.Min(arguments.Length - offset, max);
 
             for (int i = 0; i < n; i++)
-                args[i] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+                args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
 
-            for (int i = n; i < max; i++)
+            for (int i = n + offset; i < max; i++)
                 args[i] = parameters[i].IsOptional ? parameters[i].DefaultValue : parameters[i].ParameterType.GetDefaultValue();
 
             if (max != parameters.Length)
