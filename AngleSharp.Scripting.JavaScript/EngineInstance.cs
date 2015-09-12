@@ -1,7 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
-    using AngleSharp.Dom.Events;
     using Jint;
     using Jint.Runtime.Environments;
     using System;
@@ -31,8 +30,8 @@
             _constructors = new DomConstructors(this);
             _constructors.Configure();
 
-            this.AddConstructor(_window, typeof(Event));
-            this.AddConstructor(_window, typeof(CustomEvent));
+            foreach (var type in typeof(INode).Assembly.ExportedTypes)
+                this.AddConstructor(_window, type);
         }
 
         public DomConstructors Constructors
