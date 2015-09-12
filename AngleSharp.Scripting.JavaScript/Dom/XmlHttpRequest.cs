@@ -4,6 +4,8 @@
     using AngleSharp.Dom;
     using AngleSharp.Network;
     using System;
+    using System.Collections.Generic;
+    using System.IO;
 
     /// <summary>
     /// Defines the XHR. For more information see:
@@ -13,10 +15,11 @@
     [DomExposed("Window")]
     [DomExposed("DedicatedWorker")]
     [DomExposed("SharedWorker")]
-    public sealed class XmlHttpRequest : XmlHttpRequestEventTarget
+    public sealed class XmlHttpRequest : XmlHttpRequestEventTarget, IRequest
     {
         #region Fields
 
+        readonly Dictionary<String, String> _headers;
         RequesterState _readyState;
         Int32 _timeout;
         Boolean _credentials;
@@ -24,6 +27,8 @@
         HttpMethod _method;
         Url _url;
         Boolean _async;
+        String _mime;
+        Stream _body;
 
         #endregion
 
@@ -39,6 +44,7 @@
             _method = HttpMethod.Get;
             _url = null;
             _response = null;
+            _mime = null;
             _readyState = RequesterState.Unsent;
             _credentials = false;
             _timeout = 45000;
@@ -211,7 +217,8 @@
         [DomName("send")]
         public void Send(Object body = null)
         {
-            //TODO
+            _body = Stream.Null;
+
         }
 
         /// <summary>
@@ -222,7 +229,7 @@
         [DomName("setRequestHeader")]
         public void SetRequestHeader(String name, String value)
         {
-            //TODO
+            _headers[name] = value;
         }
 
         /// <summary>
@@ -233,7 +240,11 @@
         [DomName("getResponseHeader")]
         public String GetResponseHeader(String name)
         {
-            //TODO
+            var value = default(String);
+
+            if (_response != null && _response.Headers.TryGetValue(name, out value))
+                return value;
+
             return String.Empty;
         }
 
@@ -244,7 +255,18 @@
         [DomName("getAllResponseHeaders")]
         public String GetAllResponseHeaders()
         {
-            //TODO
+            if (_response != null)
+            {
+                var headers = _response.Headers;
+                var lines = new String[headers.Count];
+                var index = 0;
+
+                foreach (var header in headers)
+                    lines[index++] = String.Concat(header.Key, ": ", header.Value);
+
+                return String.Join(Environment.NewLine, lines);
+            }
+
             return String.Empty;
         }
 
@@ -255,7 +277,31 @@
         [DomName("overrideMimeType")]
         public void OverrideMimeType(String mime)
         {
-            //TODO
+            _mime = mime;
+        }
+
+        #endregion
+
+        #region Request
+
+        Url IRequest.Address
+        {
+            get { return _url; }
+        }
+
+        Stream IRequest.Content
+        {
+            get { return _body; }
+        }
+
+        Dictionary<String, String> IRequest.Headers
+        {
+            get { return _headers; }
+        }
+
+        HttpMethod IRequest.Method
+        {
+            get { return _method; }
         }
 
         #endregion
