@@ -161,6 +161,12 @@
             return method != null ? method.GetParameters().Select(m => m.Name).ToArray() : null;
         }
 
+        public static void AddConstructors(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            foreach (var exportedType in type.Assembly.ExportedTypes)
+                engine.AddConstructor(obj, exportedType);
+        }
+
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
             var info = type.GetConstructors().FirstOrDefault(m => 

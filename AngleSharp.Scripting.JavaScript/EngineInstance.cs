@@ -30,8 +30,8 @@
             _constructors = new DomConstructors(this);
             _constructors.Configure();
 
-            foreach (var type in typeof(INode).Assembly.ExportedTypes)
-                this.AddConstructor(_window, type);
+            this.AddConstructors(_window, typeof(INode));
+            this.AddConstructors(_window, this.GetType());
         }
 
         public DomConstructors Constructors
