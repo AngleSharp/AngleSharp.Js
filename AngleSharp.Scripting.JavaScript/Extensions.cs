@@ -140,7 +140,7 @@
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
                 max--;
 
-            var n = Math.Min(arguments.Length - offset, max);
+            var n = Math.Min(arguments.Length, max - offset);
 
             for (int i = 0; i < n; i++)
                 args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
