@@ -65,6 +65,13 @@
         }
 
         [Test]
+        public async Task CreateXmlHttpRequestShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("var xhr = new XMLHttpRequest(); xhr.open('GET', 'foo');", SetResult("xhr.readyState.toString()"));
+            Assert.AreEqual("0", result);
+        }
+
+        [Test]
         public async Task SetContentOfIFrameElement()
         {
             var cfg = Configuration.Default.WithJavaScript();
