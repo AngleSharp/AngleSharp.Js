@@ -20,7 +20,7 @@
         {
             _engine = engine;
             _value = value;
-            SetMembers(value.GetType());
+            SetAllMembers(value.GetType());
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
@@ -53,14 +53,23 @@
             return base.GetOwnProperty(propertyName);
         }
 
-        void SetMembers(Type type)
+        void SetAllMembers(Type type)
         {
-            if (type.GetCustomAttribute<DomNameAttribute>() == null)
+            var types = new List<Type>(type.GetInterfaces());
+
+            do
             {
-                foreach (var contract in type.GetInterfaces())
-                    SetMembers(contract);
+                types.Add(type);
+                type = type.BaseType;
             }
-            else
+            while (type != null);
+
+            SetMembers(types);
+        }
+
+        void SetMembers(IEnumerable<Type> types)
+        {
+            foreach (var type in types)
             {
                 SetProperties(type.GetProperties());
                 SetMethods(type.GetMethods());
