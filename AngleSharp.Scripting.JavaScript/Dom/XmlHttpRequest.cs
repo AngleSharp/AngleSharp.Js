@@ -2,10 +2,15 @@
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
     using AngleSharp.Network;
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Net;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Defines the XHR. For more information see:
@@ -15,22 +20,25 @@
     [DomExposed("Window")]
     [DomExposed("DedicatedWorker")]
     [DomExposed("SharedWorker")]
-    public sealed class XmlHttpRequest : XmlHttpRequestEventTarget, IRequest
+    public sealed class XmlHttpRequest : XmlHttpRequestEventTarget
     {
         #region Fields
 
         readonly Dictionary<String, String> _headers;
         readonly IWindow _window;
+        readonly CancellationTokenSource _cancel;
 
+        DocumentRequest _request;
         RequesterState _readyState;
         Int32 _timeout;
         Boolean _credentials;
-        IResponse _response;
         HttpMethod _method;
         Url _url;
         Boolean _async;
         String _mime;
-        Stream _body;
+        HttpStatusCode _responseStatus;
+        String _responseUrl;
+        String _responseText;
 
         #endregion
 
@@ -45,10 +53,14 @@
             _window = window;
             _async = true;
             _method = HttpMethod.Get;
+            _cancel = new CancellationTokenSource();
+            _headers = new Dictionary<String, String>();
             _url = null;
-            _response = null;
             _mime = null;
+            _responseUrl = String.Empty;
+            _responseText = String.Empty;
             _readyState = RequesterState.Unsent;
+            _responseStatus = (HttpStatusCode)0;
             _credentials = false;
             _timeout = 45000;
         }
@@ -56,6 +68,14 @@
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets if response headers are accessible.
+        /// </summary>
+        public Boolean HasResponseHeaders
+        {
+            get { return _readyState == RequesterState.Loading || _readyState == RequesterState.Done; }
+        }
 
         /// <summary>
         /// Adds or removes the handler for the readystatechange event.
@@ -74,6 +94,11 @@
         public RequesterState ReadyState
         {
             get { return _readyState; }
+            private set
+            {
+                _readyState = value;
+                Fire(ReadyStateChangeEvent);
+            }
         }
 
         /// <summary>
@@ -120,7 +145,7 @@
         [DomName("responseURL")]
         public String ResponseUrl
         {
-            get { return _response != null ? _response.Address.Href : String.Empty; }
+            get { return _responseUrl; }
         }
 
         /// <summary>
@@ -129,7 +154,7 @@
         [DomName("status")]
         public Int32 StatusCode
         {
-            get { return _response != null ? (Int32)_response.StatusCode : 0; }
+            get { return (Int32)_responseStatus; }
         }
 
         /// <summary>
@@ -138,7 +163,7 @@
         [DomName("statusText")]
         public String StatusText
         {
-            get { return _response != null ? _response.StatusCode.ToString() : String.Empty; }
+            get { return StatusCode != 0 ? _responseStatus.ToString() : String.Empty; }
         }
 
         /// <summary>
@@ -147,7 +172,7 @@
         [DomName("response")]
         public Object Response
         {
-            get { return _response != null ? null : String.Empty; }
+            get { return null; }
         }
 
         /// <summary>
@@ -156,7 +181,7 @@
         [DomName("responseText")]
         public String ResponseText
         {
-            get { return _response != null ? null : String.Empty; }
+            get { return _responseText; }
         }
 
         /// <summary>
@@ -178,21 +203,11 @@
         [DomName("abort")]
         public void Abort()
         {
-            //TODO
-        }
-
-        /// <summary>
-        /// Opens a new request with the provided method and URL.
-        /// </summary>
-        /// <param name="method">The method to use.</param>
-        /// <param name="url">The URL to send to request to.</param>
-        [DomName("open")]
-        public void Open(String method, String url)
-        {
-            if (Enum.TryParse(method, true, out _method) == false)
-                _method = HttpMethod.Get;
-
-            _url = Url.Create(url);
+            if (_readyState == RequesterState.Loading)
+            {
+                _cancel.Cancel();
+                Fire(AbortEvent);
+            }
         }
 
         /// <summary>
@@ -204,13 +219,20 @@
         /// <param name="username">Should a username be used?</param>
         /// <param name="password">Should a password be used?</param>
         [DomName("open")]
-        public void Open(String method, String url, Boolean async, String username = null, String password = null)
+        public void Open(String method, String url, Boolean async = true, String username = null, String password = null)
         {
-            Open(method, url);
+            if (_readyState == RequesterState.Unsent)
+            {
+                ReadyState = RequesterState.Opened;
 
-            _async = async;
-            _url.UserName = username;
-            _url.Password = password;
+                if (Enum.TryParse(method, true, out _method) == false)
+                    _method = HttpMethod.Get;
+
+                _url = Url.Create(url);
+                _async = async;
+                _url.UserName = username;
+                _url.Password = password;
+            }
         }
 
         /// <summary>
@@ -220,8 +242,36 @@
         [DomName("send")]
         public void Send(Object body = null)
         {
-            _body = Stream.Null;
+            if (_readyState != RequesterState.Opened)
+                return;
 
+            var requestBody = Serialize(body);
+            var mimeType = default(String);
+            var loader = GetLoader();
+
+            if (loader != null)
+            {
+                var request = new DocumentRequest(_url)
+                {
+                    Body = requestBody,
+                    Method = _method,
+                    MimeType = mimeType,
+                    Referer = _window.Document.DocumentUri,
+                };
+
+                foreach (var header in _headers)
+                    request.Headers[header.Key] = header.Value;
+
+                _headers.Clear();
+                _cancel.CancelAfter(_timeout);
+
+                Fire(LoadStartEvent);
+                ReadyState = RequesterState.HeadersReceived;
+                var connection = Receive(loader, request, _cancel.Token);
+
+                if (!_async)
+                    connection.Wait();
+            }
         }
 
         /// <summary>
@@ -232,7 +282,8 @@
         [DomName("setRequestHeader")]
         public void SetRequestHeader(String name, String value)
         {
-            _headers[name] = value;
+            if (_readyState == RequesterState.Opened)
+                _headers[name] = value;
         }
 
         /// <summary>
@@ -245,7 +296,7 @@
         {
             var value = default(String);
 
-            if (_response != null && _response.Headers.TryGetValue(name, out value))
+            if (HasResponseHeaders && _headers.TryGetValue(name, out value))
                 return value;
 
             return String.Empty;
@@ -258,9 +309,9 @@
         [DomName("getAllResponseHeaders")]
         public String GetAllResponseHeaders()
         {
-            if (_response != null)
+            if (HasResponseHeaders)
             {
-                var headers = _response.Headers;
+                var headers = _headers;
                 var lines = new String[headers.Count];
                 var index = 0;
 
@@ -280,31 +331,89 @@
         [DomName("overrideMimeType")]
         public void OverrideMimeType(String mime)
         {
-            _mime = mime;
+            if (_readyState == RequesterState.Opened)
+                _mime = mime;
         }
 
         #endregion
 
-        #region Request
+        #region Helpers
 
-        Url IRequest.Address
+        async Task Receive(IDocumentLoader loader, DocumentRequest request, CancellationToken cancel)
         {
-            get { return _url; }
+            try
+            {
+                var response = await loader.LoadAsync(request, cancel).ConfigureAwait(false);
+
+                if (response != null)
+                {
+                    using (response)
+                    {
+                        foreach (var header in response.Headers)
+                            _headers[header.Key] = header.Value;
+
+                        _responseUrl = response.Address.Href;
+                        _responseStatus = response.StatusCode;
+                        ReadyState = RequesterState.Loading;
+
+                        using (var ms = new MemoryStream())
+                        {
+                            await response.Content.CopyToAsync(ms, 16384, cancel).ConfigureAwait(false);
+                            ms.Seek(0, SeekOrigin.Begin);
+
+                            using (var reader = new StreamReader(ms))
+                                _responseText = reader.ReadToEnd();
+                        }
+                    }
+
+                    Fire(LoadEndEvent);
+                    ReadyState = RequesterState.Done;
+                    Fire(LoadEvent);
+                }
+                else
+                {
+                    ReadyState = RequesterState.Done;
+                    Fire(ErrorEvent);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                ReadyState = RequesterState.Done;
+                Fire(TimeoutEvent);
+            }
         }
 
-        Stream IRequest.Content
+        IDocumentLoader GetLoader()
         {
-            get { return _body; }
+            if (_window == null)
+                return null;
+
+            var document = _window.Document;
+
+            if (document == null)
+                return null;
+
+            var context = document.Context;
+            return context != null ? context.Loader : null;
         }
 
-        Dictionary<String, String> IRequest.Headers
+        static Stream Serialize(Object body)
         {
-            get { return _headers; }
+            if (body != null)
+            {
+                //TODO Different Types?
+                var content = body.ToString();
+                var bytes = Encoding.UTF8.GetBytes(content);
+                return new MemoryStream(bytes);
+            }
+
+            return Stream.Null;
         }
 
-        HttpMethod IRequest.Method
+        void Fire(String eventName)
         {
-            get { return _method; }
+            var evt = new Event(eventName);
+            Dispatch(evt);
         }
 
         #endregion
