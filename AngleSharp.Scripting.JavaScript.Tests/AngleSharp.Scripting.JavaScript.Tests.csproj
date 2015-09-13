@@ -82,6 +82,7 @@
     <Compile Include="GeneratorTests.cs" />
     <Compile Include="InteractionTests.cs" />
     <Compile Include="JqueryTests.cs" />
+    <Compile Include="Mocks\DelayedRequester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptEvalTests.cs" />
     <Compile Include="ScriptingTests.cs" />
