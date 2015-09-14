@@ -19,7 +19,7 @@
         public static JsValue ToJsValue(this Object obj, EngineInstance engine)
         {
             if (obj == null)
-                return JsValue.Undefined;
+                return JsValue.Null;
 
             if (obj is String)
                 return new JsValue((String)obj);
@@ -78,6 +78,7 @@
 
                     return obj;
                 case Types.Undefined:
+                    return "undefined";
                 case Types.Null:
                     return null;
             }
