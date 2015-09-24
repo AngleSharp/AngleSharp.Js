@@ -3,10 +3,10 @@
   <metadata>
     <id>AngleSharp.Scripting.JavaScript</id>
     <version>0.3.0</version>
-    <authors>Florian Rappl</authors>
+    <authors>AngleSharp</authors>
     <owners>Florian Rappl</owners>
     <licenseUrl>https://github.com/AngleSharp/AngleSharp.Scripting/blob/master/LICENSE</licenseUrl>
-    <projectUrl>http://github.com/AngleSharp/AngleSharp.Scripting</projectUrl>
+    <projectUrl>https://anglesharp.github.io</projectUrl>
     <iconUrl>https://raw.github.com/AngleSharp/AngleSharp.Scripting/master/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>JavaScript integration for AngleSharp.</description>
