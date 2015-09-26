@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
     using AngleSharp.Dom.Html;
+    using AngleSharp.Extensions;
     using AngleSharp.Scripting.JavaScript.Tests.Mocks;
     using NUnit.Framework;
     using System;
@@ -103,20 +104,23 @@ document.querySelector('#result').textContent = xhr.responseText;";
         public async Task PerformXmlHttpRequestAsynchronousToDelayedResponseShouldWork()
         {
             var message = "Hi!";
-            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new [] { new DelayedRequester(10, message) });
+            var req = new DelayedRequester(10, message);
+            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new [] { req });
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/');
 xhr.addEventListener('load', function (ev) { 
-    document.querySelector('#result').textContent = xhr.responseText; 
+    var res = document.querySelector('#result');
+    res.textContent = xhr.responseText;
+    res.dispatchEvent(new CustomEvent('xhrdone'));
 }, false);
-xhr.send();
-document.querySelector('#result').textContent = xhr.responseText;";
+xhr.send();";
             var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var result = document.QuerySelector("#result");
             Assert.AreEqual("", result.TextContent);
-            await Task.Delay(150);
+            Assert.IsTrue(req.IsStarted);
+            await result.AwaitEvent("xhrdone").ConfigureAwait(false);
             Assert.AreEqual(message, result.TextContent);
         }
 
