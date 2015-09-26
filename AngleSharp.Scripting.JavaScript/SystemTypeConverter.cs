@@ -12,8 +12,9 @@
         {
             var obj = arg.AsObject();
             var dict = new Dictionary<String, Object>();
+            var properties = obj.GetOwnProperties();
 
-            foreach (var property in obj.Properties)
+            foreach (var property in properties)
                 dict.Add(property.Key, property.Value.Value.Clr());
 
             return dict;
