@@ -116,7 +116,7 @@ document.querySelector('#result').textContent = xhr.responseText;";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var result = document.QuerySelector("#result");
             Assert.AreEqual("", result.TextContent);
-            await Task.Delay(50);
+            await Task.Delay(150);
             Assert.AreEqual(message, result.TextContent);
         }
 
