@@ -13,6 +13,8 @@
     {
         readonly Int32 _delay;
         readonly String _message;
+        Boolean _started;
+        Boolean _finished;
 
         public DelayedRequester(Int32 delay, String message)
         {
@@ -20,9 +22,21 @@
             _message = message;
         }
 
+        public Boolean IsStarted
+        {
+            get { return _started; }
+        }
+
+        public Boolean IsFinished
+        {
+            get { return _finished; }
+        }
+
         public async Task<IResponse> RequestAsync(IRequest request, CancellationToken cancel)
         {
-            await Task.Delay(_delay, cancel);
+            _started = true;
+            await Task.Delay(_delay, cancel).ConfigureAwait(false);
+            _finished = true;
             return new Response(_message, request.Address);
         }
 
