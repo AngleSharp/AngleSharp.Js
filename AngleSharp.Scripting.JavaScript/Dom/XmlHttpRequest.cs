@@ -24,11 +24,12 @@
     {
         #region Fields
 
+        const Int32 BufferSize = 16384;
+
         readonly Dictionary<String, String> _headers;
         readonly IWindow _window;
         readonly CancellationTokenSource _cancel;
 
-        DocumentRequest _request;
         RequesterState _readyState;
         Int32 _timeout;
         Boolean _credentials;
@@ -343,11 +344,9 @@
         {
             try
             {
-                var response = await loader.LoadAsync(request, cancel).ConfigureAwait(false);
-
-                if (response != null)
+                using (var response = await loader.LoadAsync(request, cancel).ConfigureAwait(false))
                 {
-                    using (response)
+                    if (response != null)
                     {
                         foreach (var header in response.Headers)
                             _headers[header.Key] = header.Value;
@@ -358,22 +357,18 @@
 
                         using (var ms = new MemoryStream())
                         {
-                            await response.Content.CopyToAsync(ms, 16384, cancel).ConfigureAwait(false);
+                            await response.Content.CopyToAsync(ms, BufferSize, cancel).ConfigureAwait(false);
                             ms.Seek(0, SeekOrigin.Begin);
 
                             using (var reader = new StreamReader(ms))
                                 _responseText = reader.ReadToEnd();
                         }
+
+                        Fire(LoadEndEvent);
                     }
 
-                    Fire(LoadEndEvent);
                     ReadyState = RequesterState.Done;
-                    Fire(LoadEvent);
-                }
-                else
-                {
-                    ReadyState = RequesterState.Done;
-                    Fire(ErrorEvent);
+                    Fire(response == null ? ErrorEvent : LoadEvent);
                 }
             }
             catch (TaskCanceledException)
