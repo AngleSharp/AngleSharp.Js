@@ -2,20 +2,20 @@
 <package>
   <metadata>
     <id>AngleSharp.Scripting.JavaScript</id>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <authors>AngleSharp</authors>
     <owners>Florian Rappl</owners>
     <licenseUrl>https://github.com/AngleSharp/AngleSharp.Scripting/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://anglesharp.github.io</projectUrl>
     <iconUrl>https://raw.github.com/AngleSharp/AngleSharp.Scripting/master/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>JavaScript integration for AngleSharp.</description>
+    <description>Integrates a JavaScript engine (Jint) to AngleSharp.</description>
     <releaseNotes>For all changes see: https://github.com/AngleSharp/AngleSharp/wiki/ChangeLog</releaseNotes>
     <copyright>Copyright 2015, AngleSharp</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies> 
-      <dependency id="AngleSharp" version="0.9.1" />
-      <dependency id="Jint" version="2.5.0" />
+      <dependency id="AngleSharp" version="0.9.2" />
+      <dependency id="Jint" version="2.6.0" />
     </dependencies>
   </metadata>
 </package>
