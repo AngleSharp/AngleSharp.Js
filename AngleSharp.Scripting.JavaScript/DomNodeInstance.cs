@@ -35,9 +35,9 @@
         public override PropertyDescriptor GetOwnProperty(String propertyName)
         {
             //  If we have a numeric indexer and the property is numeric
-            int numericIndex;
+            var numericIndex = default(Int32);
 
-            if (_numericIndexer != null && int.TryParse(propertyName, out numericIndex))
+            if (_numericIndexer != null && Int32.TryParse(propertyName, out numericIndex))
                 return new PropertyDescriptor(_numericIndexer.GetMethod.Invoke(_value, new Object[] { numericIndex }).ToJsValue(_engine), false, false, false);
 
             //  Else a string property
@@ -46,8 +46,8 @@
             //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
-            if (_stringIndexer != null && Properties.ContainsKey(propertyName) == false)
-                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] {propertyName}).ToJsValue(_engine), false, false, false);
+            if (_stringIndexer != null && !Properties.ContainsKey(propertyName))
+                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] { propertyName }).ToJsValue(_engine), false, false, false);
             
             //  Else try to return a registered property
             return base.GetOwnProperty(propertyName);
@@ -85,9 +85,8 @@
 
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
-                    FastSetProperty(name, new PropertyDescriptor(
-                        new DomFunctionInstance(this, eventInfo.RaiseMethod),
-                        new DomFunctionInstance(this, eventInfo.AddMethod), false, false));
+                    var eventInstance = new DomEventInstance(this, eventInfo);
+                    FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
                 }
             }
         }
@@ -116,8 +115,8 @@
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
                     FastSetProperty(name, new PropertyDescriptor(
-                        new DomFunctionInstance(this, property.GetMethod),
-                        new DomFunctionInstance(this, property.SetMethod), false, false));
+                        new DomFunctionInstance(_engine, property.GetMethod),
+                        new DomFunctionInstance(_engine, property.SetMethod), false, false));
                 }
             }
         }
@@ -136,8 +135,8 @@
                     // to pick depending on the number (and probably types) of arguments.
                     if (Properties.ContainsKey(name))
                         continue;
-                    
-                    FastAddProperty(name, new DomFunctionInstance(this, method), false, false, false);
+
+                    FastAddProperty(name, new DomFunctionInstance(_engine, method), false, false, false);
                 }
             }
         }
