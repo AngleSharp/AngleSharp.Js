@@ -67,5 +67,69 @@ log.push('b');
             Assert.AreEqual("c", log.Get("2").AsString());
             Assert.AreEqual("d", log.Get("3").AsString());
         }
+
+        [Test]
+        public async Task AddClickHandlerClassicallyWillExecute()
+        {
+            var service = new ScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var clicked = false;
+document.onclick = function () {
+    clicked = true;
+};
+document.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            Assert.IsTrue(clicked);
+        }
+
+        [Test]
+        public async Task AddAndRemoveClickHandlerWontExecute()
+        {
+            var service = new ScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var clicked = false;
+document.onclick = function () {
+    clicked = true;
+};
+document.onclick = undefined;
+document.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            Assert.IsFalse(clicked);
+        }
+
+        [Test]
+        public async Task AddAndInvokeClickHandlerWillChangeCapturedValue()
+        {
+            var service = new ScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var clicked = false;
+document.onclick = function () {
+    clicked = true;
+};
+document.onclick();
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            Assert.IsTrue(clicked);
+        }
     }
 }
