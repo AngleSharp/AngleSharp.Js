@@ -9,12 +9,12 @@
     sealed class DomFunctionInstance : FunctionInstance
     {
         readonly MethodInfo _method;
-        readonly DomNodeInstance _host;
+        readonly EngineInstance _engine;
 
-        public DomFunctionInstance(DomNodeInstance host, MethodInfo method)
-            : base(host.Engine, method.GetParameterNames(), null, false)
+        public DomFunctionInstance(EngineInstance engine, MethodInfo method)
+            : base(engine.Jint, method.GetParameterNames(), null, false)
         {
-            _host = host;
+            _engine = engine;
             _method = method;
 
             FastAddProperty("toString", new ClrFunctionInstance(Engine, ToString), true, false, true);
@@ -30,9 +30,8 @@
                 {
                     try
                     {
-                        var engine = _host.Context;
-                        var parameters = engine.BuildArgs(_method, arguments);
-                        return _method.Invoke(node.Value, parameters).ToJsValue(engine);
+                        var parameters = _engine.BuildArgs(_method, arguments);
+                        return _method.Invoke(node.Value, parameters).ToJsValue(_engine);
                     }
                     catch
                     {
