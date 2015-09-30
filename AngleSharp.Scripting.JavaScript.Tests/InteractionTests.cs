@@ -1,5 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
+    using AngleSharp.Scripting.JavaScript.Services;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;

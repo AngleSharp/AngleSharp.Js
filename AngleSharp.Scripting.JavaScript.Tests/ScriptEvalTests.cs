@@ -2,6 +2,7 @@
 {
     using AngleSharp.Dom.Html;
     using AngleSharp.Extensions;
+    using AngleSharp.Scripting.JavaScript.Dom;
     using AngleSharp.Scripting.JavaScript.Tests.Mocks;
     using NUnit.Framework;
     using System;
@@ -136,6 +137,34 @@ doc.body.textContent = 'Hello world.';
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var result = document.GetElementById("myframe") as IHtmlInlineFrameElement;
             Assert.AreEqual("Hello world.", result.ContentDocument.Body.TextContent);
+        }
+
+        [Test]
+        public async Task RunMainScriptFromHtml5Test()
+        {
+            var script = @"var p=[],w=window,d=document,e=f=0;p.push('ua='+encodeURIComponent(navigator.userAgent));e|=w.ActiveXObject?1:0;e|=w.opera?2:0;e|=w.chrome?4:0;
+e|='getBoxObjectFor' in d || 'mozInnerScreenX' in w?8:0;e|=('WebKitCSSMatrix' in w||'WebKitPoint' in w||'webkitStorageInfo' in w||'webkitURL' in w)?16:0;
+e|=(e&16&&({}.toString).toString().indexOf(""\n"")===-1)?32:0;p.push('e='+e);f|='sandbox' in d.createElement('iframe')?1:0;f|='WebSocket' in w?2:0;
+f|=w.Worker?4:0;f|=w.applicationCache?8:0;f|=w.history && history.pushState?16:0;f|=d.documentElement.webkitRequestFullScreen?32:0;f|='FileReader' in w?64:0;
+p.push('f='+f);p.push('r='+Math.random().toString(36).substring(7));p.push('w='+screen.width);p.push('h='+screen.height);var s=d.createElement('script');
+s.src='//api.whichbrowser.net/rel/detect.js?' + p.join('&');d.getElementsByTagName('head')[0].appendChild(s);";
+            var result = await EvaluateComplexScriptAsync(script, SetResult("p.join('').toString()"));
+            Assert.AreNotEqual("undefined", result);
+        }
+
+        [Test]
+        public async Task QueryUserAgentShouldMatchAgent()
+        {
+            var userAgent = new Navigator().UserAgent;
+            var result = await EvaluateComplexScriptAsync(SetResult("navigator.userAgent"));
+            Assert.AreEqual(userAgent, result);
+        }
+
+        [Test]
+        public async Task ScreenPixelDepthShouldYield24()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("screen.pixelDepth.toString()"));
+            Assert.AreEqual("24", result);
         }
     }
 }
