@@ -69,7 +69,8 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="JavaScriptEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScriptingService.cs" />
+    <Compile Include="Services\ScriptingService.cs" />
+    <Compile Include="Services\NavigatorService.cs" />
     <Compile Include="SystemTypeConverter.cs" />
     <Compile Include="UnresolvedConverter.cs" />
   </ItemGroup>

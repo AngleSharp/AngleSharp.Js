@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript
+﻿namespace AngleSharp.Scripting.JavaScript.Services
 {
     using AngleSharp.Network;
     using AngleSharp.Services;
@@ -8,7 +8,7 @@
     /// <summary>
     /// Represents the service for the JavaScript engine.
     /// </summary>
-    public sealed class ScriptingService : IScriptingService
+    public class ScriptingService : IScriptingService
     {
         readonly JavaScriptEngine _engine;
 
@@ -33,7 +33,7 @@
         /// </summary>
         /// <param name="mimeType">The mime-type.</param>
         /// <returns>The contained engine.</returns>
-        public IScriptEngine GetEngine(String mimeType)
+        public virtual IScriptEngine GetEngine(String mimeType)
         {
             if (MimeTypes.IsJavaScript(mimeType))
                 return _engine;
