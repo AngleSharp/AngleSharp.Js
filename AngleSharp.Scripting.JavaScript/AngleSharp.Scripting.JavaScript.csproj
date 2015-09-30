@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DomInstanceAttribute.cs" />
     <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />
     <Compile Include="DomConstructorInstance.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="DomEventInstance.cs" />
     <Compile Include="Dom\Navigator.cs" />
     <Compile Include="Dom\RequesterState.cs" />
+    <Compile Include="Dom\Screen.cs" />
     <Compile Include="Dom\XmlHttpRequest.cs" />
     <Compile Include="Dom\XmlHttpRequestEventTarget.cs" />
     <Compile Include="Dom\XmlHttpRequestResponseType.cs" />

@@ -173,6 +173,12 @@
                 engine.AddConstructor(obj, exportedType);
         }
 
+        public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            foreach (var exportedType in type.Assembly.ExportedTypes)
+                engine.AddInstance(obj, exportedType);
+        }
+
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
             var info = type.GetConstructors().FirstOrDefault(m => 
@@ -183,6 +189,26 @@
                 var name = type.GetOfficialName();
                 var constructor = new DomConstructorInstance(engine, info);
                 obj.FastSetProperty(name, new PropertyDescriptor(constructor, false, true, false));
+            }
+        }
+
+        public static void AddInstance(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            var attributes = type.GetCustomAttributes<DomInstanceAttribute>();
+            var info = type.GetConstructor(Type.EmptyTypes);
+
+            if (info != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    var instance = info.Invoke(null);
+
+                    if (instance != null)
+                    {
+                        var node = engine.GetDomNode(instance);
+                        obj.FastSetProperty(attribute.Name, new PropertyDescriptor(node, false, true, false));
+                    }
+                }
             }
         }
 

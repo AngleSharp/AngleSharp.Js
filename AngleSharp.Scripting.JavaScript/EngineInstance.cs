@@ -32,6 +32,7 @@
 
             this.AddConstructors(_window, typeof(INode));
             this.AddConstructors(_window, this.GetType());
+            this.AddInstances(_window, this.GetType());
         }
 
         public DomNodeInstance Window
