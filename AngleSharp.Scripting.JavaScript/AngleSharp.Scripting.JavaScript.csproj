@@ -55,6 +55,7 @@
     <Compile Include="DomConstructorInstance.cs" />
     <Compile Include="DomConstructors.cs" />
     <Compile Include="DomEventInstance.cs" />
+    <Compile Include="Dom\Navigator.cs" />
     <Compile Include="Dom\RequesterState.cs" />
     <Compile Include="Dom\XmlHttpRequest.cs" />
     <Compile Include="Dom\XmlHttpRequestEventTarget.cs" />
