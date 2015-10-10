@@ -1,5 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
+    using AngleSharp.Extensions;
+    using AngleSharp.Scripting.JavaScript.Tests.Mocks;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
@@ -36,6 +38,51 @@
         {
             var result = await EvaluateScriptWithJqueryAsync(SetResult("$('#result').length.toString()"));
             Assert.AreEqual("1", result);
+        }
+
+        [Test]
+        public async Task JqueryWithSettingAttribute()
+        {
+            var result = await EvaluateScriptWithJqueryAsync("$('#result').attr('foo', 'bar')", SetResult("$('#result').attr('foo')"));
+            Assert.AreEqual("bar", result);
+        }
+
+        [Test]
+        public async Task JqueryWithSettingTextProperty()
+        {
+            var result = await EvaluateScriptWithJqueryAsync("$('#result').text('<span>foo&gt;</span>');");
+            Assert.AreEqual("&lt;span&gt;foo&amp;gt;&lt;/span&gt;", result);
+        }
+
+        [Test]
+        public async Task JqueryWithSettingHtmlProperty()
+        {
+            var result = await EvaluateScriptWithJqueryAsync("$('#result').html('<span>foo&gt;</span>')");
+            Assert.AreEqual("<span>foo&gt;</span>", result);
+        }
+
+        [Test]
+        public async Task JqueryWithAjaxToDelayedResponse()
+        {
+            var message = "Hi!";
+            var req = new DelayedRequester(10, message);
+            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new[] { req });
+            var sources = new [] { Sources.Jquery, @"
+$.ajax('http://example.com/', {
+    success: function (data, status, xhr) { 
+        var res = document.querySelector('#result');
+        res.textContent = xhr.responseText;
+        res.dispatchEvent(new CustomEvent('xhrdone'));
+    }
+});" };
+            var scripts = String.Join("</script><script>", sources);
+            var html = "<!doctype html><div id=result></div><script>" + scripts + "</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var result = document.QuerySelector("#result");
+            Assert.AreEqual("", result.TextContent);
+            Assert.IsTrue(req.IsStarted);
+            await result.AwaitEvent("xhrdone").ConfigureAwait(false);
+            Assert.AreEqual(message, result.TextContent);
         }
     }
 }
