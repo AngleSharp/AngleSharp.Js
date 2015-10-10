@@ -144,10 +144,21 @@
             var n = Math.Min(arguments.Length, max - offset);
 
             for (int i = 0; i < n; i++)
-                args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+            {
+                if (parameters[i].IsOptional && arguments[i].IsUndefined())
+                    args[i + offset] = parameters[i].DefaultValue;
+                else
+                    args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+            }
 
             for (int i = n + offset; i < max; i++)
-                args[i] = parameters[i].IsOptional ? parameters[i].DefaultValue : parameters[i].ParameterType.GetDefaultValue();
+            {
+                if (parameters[i].IsOptional)
+                    args[i] = parameters[i].DefaultValue;
+                else
+                    args[i] = parameters[i].ParameterType.GetDefaultValue();
+            }
+                
 
             if (max != parameters.Length)
             {
