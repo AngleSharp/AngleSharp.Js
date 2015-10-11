@@ -59,6 +59,7 @@
     <Compile Include="Dom\Navigator.cs" />
     <Compile Include="Dom\RequesterState.cs" />
     <Compile Include="Dom\Screen.cs" />
+    <Compile Include="Dom\WindowBase64.cs" />
     <Compile Include="Dom\XmlHttpRequest.cs" />
     <Compile Include="Dom\XmlHttpRequestEventTarget.cs" />
     <Compile Include="Dom\XmlHttpRequestResponseType.cs" />
