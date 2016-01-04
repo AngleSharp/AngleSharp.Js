@@ -10,12 +10,17 @@
     [TestFixture]
     public class JqueryTests
     {
-        public static async Task<String> EvaluateScriptWithJqueryAsync(params String[] sources)
+        public static Task<String> EvaluateScriptWithJqueryAsync(params String[] sources)
         {
             var list = new List<String>(sources);
             list.Insert(0, Sources.Jquery);
-            var cfg = Configuration.Default.WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true).WithJavaScript();
-            var scripts = "<script>" + String.Join("</script><script>", list) + "</script>";
+            return EvaluateScriptsAsync(list);
+        }
+
+        public static async Task<String> EvaluateScriptsAsync(List<String> sources)
+        {
+            var cfg = Configuration.Default.WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true).WithJavaScript().WithCss();
+            var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
             var html = "<!doctype html><div id=result></div>" + scripts;
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return document.GetElementById("result").InnerHtml;
@@ -83,6 +88,13 @@ $.ajax('http://example.com/', {
             Assert.IsTrue(req.IsStarted);
             await result.AwaitEvent("xhrdone").ConfigureAwait(false);
             Assert.AreEqual(message, result.TextContent);
+        }
+
+        [Test]
+        public async Task JqueryVersionOne()
+        {
+            var result = await EvaluateScriptsAsync(new List<String> { Sources.Jquery1, SetResult("$.toString()") });
+            Assert.AreNotEqual("", result);
         }
     }
 }
