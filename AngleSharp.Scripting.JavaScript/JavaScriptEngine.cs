@@ -40,7 +40,7 @@
         /// </summary>
         public String Type
         {
-            get { return MimeTypes.DefaultJavaScript; }
+            get { return MimeTypeNames.DefaultJavaScript; }
         }
 
         /// <summary>
@@ -53,7 +53,9 @@
             var instance = default(EngineInstance);
 
             if (_contexts.TryGetValue(document.DefaultView, out instance))
+            {
                 return instance.Jint;
+            }
 
             return null;
         }
@@ -68,8 +70,10 @@
             var objectContext = options.Context;
             var instance = default(EngineInstance);
 
-            if (_contexts.TryGetValue(objectContext, out instance) == false)
+            if (!_contexts.TryGetValue(objectContext, out instance))
+            {
                 _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
+            }
 
             instance.RunScript(source);
         }

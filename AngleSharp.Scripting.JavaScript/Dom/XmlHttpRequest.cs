@@ -9,7 +9,6 @@
     using System.IO;
     using System.Net;
     using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -28,7 +27,6 @@
 
         readonly Dictionary<String, String> _headers;
         readonly IWindow _window;
-        readonly CancellationTokenSource _cancel;
 
         RequesterState _readyState;
         Int32 _timeout;
@@ -40,6 +38,7 @@
         HttpStatusCode _responseStatus;
         String _responseUrl;
         String _responseText;
+        IDownload _download;
 
         #endregion
 
@@ -54,7 +53,6 @@
             _window = window;
             _async = true;
             _method = HttpMethod.Get;
-            _cancel = new CancellationTokenSource();
             _headers = new Dictionary<String, String>();
             _url = null;
             _mime = null;
@@ -206,7 +204,7 @@
         {
             if (_readyState == RequesterState.Loading)
             {
-                _cancel.Cancel();
+                _download.Cancel();
                 Fire(AbortEvent);
             }
         }
@@ -226,8 +224,10 @@
             {
                 ReadyState = RequesterState.Opened;
 
-                if (Enum.TryParse(method, true, out _method) == false)
+                if (!Enum.TryParse(method, true, out _method))
+                {
                     _method = HttpMethod.Get;
+                }
 
                 _url = Url.Create(url);
                 _async = async;
@@ -243,35 +243,38 @@
         [DomName("send")]
         public void Send(Object body = null)
         {
-            if (_readyState != RequesterState.Opened)
-                return;
-
-            var requestBody = Serialize(body);
-            var mimeType = default(String);
-            var loader = GetLoader();
-
-            if (loader != null)
+            if (_readyState == RequesterState.Opened)
             {
-                var request = new DocumentRequest(_url)
+                var requestBody = Serialize(body);
+                var mimeType = default(String);
+                var loader = GetLoader();
+
+                if (loader != null)
                 {
-                    Body = requestBody,
-                    Method = _method,
-                    MimeType = mimeType,
-                    Referer = _window.Document.DocumentUri,
-                };
+                    var request = new DocumentRequest(_url)
+                    {
+                        Body = requestBody,
+                        Method = _method,
+                        MimeType = mimeType,
+                        Referer = _window.Document.DocumentUri,
+                    };
 
-                foreach (var header in _headers)
-                    request.Headers[header.Key] = header.Value;
+                    foreach (var header in _headers)
+                    {
+                        request.Headers[header.Key] = header.Value;
+                    }
 
-                _headers.Clear();
-                _cancel.CancelAfter(_timeout);
+                    _headers.Clear();
 
-                Fire(LoadStartEvent);
-                ReadyState = RequesterState.HeadersReceived;
-                var connection = Receive(loader, request, _cancel.Token);
+                    Fire(LoadStartEvent);
+                    ReadyState = RequesterState.HeadersReceived;
+                    var connection = Receive(loader, request);
 
-                if (!_async)
-                    connection.Wait();
+                    if (!_async)
+                    {
+                        connection.Wait();
+                    }
+                }
             }
         }
 
@@ -284,7 +287,9 @@
         public void SetRequestHeader(String name, String value)
         {
             if (_readyState == RequesterState.Opened)
+            {
                 _headers[name] = value;
+            }
         }
 
         /// <summary>
@@ -298,7 +303,9 @@
             var value = default(String);
 
             if (HasResponseHeaders && _headers.TryGetValue(name, out value))
+            {
                 return value;
+            }
 
             return String.Empty;
         }
@@ -317,7 +324,10 @@
                 var index = 0;
 
                 foreach (var header in headers)
-                    lines[index++] = String.Concat(header.Key, ": ", header.Value);
+                {
+                    lines[index] = String.Concat(header.Key, ": ", header.Value);
+                    index++;
+                }
 
                 return String.Join(Environment.NewLine, lines);
             }
@@ -333,23 +343,33 @@
         public void OverrideMimeType(String mime)
         {
             if (_readyState == RequesterState.Opened)
+            {
                 _mime = mime;
+            }
         }
 
         #endregion
 
         #region Helpers
 
-        async Task Receive(IDocumentLoader loader, DocumentRequest request, CancellationToken cancel)
+        async Task Receive(IDocumentLoader loader, DocumentRequest request)
         {
+            var eventName = ErrorEvent;
+
             try
             {
-                using (var response = await loader.LoadAsync(request, cancel).ConfigureAwait(false))
+                _download = loader.DownloadAsync(request);
+
+                using (var response = await _download.Task.ConfigureAwait(false))
                 {
                     if (response != null)
                     {
+                        eventName = LoadEvent;
+
                         foreach (var header in response.Headers)
+                        {
                             _headers[header.Key] = header.Value;
+                        }
 
                         _responseUrl = response.Address.Href;
                         _responseStatus = response.StatusCode;
@@ -357,18 +377,20 @@
 
                         using (var ms = new MemoryStream())
                         {
-                            await response.Content.CopyToAsync(ms, BufferSize, cancel).ConfigureAwait(false);
+                            await response.Content.CopyToAsync(ms, BufferSize).ConfigureAwait(false);
                             ms.Seek(0, SeekOrigin.Begin);
 
                             using (var reader = new StreamReader(ms))
+                            {
                                 _responseText = reader.ReadToEnd();
+                            }
                         }
 
                         Fire(LoadEndEvent);
                     }
 
                     ReadyState = RequesterState.Done;
-                    Fire(response == null ? ErrorEvent : LoadEvent);
+                    Fire(eventName);
                 }
             }
             catch (TaskCanceledException)
@@ -380,16 +402,23 @@
 
         IDocumentLoader GetLoader()
         {
-            if (_window == null)
-                return null;
+            if (_window != null)
+            {
+                var document = _window.Document;
 
-            var document = _window.Document;
+                if (document != null)
+                {
+                    var context = document.Context;
 
-            if (document == null)
-                return null;
+                    if (context != null)
+                    {
+                        return context.Loader;
+                    }
+                }
+            }
 
-            var context = document.Context;
-            return context != null ? context.Loader : null;
+            return null;
+
         }
 
         static Stream Serialize(Object body)

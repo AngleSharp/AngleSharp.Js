@@ -35,8 +35,10 @@
         /// <returns>The contained engine.</returns>
         public virtual IScriptEngine GetEngine(String mimeType)
         {
-            if (MimeTypes.IsJavaScript(mimeType))
+            if (MimeTypeNames.IsJavaScript(mimeType))
+            {
                 return _engine;
+            }
 
             return null;
         }
