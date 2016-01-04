@@ -18,9 +18,11 @@
         JsValue Log(JsValue ctx, JsValue[] args)
         {
             var strs = new String[args.Length];
-            
+
             for (var i = 0; i < args.Length; i++)
+            {
                 strs[i] = args[i].ToString();
+            }
 
             Console.WriteLine(String.Join(", ", strs));
             return JsValue.Undefined;

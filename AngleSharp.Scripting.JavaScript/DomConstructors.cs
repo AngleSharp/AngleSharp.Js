@@ -29,7 +29,10 @@
             var constructors = GetType().GetProperties();
 
             foreach (var constructor in constructors)
-                obj.FastAddProperty(constructor.Name, constructor.GetValue(this) as FunctionInstance, true, false, true);
+            {
+                var func = constructor.GetValue(this) as FunctionInstance;
+                obj.FastAddProperty(constructor.Name, func, true, false, true);
+            }
         }
 
         partial void Setup(EngineInstance engine);

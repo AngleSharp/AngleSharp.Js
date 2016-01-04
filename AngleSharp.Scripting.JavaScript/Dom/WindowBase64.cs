@@ -50,7 +50,9 @@
             for (int i = 0; i < data.Length; i++)
             {
                 if (data[i] > 255)
+                {
                     throw new DomException(DomError.InvalidCharacter);
+                }
 
                 content[i] = (Byte)data[i];
             }
@@ -75,10 +77,14 @@
             var content = Convert.FromBase64CharArray(chars, 0, length);
 
             if (content.Length > chars.Length)
+            {
                 Array.Resize(ref chars, content.Length);
+            }
 
-            for (int i = 0; i < content.Length; i++)
+            for (var i = 0; i < content.Length; i++)
+            {
                 chars[i] = (Char)content[i];
+            }
 
             return new String(chars, 0, content.Length);
         }
@@ -96,23 +102,31 @@
             if (rem == 0)
             {
                 while (length > 0 && chars[length - 1] == '=')
+                {
                     length--;
+                }
 
                 rem = length % 4;
             }
 
             if (rem == 1)
+            {
                 throw new DomException(DomError.InvalidCharacter);
+            }
 
             CheckCharacters(chars, length);
 
             if (rem != 0)
             {
                 if (length + 4 - rem > chars.Length)
+                {
                     Array.Resize(ref chars, length + 4 - rem);
+                }
 
                 while (rem++ != 4)
+                {
                     chars[length++] = '=';
+                }
             }
 
             return length;
@@ -120,10 +134,12 @@
 
         static void CheckCharacters(Char[] chars, Int32 length)
         {
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
                 if (!IsLegalBase64Char(chars[i]))
+                {
                     throw new DomException(DomError.InvalidCharacter);
+                }
             }
         }
 

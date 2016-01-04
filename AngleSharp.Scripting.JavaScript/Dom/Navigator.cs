@@ -73,12 +73,14 @@
                             var statistic = adapter.GetIPv4Statistics();
 
                             if (statistic.BytesReceived > 0 && statistic.BytesSent > 0)
+                            {
                                 return true;
+                            }
                         }
                     }
                 }
 
-                return false; ;
+                return false;
             }
         }
     }

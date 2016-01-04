@@ -15,7 +15,10 @@
             var properties = obj.GetOwnProperties();
 
             foreach (var property in properties)
-                dict.Add(property.Key, property.Value.Value.Clr());
+            {
+                var value = property.Value.Value.Clr();
+                dict.Add(property.Key,value);
+            }
 
             return dict;
         }
@@ -28,7 +31,9 @@
         public static Nullable<Int32> ToOptionalInt32(JsValue arg)
         {
             if (arg.IsNumber())
+            {
                 return TypeConverter.ToInt32(arg);
+            }
 
             return null;
         }

@@ -12,7 +12,9 @@
         public static Delegate ToDelegate(this Type type, FunctionInstance function, EngineInstance engine)
         {
             if (type == typeof(DomEventHandler))
+            {
                 return function.ToListener(engine);
+            }
 
             var method = typeof(DomDelegates).GetMethod("ToCallback").MakeGenericMethod(type);
             return method.Invoke(null, new Object[] { function, engine }) as Delegate;
@@ -35,7 +37,9 @@
             var parameters = new ParameterExpression[mps.Length];
 
             for (var i = 0; i < mps.Length; i++)
+            {
                 parameters[i] = Expression.Parameter(mps[i].ParameterType, mps[i].Name);
+            }
 
             var objExpr = Expression.Constant(function);
             var engineExpr = Expression.Constant(engine);
