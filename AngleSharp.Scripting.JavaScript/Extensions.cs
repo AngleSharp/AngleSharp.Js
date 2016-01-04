@@ -18,25 +18,41 @@
     {
         public static JsValue ToJsValue(this Object obj, EngineInstance engine)
         {
-            if (obj == null)
-                return JsValue.Null;
+            if (obj != null)
+            {
+                if (obj is String)
+                {
+                    return new JsValue((String)obj);
+                }
+                else if (obj is Int32)
+                {
+                    return new JsValue((Int32)obj);
+                }
+                else if (obj is UInt32)
+                {
+                    return new JsValue((UInt32)obj);
+                }
+                else if (obj is Double)
+                {
+                    return new JsValue((Double)obj);
+                }
+                else if (obj is Single)
+                {
+                    return new JsValue((Single)obj);
+                }
+                else if (obj is Boolean)
+                {
+                    return new JsValue((Boolean)obj);
+                }
+                else if (obj is Enum)
+                {
+                    return new JsValue(Convert.ToInt32(obj));
+                }
 
-            if (obj is String)
-                return new JsValue((String)obj);
-            else if (obj is Int32)
-                return new JsValue((Int32)obj);
-            else if (obj is UInt32)
-                return new JsValue((UInt32)obj);
-            else if (obj is Double)
-                return new JsValue((Double)obj);
-            else if (obj is Single)
-                return new JsValue((Single)obj);
-            else if (obj is Boolean)
-                return new JsValue((Boolean)obj);
-            else if (obj is Enum)
-                return new JsValue(Convert.ToInt32(obj));
+                return engine.GetDomNode(obj);
+            }
 
-            return engine.GetDomNode(obj);
+            return JsValue.Null;
         }
 
         public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
@@ -74,7 +90,9 @@
                     var node = obj as DomNodeInstance;
 
                     if (node != null)
+                    {
                         return node.Value;
+                    }
 
                     return obj;
                 case Types.Undefined:
@@ -88,25 +106,35 @@
 
         public static Object As(this Object value, Type targetType, EngineInstance engine)
         {
-            if (value == null)
-                return value;
+            if (value != null)
+            {
+                var sourceType = value.GetType();
 
-            var sourceType = value.GetType();
+                if (sourceType == targetType || sourceType.IsSubclassOf(targetType) || targetType.IsInstanceOfType(value) || targetType.IsAssignableFrom(sourceType))
+                {
+                    return value;
+                }
+                else if (sourceType == typeof(Double) && targetType == typeof(Int32))
+                {
+                    return (Int32)(Double)value;
+                }
 
-            if (sourceType == targetType || sourceType.IsSubclassOf(targetType) || targetType.IsInstanceOfType(value) || targetType.IsAssignableFrom(sourceType))
-                return value;
-            else if (sourceType == typeof(Double) && targetType == typeof(Int32))
-                return (Int32)(Double)value;
+                if (targetType.IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
+                {
+                    return targetType.ToDelegate((FunctionInstance)value, engine);
+                }
 
-            if (targetType.IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
-                return targetType.ToDelegate((FunctionInstance)value, engine);
+                var method = sourceType.PrepareConvert(targetType);
 
-            var method = sourceType.PrepareConvert(targetType);
+                if (method == null)
+                {
+                    throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
+                }
 
-            if (method != null)
                 return method.Invoke(value, null);
+            }
 
-            throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
+            return value;
         }
 
         public static Object GetDefaultValue(this Type type)
@@ -136,27 +164,39 @@
             var offset = 0;
 
             if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
+            {
                 args[offset++] = context.Window.Value;
+            }
 
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
+            {
                 max--;
+            }
 
             var n = Math.Min(arguments.Length, max - offset);
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 if (parameters[i].IsOptional && arguments[i].IsUndefined())
+                {
                     args[i + offset] = parameters[i].DefaultValue;
+                }
                 else
+                {
                     args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+                }
             }
 
-            for (int i = n + offset; i < max; i++)
+            for (var i = n + offset; i < max; i++)
             {
                 if (parameters[i].IsOptional)
+                {
                     args[i] = parameters[i].DefaultValue;
+                }
                 else
+                {
                     args[i] = parameters[i].ParameterType.GetDefaultValue();
+                }
             }
                 
 
@@ -164,8 +204,10 @@
             {
                 var array = Array.CreateInstance(parameters[max].ParameterType.GetElementType(), Math.Max(0, arguments.Length - max));
 
-                for (int i = max; i < arguments.Length; i++)
+                for (var i = max; i < arguments.Length; i++)
+                {
                     array.SetValue(arguments[i].FromJsValue(), i - max);
+                }
 
                 args[max] = array;
             }
@@ -181,13 +223,17 @@
         public static void AddConstructors(this EngineInstance engine, ObjectInstance obj, Type type)
         {
             foreach (var exportedType in type.Assembly.ExportedTypes)
+            {
                 engine.AddConstructor(obj, exportedType);
+            }
         }
 
         public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Type type)
         {
             foreach (var exportedType in type.Assembly.ExportedTypes)
+            {
                 engine.AddInstance(obj, exportedType);
+            }
         }
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)

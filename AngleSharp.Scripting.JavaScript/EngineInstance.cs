@@ -22,7 +22,9 @@
             _engine.SetValue("console", new ConsoleInstance(_engine));
 
             foreach (var assignment in assignments)
+            {
                 _engine.SetValue(assignment.Key, assignment.Value);
+            }
 
             _window = GetDomNode(window);
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _window, _engine.ExecutionContext.LexicalEnvironment, true);
@@ -64,8 +66,10 @@
         {
             var domNodeInstance = default(DomNodeInstance);
 
-            if (_objects.TryGetValue(obj, out domNodeInstance) == false)
+            if (!_objects.TryGetValue(obj, out domNodeInstance))
+            {
                 _objects.Add(obj, domNodeInstance = new DomNodeInstance(this, obj));
+            }
             
             return domNodeInstance;
         }

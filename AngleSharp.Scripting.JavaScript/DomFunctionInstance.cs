@@ -48,7 +48,9 @@
             var func = thisObj.TryCast<FunctionInstance>();
 
             if (func == null)
+            {
                 throw new JavaScriptException(Engine.TypeError, "Function object expected.");
+            }
 
             var officialName = _method.GetOfficialName();
             return string.Format("function {0} () {{ [native code] }}", officialName);

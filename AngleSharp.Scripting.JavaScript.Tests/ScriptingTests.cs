@@ -36,6 +36,15 @@
         }
 
         [Test]
+        public async Task GetNodeTypeOfDocument()
+        {
+            var type = await EvaluateSimpleScriptAsync("typeof document.nodeType");
+            var value = await EvaluateSimpleScriptAsync("document.nodeType");
+            Assert.AreEqual("number", type);
+            Assert.AreEqual("9", value);
+        }
+
+        [Test]
         public async Task GetChildNodesLengthOfDocument()
         {
             var result = await EvaluateSimpleScriptAsync("document.childNodes.length");

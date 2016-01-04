@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Attributes;
+    using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Descriptors;
     using System;
@@ -38,7 +39,12 @@
             var numericIndex = default(Int32);
 
             if (_numericIndexer != null && Int32.TryParse(propertyName, out numericIndex))
-                return new PropertyDescriptor(_numericIndexer.GetMethod.Invoke(_value, new Object[] { numericIndex }).ToJsValue(_engine), false, false, false);
+            {
+                var args = new Object[] { numericIndex };
+                var orig = _numericIndexer.GetMethod.Invoke(_value, args);
+                var prop = orig != null ? orig.ToJsValue(_engine) : JsValue.Undefined;
+                return new PropertyDescriptor(prop, false, false, false);
+            }
 
             //  Else a string property
             //  If we have a string indexer and no property exists for this name then use the string indexer
@@ -47,7 +53,11 @@
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
             if (_stringIndexer != null && !Properties.ContainsKey(propertyName))
-                return new PropertyDescriptor(_stringIndexer.GetMethod.Invoke(_value, new Object[] { propertyName }).ToJsValue(_engine), false, false, false);
+            {
+                var args = new Object[] { propertyName };
+                var prop = _stringIndexer.GetMethod.Invoke(_value, args).ToJsValue(_engine);
+                return new PropertyDescriptor(prop, false, false, false);
+            }
             
             //  Else try to return a registered property
             return base.GetOwnProperty(propertyName);
@@ -104,9 +114,13 @@
                     if (indexParameters.Length == 1)
                     {
                         if (indexParameters[0].ParameterType == typeof(Int32))
+                        {
                             _numericIndexer = property;
+                        }
                         else if (indexParameters[0].ParameterType == typeof(String))
+                        {
                             _stringIndexer = property;
+                        }
                     }
                 }
 
@@ -133,10 +147,11 @@
                     // If it already has a property with the given name (usually another method),
                     // then convert that method to a two-layer method, which decides which one
                     // to pick depending on the number (and probably types) of arguments.
-                    if (Properties.ContainsKey(name))
-                        continue;
-
-                    FastAddProperty(name, new DomFunctionInstance(_engine, method), false, false, false);
+                    if (!Properties.ContainsKey(name))
+                    {
+                        var func = new DomFunctionInstance(_engine, method);
+                        FastAddProperty(name, func, false, false, false);
+                    }
                 }
             }
         }
