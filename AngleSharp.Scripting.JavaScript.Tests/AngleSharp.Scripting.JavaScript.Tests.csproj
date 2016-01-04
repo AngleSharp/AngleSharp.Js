@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="FireEventTests.cs" />
     <Compile Include="GeneratorTests.cs" />
+    <Compile Include="IntegrationTests.cs" />
     <Compile Include="InteractionTests.cs" />
     <Compile Include="JqueryTests.cs" />
     <Compile Include="Mocks\DelayedRequester.cs" />
