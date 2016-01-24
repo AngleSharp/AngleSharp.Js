@@ -40,7 +40,7 @@
         /// </summary>
         public String Type
         {
-            get { return MimeTypes.DefaultJavaScript; }
+            get { return MimeTypeNames.DefaultJavaScript; }
         }
 
         /// <summary>

@@ -344,7 +344,7 @@
         {
             try
             {
-                using (var response = await loader.LoadAsync(request, cancel).ConfigureAwait(false))
+                using (var response = await loader.DownloadAsync(request).Task.ConfigureAwait(false))
                 {
                     if (response != null)
                     {
