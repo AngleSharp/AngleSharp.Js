@@ -9,6 +9,8 @@
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// The JavaScript engine.
@@ -61,12 +63,17 @@
         }
 
         /// <summary>
-        /// Evaluates the given source.
+        /// Evaluates the response and returns an already finished task.
         /// </summary>
-        /// <param name="source">The source code to evaluate.</param>
+        /// <param name="response">The response to parse.</param>
         /// <param name="options">The options to consider.</param>
-        public void Evaluate(String source, ScriptOptions options)
+        /// <param name="cancel">The currently unused cancellation token.</param>
+        /// <returns>The completed task.</returns>
+        public Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
+            var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true);
+            var content = reader.ReadToEnd();
+            reader.Close();
             var objectContext = options.Context;
             var instance = default(EngineInstance);
 
@@ -75,20 +82,8 @@
                 _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
             }
 
-            instance.RunScript(source);
-        }
-
-        /// <summary>
-        /// Evaluates the response.
-        /// </summary>
-        /// <param name="response">The response to parse.</param>
-        /// <param name="options">The options to consider.</param>
-        public void Evaluate(IResponse response, ScriptOptions options)
-        {
-            var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true);
-            var content = reader.ReadToEnd();
-            reader.Close();
-            Evaluate(content, options);
+            instance.RunScript(content);
+            return Task.FromResult(true);
         }
     }
 }

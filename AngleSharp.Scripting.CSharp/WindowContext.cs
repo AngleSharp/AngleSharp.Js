@@ -176,6 +176,11 @@
             return _window.SetTimeout(handler, timeout);
         }
 
+        public void InvokeEventListener(Event ev)
+        {
+            _window.InvokeEventListener(ev);
+        }
+
         #endregion
 
         #region Events
