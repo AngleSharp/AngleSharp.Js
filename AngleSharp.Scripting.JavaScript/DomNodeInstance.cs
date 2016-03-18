@@ -41,9 +41,23 @@
             if (_numericIndexer != null && Int32.TryParse(propertyName, out numericIndex))
             {
                 var args = new Object[] { numericIndex };
-                var orig = _numericIndexer.GetMethod.Invoke(_value, args);
-                var prop = orig != null ? orig.ToJsValue(_engine) : JsValue.Undefined;
-                return new PropertyDescriptor(prop, false, false, false);
+
+                try
+                {
+                    var orig = _numericIndexer.GetMethod.Invoke(_value, args);
+                    var prop = orig.ToJsValue(_engine);
+                    return new PropertyDescriptor(prop, false, false, false);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    if (ex.InnerException is ArgumentOutOfRangeException)
+                    {
+                        var prop = JsValue.Undefined;
+                        return new PropertyDescriptor(prop, false, false, false);
+                    }
+
+                    throw;
+                }
             }
 
             //  Else a string property
