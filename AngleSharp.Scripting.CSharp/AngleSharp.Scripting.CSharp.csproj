@@ -43,7 +43,7 @@
     <Compile Include="WindowService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.9.5.41771, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
+    <Reference Include="AngleSharp, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
       <HintPath>..\packages\AngleSharp.0.9.5\lib\portable-windows8+net45+windowsphone8+wpa\AngleSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
