@@ -60,11 +60,18 @@
                 try
                 {
                     var orig = _numericIndexer.GetMethod.Invoke(_value, args);
-                    return new PropertyDescriptor(orig.ToJsValue(_engine), false, false, false);
+                    var prop = orig.ToJsValue(_engine);
+                    return new PropertyDescriptor(prop, false, false, false);
                 }
-                catch
+                catch (TargetInvocationException ex)
                 {
-                    return new PropertyDescriptor(JsValue.Undefined, false, false, false);
+                    if (ex.InnerException is ArgumentOutOfRangeException)
+                    {
+                        var prop = JsValue.Undefined;
+                        return new PropertyDescriptor(prop, false, false, false);
+                    }
+
+                    throw;
                 }
             }
 

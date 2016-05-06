@@ -1,8 +1,10 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Net.NetworkInformation;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -27,6 +29,50 @@
             var html = "<!doctype html><div id=result></div>" + scripts;
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return document.GetElementById("result").InnerHtml;
+        }
+
+        public static Boolean IsNetworkAvailable()
+        {
+            if (IsNetworkAvailable(0))
+            {
+                return true;
+            }
+
+            Assert.Inconclusive("No network has been detected. Test skipped.");
+            return false;
+        }
+
+        public static Boolean IsNetworkAvailable(Int64 minimumSpeed)
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    // discard because of standard reasons
+                    if ((ni.OperationalStatus != OperationalStatus.Up) ||
+                        (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) ||
+                        (ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel))
+                        continue;
+
+                    // this allow to filter modems, serial, etc.
+                    // I use 10000000 as a minimum speed for most cases
+                    if (ni.Speed < minimumSpeed)
+                        continue;
+
+                    // discard virtual cards (virtual box, virtual pc, etc.)
+                    if ((ni.Description.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (ni.Name.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0))
+                        continue;
+
+                    // discard "Microsoft Loopback Adapter", it will not show as NetworkInterfaceType.Loopback but as Ethernet Card.
+                    if (ni.Description.Equals("Microsoft Loopback Adapter", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -33,7 +33,7 @@
                         var parameters = _engine.BuildArgs(_method, arguments);
                         return _method.Invoke(node.Value, parameters).ToJsValue(_engine);
                     }
-                    catch
+                    catch (TargetInvocationException)
                     {
                         throw new JavaScriptException(Engine.Error);
                     }
