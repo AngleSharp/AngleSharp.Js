@@ -11,21 +11,36 @@
 
     sealed class DomNodeInstance : ObjectInstance
     {
-        readonly Object _value;
+        readonly Type _type;
         readonly EngineInstance _engine;
+        readonly Object _value;
+
         PropertyInfo _numericIndexer;
         PropertyInfo _stringIndexer;
 
         public DomNodeInstance(EngineInstance engine, Object value)
             : base(engine.Jint)
         {
+            _type = value.GetType();
             _engine = engine;
             _value = value;
-            SetAllMembers(value.GetType());
+
+            SetAllMembers();
+            SetPseudoProperties();
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
             Prototype = engine.Jint.Object;
+        }
+
+        public Object Value
+        {
+            get { return _value; }
+        }
+
+        public override String ToString()
+        {
+            return String.Format("[object {0}]", _type.Name);
         }
 
         public EngineInstance Context
@@ -70,8 +85,9 @@
             return base.GetOwnProperty(propertyName);
         }
 
-        void SetAllMembers(Type type)
+        void SetAllMembers()
         {
+            var type = _type;
             var types = new List<Type>(type.GetInterfaces());
 
             do
@@ -163,14 +179,33 @@
             }
         }
 
-        public Object Value
+        void SetPseudoProperties()
         {
-            get { return _value; }
-        }
+            if (_type.GetInterfaces().Contains(typeof(AngleSharp.Dom.IElement)))
+            {
+                var focusInEventInstance = new DomEventInstance(this);
+                var focusOutEventInstance = new DomEventInstance(this);
+                var unloadEventInstance = new DomEventInstance(this);
+                var contextMenuEventInstance = new DomEventInstance(this);
 
-        public override String ToString()
-        {
-            return String.Format("[object {0}]", _value.GetType().Name);
+                FastSetProperty("scrollLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+
+                FastSetProperty("focusin", new PropertyDescriptor(focusInEventInstance.Getter, focusInEventInstance.Setter, false, false));
+                FastSetProperty("focusout", new PropertyDescriptor(focusOutEventInstance.Getter, focusOutEventInstance.Setter, false, false));
+                FastSetProperty("unload", new PropertyDescriptor(unloadEventInstance.Getter, unloadEventInstance.Setter, false, false));
+                FastSetProperty("contextmenu", new PropertyDescriptor(contextMenuEventInstance.Getter, contextMenuEventInstance.Setter, false, false));
+            }
         }
     }
 }

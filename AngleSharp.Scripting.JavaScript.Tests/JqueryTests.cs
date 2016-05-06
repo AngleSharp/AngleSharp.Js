@@ -14,19 +14,10 @@
         {
             var list = new List<String>(sources);
             list.Insert(0, Sources.Jquery);
-            return EvaluateScriptsAsync(list);
+            return list.EvalScriptsAsync();
         }
 
-        public static async Task<String> EvaluateScriptsAsync(List<String> sources)
-        {
-            var cfg = Configuration.Default.WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true).WithJavaScript().WithCss();
-            var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
-            var html = "<!doctype html><div id=result></div>" + scripts;
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            return document.GetElementById("result").InnerHtml;
-        }
-
-        public static String SetResult(String eval)
+        static String SetResult(String eval)
         {
             return "document.querySelector('#result').textContent = " + eval + ";";
         }
@@ -93,7 +84,7 @@ $.ajax('http://example.com/', {
         [Test]
         public async Task JqueryVersionOne()
         {
-            var result = await EvaluateScriptsAsync(new List<String> { Sources.Jquery1, SetResult("$.toString()") });
+            var result = await (new [] { Sources.Jquery1, SetResult("$.toString()") }).EvalScriptsAsync();
             Assert.AreNotEqual("", result);
         }
     }

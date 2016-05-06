@@ -81,12 +81,14 @@
   <ItemGroup>
     <Compile Include="FireEventTests.cs" />
     <Compile Include="GeneratorTests.cs" />
+    <Compile Include="Helpers.cs" />
     <Compile Include="IntegrationTests.cs" />
     <Compile Include="InteractionTests.cs" />
     <Compile Include="JqueryTests.cs" />
     <Compile Include="Mocks\DelayedRequester.cs" />
     <Compile Include="PageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PseudoPropertiesTests.cs" />
     <Compile Include="ScriptEvalTests.cs" />
     <Compile Include="ScriptingTests.cs" />
     <Compile Include="Sources.Designer.cs">

@@ -11,14 +11,18 @@
         DomEventHandler _handler;
         FunctionInstance _function;
 
-        public DomEventInstance(DomNodeInstance node, EventInfo eventInfo)
+        public DomEventInstance(DomNodeInstance node, EventInfo eventInfo = null)
         {
             Getter = new ClrFunctionInstance(node.Engine, (thisObject, arguments) => _function ?? JsValue.Null);
             Setter = new ClrFunctionInstance(node.Engine, (thisObject, arguments) =>
             {
                 if (_handler != null)
                 {
-                    eventInfo.RemoveEventHandler(node.Value, _handler);
+                    if (eventInfo != null)
+                    {
+                        eventInfo.RemoveEventHandler(node.Value, _handler);
+                    }
+
                     _handler = null;
                     _function = null;
                 }
@@ -32,7 +36,11 @@
                         var args = ev.ToJsValue(node.Context);
                         _function.Call(sender, new [] { args });
                     };
-                    eventInfo.AddEventHandler(node.Value, _handler);
+
+                    if (eventInfo != null)
+                    {
+                        eventInfo.AddEventHandler(node.Value, _handler);
+                    }
                 }
 
                 return arguments[0];
