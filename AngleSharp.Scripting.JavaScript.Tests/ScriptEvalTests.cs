@@ -121,14 +121,16 @@ xhr.send();";
             var result = document.QuerySelector("#result");
             Assert.AreEqual("", result.TextContent);
             Assert.IsTrue(req.IsStarted);
-            await result.AwaitEvent("xhrdone").ConfigureAwait(false);
+            await result.AwaitEventAsync("xhrdone").ConfigureAwait(false);
             Assert.AreEqual(message, result.TextContent);
         }
 
         [Test]
         public async Task SetContentOfIFrameElement()
         {
-            var cfg = Configuration.Default.WithJavaScript();
+            var cfg = Configuration.Default.
+                WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true).
+                WithJavaScript();
             var html = @"<!doctype html><iframe id=myframe srcdoc=''></iframe><script>
 var iframe = document.querySelector('#myframe');
 var doc = iframe.contentWindow.document;

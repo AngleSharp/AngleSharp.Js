@@ -9,14 +9,22 @@
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// The JavaScript engine.
     /// </summary>
     public class JavaScriptEngine : IScriptEngine
     {
+        #region Fields
+
         readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
         readonly Dictionary<String, Object> _external;
+
+        #endregion
+
+        #region ctor
 
         /// <summary>
         /// Creates a new JavaScript engine.
@@ -26,6 +34,10 @@
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
         }
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
         /// Gets the external assignments.
@@ -42,6 +54,10 @@
         {
             get { return MimeTypeNames.DefaultJavaScript; }
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Gets the associated Jint engine, if any.
@@ -61,34 +77,29 @@
         }
 
         /// <summary>
-        /// Evaluates the given source.
-        /// </summary>
-        /// <param name="source">The source code to evaluate.</param>
-        /// <param name="options">The options to consider.</param>
-        public void Evaluate(String source, ScriptOptions options)
-        {
-            var objectContext = options.Context;
-            var instance = default(EngineInstance);
-
-            if (!_contexts.TryGetValue(objectContext, out instance))
-            {
-                _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
-            }
-
-            instance.RunScript(source);
-        }
-
-        /// <summary>
-        /// Evaluates the response.
+        /// Evaluates the response asynchronously.
         /// </summary>
         /// <param name="response">The response to parse.</param>
         /// <param name="options">The options to consider.</param>
-        public void Evaluate(IResponse response, ScriptOptions options)
+        /// <param name="cancel">The cancellation token to transport.</param>
+        public async Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
-            var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true);
-            var content = reader.ReadToEnd();
-            reader.Close();
-            Evaluate(content, options);
+            var instance = default(EngineInstance);
+            var objectContext = options.Document.DefaultView;
+            
+            using (var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true))
+            {
+                var content = await reader.ReadToEndAsync().ConfigureAwait(false);
+
+                if (!_contexts.TryGetValue(objectContext, out instance))
+                {
+                    _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
+                }
+
+                instance.RunScript(content);
+            }
         }
+
+        #endregion
     }
 }

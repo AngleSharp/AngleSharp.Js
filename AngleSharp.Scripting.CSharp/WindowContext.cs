@@ -156,6 +156,11 @@
             _window.RemoveEventListener(type, callback, capture);
         }
 
+        public void InvokeEventListener(Event ev)
+        {
+            _window.InvokeEventListener(ev);
+        }
+
         public void ClearInterval(Int32 handle = 0)
         {
             _window.ClearInterval(handle);

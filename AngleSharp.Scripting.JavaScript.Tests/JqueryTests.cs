@@ -86,7 +86,7 @@ $.ajax('http://example.com/', {
             var result = document.QuerySelector("#result");
             Assert.AreEqual("", result.TextContent);
             Assert.IsTrue(req.IsStarted);
-            await result.AwaitEvent("xhrdone").ConfigureAwait(false);
+            await result.AwaitEventAsync("xhrdone").ConfigureAwait(false);
             Assert.AreEqual(message, result.TextContent);
         }
 

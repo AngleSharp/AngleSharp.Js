@@ -8,12 +8,14 @@
     public class ConversionTests
     {
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void ConvertCurrentDocumentOfFreshBrowsingContextWithoutDocumentShouldThrowException()
         {
             var context = BrowsingContext.New();
-            var document = context.GetDynamicDocument();
-            Assert.IsNotNull(document);
+            Assert.Catch<ArgumentNullException>(() =>
+            {
+                var document = context.GetDynamicDocument();
+                Assert.IsNotNull(document);
+            });
         }
 
         [Test]
