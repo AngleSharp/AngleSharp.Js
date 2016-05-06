@@ -8,12 +8,18 @@
 
     sealed class EngineInstance
     {
+        #region Fields
+
         readonly Dictionary<Object, DomNodeInstance> _objects;
         readonly Engine _engine;
         readonly LexicalEnvironment _lexicals;
         readonly LexicalEnvironment _variables;
         readonly DomNodeInstance _window;
         readonly DomConstructors _constructors;
+
+        #endregion
+
+        #region ctor
 
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments)
         {
@@ -36,6 +42,10 @@
             this.AddConstructors(_window, this.GetType());
             this.AddInstances(_window, this.GetType());
         }
+
+        #endregion
+
+        #region Properties
 
         public DomNodeInstance Window
         {
@@ -62,6 +72,10 @@
             get { return _engine; }
         }
 
+        #endregion
+
+        #region Methods
+
         public DomNodeInstance GetDomNode(Object obj)
         {
             var domNodeInstance = default(DomNodeInstance);
@@ -80,5 +94,7 @@
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
         }
+
+        #endregion
     }
 }

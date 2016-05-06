@@ -41,9 +41,16 @@
             if (_numericIndexer != null && Int32.TryParse(propertyName, out numericIndex))
             {
                 var args = new Object[] { numericIndex };
-                var orig = _numericIndexer.GetMethod.Invoke(_value, args);
-                var prop = orig != null ? orig.ToJsValue(_engine) : JsValue.Undefined;
-                return new PropertyDescriptor(prop, false, false, false);
+
+                try
+                {
+                    var orig = _numericIndexer.GetMethod.Invoke(_value, args);
+                    return new PropertyDescriptor(orig.ToJsValue(_engine), false, false, false);
+                }
+                catch
+                {
+                    return new PropertyDescriptor(JsValue.Undefined, false, false, false);
+                }
             }
 
             //  Else a string property
