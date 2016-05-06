@@ -142,7 +142,11 @@ Task("Publish-Package")
 
         foreach (var nupkg in GetFiles(nugetRoot.Path.FullPath + "/*.nupkg"))
         {
-            NuGetPush(nupkg, new NuGetPushSettings { ApiKey = apiKey });
+            NuGetPush(nupkg, new NuGetPushSettings 
+            { 
+                Source = "https://nuget.org/api/v2/package",
+                ApiKey = apiKey 
+            });
         }
     });
     
