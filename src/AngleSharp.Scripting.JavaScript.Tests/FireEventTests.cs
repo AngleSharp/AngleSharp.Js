@@ -11,7 +11,7 @@
         [Test]
         public async Task InvokeFunctionOnLoadEventShouldFireDelayed()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><div id=result></div><script>document.addEventListener('load', function () { document.querySelector('#result').textContent = 'done'; }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -24,7 +24,7 @@
         [Test]
         public async Task InvokeFunctionOnCustomEvent()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><div id=result>0</div><script>var i = 0; document.addEventListener('hello', function () { i++; document.querySelector('#result').textContent = i.toString(); }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -38,7 +38,7 @@
         [Test]
         public async Task InvokeLoadEventFromJsAndCustomEventFromJsAndCs()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -72,7 +72,7 @@ log.push('b');
         [Test]
         public async Task AddClickHandlerClassicallyWillExecute()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -93,7 +93,7 @@ document.dispatchEvent(new MouseEvent('click'));
         [Test]
         public async Task AddAndRemoveClickHandlerWontExecute()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -115,7 +115,7 @@ document.dispatchEvent(new MouseEvent('click'));
         [Test]
         public async Task AddAndInvokeClickHandlerWillChangeCapturedValue()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>

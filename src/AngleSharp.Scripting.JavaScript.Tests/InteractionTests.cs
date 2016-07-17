@@ -12,7 +12,7 @@
         [Test]
         public async Task ReadStoredJavaScriptValueFromCSharp()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>var foo = 'test';</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -24,7 +24,7 @@
         [Test]
         public async Task RunJavaScriptFunctionFromCSharp()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>function square(x) { return x * x; }</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -37,7 +37,7 @@
         [Test]
         public async Task RunCSharpFunctionFromJavaScript()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             var storedValue = 0.0;
             service.Engine.External["square"] = new Action<Double>(x => storedValue = x);
@@ -49,7 +49,7 @@
         [Test]
         public async Task AccessCSharpInstanceMembersFromJavaScript()
         {
-            var service = new ScriptingService();
+            var service = new JavaScriptProvider();
             var cfg = Configuration.Default.With(service);
             service.Engine.External["person"] = new Person { Age = 20, Name = "Foobar" };
             var html = "<!doctype html><script>var str = person.Name + ' is ' + person.Age + ' years old';</script>";

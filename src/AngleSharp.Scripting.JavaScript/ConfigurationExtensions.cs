@@ -1,7 +1,9 @@
 ﻿namespace AngleSharp
 {
+    using AngleSharp.Dom.Navigator;
+    using AngleSharp.Scripting.JavaScript.Dom;
     using AngleSharp.Scripting.JavaScript.Services;
-    using AngleSharp.Services;
+    using System;
     using System.Linq;
 
     /// <summary>
@@ -18,14 +20,13 @@
         /// <returns>The new configuration.</returns>
         public static IConfiguration WithJavaScript(this IConfiguration configuration)
         {
-            if (!configuration.Services.OfType<ScriptingService>().Any())
+            if (!configuration.Services.OfType<JavaScriptProvider>().Any())
             {
-                var service = new ScriptingService();
+                var service = new JavaScriptProvider();
 
-                if (!configuration.Services.OfType<INavigatorService>().Any())
+                if (!configuration.Services.OfType<Func<IBrowsingContext, INavigator>>().Any())
                 {
-                    var navigator = new NavigatorService();
-                    configuration = configuration.With(navigator);
+                    configuration = configuration.With<INavigator>(context => new Navigator());
                 }
 
                 return configuration.With(service);

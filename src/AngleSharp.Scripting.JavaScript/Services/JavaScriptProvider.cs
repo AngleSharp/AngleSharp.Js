@@ -8,14 +8,14 @@
     /// <summary>
     /// Represents the service for the JavaScript engine.
     /// </summary>
-    public class ScriptingService : IScriptingService
+    public class JavaScriptProvider : IScriptingProvider
     {
         readonly JavaScriptEngine _engine;
 
         /// <summary>
         /// Creates a new scripting service.
         /// </summary>
-        public ScriptingService()
+        public JavaScriptProvider()
         {
             _engine = new JavaScriptEngine();
         }
