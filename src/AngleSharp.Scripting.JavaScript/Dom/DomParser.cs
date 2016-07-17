@@ -26,12 +26,23 @@
 
         readonly IWindow _window;
 
+        /// <summary>
+        /// Creates a new DOMParser instance.
+        /// </summary>
+        /// <param name="window">The window to host the parser.</param>
         [DomConstructor]
         public DomParser(IWindow window)
         {
             _window = window;
         }
 
+        /// <summary>
+        /// Parses the given string for the given type. Throws a not supported
+        /// exception if the type is not supported.
+        /// </summary>
+        /// <param name="str">The content to parse.</param>
+        /// <param name="type">The type of the target to parse to.</param>
+        /// <returns>The document of the given type.</returns>
         [DomName("parseFromString")]
         public IDocument Parse(String str, String type)
         {

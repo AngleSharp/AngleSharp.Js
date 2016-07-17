@@ -1,3 +1,8 @@
+# 0.4.1
+
+- Release as a portable library (profile 259)
+- Adjustable console logger
+
 # 0.4.0
 
 - Fixed some bugs (#24, #20, #17, #16)
