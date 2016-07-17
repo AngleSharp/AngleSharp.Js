@@ -13,7 +13,7 @@
         public static Task<String> EvaluateScriptWithJqueryAsync(params String[] sources)
         {
             var list = new List<String>(sources);
-            list.Insert(0, Sources.Jquery);
+            list.Insert(0, Constants.Jquery2_1_4);
             return list.EvalScriptsAsync();
         }
 
@@ -63,7 +63,7 @@
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
             var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new[] { req });
-            var sources = new [] { Sources.Jquery, @"
+            var sources = new [] { Constants.Jquery2_1_4, @"
 $.ajax('http://example.com/', {
     success: function (data, status, xhr) { 
         var res = document.querySelector('#result');
@@ -84,7 +84,7 @@ $.ajax('http://example.com/', {
         [Test]
         public async Task JqueryVersionOne()
         {
-            var result = await (new [] { Sources.Jquery1, SetResult("$.toString()") }).EvalScriptsAsync();
+            var result = await (new [] { Constants.Jquery1_11_2, SetResult("$.toString()") }).EvalScriptsAsync();
             Assert.AreNotEqual("", result);
         }
     }
