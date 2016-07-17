@@ -2,6 +2,7 @@
 {
     using Jint.Native.Function;
     using Jint.Native.Object;
+    using System.Reflection;
 
     partial class DomConstructors
     {
@@ -26,12 +27,12 @@
 
         public void AttachConstructors(ObjectInstance obj)
         {
-            var constructors = GetType().GetProperties();
+            var properties = GetType().GetTypeInfo().DeclaredProperties;
 
-            foreach (var constructor in constructors)
+            foreach (var property in properties)
             {
-                var func = constructor.GetValue(this) as FunctionInstance;
-                obj.FastAddProperty(constructor.Name, func, true, false, true);
+                var func = property.GetValue(this) as FunctionInstance;
+                obj.FastAddProperty(property.Name, func, true, false, true);
             }
         }
 

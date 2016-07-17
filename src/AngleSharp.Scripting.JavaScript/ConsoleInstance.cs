@@ -4,27 +4,34 @@
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Interop;
+    using Services;
     using System;
 
     sealed class ConsoleInstance : ObjectInstance
     {
-        public ConsoleInstance(Engine engine)
+        private readonly IConsoleLogger _logger;
+
+        public ConsoleInstance(Engine engine, IConsoleLogger logger)
             : base(engine)
         {
-            Action<Object> log = obj => Console.WriteLine(obj);
+            _logger = logger;
             FastAddProperty("log", new ClrFunctionInstance(engine, Log), false, false, false);
         }
 
         JsValue Log(JsValue ctx, JsValue[] args)
         {
-            var strs = new String[args.Length];
-
-            for (var i = 0; i < args.Length; i++)
+            if (_logger != null)
             {
-                strs[i] = args[i].ToString();
+                var objs = new Object[args.Length];
+
+                for (var i = 0; i < args.Length; i++)
+                {
+                    objs[i] = args[i].FromJsValue();
+                }
+
+                _logger.Log(objs);
             }
 
-            Console.WriteLine(String.Join(", ", strs));
             return JsValue.Undefined;
         }
     }

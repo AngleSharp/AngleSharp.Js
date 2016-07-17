@@ -11,7 +11,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: Guid("be485498-5294-46d0-b1ba-54f095eba40d")]
 [assembly: AssemblyVersion("0.4.1.*")]
 [assembly: AssemblyFileVersion("0.4.1")]
 [assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.JavaScript.Tests")]

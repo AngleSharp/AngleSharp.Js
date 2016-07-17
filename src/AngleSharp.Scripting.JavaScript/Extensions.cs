@@ -110,7 +110,7 @@
             {
                 var sourceType = value.GetType();
 
-                if (sourceType == targetType || sourceType.IsSubclassOf(targetType) || targetType.IsInstanceOfType(value) || targetType.IsAssignableFrom(sourceType))
+                if (sourceType == targetType || sourceType.GetTypeInfo().IsSubclassOf(targetType) || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
                 {
                     return value;
                 }
@@ -119,7 +119,7 @@
                     return (Int32)(Double)value;
                 }
 
-                if (targetType.IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
+                if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
                 {
                     return targetType.ToDelegate((FunctionInstance)value, engine);
                 }
@@ -139,7 +139,7 @@
 
         public static Object GetDefaultValue(this Type type)
         {
-            return type.IsValueType ? Activator.CreateInstance(type) : null;
+            return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
         }
 
         public static MethodInfo PrepareConvert(this Type fromType, Type toType)
@@ -222,7 +222,7 @@
 
         public static void AddConstructors(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            foreach (var exportedType in type.Assembly.ExportedTypes)
+            foreach (var exportedType in type.GetTypeInfo().Assembly.ExportedTypes)
             {
                 engine.AddConstructor(obj, exportedType);
             }
@@ -230,7 +230,7 @@
 
         public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            foreach (var exportedType in type.Assembly.ExportedTypes)
+            foreach (var exportedType in type.GetTypeInfo().Assembly.ExportedTypes)
             {
                 engine.AddInstance(obj, exportedType);
             }
@@ -238,12 +238,12 @@
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var info = type.GetConstructors().FirstOrDefault(m => 
+            var info = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(m => 
                 m.GetCustomAttributes<DomConstructorAttribute>().Any());
 
             if (info != null)
             {
-                var name = type.GetOfficialName();
+                var name = type.GetTypeInfo().GetOfficialName();
                 var constructor = new DomConstructorInstance(engine, info);
                 obj.FastSetProperty(name, new PropertyDescriptor(constructor, false, true, false));
             }
@@ -251,8 +251,8 @@
 
         public static void AddInstance(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var attributes = type.GetCustomAttributes<DomInstanceAttribute>();
-            var info = type.GetConstructor(Type.EmptyTypes);
+            var attributes = type.GetTypeInfo().GetCustomAttributes<DomInstanceAttribute>();
+            var info = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(m => m.GetParameters().Length == 0);
 
             if (info != null)
             {

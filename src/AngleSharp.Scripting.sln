@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript", "AngleSharp.Scripting.JavaScript\AngleSharp.Scripting.JavaScript.csproj", "{4ED5A0B3-AE7A-40B6-BBAC-FF408D6C6BC3}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript.Tests", "AngleSharp.Scripting.JavaScript.Tests\AngleSharp.Scripting.JavaScript.Tests.csproj", "{18B0B97B-8795-4DC2-A1E7-8070255BE718}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript.Generator", "AngleSharp.Scripting.JavaScript.Generator\AngleSharp.Scripting.JavaScript.Generator.csproj", "{2BEBF4AD-1660-43A6-B452-109716F42FA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Scripting.JavaScript.Generator.Tests", "AngleSharp.Scripting.JavaScript.Generator.Tests\AngleSharp.Scripting.JavaScript.Generator.Tests.csproj", "{14AC7A32-E4E4-4ADF-A81A-030FC90E1BB6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BEBF4AD-1660-43A6-B452-109716F42FA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14AC7A32-E4E4-4ADF-A81A-030FC90E1BB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14AC7A32-E4E4-4ADF-A81A-030FC90E1BB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14AC7A32-E4E4-4ADF-A81A-030FC90E1BB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14AC7A32-E4E4-4ADF-A81A-030FC90E1BB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

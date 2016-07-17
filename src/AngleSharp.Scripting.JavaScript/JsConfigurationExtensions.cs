@@ -9,8 +9,24 @@
     /// <summary>
     /// Additional extensions for JavaScript scripting.
     /// </summary>
-    public static class ConfigurationExtensions
+    public static class JsConfigurationExtensions
     {
+        /// <summary>
+        /// Includes a service to create a new console logger for the given context.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <param name="createLogger">The delegate to create a new logger.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithConsoleLogger(this IConfiguration configuration, Func<IBrowsingContext, IConsoleLogger> createLogger)
+        {
+            if (!configuration.Services.OfType<Func<IBrowsingContext, IConsoleLogger>>().Any())
+            {
+                configuration = configuration.With<IConsoleLogger>(createLogger);
+            }
+
+            return configuration;
+        }
+
         /// <summary>
         /// Sets scripting to true, registers the JavaScript engine and returns
         /// a new configuration with the scripting service and possible

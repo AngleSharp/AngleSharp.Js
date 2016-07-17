@@ -2,7 +2,6 @@
 {
     using AngleSharp.Dom.Navigator;
     using System;
-    using System.Linq;
     using System.Net.NetworkInformation;
 
     sealed class Navigator : INavigator
@@ -14,7 +13,7 @@
 
         public String Platform
         {
-            get { return Environment.OSVersion.VersionString; }
+            get { return String.Empty; }
         }
 
         public String UserAgent
@@ -59,29 +58,7 @@
 
         public Boolean IsOnline
         {
-            get
-            {
-                if (NetworkInterface.GetIsNetworkAvailable())
-                {
-                    var adapters = NetworkInterface.GetAllNetworkInterfaces().Where(m => m.OperationalStatus == OperationalStatus.Up);
-
-                    foreach (var adapter in adapters)
-                    {
-                        if (adapter.NetworkInterfaceType != NetworkInterfaceType.Tunnel && 
-                            adapter.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                        {
-                            var statistic = adapter.GetIPv4Statistics();
-
-                            if (statistic.BytesReceived > 0 && statistic.BytesSent > 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                return false;
-            }
+            get { return NetworkInterface.GetIsNetworkAvailable(); }
         }
     }
 }

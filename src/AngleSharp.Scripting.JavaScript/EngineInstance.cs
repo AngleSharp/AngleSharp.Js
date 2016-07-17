@@ -3,8 +3,10 @@
     using AngleSharp.Dom;
     using Jint;
     using Jint.Runtime.Environments;
+    using Services;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     sealed class EngineInstance
     {
@@ -23,9 +25,18 @@
 
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments)
         {
+            var logger = default(IConsoleLogger);
+            var context = window.Document.Context;
+            var createLogger = context.Configuration.Services.OfType<Func<IBrowsingContext, IConsoleLogger>>().FirstOrDefault();
+
+            if (createLogger != null)
+            {
+                logger = createLogger.Invoke(context);
+            }
+            
             _objects = new Dictionary<Object, DomNodeInstance>();
             _engine = new Engine();
-            _engine.SetValue("console", new ConsoleInstance(_engine));
+            _engine.SetValue("console", new ConsoleInstance(_engine, logger));
 
             foreach (var assignment in assignments)
             {

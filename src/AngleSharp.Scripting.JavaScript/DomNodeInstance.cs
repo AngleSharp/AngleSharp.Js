@@ -95,12 +95,12 @@
         void SetAllMembers()
         {
             var type = _type;
-            var types = new List<Type>(type.GetInterfaces());
+            var types = new List<Type>(type.GetTypeInfo().ImplementedInterfaces);
 
             do
             {
                 types.Add(type);
-                type = type.BaseType;
+                type = type.GetTypeInfo().BaseType;
             }
             while (type != null);
 
@@ -111,13 +111,14 @@
         {
             foreach (var type in types)
             {
-                SetProperties(type.GetProperties());
-                SetMethods(type.GetMethods());
-                SetEvents(type.GetEvents());
+                var typeInfo = type.GetTypeInfo();
+                SetProperties(typeInfo.DeclaredProperties);
+                SetMethods(typeInfo.DeclaredMethods);
+                SetEvents(typeInfo.DeclaredEvents);
             }
         }
 
-        void SetEvents(EventInfo[] eventInfos)
+        void SetEvents(IEnumerable<EventInfo> eventInfos)
         {
             foreach (var eventInfo in eventInfos)
             {
@@ -188,7 +189,7 @@
 
         void SetPseudoProperties()
         {
-            if (_type.GetInterfaces().Contains(typeof(AngleSharp.Dom.IElement)))
+            if (_type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(AngleSharp.Dom.IElement)))
             {
                 var focusInEventInstance = new DomEventInstance(this);
                 var focusOutEventInstance = new DomEventInstance(this);
