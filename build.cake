@@ -95,7 +95,7 @@ Task("Copy-Files")
     .IsDependentOn("Build")
     .Does(() =>
     {
-        var target = nugetRoot + Directory("lib") + Directory("net45");
+        var target = nugetRoot + Directory("lib") + Directory("portable-windows8+net45+windowsphone8+wpa+monoandroid+monotouch");
         CreateDirectory(target);
         CopyFiles(new FilePath[]
         { 
