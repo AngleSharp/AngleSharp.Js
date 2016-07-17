@@ -17,7 +17,7 @@ The repository contains helpers for dynamic evaluation using the DLR. The dynami
 
 Additionally this library has eventually the goal of providing a very fancy way of integrating Roslyn, scriptcs or any other C# script engine. In HTML files that have been parsed with a configuration that uses `WithCSharp`, scripts can be provided in using the `text/c-sharp` type. Such scripts will then be transformed and evaluated by the provided C# script engine.
 
-The transformation should set the `this` pointer to the `IWindow` instance. Additionally the DLR will be used. Finally it will be possible to also reference other libraries in the script. The script tag might be used to include external libraries via NuGet.
+The transformation should set the `this` pointer to the `IWindow` instance. Additionally the DLR will be used. Finally, it will be possible to also reference other libraries in the script. The script tag might be used to include external libraries via NuGet.
 
 **Status** Highly experimental and most things are not implemented.
 
@@ -26,7 +26,7 @@ AngleSharp.Scripting.JavaScript
 
 The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* is fully ECMAScript 5 compatible and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation.
 
-The library comes with a service that exposes `WithJavaScript` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are pre-generated and do not use reflection. Since *Jint* is interpreting JavaScript, the library can be consumed as a PCL. The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
+The library comes with a service that exposes `WithJavaScript` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be consumed as a PCL. The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
 
 **Status** Currently leaving experimental stage and becoming alpha ready.
 
@@ -38,7 +38,7 @@ Some legal stuff
 
 The MIT License (MIT)
 
-Copyright (c) 2015 AngleSharp
+Copyright (c) 2015 - 2016 AngleSharp
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
