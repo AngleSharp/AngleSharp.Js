@@ -40,11 +40,10 @@
     <Compile Include="InternalHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowContext.cs" />
-    <Compile Include="WindowService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.9.6.41832, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
-      <HintPath>..\packages\AngleSharp.0.9.6\lib\portable-windows8+net45+windowsphone8+wpa\AngleSharp.dll</HintPath>
+    <Reference Include="AngleSharp, Version=0.9.7.82, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
+      <HintPath>..\packages\AngleSharp.0.9.7\lib\portable-windows8+net45+windowsphone8+wpa+monoandroid+monotouch\AngleSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

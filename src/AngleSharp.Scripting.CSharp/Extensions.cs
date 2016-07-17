@@ -40,8 +40,12 @@
         /// <returns>The new configuration with the supplied service.</returns>
         public static IConfiguration WithWindowContext(this IConfiguration configuration, Func<IWindow, WindowContext> creator)
         {
-            var service = new WindowService(creator);
-            return configuration.With(service);
+            return configuration.With<IWindow>(context =>
+            {
+                var window = creator.Invoke(context.Current);
+                window.Run();
+                return window;
+            });
         }
     }
 }
