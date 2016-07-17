@@ -11,6 +11,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("0.1.1.*")]
-[assembly: AssemblyFileVersion("0.1.6")]
+[assembly: AssemblyVersion("0.2.0.*")]
+[assembly: AssemblyFileVersion("0.2.0")]
 [assembly: InternalsVisibleToAttribute("AngleSharp.Scripting.CSharp.Tests")]
