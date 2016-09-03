@@ -1,3 +1,8 @@
+# 0.4.2
+
+- Updated to latest version of AngleSharp
+- Allow getting the engine without a script (#28)
+
 # 0.4.1
 
 - Release as a portable library (profile 259)
