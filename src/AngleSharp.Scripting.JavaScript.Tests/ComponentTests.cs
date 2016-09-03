@@ -14,7 +14,7 @@
             var cfg = Configuration.Default.With(service);
             var html = String.Concat("<!doctype html><script>", script, "</script>");
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var value = service.Engine.GetJint(document).GetValue("assert");
+            var value = service.Engine.GetOrCreateJint(document).GetValue("assert");
             return value.AsString();
         }
 

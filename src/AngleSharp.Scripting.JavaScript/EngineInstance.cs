@@ -12,12 +12,12 @@
     {
         #region Fields
 
-        readonly Dictionary<Object, DomNodeInstance> _objects;
-        readonly Engine _engine;
-        readonly LexicalEnvironment _lexicals;
-        readonly LexicalEnvironment _variables;
-        readonly DomNodeInstance _window;
-        readonly DomConstructors _constructors;
+        private readonly Dictionary<Object, DomNodeInstance> _objects;
+        private readonly Engine _engine;
+        private readonly LexicalEnvironment _lexicals;
+        private readonly LexicalEnvironment _variables;
+        private readonly DomNodeInstance _window;
+        private readonly DomConstructors _constructors;
 
         #endregion
 

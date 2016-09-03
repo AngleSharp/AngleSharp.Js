@@ -53,7 +53,7 @@ log.push('b');
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var log = service.Engine.GetJint(document).GetValue("log").AsArray();
+            var log = service.Engine.GetOrCreateJint(document).GetValue("log").AsArray();
 
             document.AddEventListener("hello", (s, ev) =>
             {
@@ -86,7 +86,7 @@ document.dispatchEvent(new MouseEvent('click'));
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsTrue(clicked);
         }
 
@@ -108,7 +108,7 @@ document.dispatchEvent(new MouseEvent('click'));
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsFalse(clicked);
         }
 
@@ -129,7 +129,7 @@ document.onclick();
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsTrue(clicked);
         }
     }

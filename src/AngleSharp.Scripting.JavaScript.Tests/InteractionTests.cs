@@ -16,7 +16,7 @@
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>var foo = 'test';</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var foo = service.Engine.GetJint(document).GetValue("foo");
+            var foo = service.Engine.GetOrCreateJint(document).GetValue("foo");
             Assert.AreEqual(Types.String, foo.Type);
             Assert.AreEqual("test", foo.AsString());
         }
@@ -28,7 +28,7 @@
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>function square(x) { return x * x; }</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var square = service.Engine.GetJint(document).GetValue("square");
+            var square = service.Engine.GetOrCreateJint(document).GetValue("square");
             var result = square.Invoke(4);
             Assert.AreEqual(Types.Number, result.Type);
             Assert.AreEqual(16.0, result.AsNumber());
@@ -54,7 +54,7 @@
             service.Engine.External["person"] = new Person { Age = 20, Name = "Foobar" };
             var html = "<!doctype html><script>var str = person.Name + ' is ' + person.Age + ' years old';</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var str = service.Engine.GetJint(document).GetValue("str");
+            var str = service.Engine.GetOrCreateJint(document).GetValue("str");
             Assert.AreEqual(Types.String, str.Type);
             Assert.AreEqual("Foobar is 20 years old", str.AsString());
         }

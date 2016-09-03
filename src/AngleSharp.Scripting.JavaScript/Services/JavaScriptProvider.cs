@@ -10,7 +10,7 @@
     /// </summary>
     public class JavaScriptProvider : IScriptingProvider
     {
-        readonly JavaScriptEngine _engine;
+        private readonly JavaScriptEngine _engine;
 
         /// <summary>
         /// Creates a new scripting service.

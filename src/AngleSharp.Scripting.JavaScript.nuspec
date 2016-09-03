@@ -14,8 +14,8 @@
     <copyright>Copyright 2016, AngleSharp</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies> 
-      <dependency id="AngleSharp" version="0.9.7" />
-      <dependency id="Jint" version="2.8.0" />
+      <dependency id="AngleSharp" version="0.9.8" />
+      <dependency id="Jint" version="2.9.1" />
     </dependencies>
   </metadata>
 </package>

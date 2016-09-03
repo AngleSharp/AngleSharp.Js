@@ -19,8 +19,8 @@
     {
         #region Fields
 
-        readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
-        readonly Dictionary<String, Object> _external;
+        private readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
+        private readonly Dictionary<String, Object> _external;
 
         #endregion
 
@@ -60,20 +60,13 @@
         #region Methods
 
         /// <summary>
-        /// Gets the associated Jint engine, if any.
+        /// Gets the associated Jint engine or creates it.
         /// </summary>
         /// <param name="document">The current document.</param>
-        /// <returns>The engine object, if any.</returns>
-        public Engine GetJint(IDocument document)
+        /// <returns>The engine object.</returns>
+        public Engine GetOrCreateJint(IDocument document)
         {
-            var instance = default(EngineInstance);
-
-            if (_contexts.TryGetValue(document.DefaultView, out instance))
-            {
-                return instance.Jint;
-            }
-
-            return null;
+            return GetOrCreateInstance(document).Jint;
         }
 
         /// <summary>
@@ -84,20 +77,29 @@
         /// <param name="cancel">The cancellation token to transport.</param>
         public async Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
-            var instance = default(EngineInstance);
-            var objectContext = options.Document.DefaultView;
-            
             using (var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-
-                if (!_contexts.TryGetValue(objectContext, out instance))
-                {
-                    _contexts.Add(objectContext, instance = new EngineInstance(objectContext, _external));
-                }
-
-                instance.RunScript(content);
+                GetOrCreateInstance(options.Document).RunScript(content);
             }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private EngineInstance GetOrCreateInstance(IDocument document)
+        {
+            var instance = default(EngineInstance);
+            var objectContext = document.DefaultView;
+
+            if (!_contexts.TryGetValue(objectContext, out instance))
+            {
+                instance = new EngineInstance(objectContext, _external);
+                _contexts.Add(objectContext, instance);
+            }
+
+            return instance;
         }
 
         #endregion
