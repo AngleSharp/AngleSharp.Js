@@ -161,13 +161,14 @@ Task("Publish-Release")
         {
             throw new InvalidOperationException("Could not resolve AngleSharp GitHub token.");
         }
-        
+
         var github = new GitHubClient(new ProductHeaderValue("AngleSharpCakeBuild"))
         {
             Credentials = new Credentials(githubToken)
         };
 
-        github.Release.Create("AngleSharp", "AngleSharp.Scripting", new NewRelease("v" + version) 
+        var newRelease = github.Repository.Release;
+        newRelease.Create("AngleSharp", "AngleSharp.Scripting", new NewRelease("v" + version)
         {
             Name = version,
             Body = String.Join(Environment.NewLine, releaseNotes.Notes),
