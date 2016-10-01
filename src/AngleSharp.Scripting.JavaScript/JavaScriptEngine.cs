@@ -84,6 +84,26 @@
             }
         }
 
+        /// <summary>
+        /// Evaluates the given script source in the provided context.
+        /// </summary>
+        /// <param name="context">The context of the evaluation.</param>
+        /// <param name="source">The source of the script.</param>
+        /// <returns>The result of the evaluation.</returns>
+        public Object EvaluateScript(INode context, String source)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            var document = context.Owner;
+
+            if (document == null)
+                throw new ArgumentException("The context has to be attached to a document.");
+
+            var instance = GetOrCreateInstance(document);
+            return instance.RunScript(source, context);
+        }
+
         #endregion
 
         #region Helpers

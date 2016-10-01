@@ -2,17 +2,19 @@
 {
     using AngleSharp.Dom;
     using Jint;
+    using Jint.Native;
     using Jint.Runtime.Environments;
     using Services;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.CompilerServices;
 
     sealed class EngineInstance
     {
         #region Fields
 
-        private readonly Dictionary<Object, DomNodeInstance> _objects;
+        private readonly ConditionalWeakTable<Object, DomNodeInstance> _objects;
         private readonly Engine _engine;
         private readonly LexicalEnvironment _lexicals;
         private readonly LexicalEnvironment _variables;
@@ -34,7 +36,7 @@
                 logger = createLogger.Invoke(context);
             }
             
-            _objects = new Dictionary<Object, DomNodeInstance>();
+            _objects = new ConditionalWeakTable<Object, DomNodeInstance>();
             _engine = new Engine();
             _engine.SetValue("console", new ConsoleInstance(_engine, logger));
 
@@ -99,11 +101,12 @@
             return domNodeInstance;
         }
 
-        public void RunScript(String source)
+        public Object RunScript(String source, JsValue context)
         {
-            _engine.EnterExecutionContext(Lexicals, Variables, _window);
+            _engine.EnterExecutionContext(Lexicals, Variables, context);
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
+            return _engine.GetCompletionValue().FromJsValue();
         }
 
         #endregion

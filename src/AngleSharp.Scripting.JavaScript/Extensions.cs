@@ -55,6 +55,16 @@
             return JsValue.Null;
         }
 
+        public static Object RunScript(this EngineInstance engine, String source)
+        {
+            return engine.RunScript(source, engine.Window);
+        }
+
+        public static Object RunScript(this EngineInstance engine, String source, INode context)
+        {
+            return engine.RunScript(source, context.ToJsValue(engine));
+        }
+
         public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
         {
             return new ClrFunctionInstance(engine, func);
