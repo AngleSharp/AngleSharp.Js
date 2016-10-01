@@ -55,16 +55,6 @@
             return JsValue.Null;
         }
 
-        public static Object RunScript(this EngineInstance engine, String source)
-        {
-            return engine.RunScript(source, engine.Window);
-        }
-
-        public static Object RunScript(this EngineInstance engine, String source, INode context)
-        {
-            return engine.RunScript(source, context.ToJsValue(engine));
-        }
-
         public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
         {
             return new ClrFunctionInstance(engine, func);
@@ -98,13 +88,7 @@
                 case Types.Object:
                     var obj = val.AsObject();
                     var node = obj as DomNodeInstance;
-
-                    if (node != null)
-                    {
-                        return node.Value;
-                    }
-
-                    return obj;
+                    return node != null ? node.Value : obj;
                 case Types.Undefined:
                     return "undefined";
                 case Types.Null:
@@ -137,9 +121,7 @@
                 var method = sourceType.PrepareConvert(targetType);
 
                 if (method == null)
-                {
                     throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
-                }
 
                 return method.Invoke(value, null);
             }
@@ -277,6 +259,16 @@
                     }
                 }
             }
+        }
+
+        public static Object RunScript(this EngineInstance engine, String source)
+        {
+            return engine.RunScript(source, engine.Window);
+        }
+
+        public static Object RunScript(this EngineInstance engine, String source, INode context)
+        {
+            return engine.RunScript(source, context.ToJsValue(engine));
         }
 
         public static String GetOfficialName(this MemberInfo member)
