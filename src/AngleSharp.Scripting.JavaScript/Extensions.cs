@@ -6,6 +6,7 @@
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Native.Object;
+    using Jint.Native.String;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
@@ -113,9 +114,26 @@
                     return (Int32)(Double)value;
                 }
 
-                if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)) && value is FunctionInstance)
+                if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
                 {
-                    return targetType.ToDelegate((FunctionInstance)value, engine);
+                    var f = value as FunctionInstance;
+
+                    if (f == null)
+                    {
+                        var b = value as String;
+
+                        if (b != null)
+                        {
+                            var e = engine.Jint;
+                            var p = new[] { new JsValue(b) };
+                            f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
+                        }
+                    }
+
+                    if (f != null)
+                    {
+                        return targetType.ToDelegate(f, engine);
+                    }
                 }
 
                 var method = sourceType.PrepareConvert(targetType);
