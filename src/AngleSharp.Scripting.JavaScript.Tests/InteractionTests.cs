@@ -59,6 +59,46 @@
             Assert.AreEqual("Foobar is 20 years old", str.AsString());
         }
 
+        [Test]
+        public async Task RunScriptSnippetDirectlyGetStringContent()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJavaScript();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var result = document.ExecuteScript("document.querySelector('#test').innerHTML");
+            Assert.AreEqual("Test", result);
+        }
+
+        [Test]
+        public async Task RunScriptSnippetDirectlyGetComplexObjectFromProperty()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJavaScript();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var result = document.ExecuteScript("document.defaultView");
+            Assert.AreEqual(document.DefaultView, result);
+        }
+
+        [Test]
+        public async Task RunScriptSnippetDirectlyGetComplexObjectFromQuerySelector()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJavaScript();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var result = document.ExecuteScript("document.querySelector('#test')");
+            Assert.AreEqual(document.QuerySelector("#test"), result);
+        }
+
+        [Test]
+        public async Task RunScriptSnippetDirectlyGetSimpleValueFromCalculation()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJavaScript();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var result = document.ExecuteScript("1 + 2 * 3 - 4");
+            Assert.AreEqual(3.0, result);
+        }
+
         class Person
         {
             public String Name
