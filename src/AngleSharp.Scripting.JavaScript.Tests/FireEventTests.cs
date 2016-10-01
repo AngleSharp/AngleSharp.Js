@@ -132,5 +132,64 @@ document.onclick();
             var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsTrue(clicked);
         }
+
+        [Test]
+        public async Task AddAndInvokeClickHandlerWithStringFunctionWontWork()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var clicked = false;
+document.onclick = 'clicked = true;';
+document.onclick();
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
+            Assert.IsFalse(clicked);
+        }
+
+        [Test]
+        public async Task SetTimeoutWithNormalFunction()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var completed = false;
+setTimeout(function () {
+  completed = true;
+}, 0);
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            await Task.Delay(100);
+            var result = service.Engine.GetOrCreateJint(document).GetValue("completed").AsBoolean();
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task SetTimeoutWithStringAsFunction()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var completed = false;
+setTimeout('completed = true;', 0);
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            await Task.Delay(100);
+            var result = service.Engine.GetOrCreateJint(document).GetValue("completed").AsBoolean();
+            Assert.IsTrue(result);
+        }
     }
 }
