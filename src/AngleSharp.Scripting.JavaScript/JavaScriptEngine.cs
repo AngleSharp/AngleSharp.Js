@@ -80,28 +80,22 @@
             using (var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-                GetOrCreateInstance(options.Document).RunScript(content);
+                EvaluateScript(options.Document, content);
             }
         }
 
         /// <summary>
-        /// Evaluates the given script source in the provided context.
+        /// Evaluates the given script source in the engine of the document.
         /// </summary>
-        /// <param name="context">The context of the evaluation.</param>
+        /// <param name="document">The context of the evaluation.</param>
         /// <param name="source">The source of the script.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Object EvaluateScript(INode context, String source)
+        public Object EvaluateScript(IDocument document, String source)
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
-
-            var document = context.Owner;
-
             if (document == null)
-                throw new ArgumentException("The context has to be attached to a document.");
-
-            var instance = GetOrCreateInstance(document);
-            return instance.RunScript(source, context);
+                throw new ArgumentNullException(nameof(document));
+            
+            return GetOrCreateInstance(document).RunScript(source);
         }
 
         #endregion
