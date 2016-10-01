@@ -101,12 +101,12 @@
             return domNodeInstance;
         }
 
-        public Object RunScript(String source, JsValue context)
+        public JsValue RunScript(String source, JsValue context)
         {
             _engine.EnterExecutionContext(Lexicals, Variables, context);
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
-            return _engine.GetCompletionValue().FromJsValue();
+            return _engine.GetCompletionValue();
         }
 
         #endregion

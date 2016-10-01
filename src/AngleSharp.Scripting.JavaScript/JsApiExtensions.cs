@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript
+﻿namespace AngleSharp.Extensions
 {
     using AngleSharp.Dom;
     using AngleSharp.Scripting.JavaScript.Services;
@@ -8,7 +8,7 @@
     /// <summary>
     /// Useful extensions for the DOM.
     /// </summary>
-    public static class ApiExtensions
+    public static class JsApiExtensions
     {
         /// <summary>
         /// Executes the given script code in the context of the document.

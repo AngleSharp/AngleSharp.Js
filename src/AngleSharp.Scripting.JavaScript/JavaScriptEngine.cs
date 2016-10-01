@@ -95,7 +95,7 @@
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
             
-            return GetOrCreateInstance(document).RunScript(source);
+            return GetOrCreateInstance(document).RunScript(source).FromJsValue();
         }
 
         #endregion

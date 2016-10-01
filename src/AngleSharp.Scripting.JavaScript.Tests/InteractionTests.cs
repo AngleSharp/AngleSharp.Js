@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
     using AngleSharp.Scripting.JavaScript.Services;
+    using AngleSharp.Extensions;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -76,6 +77,16 @@
             var config = Configuration.Default.WithJavaScript();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("document.defaultView");
+            Assert.AreEqual(document.DefaultView, result);
+        }
+
+        [Test]
+        public async Task RunScriptSnippetDirectlyGetsWindow()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJavaScript();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var result = document.ExecuteScript("window");
             Assert.AreEqual(document.DefaultView, result);
         }
 

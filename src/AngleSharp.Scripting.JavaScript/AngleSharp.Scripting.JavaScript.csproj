@@ -50,7 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ApiExtensions.cs" />
+    <Compile Include="JsApiExtensions.cs" />
     <Compile Include="Attributes\DomInstanceAttribute.cs" />
     <Compile Include="JsConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />

@@ -261,12 +261,12 @@
             }
         }
 
-        public static Object RunScript(this EngineInstance engine, String source)
+        public static JsValue RunScript(this EngineInstance engine, String source)
         {
             return engine.RunScript(source, engine.Window);
         }
 
-        public static Object RunScript(this EngineInstance engine, String source, INode context)
+        public static JsValue RunScript(this EngineInstance engine, String source, INode context)
         {
             return engine.RunScript(source, context.ToJsValue(engine));
         }
