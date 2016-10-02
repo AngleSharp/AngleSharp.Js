@@ -168,5 +168,54 @@ s.src='//api.whichbrowser.net/rel/detect.js?' + p.join('&');d.getElementsByTagNa
             var result = await EvaluateComplexScriptAsync(SetResult("screen.pixelDepth.toString()"));
             Assert.AreEqual("24", result);
         }
+
+        [Test]
+        public async Task PrototypeObjectOfHtmlDocumentIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(document).toString()"));
+            Assert.AreEqual("[object HTMLDocument]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfDocumentIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(Object.getPrototypeOf(document)).toString()"));
+            Assert.AreEqual("[object Document]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfNodeIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(document))).toString()"));
+            Assert.AreEqual("[object Node]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfEventTargetIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(document)))).toString()"));
+            Assert.AreEqual("[object EventTarget]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfObjectIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(document))))).toString()"));
+            Assert.AreEqual("[object Object]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfObjectLiteralIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf({}).toString()"));
+            Assert.AreEqual("[object Object]", result);
+        }
+
+        [Test]
+        public async Task PrototypeObjectOfBodyIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(document.body).toString()"));
+            Assert.AreEqual("[object HTMLBodyElement]", result);
+        }
     }
 }
