@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="ComponentTests.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="ExtendedTests.cs" />
     <Compile Include="FireEventTests.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IntegrationTests.cs" />
