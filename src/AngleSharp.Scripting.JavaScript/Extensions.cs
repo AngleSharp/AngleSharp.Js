@@ -6,7 +6,6 @@
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Native.Object;
-    using Jint.Native.String;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
@@ -91,7 +90,7 @@
                     var node = obj as DomNodeInstance;
                     return node != null ? node.Value : obj;
                 case Types.Undefined:
-                    return "undefined";
+                    return Undefined.Text;
                 case Types.Null:
                     return null;
             }
@@ -109,12 +108,38 @@
                 {
                     return value;
                 }
-                else if (sourceType == typeof(Double) && targetType == typeof(Int32))
+                else if (targetType == typeof(Int32))
                 {
+                    if (sourceType != typeof(Double))
+                    {
+                        var v = value.ToJsValue(engine);
+                        return TypeConverter.ToInt32(v);
+                    }
+
                     return (Int32)(Double)value;
                 }
+                else if (targetType == typeof(Double))
+                {
+                    var v = value.ToJsValue(engine);
+                    return TypeConverter.ToNumber(v);
+                }
+                else if (targetType == typeof(String))
+                {
+                    var v = value.ToJsValue(engine);
 
-                if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
+                    if (v.IsPrimitive())
+                    {
+                        return TypeConverter.ToString(v);
+                    }
+
+                    return v.ToString();
+                }
+                else if (targetType == typeof(Boolean))
+                {
+                    var v = value.ToJsValue(engine);
+                    return TypeConverter.ToBoolean(v);
+                }
+                else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
                 {
                     var f = value as FunctionInstance;
 
