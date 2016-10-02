@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DomPrototypeInstance.cs" />
     <Compile Include="JsApiExtensions.cs" />
     <Compile Include="Attributes\DomInstanceAttribute.cs" />
     <Compile Include="JsConfigurationExtensions.cs" />
@@ -74,6 +75,8 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="JavaScriptEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PrototypeCache.cs" />
+    <Compile Include="ReferenceCache.cs" />
     <Compile Include="Services\IConsoleLogger.cs" />
     <Compile Include="Services\JavaScriptProvider.cs" />
     <Compile Include="SystemTypeConverter.cs" />

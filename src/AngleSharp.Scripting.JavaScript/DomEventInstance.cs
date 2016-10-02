@@ -8,21 +8,37 @@
 
     sealed class DomEventInstance
     {
-        DomEventHandler _handler;
-        FunctionInstance _function;
+        private readonly EngineInstance _engine;
+        private readonly EventInfo _eventInfo;
+        private DomEventHandler _handler;
+        private FunctionInstance _function;
 
-        public DomEventInstance(DomNodeInstance node, EventInfo eventInfo = null)
+        public DomEventInstance(EngineInstance engine, EventInfo eventInfo = null)
         {
-            Getter = new ClrFunctionInstance(node.Engine, (thisObject, arguments) => _function ?? JsValue.Null);
-            Setter = new ClrFunctionInstance(node.Engine, (thisObject, arguments) =>
+            _engine = engine;
+            _eventInfo = eventInfo;
+            Getter = new ClrFunctionInstance(engine.Jint, GetEventHandler);
+            Setter = new ClrFunctionInstance(engine.Jint, SetEventHandler);
+        }
+
+        public ClrFunctionInstance Getter { get; }
+
+        public ClrFunctionInstance Setter { get; }
+
+        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments)
+        {
+            return _function ?? JsValue.Null;
+        }
+
+        private JsValue SetEventHandler(JsValue thisObject, JsValue[] arguments)
+        {
+            var node = thisObject.As<DomNodeInstance>();
+
+            if (node != null)
             {
                 if (_handler != null)
                 {
-                    if (eventInfo != null)
-                    {
-                        eventInfo.RemoveEventHandler(node.Value, _handler);
-                    }
-
+                    _eventInfo?.RemoveEventHandler(node.Value, _handler);
                     _handler = null;
                     _function = null;
                 }
@@ -30,33 +46,18 @@
                 if (arguments[0].Is<FunctionInstance>())
                 {
                     _function = arguments[0].As<FunctionInstance>();
-                    _handler = (s, ev) => 
+                    _handler = (s, ev) =>
                     {
-                        var sender = s.ToJsValue(node.Context);
-                        var args = ev.ToJsValue(node.Context);
-                        _function.Call(sender, new [] { args });
+                        var sender = s.ToJsValue(_engine);
+                        var args = ev.ToJsValue(_engine);
+                        _function.Call(sender, new[] { args });
                     };
 
-                    if (eventInfo != null)
-                    {
-                        eventInfo.AddEventHandler(node.Value, _handler);
-                    }
+                    _eventInfo?.AddEventHandler(node.Value, _handler);
                 }
+            }
 
-                return arguments[0];
-            });
-        }
-
-        public ClrFunctionInstance Getter
-        {
-            get;
-            private set;
-        }
-
-        public ClrFunctionInstance Setter
-        {
-            get;
-            private set;
+            return arguments[0];
         }
     }
 }

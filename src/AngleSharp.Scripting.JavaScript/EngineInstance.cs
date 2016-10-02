@@ -1,25 +1,25 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
+    using AngleSharp.Scripting.JavaScript.Services;
     using Jint;
     using Jint.Native;
+    using Jint.Native.Object;
     using Jint.Runtime.Environments;
-    using Services;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
 
     sealed class EngineInstance
     {
         #region Fields
 
-        private readonly ConditionalWeakTable<Object, DomNodeInstance> _objects;
+        private readonly PrototypeCache _prototypes;
+        private readonly ReferenceCache _references;
         private readonly Engine _engine;
         private readonly LexicalEnvironment _lexicals;
         private readonly LexicalEnvironment _variables;
         private readonly DomNodeInstance _window;
-        private readonly DomConstructors _constructors;
 
         #endregion
 
@@ -35,9 +35,10 @@
             {
                 logger = createLogger.Invoke(context);
             }
-            
-            _objects = new ConditionalWeakTable<Object, DomNodeInstance>();
+
             _engine = new Engine();
+            _prototypes = new PrototypeCache(_engine);
+            _references = new ReferenceCache();
             _engine.SetValue("console", new ConsoleInstance(_engine, logger));
 
             foreach (var assignment in assignments)
@@ -48,8 +49,6 @@
             _window = GetDomNode(window);
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _window, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
-            _constructors = new DomConstructors(this);
-            _constructors.Configure();
 
             this.AddConstructors(_window, typeof(INode));
             this.AddConstructors(_window, this.GetType());
@@ -63,11 +62,6 @@
         public DomNodeInstance Window
         {
             get { return _window; }
-        }
-
-        public DomConstructors Constructors
-        {
-            get { return _constructors; }
         }
         
         public LexicalEnvironment Lexicals 
@@ -91,14 +85,12 @@
 
         public DomNodeInstance GetDomNode(Object obj)
         {
-            var domNodeInstance = default(DomNodeInstance);
+            return _references.GetOrCreate(obj, CreateInstance);
+        }
 
-            if (!_objects.TryGetValue(obj, out domNodeInstance))
-            {
-                _objects.Add(obj, domNodeInstance = new DomNodeInstance(this, obj));
-            }
-            
-            return domNodeInstance;
+        public ObjectInstance GetDomPrototype(Type type)
+        {
+            return _prototypes.GetOrCreate(type, CreatePrototype);
         }
 
         public JsValue RunScript(String source, JsValue context)
@@ -107,6 +99,20 @@
             _engine.Execute(source);
             _engine.LeaveExecutionContext();
             return _engine.GetCompletionValue();
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private DomNodeInstance CreateInstance(Object obj)
+        {
+            return new DomNodeInstance(this, obj);
+        }
+
+        private ObjectInstance CreatePrototype(Type type)
+        {
+            return new DomPrototypeInstance(this, type);
         }
 
         #endregion

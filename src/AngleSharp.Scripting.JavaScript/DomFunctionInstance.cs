@@ -8,8 +8,8 @@
 
     sealed class DomFunctionInstance : FunctionInstance
     {
-        readonly MethodInfo _method;
-        readonly EngineInstance _engine;
+        private readonly MethodInfo _method;
+        private readonly EngineInstance _engine;
 
         public DomFunctionInstance(EngineInstance engine, MethodInfo method)
             : base(engine.Jint, method.GetParameterNames(), null, false)

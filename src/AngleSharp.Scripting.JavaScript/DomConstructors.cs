@@ -6,7 +6,7 @@
 
     partial class DomConstructors
     {
-        readonly EngineInstance _engine;
+        private readonly EngineInstance _engine;
 
         public DomConstructors(EngineInstance engine)
         {
