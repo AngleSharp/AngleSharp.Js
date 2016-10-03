@@ -22,7 +22,7 @@
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
         {
-            var baseType = type.GetTypeInfo().BaseType;
+            var baseType = type.GetTypeInfo().BaseType ?? typeof(Object);
             _type = type;
             _name = type.GetOfficialName(baseType);
             _engine = engine;

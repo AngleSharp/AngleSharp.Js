@@ -50,8 +50,8 @@
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _window, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
 
-            this.AddConstructors(_window, typeof(INode));
-            this.AddConstructors(_window, this.GetType());
+            this.AddConstructors(_window, typeof(INode).GetAssembly());
+            this.AddConstructors(_window, this.GetType().GetAssembly());
             this.AddInstances(_window, this.GetType());
         }
 

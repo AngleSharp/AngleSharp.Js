@@ -4,27 +4,46 @@
     using Jint.Native.Function;
     using Jint.Native.Object;
     using Jint.Runtime;
+    using Jint.Runtime.Interop;
+    using System;
     using System.Reflection;
 
     sealed class DomConstructorInstance : FunctionInstance, IConstructor
     {
-        readonly ConstructorInfo _constructor;
-        readonly EngineInstance _engine;
+        private readonly ConstructorInfo _constructor;
+        private readonly EngineInstance _engine;
+        private readonly ObjectInstance _prototype;
 
-        public DomConstructorInstance(EngineInstance engine, ConstructorInfo constructor)
+        public DomConstructorInstance(EngineInstance engine, Type type)
             : base(engine.Jint, null, null, false)
         {
+            var toString = new ClrFunctionInstance(Engine, ToString);
+            _prototype = engine.GetDomPrototype(type);
             _engine = engine;
+            FastAddProperty("toString", toString, true, false, true);
+            FastAddProperty("prototype", _prototype, false, false, false);
+            _prototype.FastAddProperty("constructor", this, true, false, true);
+        }
+
+        public DomConstructorInstance(EngineInstance engine, ConstructorInfo constructor)
+            : this(engine, constructor.DeclaringType)
+        {
             _constructor = constructor;
         }
 
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
-            throw new JavaScriptException("Only call the constructor with the new keyword.");
+            if (_constructor != null)
+                throw new JavaScriptException("Only call the constructor with the new keyword.");
+
+            return ((IConstructor)this).Construct(arguments);
         }
 
-        public ObjectInstance Construct(JsValue[] arguments)
+        ObjectInstance IConstructor.Construct(JsValue[] arguments)
         {
+            if (_constructor == null)
+                throw new JavaScriptException("Illegal constructor.");
+
             try
             {
                 var parameters = _engine.BuildArgs(_constructor, arguments);
@@ -35,7 +54,11 @@
             {
                 throw new JavaScriptException(_engine.Jint.Error);
             }
+        }
 
+        private JsValue ToString(JsValue thisObj, JsValue[] arguments)
+        {
+            return $"function {_prototype.Class}() {{ [native code] }}";
         }
     }
 }

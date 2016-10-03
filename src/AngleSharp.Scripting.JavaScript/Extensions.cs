@@ -98,78 +98,41 @@
             return val.ToObject();
         }
 
-        public static Object As(this Object value, Type targetType, EngineInstance engine)
+        public static Object As(this JsValue value, Type targetType, EngineInstance engine)
         {
-            if (value != null)
+            if (value != JsValue.Null)
             {
-                var sourceType = value.GetType();
-
-                if (sourceType == targetType || sourceType.GetTypeInfo().IsSubclassOf(targetType) || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
+                if (targetType == typeof(Int32))
                 {
-                    return value;
-                }
-                else if (targetType == typeof(Int32))
-                {
-                    if (sourceType != typeof(Double))
-                    {
-                        var v = value.ToJsValue(engine);
-                        return TypeConverter.ToInt32(v);
-                    }
-
-                    return (Int32)(Double)value;
+                    return TypeConverter.ToInt32(value);
                 }
                 else if (targetType == typeof(Double))
                 {
-                    var v = value.ToJsValue(engine);
-                    return TypeConverter.ToNumber(v);
+                    return TypeConverter.ToNumber(value);
                 }
                 else if (targetType == typeof(String))
                 {
-                    var v = value.ToJsValue(engine);
-
-                    if (v.IsPrimitive())
-                    {
-                        return TypeConverter.ToString(v);
-                    }
-
-                    return v.ToString();
+                    return value.IsPrimitive() ? TypeConverter.ToString(value) : value.ToString();
                 }
                 else if (targetType == typeof(Boolean))
                 {
-                    var v = value.ToJsValue(engine);
-                    return TypeConverter.ToBoolean(v);
+                    return TypeConverter.ToBoolean(value);
                 }
-                else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
+                else if (targetType == typeof(UInt32))
                 {
-                    var f = value as FunctionInstance;
-
-                    if (f == null)
-                    {
-                        var b = value as String;
-
-                        if (b != null)
-                        {
-                            var e = engine.Jint;
-                            var p = new[] { new JsValue(b) };
-                            f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
-                        }
-                    }
-
-                    if (f != null)
-                    {
-                        return targetType.ToDelegate(f, engine);
-                    }
+                    return TypeConverter.ToUint32(value);
                 }
-
-                var method = sourceType.PrepareConvert(targetType);
-
-                if (method == null)
-                    throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
-
-                return method.Invoke(value, null);
+                else if (targetType == typeof(UInt16))
+                {
+                    return TypeConverter.ToUint16(value);
+                }
+                else
+                {
+                    return value.AsComplex(targetType, engine);
+                }
             }
 
-            return value;
+            return null;
         }
 
         public static Object GetDefaultValue(this Type type)
@@ -218,7 +181,7 @@
                 }
                 else
                 {
-                    args[i + offset] = arguments[i].FromJsValue().As(parameters[i].ParameterType, context);
+                    args[i + offset] = arguments[i].As(parameters[i].ParameterType, context);
                 }
             }
 
@@ -255,11 +218,16 @@
             return method != null ? method.GetParameters().Select(m => m.Name).ToArray() : null;
         }
 
-        public static void AddConstructors(this EngineInstance engine, ObjectInstance obj, Type type)
+        public static Assembly GetAssembly(this Type type)
         {
-            foreach (var exportedType in type.GetTypeInfo().Assembly.ExportedTypes)
+            return type.GetTypeInfo().Assembly;
+        }
+
+        public static void AddConstructors(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
+        {
+            foreach (var exportedType in assembly.ExportedTypes)
             {
-                engine.AddConstructor(obj, exportedType);
+                engine.AddConstructor(ctx, exportedType);
             }
         }
 
@@ -273,14 +241,15 @@
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var info = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(m => 
-                m.GetCustomAttributes<DomConstructorAttribute>().Any());
+            var ti = type.GetTypeInfo();
+            var names = ti.GetCustomAttributes<DomNameAttribute>();
+            var name = names.FirstOrDefault();
 
-            if (info != null)
+            if (name != null)
             {
-                var name = type.GetTypeInfo().GetOfficialName();
-                var constructor = new DomConstructorInstance(engine, info);
-                obj.FastSetProperty(name, new PropertyDescriptor(constructor, false, true, false));
+                var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
+                var constructor = info != null ? new DomConstructorInstance(engine, info) : new DomConstructorInstance(engine, type);
+                obj.FastSetProperty(name.OfficialName, new PropertyDescriptor(constructor, false, true, false));
             }
         }
 
@@ -328,7 +297,16 @@
 
             if (name == null)
             {
-                foreach (var impl in ti.ImplementedInterfaces.Except(baseType.GetTypeInfo().ImplementedInterfaces))
+                var interfaces = ti.ImplementedInterfaces;
+
+                if (baseType != null)
+                {
+                    var bi = baseType.GetTypeInfo();
+                    var exclude = bi.ImplementedInterfaces;
+                    interfaces = interfaces.Except(exclude);
+                }
+
+                foreach (var impl in interfaces)
                 {
                     name = impl.GetTypeInfo().GetCustomAttribute<DomNameAttribute>(false)?.OfficialName;
 
@@ -337,7 +315,46 @@
                 }
             }
 
-            return name ?? currentType.Name;
+            return name;
+        }
+
+        private static Object AsComplex(this JsValue value, Type targetType, EngineInstance engine)
+        {
+            var obj = value.FromJsValue();
+            var sourceType = obj.GetType();
+
+            if (sourceType == targetType || sourceType.GetTypeInfo().IsSubclassOf(targetType) || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
+            {
+                return obj;
+            }
+            else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
+            {
+                var f = obj as FunctionInstance;
+
+                if (f == null)
+                {
+                    var b = obj as String;
+
+                    if (b != null)
+                    {
+                        var e = engine.Jint;
+                        var p = new[] { new JsValue(b) };
+                        f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
+                    }
+                }
+
+                if (f != null)
+                {
+                    return targetType.ToDelegate(f, engine);
+                }
+            }
+
+            var method = sourceType.PrepareConvert(targetType);
+
+            if (method == null)
+                throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
+
+            return method.Invoke(obj, null);
         }
     }
 }

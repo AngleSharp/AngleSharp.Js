@@ -8,16 +8,16 @@
 
     sealed class DomFunctionInstance : FunctionInstance
     {
-        private readonly MethodInfo _method;
         private readonly EngineInstance _engine;
+        private readonly MethodInfo _method;
 
         public DomFunctionInstance(EngineInstance engine, MethodInfo method)
             : base(engine.Jint, method.GetParameterNames(), null, false)
         {
+            var toString = new ClrFunctionInstance(Engine, ToString);
             _engine = engine;
             _method = method;
-
-            FastAddProperty("toString", new ClrFunctionInstance(Engine, ToString), true, false, true);
+            FastAddProperty("toString", toString, true, false, true);
         }
 
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)
@@ -53,7 +53,7 @@
             }
 
             var officialName = _method.GetOfficialName();
-            return string.Format("function {0} () {{ [native code] }}", officialName);
+            return $"function {officialName}() {{ [native code] }}";
         }
     }
 }
