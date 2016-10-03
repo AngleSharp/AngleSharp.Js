@@ -1,3 +1,12 @@
+# 0.5.0
+
+- Several bug fixes and improvements
+- Construct prototype chain (#7)
+- Added better type casts and wrappers (#8)
+- Allow strings instead of functions (#26)
+- Include extension method `ExecuteScript` to `document` (#29)
+- Simplified DOM context evaluation (#19)
+
 # 0.4.2
 
 - Updated to latest version of AngleSharp
