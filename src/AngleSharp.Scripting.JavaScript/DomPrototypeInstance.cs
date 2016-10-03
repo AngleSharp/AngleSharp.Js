@@ -22,8 +22,9 @@
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
         {
+            var baseType = type.GetTypeInfo().BaseType;
             _type = type;
-            _name = String.Format("[object {0}]", type.Name);
+            _name = type.GetOfficialName(baseType);
             _engine = engine;
 
             SetAllMembers();
@@ -31,12 +32,12 @@
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
-            Prototype = engine.GetDomPrototype(type.GetTypeInfo().BaseType);
+            Prototype = engine.GetDomPrototype(baseType);
         }
-        
-        public override String ToString()
+
+        public override String Class
         {
-            return _name;
+            get { return _name; }
         }
 
         public Boolean TryGetFromIndex(Object value, String index, out PropertyDescriptor result)

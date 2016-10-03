@@ -8,11 +8,13 @@
     sealed class PrototypeCache
     {
         private readonly Dictionary<Type, ObjectInstance> _prototypes;
+        private readonly Engine _engine;
 
         public PrototypeCache(Engine engine)
         {
             _prototypes = new Dictionary<Type, ObjectInstance>();
-            _prototypes.Add(typeof(Object), engine.Object);
+            _prototypes.Add(typeof(Object), engine.Object.PrototypeObject);
+            _engine = engine;
         }
 
         public ObjectInstance GetOrCreate(Type type, Func<Type, ObjectInstance> creator)

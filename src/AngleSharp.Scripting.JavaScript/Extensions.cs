@@ -320,5 +320,24 @@
             var officalNameAttribute = names.FirstOrDefault();
             return officalNameAttribute != null ? officalNameAttribute.OfficialName : member.Name;
         }
+
+        public static String GetOfficialName(this Type currentType, Type baseType)
+        {
+            var ti = currentType.GetTypeInfo();
+            var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+
+            if (name == null)
+            {
+                foreach (var impl in ti.ImplementedInterfaces.Except(baseType.GetTypeInfo().ImplementedInterfaces))
+                {
+                    name = impl.GetTypeInfo().GetCustomAttribute<DomNameAttribute>(false)?.OfficialName;
+
+                    if (name != null)
+                        break;
+                }
+            }
+
+            return name ?? currentType.Name;
+        }
     }
 }

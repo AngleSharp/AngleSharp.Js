@@ -19,14 +19,14 @@
             Prototype = engine.GetDomPrototype(value.GetType());
         }
 
+        public override String Class
+        {
+            get { return Prototype.Class; }
+        }
+
         public Object Value
         {
             get { return _value; }
-        }
-
-        public override String ToString()
-        {
-            return Prototype.ToString();
         }
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
