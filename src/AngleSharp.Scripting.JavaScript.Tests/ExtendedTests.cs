@@ -69,5 +69,49 @@
             var option = document.QuerySelector<IHtmlOptionElement>("option");
             Assert.AreEqual(true, option.IsDisabled);
         }
+
+        [Test]
+        public async Task BooleanConversionForObjectsTakesPlace()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><option></option><script>document.querySelector('option').selected = this;</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var option = document.QuerySelector<IHtmlOptionElement>("option");
+            Assert.AreEqual(true, option.IsSelected);
+        }
+
+        [Test]
+        public async Task BooleanConversionForArraysTakesPlace()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><option></option><script>document.querySelector('option').selected = [];</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var option = document.QuerySelector<IHtmlOptionElement>("option");
+            Assert.AreEqual(true, option.IsSelected);
+        }
+
+        [Test]
+        public async Task BooleanConversionForZeroIsFalse()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><option></option><script>document.querySelector('option').selected =0;</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var option = document.QuerySelector<IHtmlOptionElement>("option");
+            Assert.AreEqual(false, option.IsSelected);
+        }
+
+        [Test]
+        public async Task BooleanConversionForUndefinedIsFalse()
+        {
+            var service = new JavaScriptProvider();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><option></option><script>document.querySelector('option').selected = undefined;</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var option = document.QuerySelector<IHtmlOptionElement>("option");
+            Assert.AreEqual(false, option.IsSelected);
+        }
     }
 }

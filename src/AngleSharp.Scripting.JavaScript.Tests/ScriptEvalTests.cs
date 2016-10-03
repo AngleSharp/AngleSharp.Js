@@ -217,5 +217,47 @@ s.src='//api.whichbrowser.net/rel/detect.js?' + p.join('&');d.getElementsByTagNa
             var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(document.body).toString()"));
             Assert.AreEqual("[object HTMLBodyElement]", result);
         }
+
+        [Test]
+        public async Task PrototypeObjectOfNavigatorIsCorrect()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("Object.getPrototypeOf(navigator).toString()"));
+            Assert.AreEqual("[object Navigator]", result);
+        }
+
+        [Test]
+        public async Task ConstructorOfHTMLDocumentIsAvailable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("HTMLDocument.toString()"));
+            Assert.AreEqual("function HTMLDocument() { [native code] }", result);
+        }
+
+        [Test]
+        public async Task StringOfHTMLDocumentIsAvailable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("HTMLDocument.prototype.toString()"));
+            Assert.AreEqual("[object HTMLDocument]", result);
+        }
+
+        [Test]
+        public async Task QuerySelectorOfHTMLDocumentPrototypeIsAvailable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("HTMLDocument.prototype.querySelector.toString()"));
+            Assert.AreEqual("function querySelector() { [native code] }", result);
+        }
+
+        [Test]
+        public async Task StringOfMutationObserverIsAvailable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("MutationObserver.prototype.toString()"));
+            Assert.AreEqual("[object MutationObserver]", result);
+        }
+
+        [Test]
+        public async Task ConstructorOfMutationObserverIsAvailable()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("MutationObserver.toString()"));
+            Assert.AreEqual("function MutationObserver() { [native code] }", result);
+        }
     }
 }
