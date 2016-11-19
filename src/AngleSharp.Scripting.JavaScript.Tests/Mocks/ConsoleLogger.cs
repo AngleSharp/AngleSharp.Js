@@ -1,6 +1,5 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests.Mocks
 {
-    using AngleSharp.Scripting.JavaScript.Services;
     using System;
     using System.Text;
 

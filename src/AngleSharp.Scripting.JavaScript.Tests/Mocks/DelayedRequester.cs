@@ -1,6 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests.Mocks
 {
-    using AngleSharp.Network;
+    using AngleSharp.Dom;
+    using AngleSharp.Io;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -9,12 +10,17 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    sealed class DelayedRequester : IRequester
+    sealed class DelayedRequester : EventTarget, IRequester
     {
-        readonly Int32 _delay;
-        readonly String _message;
-        Boolean _started;
-        Boolean _finished;
+        private readonly Int32 _delay;
+        private readonly String _message;
+        private Boolean _started;
+        private Boolean _finished;
+
+#pragma warning disable CS0067
+        public event DomEventHandler Requesting;
+        public event DomEventHandler Requested;
+#pragma warning restore CS0067
 
         public DelayedRequester(Int32 delay, String message)
         {
@@ -32,7 +38,7 @@
             get { return _finished; }
         }
 
-        public async Task<IResponse> RequestAsync(IRequest request, CancellationToken cancel)
+        public async Task<IResponse> RequestAsync(Request request, CancellationToken cancel)
         {
             _started = true;
             await Task.Delay(_delay, cancel).ConfigureAwait(false);
@@ -45,11 +51,11 @@
             return true;
         }
 
-        class Response : IResponse
+        private sealed class Response : IResponse
         {
-            readonly MemoryStream _content;
-            readonly Dictionary<String, String> _headers;
-            readonly Url _address;
+            private readonly MemoryStream _content;
+            private readonly Dictionary<String, String> _headers;
+            private readonly Url _address;
 
             public Response(String message, Url address)
             {

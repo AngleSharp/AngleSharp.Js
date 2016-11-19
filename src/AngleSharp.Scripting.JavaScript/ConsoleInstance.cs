@@ -4,7 +4,6 @@
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Interop;
-    using Services;
     using System;
 
     sealed class ConsoleInstance : ObjectInstance
@@ -18,7 +17,7 @@
             FastAddProperty("log", new ClrFunctionInstance(engine, Log), false, false, false);
         }
 
-        JsValue Log(JsValue ctx, JsValue[] args)
+        private JsValue Log(JsValue ctx, JsValue[] args)
         {
             if (_logger != null)
             {

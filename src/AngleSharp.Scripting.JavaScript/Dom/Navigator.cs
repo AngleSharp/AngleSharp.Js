@@ -1,6 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Dom
 {
-    using AngleSharp.Dom.Navigator;
+    using AngleSharp.Browser.Dom;
     using System;
     using System.Net.NetworkInformation;
 

@@ -1,8 +1,6 @@
-﻿namespace AngleSharp.Scripting.JavaScript.Services
+﻿namespace AngleSharp.Scripting.JavaScript
 {
-    using AngleSharp.Network;
-    using AngleSharp.Services;
-    using AngleSharp.Services.Scripting;
+    using AngleSharp.Io;
     using System;
 
     /// <summary>

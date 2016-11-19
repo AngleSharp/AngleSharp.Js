@@ -2,8 +2,9 @@
 {
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
-    using AngleSharp.Dom.Html;
-    using AngleSharp.Dom.Media;
+    using AngleSharp.Html.Dom;
+    using AngleSharp.Html.Dom.Events;
+    using AngleSharp.Media.Dom;
     using System;
     using System.Collections.Generic;
     using System.IO;

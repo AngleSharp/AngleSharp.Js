@@ -1,9 +1,8 @@
 ﻿namespace AngleSharp.Extensions
 {
     using AngleSharp.Dom;
-    using AngleSharp.Scripting.JavaScript.Services;
+    using AngleSharp.Scripting.JavaScript;
     using System;
-    using System.Linq;
 
     /// <summary>
     /// Useful extensions for the DOM.
@@ -21,9 +20,8 @@
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
             
-            var options = document?.Context.Configuration;
-            var providers = options?.Services.OfType<JavaScriptProvider>();
-            var engine = providers?.FirstOrDefault()?.Engine;
+            var provider = document?.Context.GetService<JavaScriptProvider>();
+            var engine = provider?.Engine;
             return engine?.EvaluateScript(document, scriptCode);
         }
     }

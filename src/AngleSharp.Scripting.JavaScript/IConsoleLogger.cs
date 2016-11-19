@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript.Services
+﻿namespace AngleSharp.Scripting.JavaScript
 {
     using System;
 

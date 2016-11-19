@@ -1,8 +1,7 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
-    using AngleSharp.Dom.Html;
-    using AngleSharp.Extensions;
-    using AngleSharp.Scripting.JavaScript.Services;
+    using AngleSharp.Dom;
+    using AngleSharp.Html.Dom;
     using NUnit.Framework;
     using System.Threading.Tasks;
 

@@ -1,9 +1,8 @@
 ﻿namespace AngleSharp.Scripting.CSharp
 {
+    using AngleSharp.Browser.Dom;
     using AngleSharp.Dom;
-    using AngleSharp.Dom.Css;
     using AngleSharp.Dom.Events;
-    using AngleSharp.Dom.Navigator;
     using System;
 
     public abstract class WindowContext : IWindow
@@ -91,11 +90,6 @@
 
         #region Methods
 
-        public IMediaQueryList MatchMedia(String media)
-        {
-            return _window.MatchMedia(media);
-        }
-
         public void Alert(String message)
         {
             _window.Alert(message);
@@ -119,11 +113,6 @@
         public void Focus()
         {
             _window.Focus();
-        }
-
-        public ICssStyleDeclaration GetComputedStyle(IElement element, String pseudo = null)
-        {
-            return _window.GetComputedStyle(element, pseudo);
         }
 
         public IWindow Open(String url = "about:blank", String name = null, String features = null, String replace = null)

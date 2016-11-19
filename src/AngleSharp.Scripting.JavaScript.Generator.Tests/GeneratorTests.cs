@@ -1,9 +1,8 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
     using AngleSharp.Dom;
-    using AngleSharp.Dom.Css;
-    using AngleSharp.Dom.Events;
-    using AngleSharp.Dom.Html;
+    using AngleSharp.Html.Dom;
+    using AngleSharp.Html.Dom.Events;
     using AngleSharp.Scripting.JavaScript.Generator;
     using NUnit.Framework;
     using System;
@@ -110,30 +109,6 @@
             {
                 Assert.IsTrue(bindingFields.Any(m => m.Key == fields[i]));
             }
-        }
-
-        [Test]
-        public void ICssMediaRuleShouldHaveCorrectForwardsToProperty()
-        {
-            var name = "CSSMediaRule";
-            var binding = GeneralExtensions.GetBindings(new Dictionary<String, List<Type>>
-            {
-                { name, ListOf(typeof(ICssMediaRule)) }
-            }).First() as BindingClass;
-            var bindingProperties = binding.GetAll<BindingProperty>();
-            var media = bindingProperties.Where(m => m.Key == "media").FirstOrDefault();
-            Assert.AreEqual(name, binding.Name);
-            Assert.AreEqual(0, binding.Constructors.Count());
-            Assert.AreEqual(0, binding.Deleters.Count());
-            Assert.AreEqual(0, binding.Getters.Count());
-            Assert.AreEqual(0, binding.Setters.Count());
-            Assert.IsNotNull(media);
-            Assert.IsFalse(media.Value.IsLenient);
-            Assert.AreEqual("Media", media.Value.OriginalName);
-            Assert.AreEqual("MediaText", media.Value.ForwardedTo);
-            Assert.IsTrue(media.Value.AllowGet);
-            Assert.IsFalse(media.Value.AllowSet);
-            Assert.AreEqual(typeof(IMediaList), media.Value.ValueType);
         }
 
         [Test]

@@ -1,6 +1,6 @@
 ﻿namespace AngleSharp.Scripting.JavaScript.Tests
 {
-    using Mocks;
+    using AngleSharp.Scripting.JavaScript.Tests.Mocks;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;

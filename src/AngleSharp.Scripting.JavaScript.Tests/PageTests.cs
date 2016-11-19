@@ -8,7 +8,7 @@
     [TestFixture]
     public class PageTests
     {
-        static Task<IDocument> LoadPage(String url)
+        private static Task<IDocument> LoadPage(String url)
         {
             var configuration = Configuration.Default.WithJavaScript().WithCss().WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true);
             var context = BrowsingContext.New(configuration);

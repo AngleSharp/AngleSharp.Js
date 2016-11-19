@@ -8,7 +8,7 @@
     [TestFixture]
     public class IntegrationTests
     {
-        static Task<IDocument> LoadPage(String url)
+        private static Task<IDocument> LoadPage(String url)
         {
             var configuration = Configuration.Default.WithDefaultLoader().WithCss().WithCookies().WithJavaScript();
             var context = BrowsingContext.New(configuration);

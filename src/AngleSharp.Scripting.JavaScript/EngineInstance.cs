@@ -1,14 +1,12 @@
 ﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
-    using AngleSharp.Scripting.JavaScript.Services;
     using Jint;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Environments;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     sealed class EngineInstance
     {
@@ -27,15 +25,8 @@
 
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments)
         {
-            var logger = default(IConsoleLogger);
             var context = window.Document.Context;
-            var createLogger = context.Configuration.Services.OfType<Func<IBrowsingContext, IConsoleLogger>>().FirstOrDefault();
-
-            if (createLogger != null)
-            {
-                logger = createLogger.Invoke(context);
-            }
-
+            var logger = context.GetService<IConsoleLogger>();
             _engine = new Engine();
             _prototypes = new PrototypeCache(_engine);
             _references = new ReferenceCache();

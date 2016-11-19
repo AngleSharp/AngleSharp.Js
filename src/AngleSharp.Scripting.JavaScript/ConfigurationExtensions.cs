@@ -1,15 +1,13 @@
-﻿namespace AngleSharp
+﻿namespace AngleSharp.Scripting.JavaScript
 {
-    using AngleSharp.Dom.Navigator;
+    using AngleSharp.Browser.Dom;
     using AngleSharp.Scripting.JavaScript.Dom;
-    using AngleSharp.Scripting.JavaScript.Services;
     using System;
-    using System.Linq;
 
     /// <summary>
     /// Additional extensions for JavaScript scripting.
     /// </summary>
-    public static class JsConfigurationExtensions
+    public static class ConfigurationExtensions
     {
         /// <summary>
         /// Includes a service to create a new console logger for the given context.
@@ -19,9 +17,9 @@
         /// <returns>The new configuration.</returns>
         public static IConfiguration WithConsoleLogger(this IConfiguration configuration, Func<IBrowsingContext, IConsoleLogger> createLogger)
         {
-            if (!configuration.Services.OfType<Func<IBrowsingContext, IConsoleLogger>>().Any())
+            if (!configuration.Has<IConsoleLogger>())
             {
-                configuration = configuration.With<IConsoleLogger>(createLogger);
+                configuration = configuration.With(createLogger);
             }
 
             return configuration;
@@ -36,19 +34,14 @@
         /// <returns>The new configuration.</returns>
         public static IConfiguration WithJavaScript(this IConfiguration configuration)
         {
-            if (!configuration.Services.OfType<JavaScriptProvider>().Any())
+            var service = new JavaScriptProvider();
+
+            if (!configuration.Has<INavigator>())
             {
-                var service = new JavaScriptProvider();
-
-                if (!configuration.Services.OfType<Func<IBrowsingContext, INavigator>>().Any())
-                {
-                    configuration = configuration.With<INavigator>(context => new Navigator());
-                }
-
-                return configuration.With(service);
+                configuration = configuration.With<INavigator>(context => new Navigator());
             }
 
-            return configuration;
+            return configuration.WithOnly<IScriptingProvider>(service);
         }
     }
 }

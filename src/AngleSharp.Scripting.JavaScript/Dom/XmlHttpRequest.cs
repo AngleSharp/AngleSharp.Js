@@ -3,7 +3,7 @@
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
-    using AngleSharp.Network;
+    using AngleSharp.Io;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -23,22 +23,22 @@
     {
         #region Fields
 
-        const Int32 BufferSize = 16384;
+        private const Int32 BufferSize = 16384;
 
-        readonly Dictionary<String, String> _headers;
-        readonly IWindow _window;
+        private readonly Dictionary<String, String> _headers;
+        private readonly IWindow _window;
 
-        RequesterState _readyState;
-        Int32 _timeout;
-        Boolean _credentials;
-        HttpMethod _method;
-        Url _url;
-        Boolean _async;
-        String _mime;
-        HttpStatusCode _responseStatus;
-        String _responseUrl;
-        String _responseText;
-        IDownload _download;
+        private RequesterState _readyState;
+        private Int32 _timeout;
+        private Boolean _credentials;
+        private HttpMethod _method;
+        private Url _url;
+        private Boolean _async;
+        private String _mime;
+        private HttpStatusCode _responseStatus;
+        private String _responseUrl;
+        private String _responseText;
+        private IDownload _download;
 
         #endregion
 
@@ -352,13 +352,13 @@
 
         #region Helpers
 
-        async Task Receive(IDocumentLoader loader, DocumentRequest request)
+        private async Task Receive(IDocumentLoader loader, DocumentRequest request)
         {
             var eventName = ErrorEvent;
 
             try
             {
-                _download = loader.DownloadAsync(request);
+                _download = loader.FetchAsync(request);
 
                 using (var response = await _download.Task.ConfigureAwait(false))
                 {
@@ -400,28 +400,12 @@
             }
         }
 
-        IDocumentLoader GetLoader()
+        private IDocumentLoader GetLoader()
         {
-            if (_window != null)
-            {
-                var document = _window.Document;
-
-                if (document != null)
-                {
-                    var context = document.Context;
-
-                    if (context != null)
-                    {
-                        return context.Loader;
-                    }
-                }
-            }
-
-            return null;
-
+            return _window?.Document?.Context.GetService<IDocumentLoader>();
         }
 
-        static Stream Serialize(Object body)
+        private static Stream Serialize(Object body)
         {
             if (body != null)
             {
@@ -434,7 +418,7 @@
             return Stream.Null;
         }
 
-        void Fire(String eventName)
+        private void Fire(String eventName)
         {
             var evt = new Event(eventName);
             Dispatch(evt);

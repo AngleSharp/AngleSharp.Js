@@ -34,8 +34,8 @@
     <DocumentationFile>bin\Release\AngleSharp.Scripting.JavaScript.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.9.8.1, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
-      <HintPath>..\packages\AngleSharp.0.9.8.1\lib\portable-windows8+net45+windowsphone8+wpa+monoandroid+monotouch\AngleSharp.dll</HintPath>
+    <Reference Include="AngleSharp, Version=0.10.0.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
+      <HintPath>..\packages\AngleSharp.0.10.0\lib\portable-windows8+net45+windowsphone8+wpa+monoandroid+monotouch\AngleSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Jint, Version=2.9.1.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
@@ -53,7 +53,7 @@
     <Compile Include="DomPrototypeInstance.cs" />
     <Compile Include="JsApiExtensions.cs" />
     <Compile Include="Attributes\DomInstanceAttribute.cs" />
-    <Compile Include="JsConfigurationExtensions.cs" />
+    <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="ConsoleInstance.cs" />
     <Compile Include="DomConstructorInstance.cs" />
     <Compile Include="DomConstructors.cs" />
@@ -77,8 +77,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PrototypeCache.cs" />
     <Compile Include="ReferenceCache.cs" />
-    <Compile Include="Services\IConsoleLogger.cs" />
-    <Compile Include="Services\JavaScriptProvider.cs" />
+    <Compile Include="IConsoleLogger.cs" />
+    <Compile Include="JavaScriptProvider.cs" />
     <Compile Include="SystemTypeConverter.cs" />
     <Compile Include="UnresolvedConverter.cs" />
   </ItemGroup>
