@@ -7,13 +7,13 @@
     [TestFixture]
     public class ComponentTests
     {
-        static async Task<String> RunScriptComponent(String script)
+        private static async Task<String> RunScriptComponent(String script)
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = String.Concat("<!doctype html><script>", script, "</script>");
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var value = service.Engine.GetOrCreateJint(document).GetValue("assert");
+            var value = service.GetOrCreateJint(document).GetValue("assert");
             return value.AsString();
         }
 

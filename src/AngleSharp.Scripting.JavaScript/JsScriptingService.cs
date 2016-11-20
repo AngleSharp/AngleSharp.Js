@@ -14,7 +14,7 @@
     /// <summary>
     /// The JavaScript engine.
     /// </summary>
-    public class JavaScriptEngine : IScriptEngine
+    public class JsScriptingService : IScriptingService
     {
         #region Fields
 
@@ -28,7 +28,7 @@
         /// <summary>
         /// Creates a new JavaScript engine.
         /// </summary>
-        public JavaScriptEngine()
+        public JsScriptingService()
         {
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
@@ -57,6 +57,11 @@
         #endregion
 
         #region Methods
+
+        Boolean IScriptingService.SupportsType(String mimeType)
+        {
+            return MimeTypeNames.IsJavaScript(mimeType);
+        }
 
         /// <summary>
         /// Gets the associated Jint engine or creates it.

@@ -1,13 +1,14 @@
-﻿namespace AngleSharp.Scripting.JavaScript
+﻿namespace AngleSharp
 {
     using AngleSharp.Browser.Dom;
+    using AngleSharp.Scripting.JavaScript;
     using AngleSharp.Scripting.JavaScript.Dom;
     using System;
 
     /// <summary>
     /// Additional extensions for JavaScript scripting.
     /// </summary>
-    public static class ConfigurationExtensions
+    public static class JsConfigurationExtensions
     {
         /// <summary>
         /// Includes a service to create a new console logger for the given context.
@@ -34,14 +35,14 @@
         /// <returns>The new configuration.</returns>
         public static IConfiguration WithJavaScript(this IConfiguration configuration)
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
 
             if (!configuration.Has<INavigator>())
             {
                 configuration = configuration.With<INavigator>(context => new Navigator());
             }
 
-            return configuration.WithOnly<IScriptingProvider>(service);
+            return configuration.With(service);
         }
     }
 }

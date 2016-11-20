@@ -20,9 +20,8 @@
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
             
-            var provider = document?.Context.GetService<JavaScriptProvider>();
-            var engine = provider?.Engine;
-            return engine?.EvaluateScript(document, scriptCode);
+            var service = document?.Context.GetService<JsScriptingService>();
+            return service?.EvaluateScript(document, scriptCode);
         }
     }
 }

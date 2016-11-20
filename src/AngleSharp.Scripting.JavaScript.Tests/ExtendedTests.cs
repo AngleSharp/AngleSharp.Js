@@ -11,8 +11,7 @@
         [Test]
         public async Task BooleanValueCanBeConvertedToString()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><iframe></iframe><script>document.querySelector('iframe').setAttribute('allowfullscreen', true);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var iframe = document.QuerySelector("iframe");
@@ -24,8 +23,7 @@
         [Test]
         public async Task ObjectValueCanBeConvertedToString()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><iframe></iframe><script>document.querySelector('iframe').setAttribute('allowfullscreen', window);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var iframe = document.QuerySelector("iframe");
@@ -37,8 +35,7 @@
         [Test]
         public async Task NumericValueCanBeConvertedToString()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><iframe></iframe><script>document.querySelector('iframe').setAttribute('allowfullscreen', 2.6);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var iframe = document.QuerySelector("iframe");
@@ -50,8 +47,7 @@
         [Test]
         public async Task BooleanConversionForStringsTakesPlace()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').disabled = 'a';</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");
@@ -61,8 +57,7 @@
         [Test]
         public async Task BooleanConversionForNumbersTakesPlace()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').disabled = 1;</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");
@@ -72,8 +67,7 @@
         [Test]
         public async Task BooleanConversionForObjectsTakesPlace()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').selected = this;</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");
@@ -83,8 +77,7 @@
         [Test]
         public async Task BooleanConversionForArraysTakesPlace()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').selected = [];</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");
@@ -94,8 +87,7 @@
         [Test]
         public async Task BooleanConversionForZeroIsFalse()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').selected =0;</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");
@@ -105,8 +97,7 @@
         [Test]
         public async Task BooleanConversionForUndefinedIsFalse()
         {
-            var service = new JavaScriptProvider();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithJavaScript();
             var html = "<!doctype html><option></option><script>document.querySelector('option').selected = undefined;</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var option = document.QuerySelector<IHtmlOptionElement>("option");

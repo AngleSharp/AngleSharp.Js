@@ -10,7 +10,7 @@
         [Test]
         public async Task InvokeFunctionOnLoadEventShouldFireDelayed()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><div id=result></div><script>document.addEventListener('load', function () { document.querySelector('#result').textContent = 'done'; }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -23,7 +23,7 @@
         [Test]
         public async Task InvokeFunctionOnCustomEvent()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><div id=result>0</div><script>var i = 0; document.addEventListener('hello', function () { i++; document.querySelector('#result').textContent = i.toString(); }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -37,7 +37,7 @@
         [Test]
         public async Task InvokeLoadEventFromJsAndCustomEventFromJsAndCs()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -52,7 +52,7 @@ log.push('b');
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var log = service.Engine.GetOrCreateJint(document).GetValue("log").AsArray();
+            var log = service.GetOrCreateJint(document).GetValue("log").AsArray();
 
             document.AddEventListener("hello", (s, ev) =>
             {
@@ -71,7 +71,7 @@ log.push('b');
         [Test]
         public async Task AddClickHandlerClassicallyWillExecute()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -85,14 +85,14 @@ document.dispatchEvent(new MouseEvent('click'));
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsTrue(clicked);
         }
 
         [Test]
         public async Task AddAndRemoveClickHandlerWontExecute()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -107,14 +107,14 @@ document.dispatchEvent(new MouseEvent('click'));
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsFalse(clicked);
         }
 
         [Test]
         public async Task AddAndInvokeClickHandlerWillChangeCapturedValue()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -128,14 +128,14 @@ document.onclick();
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsTrue(clicked);
         }
 
         [Test]
         public async Task AddAndInvokeClickHandlerWithStringFunctionWontWork()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -147,14 +147,14 @@ document.onclick();
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var clicked = service.Engine.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
+            var clicked = service.GetOrCreateJint(document).GetValue("clicked").AsBoolean();
             Assert.IsFalse(clicked);
         }
 
         [Test]
         public async Task SetTimeoutWithNormalFunction()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -168,14 +168,14 @@ setTimeout(function () {
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             await Task.Delay(100);
-            var result = service.Engine.GetOrCreateJint(document).GetValue("completed").AsBoolean();
+            var result = service.GetOrCreateJint(document).GetValue("completed").AsBoolean();
             Assert.IsTrue(result);
         }
 
         [Test]
         public async Task SetTimeoutWithStringAsFunction()
         {
-            var service = new JavaScriptProvider();
+            var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = @"<!doctype html>
 <html>
@@ -187,7 +187,7 @@ setTimeout('completed = true;', 0);
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             await Task.Delay(100);
-            var result = service.Engine.GetOrCreateJint(document).GetValue("completed").AsBoolean();
+            var result = service.GetOrCreateJint(document).GetValue("completed").AsBoolean();
             Assert.IsTrue(result);
         }
     }
