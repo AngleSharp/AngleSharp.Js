@@ -26,10 +26,7 @@
 
         public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine)
         {
-            return (obj, ev) =>
-            {
-                function.Call(obj.ToJsValue(engine), new [] { ev.ToJsValue(engine) });
-            };
+            return (obj, ev) => function.Call(obj.ToJsValue(engine), new [] { ev.ToJsValue(engine) });
         }
 
         public static T ToCallback<T>(this FunctionInstance function, EngineInstance engine)

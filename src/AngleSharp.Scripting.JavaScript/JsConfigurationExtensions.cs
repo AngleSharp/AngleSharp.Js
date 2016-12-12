@@ -36,13 +36,14 @@
         public static IConfiguration WithJavaScript(this IConfiguration configuration)
         {
             var service = new JsScriptingService();
+            var observer = new EventAttributeObserver(service);
 
             if (!configuration.Has<INavigator>())
             {
                 configuration = configuration.With<INavigator>(context => new Navigator());
             }
 
-            return configuration.With(service);
+            return configuration.WithOnly(observer).With(service);
         }
     }
 }

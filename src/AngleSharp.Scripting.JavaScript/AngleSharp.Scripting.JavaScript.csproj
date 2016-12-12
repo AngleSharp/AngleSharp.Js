@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DomPrototypeInstance.cs" />
+    <Compile Include="EventAttributeObserver.cs" />
     <Compile Include="JsApiExtensions.cs" />
     <Compile Include="Attributes\DomInstanceAttribute.cs" />
     <Compile Include="JsConfigurationExtensions.cs" />

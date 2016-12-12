@@ -152,7 +152,7 @@ document.onclick();
         }
 
         [Test]
-        public async Task BodyOnloadWorksWhenSetAsAttribute()
+        public async Task BodyOnloadWorksWhenSetAsAttributeInitially()
         {
             var cfg = Configuration.Default.WithJavaScript();
             var html = @"<!doctype html>
@@ -160,6 +160,23 @@ document.onclick();
 <body onload='window.foo = 2+3'>
 <script>
 window.foo = 1.0;
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var value = document.ExecuteScript("window.foo");
+            Assert.AreEqual(5.0, value);
+        }
+
+        [Test]
+        public async Task BodyOnloadWorksWhenSetAsAttributeLater()
+        {
+            var cfg = Configuration.Default.WithJavaScript();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+window.foo = 1.0;
+document.body.setAttribute('onload', 'window.foo = 2+3');
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));

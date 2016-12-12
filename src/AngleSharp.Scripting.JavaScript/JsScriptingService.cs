@@ -106,7 +106,7 @@
 
         #region Helpers
 
-        private EngineInstance GetOrCreateInstance(IDocument document)
+        internal EngineInstance GetOrCreateInstance(IDocument document)
         {
             var instance = default(EngineInstance);
             var objectContext = document.DefaultView;
