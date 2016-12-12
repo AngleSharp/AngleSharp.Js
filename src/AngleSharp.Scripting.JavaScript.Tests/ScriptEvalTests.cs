@@ -77,7 +77,8 @@
         [Test]
         public async Task PerformXmlHttpRequestSynchronousToDataUrlShouldWork()
         {
-            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader();
+            var req = new DataRequester();
+            var cfg = Configuration.Default.With(req).WithJavaScript().WithDefaultLoader();
             var script = "var xhr = new XMLHttpRequest(); xhr.open('GET', 'data:plain/text,Hello World!', false);xhr.send();document.querySelector('#result').textContent = xhr.responseText;";
             var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -89,7 +90,8 @@
         public async Task PerformXmlHttpRequestSynchronousToDelayedResponseShouldWork()
         {
             var message = "Hi!";
-            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new[] { new DelayedRequester(10, message) });
+            var req = new DelayedRequester(10, message);
+            var cfg = Configuration.Default.WithJavaScript().With(req).WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/', false);
@@ -106,7 +108,7 @@ document.querySelector('#result').textContent = xhr.responseText;";
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJavaScript().WithDefaultLoader(requesters: new [] { req });
+            var cfg = Configuration.Default.WithJavaScript().With(req).WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/');

@@ -68,6 +68,7 @@
     <Compile Include="InteractionTests.cs" />
     <Compile Include="JqueryTests.cs" />
     <Compile Include="Mocks\ConsoleLogger.cs" />
+    <Compile Include="Mocks\DataRequester.cs" />
     <Compile Include="Mocks\DelayedRequester.cs" />
     <Compile Include="PageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -152,6 +152,22 @@ document.onclick();
         }
 
         [Test]
+        public async Task BodyOnloadWorksWhenSetAsAttribute()
+        {
+            var cfg = Configuration.Default.WithJavaScript();
+            var html = @"<!doctype html>
+<html>
+<body onload='window.foo = 2+3'>
+<script>
+window.foo = 1.0;
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var value = document.ExecuteScript("window.foo");
+            Assert.AreEqual(5.0, value);
+        }
+
+        [Test]
         public async Task SetTimeoutWithNormalFunction()
         {
             var service = new JsScriptingService();

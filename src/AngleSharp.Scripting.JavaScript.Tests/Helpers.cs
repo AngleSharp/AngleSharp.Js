@@ -18,9 +18,14 @@
             return console.Content.ToString().Trim();
         }
 
+        internal static IConfiguration GetCssConfig()
+        {
+            return Configuration.Default.WithJavaScript();//WithCss()
+        }
+
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)
         {
-            var cfg = Configuration.Default.WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true).WithJavaScript().WithCss();
+            var cfg = GetCssConfig().WithDefaultLoader(setup => setup.IsResourceLoadingEnabled = true);
             var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
             var html = "<!doctype html><div id=result></div>" + scripts;
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));

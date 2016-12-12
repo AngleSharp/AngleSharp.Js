@@ -1,7 +1,6 @@
-﻿namespace AngleSharp.Extensions
+﻿namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
-    using AngleSharp.Scripting.JavaScript;
     using System;
 
     /// <summary>

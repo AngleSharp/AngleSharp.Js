@@ -10,7 +10,7 @@
     {
         private static Task<IDocument> LoadPage(String url)
         {
-            var configuration = Configuration.Default.WithDefaultLoader().WithCss().WithCookies().WithJavaScript();
+            var configuration = Helpers.GetCssConfig().WithDefaultLoader().WithCookies();
             var context = BrowsingContext.New(configuration);
             return context.OpenAsync(url);
         }
