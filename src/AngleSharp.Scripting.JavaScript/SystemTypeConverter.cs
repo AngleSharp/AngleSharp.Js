@@ -48,9 +48,9 @@
             return arg.ToObject();
         }
 
-        static Object Clr(this JsValue? arg)
+        static Object Clr(this JsValue arg)
         {
-            return arg.HasValue ? arg.Value.ToObject() : null;
+            return arg?.ToObject();
         }
     }
 }
