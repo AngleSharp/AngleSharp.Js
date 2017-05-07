@@ -50,7 +50,7 @@
 
         static Object Clr(this JsValue arg)
         {
-            return arg;
+            return arg?.ToObject();
         }
     }
 }
