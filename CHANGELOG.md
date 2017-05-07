@@ -1,3 +1,7 @@
+# 0.5.1
+
+- Updated to latest versions (#34, #37)
+
 # 0.5.0
 
 - Several bug fixes and improvements
