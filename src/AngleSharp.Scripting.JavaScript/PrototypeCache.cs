@@ -1,11 +1,9 @@
-﻿using System.Collections.Concurrent;
-
-namespace AngleSharp.Scripting.JavaScript
+﻿namespace AngleSharp.Scripting.JavaScript
 {
     using Jint;
     using Jint.Native.Object;
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
 
     sealed class PrototypeCache
     {
