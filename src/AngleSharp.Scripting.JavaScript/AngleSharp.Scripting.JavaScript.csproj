@@ -35,8 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="jint, Version=2.10.4.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
-      <HintPath>..\packages\jint.2.10.4\lib\portable40-net40+sl5+win8+wp8+wpa81\jint.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\..\..\src\packages\jint.2.10.4\lib\portable40-net40+sl5+win8+wp8+wpa81\jint.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Concurrent">
@@ -82,13 +81,13 @@
     <Compile Include="UnresolvedConverter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\AngleSharp\src\AngleSharp\AngleSharp.Core.csproj">
       <Project>{91f78c48-287e-41b5-9e49-44d6e1e31290}</Project>
       <Name>AngleSharp.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>
