@@ -1,4 +1,5 @@
-﻿using Jint.Runtime;
+﻿using AngleSharp.Dom.Events;
+using Jint.Runtime;
 
 namespace AngleSharp.Scripting.JavaScript
 {
@@ -37,9 +38,11 @@ namespace AngleSharp.Scripting.JavaScript
                 {
                     function.Call(objAsJs, new[] { evAsJs });
                 }
-                catch (JavaScriptException)
+                catch (JavaScriptException jsException)
                 {
-
+                    var window = (IWindow) engine.Window.Value;
+                    window.Fire<ErrorEvent>(
+                        e => e.Init(null, jsException.LineNumber, jsException.Column, jsException));
                 }
             };
         }
