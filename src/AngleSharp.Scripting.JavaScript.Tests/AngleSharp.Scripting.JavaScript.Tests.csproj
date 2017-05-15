@@ -66,6 +66,7 @@
     <Compile Include="Helpers.cs" />
     <Compile Include="IntegrationTests.cs" />
     <Compile Include="InteractionTests.cs" />
+    <Compile Include="JavascriptErrorTests.cs" />
     <Compile Include="JqueryTests.cs" />
     <Compile Include="Mocks\ConsoleLogger.cs" />
     <Compile Include="Mocks\DataRequester.cs" />
