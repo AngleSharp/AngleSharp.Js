@@ -14,15 +14,7 @@
 
         public DomNodeInstance GetOrCreate(Object obj, Func<Object, DomNodeInstance> creator)
         {
-            var instance = default(DomNodeInstance);
-
-            if (!_references.TryGetValue(obj, out instance))
-            {
-                instance = creator.Invoke(obj);
-                _references.Add(obj, instance);
-            }
-
-            return instance;
+            return _references.GetValue(obj, creator.Invoke);
         }
     }
 }

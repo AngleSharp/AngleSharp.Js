@@ -1,4 +1,7 @@
-﻿namespace AngleSharp.Scripting.JavaScript
+﻿using AngleSharp.Dom.Events;
+using Jint.Runtime;
+
+namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
     using Jint.Native;
@@ -26,7 +29,22 @@
 
         public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine)
         {
-            return (obj, ev) => function.Call(obj.ToJsValue(engine), new [] { ev.ToJsValue(engine) });
+            return (obj, ev) =>
+            {
+                var objAsJs = obj.ToJsValue(engine);
+                var evAsJs = ev.ToJsValue(engine);
+
+                try
+                {
+                    function.Call(objAsJs, new[] { evAsJs });
+                }
+                catch (JavaScriptException jsException)
+                {
+                    var window = (IWindow) engine.Window.Value;
+                    window.Fire<ErrorEvent>(
+                        e => e.Init(null, jsException.LineNumber, jsException.Column, jsException));
+                }
+            };
         }
 
         public static T ToCallback<T>(this FunctionInstance function, EngineInstance engine)
