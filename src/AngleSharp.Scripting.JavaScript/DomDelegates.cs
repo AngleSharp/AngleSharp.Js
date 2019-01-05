@@ -1,9 +1,8 @@
-﻿using AngleSharp.Dom.Events;
-using Jint.Runtime;
-
 namespace AngleSharp.Scripting.JavaScript
 {
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
+    using Jint.Runtime;
     using Jint.Native;
     using Jint.Native.Function;
     using System;

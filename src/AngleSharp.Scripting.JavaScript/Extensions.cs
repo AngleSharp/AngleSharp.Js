@@ -245,7 +245,7 @@
             var names = ti.GetCustomAttributes<DomNameAttribute>();
             var name = names.FirstOrDefault();
 
-            if (name != null)
+            if (name != null && !ti.IsEnum)
             {
                 var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
                 var constructor = info != null ? new DomConstructorInstance(engine, info) : new DomConstructorInstance(engine, type);

@@ -20,7 +20,7 @@
 
         internal static IConfiguration GetCssConfig()
         {
-            return Configuration.Default.WithJavaScript();//WithCss()
+            return Configuration.Default.WithJavaScript().WithCss();
         }
 
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)

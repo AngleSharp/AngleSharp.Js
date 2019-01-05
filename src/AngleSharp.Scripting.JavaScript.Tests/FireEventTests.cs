@@ -16,7 +16,7 @@
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var div = document.QuerySelector("#result");
             Assert.AreEqual("", div.TextContent);
-            await Task.Delay(50);
+            await Task.Delay(20);
             Assert.AreEqual("done", div.TextContent);
         }
 
@@ -163,6 +163,7 @@ window.foo = 1.0;
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            await Task.Delay(30);
             var value = document.ExecuteScript("window.foo");
             Assert.AreEqual(5.0, value);
         }
@@ -180,6 +181,7 @@ document.body.setAttribute('onload', 'window.foo = 2+3');
 </script>
 </body>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            await Task.Delay(30);
             var value = document.ExecuteScript("window.foo");
             Assert.AreEqual(5.0, value);
         }

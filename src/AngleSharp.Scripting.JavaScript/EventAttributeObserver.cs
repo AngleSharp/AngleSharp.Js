@@ -97,7 +97,9 @@
                     var document = element.Owner;
                     var engine = _service.GetOrCreateInstance(document);
                     var jint = engine.Jint;
+                    jint.EnterExecutionContext(engine.Lexicals, engine.Variables, engine.Window);
                     var instance = jint.Function.Construct(new JsValue[] { "event", value }) as FunctionInstance;
+                    jint.LeaveExecutionContext();
 
                     if (instance != null)
                     {
@@ -107,7 +109,7 @@
             });
         }
 
-        public void NotifyChange(IElement host, String name, String value)
+        void IAttributeObserver.NotifyChange(IElement host, String name, String value)
         {
             var observer = default(Action<IElement, String>);
 

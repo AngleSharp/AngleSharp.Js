@@ -87,5 +87,24 @@ $.ajax('http://example.com/', {
             var result = await (new [] { Constants.Jquery1_11_2, SetResult("$.toString()") }).EvalScriptsAsync();
             Assert.AreNotEqual("", result);
         }
+
+        [Test]
+        public async Task UnknownSelectorShouldFailAndBeCaught()
+        {
+            var script = @"
+	var div = document.createElement('div');
+    document.body.appendChild(div);
+    div.id = 'foo';
+
+    try {
+        var x = document.querySelectorAll('*,:x');
+        div.textContent = 'succcess';
+    }
+    catch (e) {
+        div.textContent = 'failed';
+    }";
+            var result = await (new[] { script, SetResult("document.querySelector('#foo').textContent") }).EvalScriptsAsync();
+            Assert.AreEqual("failed", result);
+        }
     }
 }
