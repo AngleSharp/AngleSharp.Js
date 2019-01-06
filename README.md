@@ -2,7 +2,7 @@
 
 # AngleSharp.Js
 
-[![Build Status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Js.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Js)
+[![Build Status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
 [![GitHub Tag](https://img.shields.io/github/tag/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/releases)
 [![NuGet Count](https://img.shields.io/nuget/dt/AngleSharp.Js.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Js/)
 [![Issues Open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/issues)
