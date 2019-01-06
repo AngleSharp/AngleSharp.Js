@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>AngleSharp.Js</id>
+    <version>$version$</version>
+    <authors>AngleSharp</authors>
+    <owners>Florian Rappl</owners>
+    <licenseUrl>https://github.com/AngleSharp/AngleSharp.Js/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://anglesharp.github.io</projectUrl>
+    <iconUrl>https://raw.github.com/AngleSharp/AngleSharp.Js/master/logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Integrates a JavaScript engine to AngleSharp.</description>
+    <releaseNotes>https://github.com/AngleSharp/AngleSharp.Js/blob/master/CHANGELOG.md</releaseNotes>
+    <copyright>Copyright 2017-2019, AngleSharp</copyright>
+    <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
+    <dependencies>
+      <dependency id="AngleSharp" version="0.10.0" />
+      <dependency id="Jint" version="3.0.0-beta-1353" />
+    </dependencies>
+  </metadata>
+</package>

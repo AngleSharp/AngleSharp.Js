@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <Description>Integrates a JavaScript engine to AngleSharp.</Description>
+    <Product>AngleSharp.Js</Product>
+    <Version>0.10.0</Version>
+  </PropertyGroup>
+</Project>
