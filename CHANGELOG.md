@@ -1,3 +1,8 @@
+# 0.10.0
+
+- Restored compatibility with AngleSharp v0.10 (#51)
+- Renamed to `AngleSharp.Js` (focus only on JavaScript) (#51)
+
 # 0.5.1
 
 - Updated to latest versions (#34, #37)
