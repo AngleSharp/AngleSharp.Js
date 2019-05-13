@@ -12,9 +12,7 @@ namespace AngleSharp.Js
             _references = new ConditionalWeakTable<Object, DomNodeInstance>();
         }
 
-        public DomNodeInstance GetOrCreate(Object obj, Func<Object, DomNodeInstance> creator)
-        {
-            return _references.GetValue(obj, creator.Invoke);
-        }
+        public DomNodeInstance GetOrCreate(Object obj, Func<Object, DomNodeInstance> creator) =>
+            _references.GetValue(obj, creator.Invoke);
     }
 }

@@ -14,14 +14,12 @@ namespace AngleSharp.Js
         {
             _prototypes = new ConcurrentDictionary<Type, ObjectInstance>
             {
-                [typeof(Object)] = engine.Object.PrototypeObject
+                [typeof(Object)] = engine.Object.PrototypeObject,
             };
             _engine = engine;
         }
 
-        public ObjectInstance GetOrCreate(Type type, Func<Type, ObjectInstance> creator)
-        {
-            return _prototypes.GetOrAdd(type, creator.Invoke);
-        }
+        public ObjectInstance GetOrCreate(Type type, Func<Type, ObjectInstance> creator) =>
+            _prototypes.GetOrAdd(type, creator.Invoke);
     }
 }

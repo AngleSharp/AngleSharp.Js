@@ -29,7 +29,7 @@ namespace AngleSharp.Js
             _instance = engine;
 
             SetAllMembers();
-            SetPseudoProperties();
+            SetExtensionMembers();
 
             //  DOM objects can have properties added dynamically
             Extensible = true;
@@ -84,146 +84,226 @@ namespace AngleSharp.Js
             return false;
         }
 
-        private void SetAllMembers()
+        private void SetExtensionMembers()
         {
-            var type = _type;
-            var types = new List<Type>(type.GetTypeInfo().ImplementedInterfaces);
-
-            do
-            {
-                types.Add(type);
-                type = type.GetTypeInfo().BaseType;
-            }
-            while (type != null);
-
-            SetMembers(types);
-        }
-
-        private void SetMembers(IEnumerable<Type> types)
-        {
-            foreach (var type in types)
+            foreach (var type in _name.GetExtensionTypes())
             {
                 var typeInfo = type.GetTypeInfo();
-                SetProperties(typeInfo.DeclaredProperties);
-                SetMethods(typeInfo.DeclaredMethods);
-                SetEvents(typeInfo.DeclaredEvents);
+                SetExtensionMethods(typeInfo.DeclaredMethods);
             }
         }
 
-        private void SetEvents(IEnumerable<EventInfo> eventInfos)
+        private void SetAllMembers()
+        {
+            foreach (var type in _type.GetTypeTree())
+            {
+                var typeInfo = type.GetTypeInfo();
+                SetNormalProperties(typeInfo.DeclaredProperties);
+                SetNormalMethods(typeInfo.DeclaredMethods);
+                SetNormalEvents(typeInfo.DeclaredEvents);
+            }
+        }
+
+        private void SetNormalEvents(IEnumerable<EventInfo> eventInfos)
         {
             foreach (var eventInfo in eventInfos)
             {
-                var names = eventInfo.GetCustomAttributes<DomNameAttribute>();
+                var names = eventInfo.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName);
 
-                foreach (var name in names.Select(m => m.OfficialName))
+                foreach (var name in names)
                 {
-                    var eventInstance = new DomEventInstance(_instance, eventInfo);
-                    FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
+                    SetEvent(name, eventInfo.AddMethod, eventInfo.RemoveMethod);
                 }
             }
         }
 
-        private void SetProperties(IEnumerable<PropertyInfo> properties)
+        private void SetEvent(String name, MethodInfo adder, MethodInfo remover)
+        {
+            var eventInstance = new DomEventInstance(_instance, adder, remover);
+            FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
+        }
+
+        private void SetExtensionMethods(IEnumerable<MethodInfo> methods)
+        {
+            var entries = new Dictionary<String, ExtensionEntry>();
+
+            foreach (var method in methods)
+            {
+                var names = method.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName);
+                var accessors = method.GetCustomAttributes<DomAccessorAttribute>()
+                    .Select(m => m.Type);
+                var isEvent = method.GetCustomAttribute<DomEventAttribute>() != null;
+                var forward = method.GetCustomAttribute<DomPutForwardsAttribute>();
+
+                foreach (var name in names)
+                {
+                    if (!entries.TryGetValue(name, out var entry))
+                    {
+                        entry = new ExtensionEntry
+                        {
+                            Forward = forward,
+                        };
+                        entries.Add(name, entry);
+                    }
+
+                    if (accessors.Any())
+                    {
+                        var accessor = accessors.FirstOrDefault();
+
+                        if (isEvent)
+                        {
+                            switch (accessor)
+                            {
+                                case Accessors.Deleter:
+                                    entry.Remover = method;
+                                    break;
+                                case Accessors.Setter:
+                                    entry.Adder = method;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (accessor)
+                            {
+                                case Accessors.Setter:
+                                    entry.Setter = method;
+                                    break;
+                                case Accessors.Getter:
+                                    entry.Getter = method;
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        entry.Other = method;
+                    }
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                var name = entry.Key;
+                var value = entry.Value;
+
+                if (!Properties.ContainsKey(name))
+                {
+                    if (value.Adder != null && value.Remover != null)
+                    {
+                        SetEvent(name, value.Adder, value.Remover);
+                    }
+                    else if (value.Getter != null || value.Setter != null)
+                    {
+                        SetProperty(name, value.Getter, value.Setter, value.Forward);
+                    }
+                    else if (value.Other != null)
+                    {
+                        SetMethod(name, value.Other);
+                    }
+                }
+            }
+        }
+
+        class ExtensionEntry
+        {
+            public MethodInfo Getter;
+            public MethodInfo Setter;
+            public MethodInfo Adder;
+            public MethodInfo Remover;
+            public MethodInfo Other;
+            public DomPutForwardsAttribute Forward;
+        }
+
+        private void SetNormalProperties(IEnumerable<PropertyInfo> properties)
         {
             foreach (var property in properties)
             {
+                var indexParameters = property.GetIndexParameters();
                 var index = property.GetCustomAttribute<DomAccessorAttribute>();
+                var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
+                var names = property
+                    .GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName);
 
-                if (index != null)
+                if (index != null || names.Any(m => m.Is("item")))
                 {
-                    var indexParameters = property.GetIndexParameters();
-
-                    if (indexParameters.Length == 1)
-                    {
-                        if (indexParameters[0].ParameterType == typeof(Int32))
-                        {
-                            _numericIndexer = property;
-                        }
-                        else if (indexParameters[0].ParameterType == typeof(String))
-                        {
-                            _stringIndexer = property;
-                        }
-                    }
+                    SetIndexer(property, indexParameters);
                 }
 
-                var names = property.GetCustomAttributes<DomNameAttribute>();
-                var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
-
-                foreach (var name in names.Select(m => m.OfficialName))
+                foreach (var name in names)
                 {
-                    FastSetProperty(name, new PropertyDescriptor(
-                        new DomDelegateInstance(_instance, name, (obj, values) =>
-                            _instance.Call(property.GetMethod, obj, values)),
-                        new DomDelegateInstance(_instance, name, (obj, values) =>
-                        {
-                            if (putsForward != null)
-                            {
-                                var ep = Array.Empty<Object>();
-                                var that = obj.AsObject() as DomNodeInstance;
-                                var target = property.GetMethod.Invoke(that.Value, ep);
-                                var propName = putsForward.PropertyName;
-                                var prop = property.PropertyType
-                                    .GetInheritedProperties()
-                                    .FirstOrDefault(m => m.GetCustomAttributes<DomNameAttribute>().Any(n => n.OfficialName.Is(propName)));
-                                var args = _instance.BuildArgs(prop.SetMethod, values);
-                                prop.SetMethod.Invoke(target, args);
-                                return prop.GetMethod.Invoke(target, ep).ToJsValue(_instance);
-                            }
-
-                            return _instance.Call(property.SetMethod, obj, values);
-                        }), false, false));
+                    SetProperty(name, property.GetMethod, property.SetMethod, putsForward);
                 }
             }
         }
 
-        private void SetMethods(IEnumerable<MethodInfo> methods)
+        private void SetProperty(String name, MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward)
+        {
+            FastSetProperty(name, new PropertyDescriptor(
+                new DomDelegateInstance(_instance, name, (obj, values) =>
+                    _instance.Call(getter, obj, values)),
+                new DomDelegateInstance(_instance, name, (obj, values) =>
+                {
+                    if (putsForward != null)
+                    {
+                        var ep = Array.Empty<Object>();
+                        var that = obj.AsObject() as DomNodeInstance;
+                        var target = getter.Invoke(that.Value, ep);
+                        var propName = putsForward.PropertyName;
+                        var prop = getter.ReturnType
+                            .GetInheritedProperties()
+                            .FirstOrDefault(m => m.GetCustomAttributes<DomNameAttribute>().Any(n => n.OfficialName.Is(propName)));
+                        var args = _instance.BuildArgs(prop.SetMethod, values);
+                        prop.SetMethod.Invoke(target, args);
+                        return prop.GetMethod.Invoke(target, ep).ToJsValue(_instance);
+                    }
+
+                    return _instance.Call(setter, obj, values);
+                }), false, false));
+        }
+
+        private void SetIndexer(PropertyInfo property, ParameterInfo[] indexParameters)
+        {
+            if (indexParameters.Length == 1)
+            {
+                if (indexParameters[0].ParameterType == typeof(Int32))
+                {
+                    _numericIndexer = property;
+                }
+                else if (indexParameters[0].ParameterType == typeof(String))
+                {
+                    _stringIndexer = property;
+                }
+            }
+        }
+
+        private void SetNormalMethods(IEnumerable<MethodInfo> methods)
         {
             foreach (var method in methods)
             {
-                var names = method.GetCustomAttributes<DomNameAttribute>();
+                var names = method.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName);
 
-                foreach (var name in names.Select(m => m.OfficialName))
+                foreach (var name in names)
                 {
-                    //TODO Jint
-                    // If it already has a property with the given name (usually another method),
-                    // then convert that method to a two-layer method, which decides which one
-                    // to pick depending on the number (and probably types) of arguments.
-                    if (!Properties.ContainsKey(name))
-                    {
-                        var func = new DomFunctionInstance(_instance, method);
-                        FastAddProperty(name, func, false, false, false);
-                    }
+                    SetMethod(name, method);
                 }
             }
         }
 
-        private void SetPseudoProperties()
+        private void SetMethod(String name, MethodInfo method)
         {
-            if (_type.GetTypeInfo().ImplementedInterfaces.Contains(typeof(IElement)))
+            //TODO Jint
+            // If it already has a property with the given name (usually another method),
+            // then convert that method to a two-layer method, which decides which one
+            // to pick depending on the number (and probably types) of arguments.
+            if (!Properties.ContainsKey(name))
             {
-                var focusInEventInstance = new DomEventInstance(_instance);
-                var focusOutEventInstance = new DomEventInstance(_instance);
-                var unloadEventInstance = new DomEventInstance(_instance);
-                var contextMenuEventInstance = new DomEventInstance(_instance);
-
-                FastSetProperty("scrollLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("scrollTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("scrollWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("scrollHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("clientLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("clientTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("clientWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("clientHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("offsetLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("offsetTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("offsetWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-                FastSetProperty("offsetHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
-
-                FastSetProperty("focusin", new PropertyDescriptor(focusInEventInstance.Getter, focusInEventInstance.Setter, false, false));
-                FastSetProperty("focusout", new PropertyDescriptor(focusOutEventInstance.Getter, focusOutEventInstance.Setter, false, false));
-                FastSetProperty("unload", new PropertyDescriptor(unloadEventInstance.Getter, unloadEventInstance.Setter, false, false));
-                FastSetProperty("contextmenu", new PropertyDescriptor(contextMenuEventInstance.Getter, contextMenuEventInstance.Setter, false, false));
+                var func = new DomFunctionInstance(_instance, method);
+                FastAddProperty(name, func, false, false, false);
             }
         }
     }

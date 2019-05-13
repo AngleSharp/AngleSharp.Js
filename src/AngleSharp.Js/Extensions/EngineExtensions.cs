@@ -9,6 +9,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -188,8 +189,21 @@ namespace AngleSharp.Js
                 {
                     try
                     {
-                        var parameters = instance.BuildArgs(method, arguments);
-                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
+                        if (method.IsStatic)
+                        {
+                            var newArgs = new List<JsValue>
+                            {
+                                thisObject,
+                            };
+                            newArgs.AddRange(arguments);
+                            var parameters = instance.BuildArgs(method, newArgs.ToArray());
+                            return method.Invoke(null, parameters).ToJsValue(instance);
+                        }
+                        else
+                        {
+                            var parameters = instance.BuildArgs(method, arguments);
+                            return method.Invoke(node.Value, parameters).ToJsValue(instance);
+                        }
                     }
                     catch (TargetInvocationException)
                     {

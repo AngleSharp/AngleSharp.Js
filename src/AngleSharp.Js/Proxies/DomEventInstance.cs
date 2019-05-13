@@ -4,19 +4,22 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime.Interop;
+    using System;
     using System.Reflection;
 
     sealed class DomEventInstance
     {
         private readonly EngineInstance _engine;
-        private readonly EventInfo _eventInfo;
+        private readonly MethodInfo _addHandler;
+        private readonly MethodInfo _removeHandler;
         private DomEventHandler _handler;
         private FunctionInstance _function;
 
-        public DomEventInstance(EngineInstance engine, EventInfo eventInfo = null)
+        public DomEventInstance(EngineInstance engine, MethodInfo addHandler, MethodInfo removeHandler)
         {
             _engine = engine;
-            _eventInfo = eventInfo;
+            _addHandler = addHandler;
+            _removeHandler = removeHandler;
             Getter = new ClrFunctionInstance(engine.Jint, GetEventHandler);
             Setter = new ClrFunctionInstance(engine.Jint, SetEventHandler);
         }
@@ -25,10 +28,8 @@ namespace AngleSharp.Js
 
         public ClrFunctionInstance Setter { get; }
 
-        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments)
-        {
-            return _function ?? JsValue.Null;
-        }
+        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments) =>
+            _function ?? JsValue.Null;
 
         private JsValue SetEventHandler(JsValue thisObject, JsValue[] arguments)
         {
@@ -38,7 +39,7 @@ namespace AngleSharp.Js
             {
                 if (_handler != null)
                 {
-                    _eventInfo?.RemoveEventHandler(node.Value, _handler);
+                    _removeHandler?.Invoke(node.Value, new Object[] { _handler });
                     _handler = null;
                     _function = null;
                 }
@@ -53,7 +54,7 @@ namespace AngleSharp.Js
                         _function.Call(sender, new[] { args });
                     };
 
-                    _eventInfo?.AddEventHandler(node.Value, _handler);
+                    _addHandler?.Invoke(node.Value, new Object[] { _handler });
                 }
             }
 

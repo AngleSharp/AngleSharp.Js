@@ -1,6 +1,7 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Text;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -16,6 +17,31 @@ namespace AngleSharp.Js
 
         public static Object GetDefaultValue(this Type type) =>
             type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
+
+        public static IEnumerable<Type> GetExtensionTypes(this String name)
+        {
+            return AppDomain.CurrentDomain
+                .GetAssemblies()
+                .Where(m => m.FullName.StartsWith("AngleSharp"))
+                .SelectMany(m => m.ExportedTypes)
+                .Where(m => m.GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
+                .ToArray();
+        }
+
+        public static IEnumerable<Type> GetTypeTree(this Type root)
+        {
+            var type = root;
+            var types = new List<Type>(type.GetTypeInfo().ImplementedInterfaces);
+
+            do
+            {
+                types.Add(type);
+                type = type.GetTypeInfo().BaseType;
+            }
+            while (type != null);
+
+            return types;
+        }
 
         public static MethodInfo PrepareConvert(this Type fromType, Type toType)
         {
