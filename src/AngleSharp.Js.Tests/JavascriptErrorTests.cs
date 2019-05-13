@@ -17,7 +17,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public void JavascriptErrorInListenerShouldNotThrowJavascriptException()
         {
             var config = Configuration.Default
-                .WithJavaScript()
+                .WithJs()
                 .WithOnly(ctx => new CustomEventLoop());
 
             var context = BrowsingContext.New(config);

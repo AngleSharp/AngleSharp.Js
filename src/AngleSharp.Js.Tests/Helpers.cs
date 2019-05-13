@@ -13,7 +13,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public static async Task<String> EvalScriptAsync(this String source)
         {
             var console = new ConsoleLogger();
-            var cfg = Configuration.Default.WithJavaScript().WithConsoleLogger(context => console);
+            var cfg = Configuration.Default.WithJs().WithConsoleLogger(context => console);
             var html = "<!doctype html><script>console.log(" + source + ")</script>";
             await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return console.Content.ToString().Trim();
@@ -21,7 +21,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
 
         internal static IConfiguration GetCssConfig()
         {
-            return Configuration.Default.WithJavaScript().WithCss();
+            return Configuration.Default.WithJs().WithCss();
         }
 
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)

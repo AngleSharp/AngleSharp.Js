@@ -1,4 +1,4 @@
-﻿namespace AngleSharp
+namespace AngleSharp
 {
     using AngleSharp.Browser.Dom;
     using AngleSharp.Scripting.JavaScript;
@@ -33,7 +33,7 @@
         /// </summary>
         /// <param name="configuration">The configuration to use.</param>
         /// <returns>The new configuration.</returns>
-        public static IConfiguration WithJavaScript(this IConfiguration configuration)
+        public static IConfiguration WithJs(this IConfiguration configuration)
         {
             var service = new JsScriptingService();
             var observer = new EventAttributeObserver(service);
@@ -43,7 +43,9 @@
                 configuration = configuration.With<INavigator>(context => new Navigator());
             }
 
-            return configuration.WithOnly(observer).With(service);
+            return configuration
+                .WithOnly(observer)
+                .With(service);
         }
     }
 }

@@ -63,7 +63,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public async Task RunScriptSnippetDirectlyGetStringContent()
         {
             var html = "<!doctype html><span id=test>Test</span>";
-            var config = Configuration.Default.WithJavaScript();
+            var config = Configuration.Default.WithJs();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("document.querySelector('#test').innerHTML");
             Assert.AreEqual("Test", result);
@@ -73,7 +73,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public async Task RunScriptSnippetDirectlyGetComplexObjectFromProperty()
         {
             var html = "<!doctype html><span id=test>Test</span>";
-            var config = Configuration.Default.WithJavaScript();
+            var config = Configuration.Default.WithJs();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("document.defaultView");
             Assert.AreEqual(document.DefaultView, result);
@@ -83,7 +83,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public async Task RunScriptSnippetDirectlyGetsWindow()
         {
             var html = "<!doctype html><span id=test>Test</span>";
-            var config = Configuration.Default.WithJavaScript();
+            var config = Configuration.Default.WithJs();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("window");
             Assert.AreEqual(document.DefaultView, result);
@@ -93,7 +93,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public async Task RunScriptSnippetDirectlyGetComplexObjectFromQuerySelector()
         {
             var html = "<!doctype html><span id=test>Test</span>";
-            var config = Configuration.Default.WithJavaScript();
+            var config = Configuration.Default.WithJs();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("document.querySelector('#test')");
             Assert.AreEqual(document.QuerySelector("#test"), result);
@@ -103,7 +103,7 @@ namespace AngleSharp.Scripting.JavaScript.Tests
         public async Task RunScriptSnippetDirectlyGetSimpleValueFromCalculation()
         {
             var html = "<!doctype html><span id=test>Test</span>";
-            var config = Configuration.Default.WithJavaScript();
+            var config = Configuration.Default.WithJs();
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("1 + 2 * 3 - 4");
             Assert.AreEqual(3.0, result);

@@ -155,7 +155,7 @@ document.onclick();
         [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeInitially()
         {
-            var cfg = Configuration.Default.WithJavaScript();
+            var cfg = Configuration.Default.WithJs();
             var html = @"<!doctype html>
 <html>
 <body onload='window.foo = 2+3'>
@@ -172,7 +172,7 @@ window.foo = 1.0;
         [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeLater()
         {
-            var cfg = Configuration.Default.WithJavaScript();
+            var cfg = Configuration.Default.WithJs();
             var html = @"<!doctype html>
 <html>
 <body>

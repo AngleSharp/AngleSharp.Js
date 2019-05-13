@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript.Dom
+namespace AngleSharp.Scripting.JavaScript.Dom
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
@@ -46,18 +46,16 @@
         [DomName("parseFromString")]
         public IDocument Parse(String str, String type)
         {
-            var parser = default(Func<IBrowsingContext, String, IDocument>);
-
-            if (!SupportedTypes.TryGetValue(type, out parser))
+            if (SupportedTypes.TryGetValue(type, out var parser))
             {
-                throw new DomException(DomError.NotSupported);
+                //Potentially the resulting document should also have the following properties:
+                //- the content type must be the type argument
+                //- the URL value must be the URL of the active document
+                //- the location value must be null
+                return parser.Invoke(_window.Document.Context, str);
             }
 
-            //Potentially the resulting document should also have the following properties:
-            //- the content type must be the type argument
-            //- the URL value must be the URL of the active document
-            //- the location value must be null
-            return parser.Invoke(_window.Document.Context, str);
+            throw new DomException(DomError.NotSupported);
         }
 
         private static IDocument ParseHtml(IBrowsingContext context, String content)
@@ -81,12 +79,7 @@
             }
         }
 
-        private static String GetXmlErrorContent(XmlParseException ex, String content)
-        {
-            return String.Format("<parsererror xmlns=\"http://www.mozilla.org/newlayout/xml/parsererror.xml\">{0}<sourcetext>{1}</sourcetext></parsererror>",
-                ex.Message,
-                String.Empty
-            );
-        }
+        private static String GetXmlErrorContent(XmlParseException ex, String content) =>
+            $"<parsererror xmlns=\"http://www.mozilla.org/newlayout/xml/parsererror.xml\">{ex.Message}<sourcetext>{String.Empty}</sourcetext></parsererror>";
     }
 }
