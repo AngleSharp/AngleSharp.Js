@@ -1,7 +1,7 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
-    using Jint;
     using NUnit.Framework;
     using System.Threading.Tasks;
 
@@ -206,6 +206,55 @@ setTimeout(function () {
             await Task.Delay(100);
             var result = service.GetOrCreateJint(document).GetValue("completed").AsBoolean();
             Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task DomContentLoadedEventIsFired_Issue50()
+        {
+            //TODO Check this as well on the window level - currently works
+            //only against document (se AngleSharp#789)
+            var cfg = Configuration.Default.WithJs();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var element = document.createElement('div');
+  element.textContent = 'Success!';
+  document.body.appendChild(element);
+});
+</script>
+</body>";
+            await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .Then(document =>
+                {
+                    var div = document.QuerySelector("div");
+                    Assert.AreEqual("Success!", div?.TextContent);
+                });
+        }
+
+        [Test]
+        public async Task DocumentLoadEventIsFired_Issue42()
+        {
+            var cfg = Configuration.Default.WithJs();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+window.onload = function() {
+  var element = document.createElement('div');
+  element.textContent = 'Success!';
+  document.body.appendChild(element);
+};
+</script>
+</body>";
+            var context = BrowsingContext.New(cfg);
+            await context.OpenAsync(m => m.Content(html))
+                .Then(document =>
+                {
+                    var div = document.QuerySelector("div");
+                    Assert.AreEqual("Success!", div?.TextContent);
+                });
         }
 
         [Test]

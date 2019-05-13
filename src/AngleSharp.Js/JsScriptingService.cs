@@ -42,37 +42,27 @@ namespace AngleSharp.Js
         /// <summary>
         /// Gets the external assignments.
         /// </summary>
-        public IDictionary<String, Object> External
-        {
-            get { return _external; }
-        }
+        public IDictionary<String, Object> External => _external;
 
         /// <summary>
         /// Gets the engine's mime-type.
         /// </summary>
-        public String Type
-        {
-            get { return MimeTypeNames.DefaultJavaScript; }
-        }
+        public String Type => MimeTypeNames.DefaultJavaScript;
 
         #endregion
 
         #region Methods
 
-        Boolean IScriptingService.SupportsType(String mimeType)
-        {
-            return MimeTypeNames.IsJavaScript(mimeType);
-        }
+        Boolean IScriptingService.SupportsType(String mimeType) =>
+            MimeTypeNames.IsJavaScript(mimeType);
 
         /// <summary>
         /// Gets the associated Jint engine or creates it.
         /// </summary>
         /// <param name="document">The current document.</param>
         /// <returns>The engine object.</returns>
-        public Engine GetOrCreateJint(IDocument document)
-        {
-            return GetOrCreateInstance(document).Jint;
-        }
+        public Engine GetOrCreateJint(IDocument document) =>
+            GetOrCreateInstance(document).Jint;
 
         /// <summary>
         /// Evaluates the response asynchronously.
@@ -82,7 +72,9 @@ namespace AngleSharp.Js
         /// <param name="cancel">The cancellation token to transport.</param>
         public async Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
-            using (var reader = new StreamReader(response.Content, options.Encoding ?? Encoding.UTF8, true))
+            var encoding = options.Encoding ?? Encoding.UTF8;
+
+            using (var reader = new StreamReader(response.Content, encoding, true))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 EvaluateScript(options.Document, content);
@@ -97,9 +89,7 @@ namespace AngleSharp.Js
         /// <returns>The result of the evaluation.</returns>
         public Object EvaluateScript(IDocument document, String source)
         {
-            if (document == null)
-                throw new ArgumentNullException(nameof(document));
-            
+            document = document ?? throw new ArgumentNullException(nameof(document));
             return GetOrCreateInstance(document).RunScript(source).FromJsValue();
         }
 
@@ -109,10 +99,9 @@ namespace AngleSharp.Js
 
         internal EngineInstance GetOrCreateInstance(IDocument document)
         {
-            var instance = default(EngineInstance);
             var objectContext = document.DefaultView;
 
-            if (!_contexts.TryGetValue(objectContext, out instance))
+            if (!_contexts.TryGetValue(objectContext, out var instance))
             {
                 instance = new EngineInstance(objectContext, _external);
                 _contexts.Add(objectContext, instance);
