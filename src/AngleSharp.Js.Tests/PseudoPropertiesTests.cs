@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Tests
+namespace AngleSharp.Js.Tests
 {
     using NUnit.Framework;
     using System.Threading.Tasks;
@@ -7,9 +7,23 @@
     public class PseudoPropertiesTests
     {
         [Test]
-        public async Task GetScrollLeftOfElement()
+        public async Task GetScrollLeftOfDiv()
         {
             var result = await "document.createElement('div').scrollLeft".EvalScriptAsync();
+            Assert.AreEqual("0", result);
+        }
+
+        [Test]
+        public async Task GetScrollTopOfParagraph()
+        {
+            var result = await "document.createElement('p').scrollTop".EvalScriptAsync();
+            Assert.AreEqual("0", result);
+        }
+
+        [Test]
+        public async Task GetClientWidthOfButton()
+        {
+            var result = await "document.createElement('button').clientWidth".EvalScriptAsync();
             Assert.AreEqual("0", result);
         }
 

@@ -118,73 +118,9 @@ namespace AngleSharp.Js
             }
         }
 
-        private void SetEvent(String name, MethodInfo adder, MethodInfo remover)
-        {
-            var eventInstance = new DomEventInstance(_instance, adder, remover);
-            FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
-        }
-
         private void SetExtensionMethods(IEnumerable<MethodInfo> methods)
         {
-            var entries = new Dictionary<String, ExtensionEntry>();
-
-            foreach (var method in methods)
-            {
-                var names = method.GetCustomAttributes<DomNameAttribute>()
-                    .Select(m => m.OfficialName);
-                var accessors = method.GetCustomAttributes<DomAccessorAttribute>()
-                    .Select(m => m.Type);
-                var isEvent = method.GetCustomAttribute<DomEventAttribute>() != null;
-                var forward = method.GetCustomAttribute<DomPutForwardsAttribute>();
-
-                foreach (var name in names)
-                {
-                    if (!entries.TryGetValue(name, out var entry))
-                    {
-                        entry = new ExtensionEntry
-                        {
-                            Forward = forward,
-                        };
-                        entries.Add(name, entry);
-                    }
-
-                    if (accessors.Any())
-                    {
-                        var accessor = accessors.FirstOrDefault();
-
-                        if (isEvent)
-                        {
-                            switch (accessor)
-                            {
-                                case Accessors.Deleter:
-                                    entry.Remover = method;
-                                    break;
-                                case Accessors.Setter:
-                                    entry.Adder = method;
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            switch (accessor)
-                            {
-                                case Accessors.Setter:
-                                    entry.Setter = method;
-                                    break;
-                                case Accessors.Getter:
-                                    entry.Getter = method;
-                                    break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        entry.Other = method;
-                    }
-                }
-            }
-
-            foreach (var entry in entries)
+            foreach (var entry in methods.GetExtensions())
             {
                 var name = entry.Key;
                 var value = entry.Value;
@@ -205,16 +141,6 @@ namespace AngleSharp.Js
                     }
                 }
             }
-        }
-
-        class ExtensionEntry
-        {
-            public MethodInfo Getter;
-            public MethodInfo Setter;
-            public MethodInfo Adder;
-            public MethodInfo Remover;
-            public MethodInfo Other;
-            public DomPutForwardsAttribute Forward;
         }
 
         private void SetNormalProperties(IEnumerable<PropertyInfo> properties)
@@ -238,6 +164,26 @@ namespace AngleSharp.Js
                     SetProperty(name, property.GetMethod, property.SetMethod, putsForward);
                 }
             }
+        }
+
+        private void SetNormalMethods(IEnumerable<MethodInfo> methods)
+        {
+            foreach (var method in methods)
+            {
+                var names = method.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName);
+
+                foreach (var name in names)
+                {
+                    SetMethod(name, method);
+                }
+            }
+        }
+
+        private void SetEvent(String name, MethodInfo adder, MethodInfo remover)
+        {
+            var eventInstance = new DomEventInstance(_instance, adder, remover);
+            FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
         }
 
         private void SetProperty(String name, MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward)
@@ -276,20 +222,6 @@ namespace AngleSharp.Js
                 else if (indexParameters[0].ParameterType == typeof(String))
                 {
                     _stringIndexer = property;
-                }
-            }
-        }
-
-        private void SetNormalMethods(IEnumerable<MethodInfo> methods)
-        {
-            foreach (var method in methods)
-            {
-                var names = method.GetCustomAttributes<DomNameAttribute>()
-                    .Select(m => m.OfficialName);
-
-                foreach (var name in names)
-                {
-                    SetMethod(name, method);
                 }
             }
         }
