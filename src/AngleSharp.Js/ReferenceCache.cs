@@ -1,4 +1,4 @@
-namespace AngleSharp.Scripting.JavaScript
+namespace AngleSharp.Js
 {
     using System;
     using System.Runtime.CompilerServices;

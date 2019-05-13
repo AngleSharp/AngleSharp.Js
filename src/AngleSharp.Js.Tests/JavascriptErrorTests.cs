@@ -8,7 +8,7 @@ using AngleSharp.Common;
 using AngleSharp.Html;
 using NUnit.Framework;
 
-namespace AngleSharp.Scripting.JavaScript.Tests
+namespace AngleSharp.Js.Tests
 {
     [TestFixture]
     public class JavascriptErrorTests

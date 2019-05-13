@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript.Tests.Mocks
+﻿namespace AngleSharp.Js.Tests.Mocks
 {
     using AngleSharp.Dom;
     using AngleSharp.Io;

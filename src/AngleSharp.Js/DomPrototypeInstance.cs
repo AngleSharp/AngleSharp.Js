@@ -1,4 +1,4 @@
-namespace AngleSharp.Scripting.JavaScript
+namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;

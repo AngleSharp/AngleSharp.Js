@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Scripting.JavaScript.Tests.Mocks
+﻿namespace AngleSharp.Js.Tests.Mocks
 {
     using System;
     using System.Text;

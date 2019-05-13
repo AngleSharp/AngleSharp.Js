@@ -1,4 +1,4 @@
-namespace AngleSharp.Scripting.JavaScript.Tests
+namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom.Events;
     using Jint;

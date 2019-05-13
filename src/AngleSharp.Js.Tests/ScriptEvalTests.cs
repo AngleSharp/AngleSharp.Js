@@ -1,10 +1,10 @@
-namespace AngleSharp.Scripting.JavaScript.Tests
+namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
     using AngleSharp.Io;
-    using AngleSharp.Scripting.JavaScript.Dom;
-    using AngleSharp.Scripting.JavaScript.Tests.Mocks;
+    using AngleSharp.Js.Dom;
+    using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
     using System;
     using System.Threading.Tasks;

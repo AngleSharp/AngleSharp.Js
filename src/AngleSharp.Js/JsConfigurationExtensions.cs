@@ -1,8 +1,8 @@
 namespace AngleSharp
 {
     using AngleSharp.Browser.Dom;
-    using AngleSharp.Scripting.JavaScript;
-    using AngleSharp.Scripting.JavaScript.Dom;
+    using AngleSharp.Js;
+    using AngleSharp.Js.Dom;
     using System;
 
     /// <summary>
