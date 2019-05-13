@@ -2,6 +2,10 @@
 
 Released on Tuesday, May 14 2019.
 
+- Properly forward setting window.location (#31)
+- Respect window.onload event (#42)
+- Support for more APIs to enable jQuery (#43)
+- Respect DOMContentLoaded event (#50)
 - Restored compatibility with AngleSharp v0.12 (#51)
 - Renamed to `AngleSharp.Js` (focus only on JavaScript) (#51)
 - Renamed the `WithJavaScript` extension method to `WithJs`
