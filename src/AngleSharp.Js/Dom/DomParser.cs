@@ -2,10 +2,11 @@ namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
-    using AngleSharp.Html.Parser;
-    using AngleSharp.Xml.Parser;
+    using AngleSharp.Io;
+    using AngleSharp.Text;
     using System;
     using System.Collections.Generic;
+    using System.IO;
 
     /// <summary>
     /// A way for JavaScript applications to access the parser.
@@ -15,15 +16,6 @@ namespace AngleSharp.Js.Dom
     [DomExposed("Window")]
     public sealed class DomParser
     {
-        private static readonly Dictionary<String, Func<IBrowsingContext, String, IDocument>> SupportedTypes = new Dictionary<String, Func<IBrowsingContext, String, IDocument>>
-        {
-            { "text/html", ParseHtml },
-            { "text/xml", ParseXml },
-            { "application/xml", ParseXml },
-            { "application/xhtml+xml", ParseXml },
-            { "image/svg+xml", ParseXml }
-        };
-
         private readonly IWindow _window;
 
         /// <summary>
@@ -46,40 +38,23 @@ namespace AngleSharp.Js.Dom
         [DomName("parseFromString")]
         public IDocument Parse(String str, String type)
         {
-            if (SupportedTypes.TryGetValue(type, out var parser))
+            var ctx = _window?.Document.Context;
+            var factory = ctx?.GetService<IDocumentFactory>() ?? throw new DomException(DomError.NotSupported);
+            
+            using (var content = new MemoryStream(TextEncoding.Utf8.GetBytes(str)))
             {
-                //Potentially the resulting document should also have the following properties:
-                //- the content type must be the type argument
-                //- the URL value must be the URL of the active document
-                //- the location value must be null
-                return parser.Invoke(_window.Document.Context, str);
-            }
-
-            throw new DomException(DomError.NotSupported);
-        }
-
-        private static IDocument ParseHtml(IBrowsingContext context, String content)
-        {
-            var parser = context.GetService<IHtmlParser>();
-            return parser.ParseDocument(content);
-        }
-
-        private static IDocument ParseXml(IBrowsingContext context, String content)
-        {
-            var parser = context.GetService<IXmlParser>();
-
-            try
-            {
-                return parser.ParseDocument(content);
-            } 
-            catch (XmlParseException ex)
-            {
-                content = GetXmlErrorContent(ex, content);
-                return parser.ParseDocument(content);
+                var response = new DefaultResponse
+                {
+                    Address = new Url(_window.Document.Url),
+                    Content = content,
+                    Headers = new Dictionary<String, String>
+                    {
+                        { HeaderNames.ContentType, type },
+                    },
+                };
+                var task = factory.CreateAsync(ctx, new CreateDocumentOptions(response), default);
+                return task.Result;
             }
         }
-
-        private static String GetXmlErrorContent(XmlParseException ex, String content) =>
-            $"<parsererror xmlns=\"http://www.mozilla.org/newlayout/xml/parsererror.xml\">{ex.Message}<sourcetext>{String.Empty}</sourcetext></parsererror>";
     }
 }
