@@ -17,10 +17,7 @@
             _sb = sb;
         }
 
-        public StringBuilder Content
-        {
-            get { return _sb; }
-        }
+        public StringBuilder Content => _sb;
 
         public void Log(Object[] values)
         {

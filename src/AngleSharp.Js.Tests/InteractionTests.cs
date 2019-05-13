@@ -1,6 +1,6 @@
 namespace AngleSharp.Js.Tests
 {
-    using Jint;
+    using AngleSharp.Dom;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -107,6 +107,16 @@ namespace AngleSharp.Js.Tests
             var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
             var result = document.ExecuteScript("1 + 2 * 3 - 4");
             Assert.AreEqual(3.0, result);
+        }
+
+        [Test]
+        public async Task SetLocationViaSimpleString_Issue31()
+        {
+            var html = "<!doctype html><span id=test>Test</span><script>window.location = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("foo", context.Active.Location.Href));
         }
 
         class Person

@@ -330,5 +330,26 @@ namespace AngleSharp.Js
 
             return method.Invoke(obj, null);
         }
+
+        public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
+        {
+            if (method != null && thisObject.Type == Types.Object)
+            {
+                if (thisObject.AsObject() is DomNodeInstance node)
+                {
+                    try
+                    {
+                        var parameters = instance.BuildArgs(method, arguments);
+                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
+                    }
+                    catch (TargetInvocationException)
+                    {
+                        throw new JavaScriptException(instance.Jint.Error);
+                    }
+                }
+            }
+
+            return JsValue.Undefined;
+        }
     }
 }

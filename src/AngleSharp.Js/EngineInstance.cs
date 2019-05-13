@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js
+namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
     using Jint;
@@ -50,39 +50,21 @@
 
         #region Properties
 
-        public DomNodeInstance Window
-        {
-            get { return _window; }
-        }
-        
-        public LexicalEnvironment Lexicals 
-        {
-            get { return _lexicals; }
-        }
+        public DomNodeInstance Window => _window;
 
-        public LexicalEnvironment Variables 
-        {
-            get { return _variables; }
-        }
+        public LexicalEnvironment Lexicals => _lexicals;
 
-        public Engine Jint
-        {
-            get { return _engine; }
-        }
+        public LexicalEnvironment Variables => _variables;
+
+        public Engine Jint => _engine;
 
         #endregion
 
         #region Methods
 
-        public DomNodeInstance GetDomNode(Object obj)
-        {
-            return _references.GetOrCreate(obj, CreateInstance);
-        }
+        public DomNodeInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
-        public ObjectInstance GetDomPrototype(Type type)
-        {
-            return _prototypes.GetOrCreate(type, CreatePrototype);
-        }
+        public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
         public JsValue RunScript(String source, JsValue context)
         {

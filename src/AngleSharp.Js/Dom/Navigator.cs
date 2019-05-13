@@ -6,25 +6,13 @@
 
     sealed class Navigator : INavigator
     {
-        public String Name
-        {
-            get { return "Netscape"; }
-        }
+        public String Name => "Netscape";
 
-        public String Platform
-        {
-            get { return String.Empty; }
-        }
+        public String Platform => String.Empty;
 
-        public String UserAgent
-        {
-            get { return "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 OPR/32.0.1948.19 (Edition beta)"; }
-        }
+        public String UserAgent => "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 OPR/32.0.1948.19 (Edition beta)";
 
-        public String Version
-        {
-            get { return "1.0.0"; }
-        }
+        public String Version => "1.0.0";
 
         public Boolean IsContentHandlerRegistered(String mimeType, String url)
         {
@@ -56,9 +44,6 @@
         {
         }
 
-        public Boolean IsOnline
-        {
-            get { return NetworkInterface.GetIsNetworkAvailable(); }
-        }
+        public Boolean IsOnline => NetworkInterface.GetIsNetworkAvailable();
     }
 }

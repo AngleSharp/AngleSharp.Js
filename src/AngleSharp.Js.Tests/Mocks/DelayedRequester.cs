@@ -28,15 +28,9 @@
             _message = message;
         }
 
-        public Boolean IsStarted
-        {
-            get { return _started; }
-        }
+        public Boolean IsStarted => _started;
 
-        public Boolean IsFinished
-        {
-            get { return _finished; }
-        }
+        public Boolean IsFinished => _finished;
 
         public async Task<IResponse> RequestAsync(Request request, CancellationToken cancel)
         {
@@ -65,25 +59,13 @@
                 _address = address;
             }
 
-            public Url Address
-            {
-                get { return _address; }
-            }
+            public Url Address => _address;
 
-            public Stream Content
-            {
-                get { return _content; }
-            }
+            public Stream Content => _content;
 
-            public IDictionary<String, String> Headers
-            {
-                get { return _headers; }
-            }
+            public IDictionary<String, String> Headers => _headers;
 
-            public HttpStatusCode StatusCode
-            {
-                get { return HttpStatusCode.OK; }
-            }
+            public HttpStatusCode StatusCode => HttpStatusCode.OK;
 
             public void Dispose()
             {

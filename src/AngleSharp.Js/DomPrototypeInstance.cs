@@ -2,6 +2,7 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
+    using AngleSharp.Text;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Descriptors;
@@ -147,12 +148,31 @@ namespace AngleSharp.Js
                 }
 
                 var names = property.GetCustomAttributes<DomNameAttribute>();
+                var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
 
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
                     FastSetProperty(name, new PropertyDescriptor(
-                        new DomFunctionInstance(_instance, property.GetMethod),
-                        new DomFunctionInstance(_instance, property.SetMethod), false, false));
+                        new DomDelegateInstance(_instance, name, (obj, values) =>
+                            _instance.Call(property.GetMethod, obj, values)),
+                        new DomDelegateInstance(_instance, name, (obj, values) =>
+                        {
+                            if (putsForward != null)
+                            {
+                                var ep = Array.Empty<Object>();
+                                var that = obj.AsObject() as DomNodeInstance;
+                                var target = property.GetMethod.Invoke(that.Value, ep);
+                                var propName = putsForward.PropertyName;
+                                var prop = property.PropertyType
+                                    .GetInheritedProperties()
+                                    .FirstOrDefault(m => m.GetCustomAttributes<DomNameAttribute>().Any(n => n.OfficialName.Is(propName)));
+                                var args = _instance.BuildArgs(prop.SetMethod, values);
+                                prop.SetMethod.Invoke(target, args);
+                                return prop.GetMethod.Invoke(target, ep).ToJsValue(_instance);
+                            }
+
+                            return _instance.Call(property.SetMethod, obj, values);
+                        }), false, false));
                 }
             }
         }
@@ -208,3 +228,4 @@ namespace AngleSharp.Js
         }
     }
 }
+

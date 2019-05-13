@@ -71,10 +71,7 @@
         /// <summary>
         /// Gets if response headers are accessible.
         /// </summary>
-        public Boolean HasResponseHeaders
-        {
-            get { return _readyState == RequesterState.Loading || _readyState == RequesterState.Done; }
-        }
+        public Boolean HasResponseHeaders => _readyState == RequesterState.Loading || _readyState == RequesterState.Done;
 
         /// <summary>
         /// Adds or removes the handler for the readystatechange event.
@@ -114,10 +111,7 @@
         /// Gets the associated upload process, if any.
         /// </summary>
         [DomName("upload")]
-        public XmlHttpRequestUpload Upload
-        {
-            get { return null; }
-        }
+        public XmlHttpRequestUpload Upload => null;
 
         /// <summary>
         /// Gets or sets if credentials should be used for the request.
@@ -133,64 +127,43 @@
         /// Gets the determined response type.
         /// </summary>
         [DomName("responseType")]
-        public XmlHttpRequestResponseType ResponseType
-        {
-            get { return XmlHttpRequestResponseType.None; }
-        }
+        public XmlHttpRequestResponseType ResponseType => XmlHttpRequestResponseType.None;
 
         /// <summary>
         /// Gets the url of the response.
         /// </summary>
         [DomName("responseURL")]
-        public String ResponseUrl
-        {
-            get { return _responseUrl; }
-        }
+        public String ResponseUrl => _responseUrl;
 
         /// <summary>
         /// Gets the status code of the response.
         /// </summary>
         [DomName("status")]
-        public Int32 StatusCode
-        {
-            get { return (Int32)_responseStatus; }
-        }
+        public Int32 StatusCode => (Int32)_responseStatus;
 
         /// <summary>
         /// Gets the status text of the response.
         /// </summary>
         [DomName("statusText")]
-        public String StatusText
-        {
-            get { return StatusCode != 0 ? _responseStatus.ToString() : String.Empty; }
-        }
+        public String StatusText => StatusCode != 0 ? _responseStatus.ToString() : String.Empty;
 
         /// <summary>
         /// Gets the resulting response object.
         /// </summary>
         [DomName("response")]
-        public Object Response
-        {
-            get { return null; }
-        }
+        public Object Response => null;
 
         /// <summary>
         /// Gets the body text of the response.
         /// </summary>
         [DomName("responseText")]
-        public String ResponseText
-        {
-            get { return _responseText; }
-        }
+        public String ResponseText => _responseText;
 
         /// <summary>
         /// Gets the XML document of the response, if any.
         /// </summary>
         [DomName("responseXML")]
-        public IDocument ResponseXml
-        {
-            get { return null; }
-        }
+        public IDocument ResponseXml => null;
 
         #endregion
 
