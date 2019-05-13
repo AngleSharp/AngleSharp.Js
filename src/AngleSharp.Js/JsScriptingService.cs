@@ -1,8 +1,8 @@
-namespace AngleSharp.Js
+namespace AngleSharp.Scripting
 {
     using AngleSharp.Dom;
     using AngleSharp.Io;
-    using AngleSharp.Scripting;
+    using AngleSharp.Js;
     using Jint;
     using System;
     using System.Collections.Generic;

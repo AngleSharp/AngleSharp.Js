@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Scripting;
     using AngleSharp.Xml;
     using NUnit.Framework;
     using System;

@@ -2,9 +2,9 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
-    using Jint.Runtime;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Runtime;
     using System;
     using System.Linq;
     using System.Linq.Expressions;
@@ -17,40 +17,35 @@ namespace AngleSharp.Js
 
         public static Delegate ToDelegate(this Type type, FunctionInstance function, EngineInstance engine)
         {
-            if (type == typeof(DomEventHandler))
+            if (type != typeof(DomEventHandler))
             {
-                return function.ToListener(engine);
+                var method = typeof(DomDelegates).GetRuntimeMethod("ToCallback", ToCallbackSignature).MakeGenericMethod(type);
+                return method.Invoke(null, new Object[] { function, engine }) as Delegate;
             }
 
-            var method = typeof(DomDelegates).GetRuntimeMethod("ToCallback", ToCallbackSignature).MakeGenericMethod(type);
-            return method.Invoke(null, new Object[] { function, engine }) as Delegate;
+            return function.ToListener(engine);
         }
 
-        public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine)
+        public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine) => (obj, ev) =>
         {
-            return (obj, ev) =>
-            {
-                var objAsJs = obj.ToJsValue(engine);
-                var evAsJs = ev.ToJsValue(engine);
+            var objAsJs = obj.ToJsValue(engine);
+            var evAsJs = ev.ToJsValue(engine);
 
-                try
-                {
-                    function.Call(objAsJs, new[] { evAsJs });
-                }
-                catch (JavaScriptException jsException)
-                {
-                    var window = (IWindow) engine.Window.Value;
-                    window.Fire<ErrorEvent>(
-                        e => e.Init(null, jsException.LineNumber, jsException.Column, jsException));
-                }
-            };
-        }
+            try
+            {
+                function.Call(objAsJs, new[] { evAsJs });
+            }
+            catch (JavaScriptException jsException)
+            {
+                var window = (IWindow)engine.Window.Value;
+                window.Fire<ErrorEvent>(e => e.Init(null, jsException.LineNumber, jsException.Column, jsException));
+            }
+        };
 
         public static T ToCallback<T>(this FunctionInstance function, EngineInstance engine)
         {
-            var type = typeof(T);
-            var methodInfo = type.GetRuntimeMethods().First(m => m.Name == "Invoke");
-            var convert = typeof(Extensions).GetRuntimeMethod("ToJsValue", ToJsValueSignature);
+            var methodInfo = typeof(T).GetRuntimeMethods().First(m => m.Name == "Invoke");
+            var convert = typeof(EngineExtensions).GetRuntimeMethod("ToJsValue", ToJsValueSignature);
             var mps = methodInfo.GetParameters();
             var parameters = new ParameterExpression[mps.Length];
 

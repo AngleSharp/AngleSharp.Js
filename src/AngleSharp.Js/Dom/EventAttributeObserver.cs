@@ -1,7 +1,8 @@
-﻿namespace AngleSharp.Js
+namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Scripting;
     using Jint.Native;
     using Jint.Native.Function;
     using System;
@@ -98,12 +99,12 @@
                     var engine = _service.GetOrCreateInstance(document);
                     var jint = engine.Jint;
                     jint.EnterExecutionContext(engine.Lexicals, engine.Variables, engine.Window);
-                    var instance = jint.Function.Construct(new JsValue[] { "event", value }) as FunctionInstance;
+                    var instance = jint.Function.Construct(new JsValue[] { "event", value });
                     jint.LeaveExecutionContext();
 
-                    if (instance != null)
+                    if (instance is FunctionInstance functor)
                     {
-                        element.AddEventListener(eventName, instance.ToListener(engine));
+                        element.AddEventListener(eventName, functor.ToListener(engine));
                     }
                 }
             });
@@ -111,9 +112,7 @@
 
         void IAttributeObserver.NotifyChange(IElement host, String name, String value)
         {
-            var observer = default(Action<IElement, String>);
-
-            if (_observers.TryGetValue(name, out observer))
+            if (_observers.TryGetValue(name, out var observer))
             {
                 observer.Invoke(host, value);
             }

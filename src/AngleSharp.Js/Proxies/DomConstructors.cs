@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js
+namespace AngleSharp.Js
 {
     using Jint.Native.Function;
     using Jint.Native.Object;
@@ -20,10 +20,7 @@
             private set;
         }
 
-        public void Configure()
-        {
-            Setup(_engine);
-        }
+        public void Configure() => Setup(_engine);
 
         public void AttachConstructors(ObjectInstance obj)
         {

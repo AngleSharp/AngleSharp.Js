@@ -2,6 +2,7 @@ namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
+    using AngleSharp.Scripting;
     using NUnit.Framework;
     using System.Threading.Tasks;
 

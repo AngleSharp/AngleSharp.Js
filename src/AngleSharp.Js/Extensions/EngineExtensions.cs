@@ -4,17 +4,15 @@ namespace AngleSharp.Js
     using AngleSharp.Dom;
     using Jint;
     using Jint.Native;
-    using Jint.Native.Function;
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Reflection;
 
-    static class Extensions
+    static class EngineExtensions
     {
         public static JsValue ToJsValue(this Object obj, EngineInstance engine)
         {
@@ -66,83 +64,6 @@ namespace AngleSharp.Js
 
         public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter) =>
             new PropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
-
-        public static Object FromJsValue(this JsValue val)
-        {
-            switch (val.Type)
-            {
-                case Types.Boolean:
-                    return val.AsBoolean();
-                case Types.Number:
-                    return val.AsNumber();
-                case Types.String:
-                    return val.AsString();
-                case Types.Object:
-                    var obj = val.AsObject();
-                    var node = obj as DomNodeInstance;
-                    return node != null ? node.Value : obj;
-                case Types.Undefined:
-                    return Undefined.Text;
-                case Types.Null:
-                    return null;
-            }
-
-            return val.ToObject();
-        }
-
-        public static Object As(this JsValue value, Type targetType, EngineInstance engine)
-        {
-            if (value != JsValue.Null)
-            {
-                if (targetType == typeof(Int32))
-                {
-                    return TypeConverter.ToInt32(value);
-                }
-                else if (targetType == typeof(Double))
-                {
-                    return TypeConverter.ToNumber(value);
-                }
-                else if (targetType == typeof(String))
-                {
-                    return value.IsPrimitive() ? TypeConverter.ToString(value) : value.ToString();
-                }
-                else if (targetType == typeof(Boolean))
-                {
-                    return TypeConverter.ToBoolean(value);
-                }
-                else if (targetType == typeof(UInt32))
-                {
-                    return TypeConverter.ToUint32(value);
-                }
-                else if (targetType == typeof(UInt16))
-                {
-                    return TypeConverter.ToUint16(value);
-                }
-                else
-                {
-                    return value.AsComplex(targetType, engine);
-                }
-            }
-
-            return null;
-        }
-
-        public static Object GetDefaultValue(this Type type) =>
-            type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
-
-        public static MethodInfo PrepareConvert(this Type fromType, Type toType)
-        {
-            try
-            {
-                // Throws an exception if there is no conversion from fromType to toType
-                var exp = Expression.Convert(Expression.Parameter(fromType, null), toType);
-                return exp.Method;
-            }
-            catch
-            {
-                return null;
-            }
-        }
 
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
@@ -203,11 +124,6 @@ namespace AngleSharp.Js
             return args;
         }
 
-        public static String[] GetParameterNames(this MethodInfo method) =>
-            method?.GetParameters().Select(m => m.Name).ToArray();
-
-        public static Assembly GetAssembly(this Type type) => type.GetTypeInfo().Assembly;
-
         public static void AddConstructors(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
         {
             foreach (var exportedType in assembly.ExportedTypes)
@@ -263,73 +179,6 @@ namespace AngleSharp.Js
 
         public static JsValue RunScript(this EngineInstance engine, String source, INode context) =>
             engine.RunScript(source, context.ToJsValue(engine));
-
-        public static String GetOfficialName(this MemberInfo member)
-        {
-            var names = member.GetCustomAttributes<DomNameAttribute>();
-            var officalNameAttribute = names.FirstOrDefault();
-            return officalNameAttribute?.OfficialName ?? member.Name;
-        }
-
-        public static String GetOfficialName(this Type currentType, Type baseType)
-        {
-            var ti = currentType.GetTypeInfo();
-            var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
-
-            if (name == null)
-            {
-                var interfaces = ti.ImplementedInterfaces;
-
-                if (baseType != null)
-                {
-                    var bi = baseType.GetTypeInfo();
-                    var exclude = bi.ImplementedInterfaces;
-                    interfaces = interfaces.Except(exclude);
-                }
-
-                foreach (var impl in interfaces)
-                {
-                    name = impl.GetTypeInfo().GetCustomAttribute<DomNameAttribute>(false)?.OfficialName;
-
-                    if (name != null)
-                        break;
-                }
-            }
-
-            return name;
-        }
-
-        private static Object AsComplex(this JsValue value, Type targetType, EngineInstance engine)
-        {
-            var obj = value.FromJsValue();
-            var sourceType = obj.GetType();
-
-            if (sourceType == targetType || sourceType.GetTypeInfo().IsSubclassOf(targetType) || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
-            {
-                return obj;
-            }
-            else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
-            {
-                var f = obj as FunctionInstance;
-
-                if (f == null && obj is String b)
-                {
-                    var e = engine.Jint;
-                    var p = new[] { new JsValue(b) };
-                    f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
-                }
-
-                if (f != null)
-                {
-                    return targetType.ToDelegate(f, engine);
-                }
-            }
-
-            var method = sourceType.PrepareConvert(targetType) ??
-                throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
-
-            return method.Invoke(obj, null);
-        }
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {

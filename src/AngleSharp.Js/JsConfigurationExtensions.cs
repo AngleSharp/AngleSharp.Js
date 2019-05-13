@@ -3,6 +3,7 @@ namespace AngleSharp
     using AngleSharp.Browser.Dom;
     using AngleSharp.Js;
     using AngleSharp.Js.Dom;
+    using AngleSharp.Scripting;
     using System;
 
     /// <summary>
