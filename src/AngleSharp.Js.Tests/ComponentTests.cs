@@ -1,6 +1,6 @@
 namespace AngleSharp.Js.Tests
 {
-    using Jint;
+    using AngleSharp.Xml;
     using NUnit.Framework;
     using System;
     using System.Threading.Tasks;
@@ -11,7 +11,7 @@ namespace AngleSharp.Js.Tests
         private static async Task<String> RunScriptComponent(String script)
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.WithXml().With(service);
             var html = String.Concat("<!doctype html><script>", script, "</script>");
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var value = service.GetOrCreateJint(document).GetValue("assert");
@@ -41,16 +41,14 @@ var assert = doc.querySelector('parsererror').textContent;";
         }
 
         [Test]
-        public void DomParserShouldNotWorkWithMathMl()
+        public async Task DomParserShouldWorkWithMathMl()
         {
             var script = @"var xmlSource = '<math> <mrow> <msup><mi> a </mi><mn>2</mn></msup> <mo> + </mo> <msup><mi> b </mi><mn>2</mn></msup> <mo> = </mo> <msup><mi> c </mi><mn>2</mn></msup> </mrow> </math>';
 var parser = new DOMParser();
 var doc = parser.parseFromString(xmlSource, 'application/mathml+xml');
-var assert = 'failed';";
-            Assert.CatchAsync<ArgumentException>(async () => 
-            {
-                var value = await RunScriptComponent(script);
-            });
+var assert = 'success';";
+            var value = await RunScriptComponent(script);
+            Assert.AreEqual("success", value);
         }
 
         [Test]

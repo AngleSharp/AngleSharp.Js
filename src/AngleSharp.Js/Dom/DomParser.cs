@@ -52,8 +52,20 @@ namespace AngleSharp.Js.Dom
                         { HeaderNames.ContentType, type },
                     },
                 };
-                var task = factory.CreateAsync(ctx, new CreateDocumentOptions(response), default);
-                return task.Result;
+
+                try
+                {
+                    var task = factory.CreateAsync(ctx, new CreateDocumentOptions(response), default);
+                    var document = task.Result;
+                    return document;
+                }
+                catch (Exception ex)
+                {
+                    var message = ex.InnerException?.Message ?? ex.Message ?? "Something went wrong.";
+                    var sourceText = String.Empty;
+                    var error = $"<parsererror xmlns=\"http://www.mozilla.org/newlayout/xml/parsererror.xml\">{message}<sourcetext>{sourceText}</sourcetext></parsererror>";
+                    return Parse(error, MimeTypeNames.Xml);
+                }
             }
         }
     }
