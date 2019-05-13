@@ -14,7 +14,24 @@ AngleSharp.Js extends the core AngleSharp library with a .NET-based JavaScript e
 
 ## Basic Configuration
 
-(tbd)
+If you just want a configuration *that works* you should use the following code:
+
+```cs
+var config = Configuration.Default
+    .WithJs(); // from AngleSharp.Js
+```
+
+This will register a scripting engine for JS files. The JS parsing options and more could be set with parameters of the `WithJs` method.
+
+You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,
+
+```cs
+var config = Configuration.Default
+    .WithJs()
+    .WithConsoleLogger(ctx => new MyConsoleLogger(ctx));
+```
+
+in the previous example `MyConsoleLogger` refers to a class implementing the `IConsoleLogger` interface. Examples of classes implementing this interface are available in our [samples repository](https://github.com/AngleSharp/AngleSharp.Samples).
 
 ## Vision and Status
 
