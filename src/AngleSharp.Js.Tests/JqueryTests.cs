@@ -91,25 +91,22 @@ $.ajax('http://example.com/', {
         [Test]
         public async Task JqueryVersionTwoTwoFour_Issue43()
         {
-            Assert.Inconclusive();
-            //var result = await (new[] { Constants.Jquery2_2_4, SetResult("$.toString()") }).EvalScriptsAsync();
-            //Assert.AreNotEqual("", result);
+            var result = await (new[] { Constants.Jquery2_2_4, SetResult("$.toString()") }).EvalScriptsAsync();
+            Assert.AreNotEqual("", result);
         }
 
         [Test]
         public async Task JqueryVersionThreeTwoOne_Issue43()
         {
-            Assert.Inconclusive();
-            //var result = await (new[] { Constants.Jquery3_2_1, SetResult("$.toString()") }).EvalScriptsAsync();
-            //Assert.AreNotEqual("", result);
+            var result = await (new[] { Constants.Jquery3_2_1, SetResult("$.toString()") }).EvalScriptsAsync();
+            Assert.AreNotEqual("", result);
         }
 
         [Test]
         public async Task JqueryVersionOneTwelveFour_Issue43()
         {
-            Assert.Inconclusive();
-            //var result = await (new[] { Constants.Jquery1_12_4, SetResult("$.toString()") }).EvalScriptsAsync();
-            //Assert.AreNotEqual("", result);
+            var result = await (new[] { Constants.Jquery1_12_4, SetResult("$.toString()") }).EvalScriptsAsync();
+            Assert.AreNotEqual("", result);
         }
 
         [Test]
