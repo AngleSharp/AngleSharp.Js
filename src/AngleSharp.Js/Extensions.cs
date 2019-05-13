@@ -8,7 +8,6 @@ namespace AngleSharp.Js
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
-    using Jint.Runtime.Descriptors.Specialized;
     using Jint.Runtime.Interop;
     using System;
     using System.Linq;
@@ -23,31 +22,31 @@ namespace AngleSharp.Js
             {
                 if (obj is String)
                 {
-                    return new JsString((String)obj);
+                    return new JsValue((String)obj);
                 }
                 else if (obj is Int32)
                 {
-                    return new JsNumber((Int32)obj);
+                    return new JsValue((Int32)obj);
                 }
                 else if (obj is UInt32)
                 {
-                    return new JsNumber((UInt32)obj);
+                    return new JsValue((UInt32)obj);
                 }
                 else if (obj is Double)
                 {
-                    return new JsNumber((Double)obj);
+                    return new JsValue((Double)obj);
                 }
                 else if (obj is Single)
                 {
-                    return new JsNumber((Single)obj);
+                    return new JsValue((Single)obj);
                 }
                 else if (obj is Boolean)
                 {
-                    return new JsBoolean((Boolean)obj);
+                    return new JsValue((Boolean)obj);
                 }
                 else if (obj is Enum)
                 {
-                    return new JsNumber(Convert.ToInt32(obj));
+                    return new JsValue(Convert.ToInt32(obj));
                 }
 
                 return engine.GetDomNode(obj);
@@ -56,25 +55,17 @@ namespace AngleSharp.Js
             return JsValue.Null;
         }
 
-        public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func)
-        {
-            return new ClrFunctionInstance(engine, String.Empty, func);
-        }
+        public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func) =>
+            new ClrFunctionInstance(engine, func);
 
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter)
-        {
-            return new GetSetPropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
-        }
+        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter) =>
+            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
 
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter)
-        {
-            return new GetSetPropertyDescriptor(new GetterFunctionInstance(engine, getter), null, true, false);
-        }
+        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter) =>
+            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), null, true, false);
 
-        public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter)
-        {
-            return new GetSetPropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
-        }
+        public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter) =>
+            new PropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
 
         public static Object FromJsValue(this JsValue val)
         {
@@ -136,10 +127,8 @@ namespace AngleSharp.Js
             return null;
         }
 
-        public static Object GetDefaultValue(this Type type)
-        {
-            return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
-        }
+        public static Object GetDefaultValue(this Type type) =>
+            type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 
         public static MethodInfo PrepareConvert(this Type fromType, Type toType)
         {
@@ -214,15 +203,10 @@ namespace AngleSharp.Js
             return args;
         }
 
-        public static String[] GetParameterNames(this MethodInfo method)
-        {
-            return method != null ? method.GetParameters().Select(m => m.Name).ToArray() : null;
-        }
+        public static String[] GetParameterNames(this MethodInfo method) =>
+            method?.GetParameters().Select(m => m.Name).ToArray();
 
-        public static Assembly GetAssembly(this Type type)
-        {
-            return type.GetTypeInfo().Assembly;
-        }
+        public static Assembly GetAssembly(this Type type) => type.GetTypeInfo().Assembly;
 
         public static void AddConstructors(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
         {
@@ -274,21 +258,17 @@ namespace AngleSharp.Js
             }
         }
 
-        public static JsValue RunScript(this EngineInstance engine, String source)
-        {
-            return engine.RunScript(source, engine.Window);
-        }
+        public static JsValue RunScript(this EngineInstance engine, String source) =>
+            engine.RunScript(source, engine.Window);
 
-        public static JsValue RunScript(this EngineInstance engine, String source, INode context)
-        {
-            return engine.RunScript(source, context.ToJsValue(engine));
-        }
+        public static JsValue RunScript(this EngineInstance engine, String source, INode context) =>
+            engine.RunScript(source, context.ToJsValue(engine));
 
         public static String GetOfficialName(this MemberInfo member)
         {
             var names = member.GetCustomAttributes<DomNameAttribute>();
             var officalNameAttribute = names.FirstOrDefault();
-            return officalNameAttribute != null ? officalNameAttribute.OfficialName : member.Name;
+            return officalNameAttribute?.OfficialName ?? member.Name;
         }
 
         public static String GetOfficialName(this Type currentType, Type baseType)
@@ -332,16 +312,11 @@ namespace AngleSharp.Js
             {
                 var f = obj as FunctionInstance;
 
-                if (f == null)
+                if (f == null && obj is String b)
                 {
-                    var b = obj as String;
-
-                    if (b != null)
-                    {
-                        var e = engine.Jint;
-                        var p = new[] { new JsString(b) };
-                        f = new ClrFunctionInstance(e, String.Empty, (_this, args) => e.Eval.Call(_this, p));
-                    }
+                    var e = engine.Jint;
+                    var p = new[] { new JsValue(b) };
+                    f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
                 }
 
                 if (f != null)
@@ -350,9 +325,7 @@ namespace AngleSharp.Js
                 }
             }
 
-            var method = sourceType.PrepareConvert(targetType);
-
-            if (method == null)
+            var method = sourceType.PrepareConvert(targetType) ??
                 throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
 
             return method.Invoke(obj, null);

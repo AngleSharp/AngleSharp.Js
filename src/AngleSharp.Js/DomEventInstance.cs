@@ -4,7 +4,6 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime.Interop;
-    using System;
     using System.Reflection;
 
     sealed class DomEventInstance
@@ -18,8 +17,8 @@ namespace AngleSharp.Js
         {
             _engine = engine;
             _eventInfo = eventInfo;
-            Getter = new ClrFunctionInstance(engine.Jint, String.Empty, GetEventHandler);
-            Setter = new ClrFunctionInstance(engine.Jint, String.Empty, SetEventHandler);
+            Getter = new ClrFunctionInstance(engine.Jint, GetEventHandler);
+            Setter = new ClrFunctionInstance(engine.Jint, SetEventHandler);
         }
 
         public ClrFunctionInstance Getter { get; }

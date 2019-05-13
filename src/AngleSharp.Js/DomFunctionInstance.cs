@@ -12,9 +12,9 @@ namespace AngleSharp.Js
         private readonly MethodInfo _method;
 
         public DomFunctionInstance(EngineInstance engine, MethodInfo method)
-            : base(engine.Jint, method.Name, method.GetParameterNames(), null, false)
+            : base(engine.Jint, method.GetParameterNames(), null, false)
         {
-            var toString = new ClrFunctionInstance(Engine, "toString", ToString);
+            var toString = new ClrFunctionInstance(Engine, ToString);
             _instance = engine;
             _method = method;
             FastAddProperty("toString", toString, true, false, true);
@@ -24,9 +24,7 @@ namespace AngleSharp.Js
         {
             if (_method != null && thisObject.Type == Types.Object)
             {
-                var node = thisObject.AsObject() as DomNodeInstance;
-
-                if (node != null)
+                if (thisObject.AsObject() is DomNodeInstance node)
                 {
                     try
                     {
@@ -45,12 +43,8 @@ namespace AngleSharp.Js
 
         private JsValue ToString(JsValue thisObj, JsValue[] arguments)
         {
-            var func = thisObj.TryCast<FunctionInstance>();
-
-            if (func == null)
-            {
+            var func = thisObj.TryCast<FunctionInstance>() ??
                 throw new JavaScriptException(Engine.TypeError, "Function object expected.");
-            }
 
             var officialName = _method.GetOfficialName();
             return $"function {officialName}() {{ [native code] }}";

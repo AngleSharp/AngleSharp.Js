@@ -14,34 +14,35 @@ namespace AngleSharp.Js.Tests
         {
             var console = new ConsoleLogger();
             var cfg = Configuration.Default.WithJs().WithConsoleLogger(context => console);
-            var html = "<!doctype html><script>console.log(" + source + ")</script>";
+            var html = $"<!doctype html><script>console.log({source})</script>";
             await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return console.Content.ToString().Trim();
         }
 
-        internal static IConfiguration GetCssConfig()
-        {
-            return Configuration.Default.WithJs().WithCss();
-        }
+        internal static IConfiguration GetCssConfig() =>
+            Configuration.Default
+                .WithJs()
+                .WithCss()
+                .WithRenderDevice();
 
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)
         {
             var cfg = GetCssConfig().WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
-            var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
-            var html = "<!doctype html><div id=result></div>" + scripts;
+            var content = String.Join("</script><script>", sources);
+            var html = $"<!doctype html><div id=result></div><script>{content}</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return document.GetElementById("result").InnerHtml;
         }
 
         public static Boolean IsNetworkAvailable()
         {
-            if (NetworkInterface.GetIsNetworkAvailable())
+            if (!NetworkInterface.GetIsNetworkAvailable())
             {
-                return true;
+                Assert.Inconclusive("No network has been detected. Test skipped.");
+                return false;
             }
 
-            Assert.Inconclusive("No network has been detected. Test skipped.");
-            return false;
+            return true;
         }
     }
 }

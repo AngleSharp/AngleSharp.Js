@@ -5,7 +5,6 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime.Descriptors;
-    using Jint.Runtime.Descriptors.Specialized;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -36,13 +35,14 @@ namespace AngleSharp.Js
             Prototype = engine.GetDomPrototype(baseType);
         }
 
+        public override String Class => _name;
+
         public Boolean TryGetFromIndex(Object value, String index, out PropertyDescriptor result)
         {
             //  If we have a numeric indexer and the property is numeric
-            var numericIndex = default(Int32);
-            result = default(PropertyDescriptor);
+            result = default;
 
-            if (_numericIndexer != null && Int32.TryParse(index, out numericIndex))
+            if (_numericIndexer != null && Int32.TryParse(index, out var numericIndex))
             {
                 var args = new Object[] { numericIndex };
 
@@ -72,7 +72,7 @@ namespace AngleSharp.Js
             //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
-            if (_stringIndexer != null && !HasProperty(index))
+            if (_stringIndexer != null && !Properties.ContainsKey(index))
             {
                 var args = new Object[] { index };
                 var prop = _stringIndexer.GetMethod.Invoke(value, args).ToJsValue(_instance);
@@ -118,7 +118,7 @@ namespace AngleSharp.Js
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
                     var eventInstance = new DomEventInstance(_instance, eventInfo);
-                    FastSetProperty(name, new GetSetPropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
+                    FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
                 }
             }
         }
@@ -150,7 +150,7 @@ namespace AngleSharp.Js
 
                 foreach (var name in names.Select(m => m.OfficialName))
                 {
-                    FastSetProperty(name, new GetSetPropertyDescriptor(
+                    FastSetProperty(name, new PropertyDescriptor(
                         new DomFunctionInstance(_instance, property.GetMethod),
                         new DomFunctionInstance(_instance, property.SetMethod), false, false));
                 }
@@ -169,7 +169,7 @@ namespace AngleSharp.Js
                     // If it already has a property with the given name (usually another method),
                     // then convert that method to a two-layer method, which decides which one
                     // to pick depending on the number (and probably types) of arguments.
-                    if (!HasProperty(name))
+                    if (!Properties.ContainsKey(name))
                     {
                         var func = new DomFunctionInstance(_instance, method);
                         FastAddProperty(name, func, false, false, false);
@@ -187,23 +187,23 @@ namespace AngleSharp.Js
                 var unloadEventInstance = new DomEventInstance(_instance);
                 var contextMenuEventInstance = new DomEventInstance(_instance);
 
-                FastSetProperty("scrollLeft", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("scrollTop", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("scrollWidth", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("scrollHeight", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("clientLeft", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("clientTop", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("clientWidth", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("clientHeight", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("offsetLeft", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("offsetTop", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("offsetWidth", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
-                FastSetProperty("offsetHeight", new PropertyDescriptor(new JsNumber(0.0), false, false, false));
+                FastSetProperty("scrollLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("scrollHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("clientHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetLeft", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetTop", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetWidth", new PropertyDescriptor(new JsValue(0.0), false, false, false));
+                FastSetProperty("offsetHeight", new PropertyDescriptor(new JsValue(0.0), false, false, false));
 
-                FastSetProperty("focusin", new GetSetPropertyDescriptor(focusInEventInstance.Getter, focusInEventInstance.Setter, false, false));
-                FastSetProperty("focusout", new GetSetPropertyDescriptor(focusOutEventInstance.Getter, focusOutEventInstance.Setter, false, false));
-                FastSetProperty("unload", new GetSetPropertyDescriptor(unloadEventInstance.Getter, unloadEventInstance.Setter, false, false));
-                FastSetProperty("contextmenu", new GetSetPropertyDescriptor(contextMenuEventInstance.Getter, contextMenuEventInstance.Setter, false, false));
+                FastSetProperty("focusin", new PropertyDescriptor(focusInEventInstance.Getter, focusInEventInstance.Setter, false, false));
+                FastSetProperty("focusout", new PropertyDescriptor(focusOutEventInstance.Getter, focusOutEventInstance.Setter, false, false));
+                FastSetProperty("unload", new PropertyDescriptor(unloadEventInstance.Getter, unloadEventInstance.Setter, false, false));
+                FastSetProperty("contextmenu", new PropertyDescriptor(contextMenuEventInstance.Getter, contextMenuEventInstance.Setter, false, false));
             }
         }
     }

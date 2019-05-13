@@ -15,9 +15,9 @@ namespace AngleSharp.Js
         private readonly ObjectInstance _objectPrototype;
 
         public DomConstructorInstance(EngineInstance engine, Type type)
-            : base(engine.Jint, type.Name, null, null, false)
+            : base(engine.Jint, null, null, false)
         {
-            var toString = new ClrFunctionInstance(Engine, "toString", ToString);
+            var toString = new ClrFunctionInstance(Engine, ToString);
             _objectPrototype = engine.GetDomPrototype(type);
             _instance = engine;
             FastAddProperty("toString", toString, true, false, true);
@@ -34,7 +34,9 @@ namespace AngleSharp.Js
         public override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
             if (_constructor != null)
+            {
                 throw new JavaScriptException("Only call the constructor with the new keyword.");
+            }
 
             return ((IConstructor)this).Construct(arguments);
         }
@@ -42,7 +44,9 @@ namespace AngleSharp.Js
         ObjectInstance IConstructor.Construct(JsValue[] arguments)
         {
             if (_constructor == null)
+            {
                 throw new JavaScriptException("Illegal constructor.");
+            }
 
             try
             {
@@ -56,9 +60,7 @@ namespace AngleSharp.Js
             }
         }
 
-        private JsValue ToString(JsValue thisObj, JsValue[] arguments)
-        {
-            return $"function {_objectPrototype.Class}() {{ [native code] }}";
-        }
+        private JsValue ToString(JsValue thisObj, JsValue[] arguments) =>
+            $"function {_objectPrototype.Class}() {{ [native code] }}";
     }
 }

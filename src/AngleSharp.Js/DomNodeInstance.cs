@@ -19,10 +19,9 @@ namespace AngleSharp.Js
             Prototype = engine.GetDomPrototype(value.GetType());
         }
 
-        public Object Value
-        {
-            get { return _value; }
-        }
+        public Object Value => _value;
+
+        public override String Class => Prototype.Class;
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
         {

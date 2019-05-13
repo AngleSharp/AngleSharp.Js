@@ -14,7 +14,7 @@ namespace AngleSharp.Js
             : base(engine)
         {
             _logger = logger;
-            FastAddProperty("log", new ClrFunctionInstance(engine, "log", Log), false, false, false);
+            FastAddProperty("log", new ClrFunctionInstance(engine, Log), false, false, false);
         }
 
         private JsValue Log(JsValue ctx, JsValue[] args)
