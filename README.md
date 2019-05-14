@@ -1,44 +1,69 @@
-![logo](https://raw.githubusercontent.com/AngleSharp/AngleSharp.Scripting/master/header.png)
+![logo](https://raw.githubusercontent.com/AngleSharp/AngleSharp.Js/master/header.png)
 
-AngleSharp.Scripting
-====================
+# AngleSharp.Js
 
-AngleSharp.Scripting extends the core AngleSharp library with some useful scripting capabilities. This repository contains multiple packages. All of them are quickly presented in this file.
+[![Build Status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
+[![GitHub Tag](https://img.shields.io/github/tag/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/releases)
+[![NuGet Count](https://img.shields.io/nuget/dt/AngleSharp.Js.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Js/)
+[![Issues Open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/issues)
+[![Gitter Chat](http://img.shields.io/badge/gitter-AngleSharp/AngleSharp-blue.svg?style=flat-square)](https://gitter.im/AngleSharp/AngleSharp)
+[![StackOverflow Questions](https://img.shields.io/stackexchange/stackoverflow/t/anglesharp.svg?style=flat-square)](https://stackoverflow.com/tags/anglesharp)
+[![CLA Assistant](https://cla-assistant.io/readme/badge/AngleSharp/AngleSharp.Js?style=flat-square)](https://cla-assistant.io/AngleSharp/AngleSharp.Js)
 
-Current status of this repository:
+AngleSharp.Js extends the core AngleSharp library with a .NET-based JavaScript engine.
 
-[![Build status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
-[![Issues open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Scripting.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Scripting/issues)
+## Basic Configuration
 
-AngleSharp.Scripting.CSharp
----------------------------
+If you just want a configuration *that works* you should use the following code:
 
-The repository contains helpers for dynamic evaluation using the DLR. The dynamic helpers enable JavaScript-like programming, without any requirements on casting. Nevertheless, as in a JavaScript, you'll need to be sure that the instance you are dealing with really exposes the API you are using.
+```cs
+var config = Configuration.Default
+    .WithJs(); // from AngleSharp.Js
+```
 
-Additionally this library has eventually the goal of providing a very fancy way of integrating Roslyn, scriptcs or any other C# script engine. In HTML files that have been parsed with a configuration that uses `WithCSharp`, scripts can be provided in using the `text/c-sharp` type. Such scripts will then be transformed and evaluated by the provided C# script engine.
+This will register a scripting engine for JS files. The JS parsing options and more could be set with parameters of the `WithJs` method.
 
-The transformation should set the `this` pointer to the `IWindow` instance. Additionally the DLR will be used. Finally, it will be possible to also reference other libraries in the script. The script tag might be used to include external libraries via NuGet.
+You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,
 
-**Status** Highly experimental and most things are not implemented.
+```cs
+var config = Configuration.Default
+    .WithJs()
+    .WithConsoleLogger(ctx => new MyConsoleLogger(ctx));
+```
 
-AngleSharp.Scripting.JavaScript
----------------------------
+in the previous example `MyConsoleLogger` refers to a class implementing the `IConsoleLogger` interface. Examples of classes implementing this interface are available in our [samples repository](https://github.com/AngleSharp/AngleSharp.Samples).
+
+## Vision and Status
 
 The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* is fully ECMAScript 5 compatible and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation.
 
-The library comes with a service that exposes `WithJavaScript` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be consumed as a PCL. The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
+The library comes with a service that exposes `WithJs` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be published in compatibility with .NET Standard (2.0). The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
 
-**Status** Currently leaving experimental stage and becoming alpha ready.
+## Features
 
-[![Nuget count](https://img.shields.io/nuget/v/AngleSharp.Scripting.Javascript.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Scripting.Javascript/)
-[![Nuget downloads](https://img.shields.io/nuget/dt/AngleSharp.Scripting.Javascript.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Scripting.JavaScript/)
+(tbd)
 
-Some legal stuff
-----------------
+## Participating
+
+Participation in the project is highly welcome. For this project the same rules as for the AngleSharp core project may be applied.
+
+If you have any question, concern, or spot an issue then please report it before opening a pull request. An initial discussion is appreciated regardless of the nature of the problem.
+
+Live discussions can take place in our [Gitter chat](https://gitter.im/AngleSharp/AngleSharp), which supports using GitHub accounts.
+
+This project has adopted the code of conduct defined by the Contributor Covenant to clarify expected behavior in our community.
+
+For more information see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
+
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
+## License
 
 The MIT License (MIT)
 
-Copyright (c) 2015 - 2017 AngleSharp
+Copyright (c) 2015 - 2019 AngleSharp
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
