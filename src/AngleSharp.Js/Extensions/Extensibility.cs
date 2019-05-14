@@ -18,7 +18,6 @@ namespace AngleSharp.Js
                     .Select(m => m.OfficialName);
                 var accessors = method.GetCustomAttributes<DomAccessorAttribute>()
                     .Select(m => m.Type);
-                var isEvent = method.GetCustomAttribute<DomEventAttribute>() != null;
                 var forward = method.GetCustomAttribute<DomPutForwardsAttribute>();
 
                 foreach (var name in names)
@@ -36,29 +35,20 @@ namespace AngleSharp.Js
                     {
                         var accessor = accessors.FirstOrDefault();
 
-                        if (isEvent)
+                        switch (accessor)
                         {
-                            switch (accessor)
-                            {
-                                case Accessors.Deleter:
-                                    entry.Remover = method;
-                                    break;
-                                case Accessors.Setter:
-                                    entry.Adder = method;
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            switch (accessor)
-                            {
-                                case Accessors.Setter:
-                                    entry.Setter = method;
-                                    break;
-                                case Accessors.Getter:
-                                    entry.Getter = method;
-                                    break;
-                            }
+                            case Accessors.Setter:
+                                entry.Setter = method;
+                                break;
+                            case Accessors.Getter:
+                                entry.Getter = method;
+                                break;
+                            case Accessors.Remover:
+                                entry.Remover = method;
+                                break;
+                            case Accessors.Adder:
+                                entry.Adder = method;
+                                break;
                         }
                     }
                     else

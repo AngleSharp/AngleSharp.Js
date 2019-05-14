@@ -86,15 +86,9 @@ namespace AngleSharp.Js
 
         #region Helpers
 
-        private DomNodeInstance CreateInstance(Object obj)
-        {
-            return new DomNodeInstance(this, obj);
-        }
+        private DomNodeInstance CreateInstance(Object obj) => new DomNodeInstance(this, obj);
 
-        private ObjectInstance CreatePrototype(Type type)
-        {
-            return new DomPrototypeInstance(this, type);
-        }
+        private ObjectInstance CreatePrototype(Type type) => new DomPrototypeInstance(this, type);
 
         #endregion
     }

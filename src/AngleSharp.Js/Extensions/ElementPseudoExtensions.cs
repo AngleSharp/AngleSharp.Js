@@ -98,8 +98,7 @@ namespace AngleSharp.Js
         /// Adds the focus in event.
         /// </summary>
         [DomName("focusin")]
-        [DomEvent]
-        [DomAccessor(Accessors.Setter)]
+        [DomAccessor(Accessors.Adder)]
         public static void AddFocusIn(this IElement element, DomEventHandler handler) =>
             element.AddEventListener("focusin", handler);
 
@@ -107,8 +106,7 @@ namespace AngleSharp.Js
         /// Removes the focus in event.
         /// </summary>
         [DomName("focusin")]
-        [DomEvent]
-        [DomAccessor(Accessors.Deleter)]
+        [DomAccessor(Accessors.Remover)]
         public static void RemoveFocusIn(this IElement element, DomEventHandler handler) =>
             element.RemoveEventListener("focusin", handler);
 
@@ -116,8 +114,7 @@ namespace AngleSharp.Js
         /// Adds the focus out event.
         /// </summary>
         [DomName("focusout")]
-        [DomEvent]
-        [DomAccessor(Accessors.Setter)]
+        [DomAccessor(Accessors.Adder)]
         public static void AddFocusOut(this IElement element, DomEventHandler handler) =>
             element.AddEventListener("focusout", handler);
 
@@ -125,8 +122,7 @@ namespace AngleSharp.Js
         /// Removes the focus out event.
         /// </summary>
         [DomName("focusout")]
-        [DomEvent]
-        [DomAccessor(Accessors.Deleter)]
+        [DomAccessor(Accessors.Remover)]
         public static void RemoveFocusOut(this IElement element, DomEventHandler handler) =>
             element.RemoveEventListener("focusout", handler);
 
@@ -134,8 +130,7 @@ namespace AngleSharp.Js
         /// Adds the unload event.
         /// </summary>
         [DomName("unload")]
-        [DomEvent]
-        [DomAccessor(Accessors.Setter)]
+        [DomAccessor(Accessors.Adder)]
         public static void AddUnload(this IElement element, DomEventHandler handler) =>
             element.AddEventListener("unload", handler);
 
@@ -143,8 +138,7 @@ namespace AngleSharp.Js
         /// Removes the unload event.
         /// </summary>
         [DomName("unload")]
-        [DomEvent]
-        [DomAccessor(Accessors.Deleter)]
+        [DomAccessor(Accessors.Remover)]
         public static void RemoveUnload(this IElement element, DomEventHandler handler) =>
             element.RemoveEventListener("unload", handler);
 
@@ -152,8 +146,7 @@ namespace AngleSharp.Js
         /// Adds the contextmenu event.
         /// </summary>
         [DomName("contextmenu")]
-        [DomEvent]
-        [DomAccessor(Accessors.Setter)]
+        [DomAccessor(Accessors.Adder)]
         public static void AddContextMenu(this IElement element, DomEventHandler handler) =>
             element.AddEventListener("contextmenu", handler);
 
@@ -161,8 +154,7 @@ namespace AngleSharp.Js
         /// Removes the contextmenu event.
         /// </summary>
         [DomName("contextmenu")]
-        [DomEvent]
-        [DomAccessor(Accessors.Deleter)]
+        [DomAccessor(Accessors.Remover)]
         public static void RemoveContextMenu(this IElement element, DomEventHandler handler) =>
             element.RemoveEventListener("contextmenu", handler);
     }
