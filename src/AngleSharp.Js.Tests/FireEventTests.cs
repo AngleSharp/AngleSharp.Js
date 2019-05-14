@@ -15,10 +15,9 @@ namespace AngleSharp.Js.Tests
             var service = new JsScriptingService();
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><div id=result></div><script>document.addEventListener('load', function () { document.querySelector('#result').textContent = 'done'; }, false);</script>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
             var div = document.QuerySelector("#result");
-            Assert.AreEqual("", div.TextContent);
-            await Task.Delay(20);
             Assert.AreEqual("done", div.TextContent);
         }
 
@@ -164,8 +163,9 @@ document.onclick();
 window.foo = 1.0;
 </script>
 </body>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            await Task.Delay(30);
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+
             var value = document.ExecuteScript("window.foo");
             Assert.AreEqual(5.0, value);
         }
@@ -182,8 +182,8 @@ window.foo = 1.0;
 document.body.setAttribute('onload', 'window.foo = 2+3');
 </script>
 </body>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            await Task.Delay(30);
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
             var value = document.ExecuteScript("window.foo");
             Assert.AreEqual(5.0, value);
         }
@@ -203,8 +203,8 @@ setTimeout(function () {
 }, 0);
 </script>
 </body>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            await Task.Delay(100);
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
             var result = service.GetOrCreateJint(document).GetValue("completed").AsBoolean();
             Assert.IsTrue(result);
         }
@@ -226,12 +226,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </body>";
-            await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
-                .Then(document =>
-                {
-                    var div = document.QuerySelector("div");
-                    Assert.AreEqual("Success!", div?.TextContent);
-                });
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var div = document.QuerySelector("div");
+            Assert.AreEqual("Success!", div?.TextContent);
         }
 
         [Test]
@@ -250,12 +249,11 @@ window.onload = function() {
 </script>
 </body>";
             var context = BrowsingContext.New(cfg);
-            await context.OpenAsync(m => m.Content(html))
-                .Then(document =>
-                {
-                    var div = document.QuerySelector("div");
-                    Assert.AreEqual("Success!", div?.TextContent);
-                });
+            var document = await context.OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var div = document.QuerySelector("div");
+            Assert.AreEqual("Success!", div?.TextContent);
         }
 
         [Test]
@@ -271,8 +269,9 @@ var completed = false;
 setTimeout('completed = true;', 0);
 </script>
 </body>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            await Task.Delay(100);
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+
             var result = service.GetOrCreateJint(document).GetValue("completed").AsBoolean();
             Assert.IsTrue(result);
         }
