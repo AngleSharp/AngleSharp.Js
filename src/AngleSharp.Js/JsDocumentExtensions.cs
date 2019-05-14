@@ -33,7 +33,7 @@ namespace AngleSharp.Dom
                 {
                     tcs.SetException(ex);
                 }
-            }, TaskPriority.Normal);
+            }, TaskPriority.None);
             return tcs.Task.ContinueWith(_ => document);
         }
 
@@ -69,5 +69,21 @@ namespace AngleSharp.Dom
         /// <returns>A task that is finished when the enqueued task completed.</returns>
         public static Task<IDocument> Then(this Task<IDocument> documentTask, String jsSource) =>
             documentTask.Then(document => document.ExecuteScript(jsSource));
+
+        /// <summary>
+        /// Waits until all currently queued tasks finished.
+        /// </summary>
+        /// <param name="document">The available document.</param>
+        /// <returns>A task that is finished when the enqueued tasks completed.</returns>
+        public static Task<IDocument> WhenStable(this IDocument document) =>
+            document.Then(_ => { });
+
+        /// <summary>
+        /// Waits until all initially queued tasks finished.
+        /// </summary>
+        /// <param name="documentTask">The soon available document.</param>
+        /// <returns>A task that is finished when the enqueued tasks completed.</returns>
+        public static Task<IDocument> WhenStable(this Task<IDocument> documentTask) =>
+            documentTask.Then(_ => { });
     }
 }

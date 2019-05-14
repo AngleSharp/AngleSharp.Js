@@ -7,6 +7,8 @@ namespace AngleSharp.Scripting
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading;
@@ -103,12 +105,16 @@ namespace AngleSharp.Scripting
 
             if (!_contexts.TryGetValue(objectContext, out var instance))
             {
-                instance = new EngineInstance(objectContext, _external);
+                var libs = GetAssemblies(document.Context).ToArray();
+                instance = new EngineInstance(objectContext, _external, libs);
                 _contexts.Add(objectContext, instance);
             }
 
             return instance;
         }
+
+        private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) =>
+            context.GetServices<Object>().Select(m => m.GetType().Assembly).Distinct();
 
         #endregion
     }

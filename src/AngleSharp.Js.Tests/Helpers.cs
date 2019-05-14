@@ -1,5 +1,7 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Browser;
+    using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
@@ -22,6 +24,7 @@ namespace AngleSharp.Js.Tests
         internal static IConfiguration GetCssConfig() =>
             Configuration.Default
                 .WithJs()
+                .WithOnly<IEventLoop>(ctx => new MockEventLoop(ctx))
                 .WithCss()
                 .WithRenderDevice();
 
@@ -30,7 +33,10 @@ namespace AngleSharp.Js.Tests
             var cfg = GetCssConfig().WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
             var content = String.Join("</script><script>", sources);
             var html = $"<!doctype html><div id=result></div><script>{content}</script>";
-            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var document = await BrowsingContext.New(cfg)
+                .OpenAsync(m => m.Content(html))
+                .WhenStable()
+                .ConfigureAwait(false);
             return document.GetElementById("result").InnerHtml;
         }
 

@@ -18,11 +18,9 @@ namespace AngleSharp.Js
         public static Object GetDefaultValue(this Type type) =>
             type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 
-        public static IEnumerable<Type> GetExtensionTypes(this String name)
+        public static IEnumerable<Type> GetExtensionTypes(this IEnumerable<Assembly> libs, String name)
         {
-            return AppDomain.CurrentDomain
-                .GetAssemblies()
-                .Where(m => m.FullName.StartsWith("AngleSharp"))
+            return libs
                 .SelectMany(m => m.ExportedTypes)
                 .Where(m => m.GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
                 .ToArray();

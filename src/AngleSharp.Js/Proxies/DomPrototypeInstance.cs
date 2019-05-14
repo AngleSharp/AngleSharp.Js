@@ -86,7 +86,7 @@ namespace AngleSharp.Js
 
         private void SetExtensionMembers()
         {
-            foreach (var type in _name.GetExtensionTypes())
+            foreach (var type in _instance.Libs.GetExtensionTypes(_name))
             {
                 var typeInfo = type.GetTypeInfo();
                 SetExtensionMethods(typeInfo.DeclaredMethods);
@@ -125,20 +125,20 @@ namespace AngleSharp.Js
                 var name = entry.Key;
                 var value = entry.Value;
 
-                if (!Properties.ContainsKey(name))
+                if (Properties.ContainsKey(name))
                 {
-                    if (value.Adder != null && value.Remover != null)
-                    {
-                        SetEvent(name, value.Adder, value.Remover);
-                    }
-                    else if (value.Getter != null || value.Setter != null)
-                    {
-                        SetProperty(name, value.Getter, value.Setter, value.Forward);
-                    }
-                    else if (value.Other != null)
-                    {
-                        SetMethod(name, value.Other);
-                    }
+                }
+                else if (value.Adder != null && value.Remover != null)
+                {
+                    SetEvent(name, value.Adder, value.Remover);
+                }
+                else if (value.Getter != null || value.Setter != null)
+                {
+                    SetProperty(name, value.Getter, value.Setter, value.Forward);
+                }
+                else if (value.Other != null)
+                {
+                    SetMethod(name, value.Other);
                 }
             }
         }

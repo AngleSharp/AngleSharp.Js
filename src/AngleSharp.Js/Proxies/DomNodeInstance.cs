@@ -25,16 +25,12 @@ namespace AngleSharp.Js
 
         public override PropertyDescriptor GetOwnProperty(String propertyName)
         {
-            var prototype = Prototype as DomPrototypeInstance;
-            var descriptor = default(PropertyDescriptor);
-            var result = prototype?.TryGetFromIndex(_value, propertyName, out descriptor) ?? false;
-
-            if (!result)
+            if (Prototype is DomPrototypeInstance prototype && prototype.TryGetFromIndex(_value, propertyName, out var descriptor))
             {
-                descriptor = base.GetOwnProperty(propertyName);
+                return descriptor;
             }
-            
-            return descriptor;
+
+            return base.GetOwnProperty(propertyName);
         }
     }
 }

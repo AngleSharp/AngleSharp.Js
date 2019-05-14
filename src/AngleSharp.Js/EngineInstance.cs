@@ -7,14 +7,16 @@ namespace AngleSharp.Js
     using Jint.Runtime.Environments;
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
 
     sealed class EngineInstance
     {
         #region Fields
 
+        private readonly Engine _engine;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
-        private readonly Engine _engine;
+        private readonly IEnumerable<Assembly> _libs;
         private readonly LexicalEnvironment _lexicals;
         private readonly LexicalEnvironment _variables;
         private readonly DomNodeInstance _window;
@@ -23,13 +25,14 @@ namespace AngleSharp.Js
 
         #region ctor
 
-        public EngineInstance(IWindow window, IDictionary<String, Object> assignments)
+        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
         {
             var context = window.Document.Context;
             var logger = context.GetService<IConsoleLogger>();
             _engine = new Engine();
             _prototypes = new PrototypeCache(_engine);
             _references = new ReferenceCache();
+            _libs = libs;
             _engine.SetValue("console", new ConsoleInstance(_engine, logger));
 
             foreach (var assignment in assignments)
@@ -41,14 +44,19 @@ namespace AngleSharp.Js
             _lexicals = LexicalEnvironment.NewObjectEnvironment(_engine, _window, _engine.ExecutionContext.LexicalEnvironment, true);
             _variables = LexicalEnvironment.NewObjectEnvironment(_engine, _engine.Global, null, false);
 
-            this.AddConstructors(_window, typeof(INode).GetAssembly());
-            this.AddConstructors(_window, this.GetType().GetAssembly());
-            this.AddInstances(_window, this.GetType());
+            foreach (var lib in libs)
+            {
+                this.AddConstructors(_window, lib);
+                this.AddConstructors(_window, lib);
+                this.AddInstances(_window, lib);
+            }
         }
 
         #endregion
 
         #region Properties
+
+        public IEnumerable<Assembly> Libs => _libs;
 
         public DomNodeInstance Window => _window;
 

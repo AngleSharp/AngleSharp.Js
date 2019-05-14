@@ -133,9 +133,9 @@ namespace AngleSharp.Js
             }
         }
 
-        public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Type type)
+        public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Assembly assembly)
         {
-            foreach (var exportedType in type.GetTypeInfo().Assembly.ExportedTypes)
+            foreach (var exportedType in assembly.ExportedTypes)
             {
                 engine.AddInstance(obj, exportedType);
             }
