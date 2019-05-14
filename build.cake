@@ -125,7 +125,7 @@ Task("Create-Package")
             ?? (isRunningOnAppVeyor ? GetFiles("C:\\Tools\\NuGet3\\nuget.exe").FirstOrDefault() : null)
             ?? throw new InvalidOperationException("Could not find nuget.exe.");
 
-        var nuspec = nugetRoot + File("AngleSharp.Css.nuspec");
+        var nuspec = nugetRoot + File("AngleSharp.Js.nuspec");
 
         NuGetPack(nuspec, new NuGetPackSettings
         {
