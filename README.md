@@ -41,7 +41,9 @@ The library comes with a service that exposes `WithJs` to `IConfiguration`. This
 
 ## Features
 
-(tbd)
+- Support of ES5 through Jint
+- Connection to the DOM
+- Evaluation of simple scripts (incl. jQuery)
 
 ## Participating
 
