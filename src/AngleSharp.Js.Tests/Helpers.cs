@@ -24,7 +24,7 @@ namespace AngleSharp.Js.Tests
         internal static IConfiguration GetCssConfig() =>
             Configuration.Default
                 .WithJs()
-                .WithOnly<IEventLoop>(ctx => new MockEventLoop(ctx))
+                .Without<IEventLoop>()
                 .WithCss()
                 .WithRenderDevice();
 

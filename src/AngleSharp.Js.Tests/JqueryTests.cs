@@ -97,8 +97,7 @@ $.ajax('http://example.com/', {
         {
             var result = await (new[] { Constants.Jquery2_2_4, SetResult("$.toString()") }).EvalScriptsAsync()
                 .ConfigureAwait(false);
-            //Assert.AreNotEqual("", result);
-            Assert.Inconclusive("Currently deactivated due to EventLoop issues.");
+            Assert.AreNotEqual("", result);
         }
 
         [Test]
@@ -106,8 +105,7 @@ $.ajax('http://example.com/', {
         {
             var result = await (new[] { Constants.Jquery3_2_1, SetResult("$.toString()") }).EvalScriptsAsync()
                 .ConfigureAwait(false);
-            //Assert.AreNotEqual("", result);
-            Assert.Inconclusive("Currently deactivated due to EventLoop issues.");
+            Assert.AreNotEqual("", result);
         }
 
         [Test]
@@ -115,8 +113,7 @@ $.ajax('http://example.com/', {
         {
             var result = await (new[] { Constants.Jquery1_12_4, SetResult("$.toString()") }).EvalScriptsAsync()
                 .ConfigureAwait(false);
-            //Assert.AreNotEqual("", result);
-            Assert.Inconclusive("Currently deactivated due to EventLoop issues.");
+            Assert.AreNotEqual("", result);
         }
 
         [Test]

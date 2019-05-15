@@ -21,20 +21,27 @@ namespace AngleSharp.Dom
         {
             var context = document.Context;
             var evts = context.GetService<IEventLoop>();
-            var tcs = new TaskCompletionSource<Boolean>();
-            evts.Enqueue(cancel =>
+
+            if (evts != null)
             {
-                try
+                var tcs = new TaskCompletionSource<Boolean>();
+                evts.Enqueue(cancel =>
                 {
-                    action?.Invoke(document);
-                    tcs.SetResult(true);
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            }, TaskPriority.None);
-            return tcs.Task.ContinueWith(_ => document);
+                    try
+                    {
+                        action?.Invoke(document);
+                        tcs.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }, TaskPriority.None);
+                return tcs.Task.ContinueWith(_ => document);
+            }
+
+            action?.Invoke(document);
+            return Task.FromResult(document);
         }
 
         /// <summary>
