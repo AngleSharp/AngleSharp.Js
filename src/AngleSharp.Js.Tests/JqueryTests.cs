@@ -10,7 +10,7 @@ namespace AngleSharp.Js.Tests
     [TestFixture]
     public class JqueryTests
     {
-        public static Task<String> EvaluateScriptWithJqueryAsync(params String[] sources)
+        private static Task<String> EvaluateScriptWithJqueryAsync(params String[] sources)
         {
             var list = new List<String>(sources);
             list.Insert(0, Constants.Jquery2_1_4);
@@ -18,7 +18,7 @@ namespace AngleSharp.Js.Tests
         }
 
         private static String SetResult(String eval) =>
-            "document.querySelector('#result').textContent = " + eval + ";";
+            $"document.querySelector('#result').textContent = {eval};";
 
         [Test]
         public async Task LoadJqueryWithoutErrors()

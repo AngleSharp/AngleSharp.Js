@@ -113,8 +113,11 @@ namespace AngleSharp.Scripting
             return instance;
         }
 
-        private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) =>
-            context.GetServices<Object>().Select(m => m.GetType().Assembly).Distinct();
+        private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) => context
+            .GetServices<Object>()
+            .Select(m => m.GetType().Assembly)
+            .Distinct()
+            .Where(m => m.FullName.StartsWith("AngleSharp"));
 
         #endregion
     }
