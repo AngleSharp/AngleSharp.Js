@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Dom
+namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
@@ -89,7 +89,7 @@
         [DomName("readyState")]
         public RequesterState ReadyState
         {
-            get { return _readyState; }
+            get => _readyState;
             private set
             {
                 _readyState = value;
@@ -103,8 +103,8 @@
         [DomName("timeout")]
         public Int32 Timeout
         {
-            get { return _timeout; }
-            set { _timeout = value; }
+            get => _timeout;
+            set => _timeout = value;
         }
 
         /// <summary>
@@ -119,8 +119,8 @@
         [DomName("withCredentials")]
         public Boolean WithCredentials
         {
-            get { return _credentials; }
-            set { _credentials = value; }
+            get => _credentials;
+            set => _credentials = value;
         }
 
         /// <summary>
@@ -219,7 +219,6 @@
             if (_readyState == RequesterState.Opened)
             {
                 var requestBody = Serialize(body);
-                var mimeType = default(String);
                 var loader = GetLoader();
 
                 if (loader != null)
@@ -228,7 +227,7 @@
                     {
                         Body = requestBody,
                         Method = _method,
-                        MimeType = mimeType,
+                        MimeType = default,
                         Referer = _window.Document.DocumentUri,
                     };
 
@@ -273,9 +272,7 @@
         [DomName("getResponseHeader")]
         public String GetResponseHeader(String name)
         {
-            var value = default(String);
-
-            if (HasResponseHeaders && _headers.TryGetValue(name, out value))
+            if (HasResponseHeaders && _headers.TryGetValue(name, out string value))
             {
                 return value;
             }
@@ -373,10 +370,8 @@
             }
         }
 
-        private IDocumentLoader GetLoader()
-        {
-            return _window?.Document?.Context.GetService<IDocumentLoader>();
-        }
+        private IDocumentLoader GetLoader() =>
+            _window?.Document?.Context.GetService<IDocumentLoader>();
 
         private static Stream Serialize(Object body)
         {
@@ -391,11 +386,8 @@
             return Stream.Null;
         }
 
-        private void Fire(String eventName)
-        {
-            var evt = new Event(eventName);
-            Dispatch(evt);
-        }
+        private void Fire(String eventName) =>
+            Dispatch(new Event(eventName));
 
         #endregion
     }
