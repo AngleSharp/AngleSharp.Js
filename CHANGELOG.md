@@ -4,6 +4,7 @@
 
 - Added thread-based event loop implementation `JsEventLoop`
 - Included new `WithEventLoop` configuration extensions
+- Added constructors to `window` (#12)
 
 # 0.12.1
 

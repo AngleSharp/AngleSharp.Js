@@ -69,6 +69,7 @@ namespace AngleSharp.Js
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
             var parameters = method.GetParameters();
+            var initDict = method.GetCustomAttribute<DomInitDictAttribute>();
             var max = parameters.Length;
             var args = new Object[max];
             var offset = 0;
@@ -81,6 +82,11 @@ namespace AngleSharp.Js
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
             {
                 max--;
+            }
+
+            if (initDict != null && arguments.Length + offset > initDict.Offset)
+            {
+                arguments = ExpandInitDict(arguments, parameters, initDict, max, offset);
             }
 
             var n = Math.Min(arguments.Length, max - offset);
@@ -123,6 +129,39 @@ namespace AngleSharp.Js
             }
 
             return args;
+        }
+
+        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterInfo[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
+        {
+            var newArgs = new JsValue[max - offset];
+            var end = initDict.Offset - offset;
+            var obj = arguments[end].AsObject();
+
+            for (var i = 0; i < end; i++)
+            {
+                newArgs[i] = arguments[i];
+            }
+
+            if (obj != null)
+            {
+                for (var i = end + offset; i < max; i++)
+                {
+                    var p = parameters[i];
+                    var name = p.Name;
+
+                    if (obj.HasProperty(name))
+                    {
+                        newArgs[i - offset] = obj.GetProperty(name).Value;
+                    }
+                    else
+                    {
+                        newArgs[i - offset] = JsValue.Undefined;
+                    }
+                }
+            }
+
+            arguments = newArgs;
+            return arguments;
         }
 
         public static void AddConstructors(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
