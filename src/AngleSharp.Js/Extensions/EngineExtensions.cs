@@ -76,7 +76,10 @@ namespace AngleSharp.Js
 
             if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
             {
-                args[offset++] = context.Window.Value;
+                if (arguments.Length == 0 || arguments[0].FromJsValue() is IWindow == false)
+                {
+                    args[offset++] = context.Window.Value;
+                }
             }
 
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)

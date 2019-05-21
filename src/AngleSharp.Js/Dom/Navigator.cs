@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Dom
+namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Browser.Dom;
     using System;
@@ -14,15 +14,9 @@
 
         public String Version => "1.0.0";
 
-        public Boolean IsContentHandlerRegistered(String mimeType, String url)
-        {
-            return false;
-        }
+        public Boolean IsContentHandlerRegistered(String mimeType, String url) => false;
 
-        public Boolean IsProtocolHandlerRegistered(String scheme, String url)
-        {
-            return false;
-        }
+        public Boolean IsProtocolHandlerRegistered(String scheme, String url) => false;
 
         public void RegisterContentHandler(String mimeType, String url, String title)
         {

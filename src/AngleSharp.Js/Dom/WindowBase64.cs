@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Dom
+namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
@@ -11,27 +11,8 @@
     [DomNoInterfaceObject]
     [DomExposed("Window")]
     [DomExposed("Worker")]
-    public sealed class WindowBase64
+    public static class WindowBase64
     {
-        #region Fields
-
-        readonly IWindow _window;
-
-        #endregion
-
-        #region ctor
-
-        /// <summary>
-        /// Creates a new WindowBase64 auxiliary class.
-        /// </summary>
-        /// <param name="window">The window to add to.</param>
-        public WindowBase64(IWindow window)
-        {
-            _window = window;
-        }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -40,10 +21,11 @@
         /// binary byte with values 0x00 to 0xFF respectively, and converts it
         /// to its base64 representation, which it returns.
         /// </summary>
+        /// <param name="window">The host.</param>
         /// <param name="data">String of bytes.</param>
         /// <returns>Base-64 representation.</returns>
         [DomName("btoa")]
-        public String btoa(String data)
+        public static String Btoa(this IWindow window, String data)
         {
             var content = new Byte[data.Length];
 
@@ -67,10 +49,11 @@
         /// representing a binary byte with values 0x00 to 0xFF respectively,
         /// corresponding to that binary data.
         /// </summary>
+        /// <param name="window">The host.</param>
         /// <param name="data">Base-64 representation.</param>
         /// <returns>String of bytes.</returns>
         [DomName("atob")]
-        public String atob(String data)
+        public static String Atob(this IWindow window, String data)
         {
             var chars = data.ToCharArray();
             var length = NormalizeCharacters(ref chars);
@@ -93,7 +76,7 @@
 
         #region Helpers
 
-        static Int32 NormalizeCharacters(ref Char[] chars)
+        private static Int32 NormalizeCharacters(ref Char[] chars)
         {
             var length = chars.Length;
             ShiftCharacters(chars, ref length);
@@ -132,7 +115,7 @@
             return length;
         }
 
-        static void CheckCharacters(Char[] chars, Int32 length)
+        private static void CheckCharacters(Char[] chars, Int32 length)
         {
             for (var i = 0; i < length; i++)
             {
@@ -143,7 +126,7 @@
             }
         }
 
-        static void ShiftCharacters(Char[] chars, ref Int32 length)
+        private static void ShiftCharacters(Char[] chars, ref Int32 length)
         {
             var shift = 0;
 
@@ -164,13 +147,11 @@
             length -= shift;
         }
 
-        static Boolean IsLegalBase64Char(Char c)
-        {
-            return (c >= 'A' && c <= 'Z') ||
-                   (c >= 'a' && c <= 'z') ||
-                   (c >= '0' && c <= '9') ||
-                   (c == '+' || c == '/');
-        }
+        private static Boolean IsLegalBase64Char(Char c) =>
+            (c >= 'A' && c <= 'Z') ||
+            (c >= 'a' && c <= 'z') ||
+            (c >= '0' && c <= '9') ||
+            (c == '+' || c == '/');
 
         #endregion
     }
