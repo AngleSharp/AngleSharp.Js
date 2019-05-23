@@ -65,6 +65,7 @@ namespace AngleSharp
         {
             var service = new JsScriptingService();
             var observer = new EventAttributeObserver(service);
+            var handler = new JsNavigationHandler(service);
 
             if (!configuration.Has<INavigator>())
             {
@@ -73,6 +74,7 @@ namespace AngleSharp
 
             return configuration
                 .WithOnly(observer)
+                .With(handler)
                 .With(service);
         }
     }
