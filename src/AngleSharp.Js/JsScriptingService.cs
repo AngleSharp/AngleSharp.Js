@@ -76,34 +76,12 @@ namespace AngleSharp.Scripting
         public async Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
             var encoding = options.Encoding ?? Encoding.UTF8;
-            var context = options.Document.Context;
-            var loop = context.GetService<IEventLoop>();
 
             using (var reader = new StreamReader(response.Content, encoding, true))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-
-                if (loop != null)
-                {
-                    var tcs = new TaskCompletionSource<Boolean>();
-                    loop.Enqueue(_ =>
-                    {
-                        try
-                        {
-                            EvaluateScript(options.Document, content);
-                            tcs.SetResult(true);
-                        }
-                        catch (Exception ex)
-                        {
-                            tcs.SetException(ex);
-                        }
-                    }, TaskPriority.Critical);
-                    await tcs.Task.ConfigureAwait(false);
-                }
-                else
-                {
-                    EvaluateScript(options.Document, content);
-                }
+                await options.EventLoop.EnqueueAsync(_ =>
+                    EvaluateScript(options.Document, content), TaskPriority.Critical).ConfigureAwait(false);
             }
         }
 
