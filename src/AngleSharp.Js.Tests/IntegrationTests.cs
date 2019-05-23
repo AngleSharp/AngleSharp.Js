@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Tests
+namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
     using NUnit.Framework;
@@ -10,7 +10,9 @@
     {
         private static Task<IDocument> LoadPage(String url)
         {
-            var configuration = Helpers.GetCssConfig().WithDefaultLoader().WithCookies();
+            var configuration = Helpers.GetCssConfig()
+                .WithDefaultLoader()
+                .WithDefaultCookies();
             var context = BrowsingContext.New(configuration);
             return context.OpenAsync(url);
         }
