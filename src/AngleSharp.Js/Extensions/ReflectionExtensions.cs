@@ -18,13 +18,10 @@ namespace AngleSharp.Js
         public static Object GetDefaultValue(this Type type) =>
             type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 
-        public static IEnumerable<Type> GetExtensionTypes(this IEnumerable<Assembly> libs, String name)
-        {
-            return libs
-                .SelectMany(m => m.ExportedTypes)
-                .Where(m => m.GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
-                .ToArray();
-        }
+        public static IEnumerable<Type> GetExtensionTypes(this IEnumerable<Assembly> libs, String name) => libs
+            .SelectMany(m => m.ExportedTypes)
+            .Where(m => m.GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
+            .ToArray();
 
         public static IEnumerable<Type> GetTypeTree(this Type root)
         {
@@ -92,29 +89,29 @@ namespace AngleSharp.Js
 
         public static PropertyInfo GetInheritedProperty(this Type type, String propertyName, BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.Instance)
         {
-            if (!type.IsInterface)
+            if (type.IsInterface)
             {
-                return type.GetProperty(propertyName, bindingAttr);
+                return type.GetInterfaces()
+                    .Union(new[] { type })
+                    .Select(i => i.GetProperty(propertyName, bindingAttr))
+                    .Where(propertyInfo => propertyInfo != null)
+                    .FirstOrDefault();
             }
 
-            return type.GetInterfaces()
-                .Union(new [] { type })
-                .Select(i => i.GetProperty(propertyName, bindingAttr))
-                .Where(propertyInfo => propertyInfo != null)
-                .FirstOrDefault();
+            return type.GetProperty(propertyName, bindingAttr);
         }
 
         public static IEnumerable<PropertyInfo> GetInheritedProperties(this Type type, BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.Instance)
         {
-            if (!type.IsInterface)
+            if (type.IsInterface)
             {
-                return type.GetProperties(bindingAttr);
+                return type.GetInterfaces()
+                    .Union(new[] { type })
+                    .SelectMany(i => i.GetProperties(bindingAttr))
+                    .Distinct();
             }
 
-            return type.GetInterfaces()
-                .Union(new [] { type })
-                .SelectMany(i => i.GetProperties(bindingAttr))
-                .Distinct();
+            return type.GetProperties(bindingAttr);
         }
     }
 }
