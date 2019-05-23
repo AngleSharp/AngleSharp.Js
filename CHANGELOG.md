@@ -6,6 +6,7 @@
 - Included new `WithEventLoop` configuration extensions
 - Added constructors to `window` (#12)
 - Fixed `btoa` and `atob` missing (#55)
+- Included `javascript:` URL handler (#47)
 
 # 0.12.1
 
