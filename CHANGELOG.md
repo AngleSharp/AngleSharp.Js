@@ -1,12 +1,13 @@
 # 0.13.0
 
-(tbd)
+Released on Friday, August 23 2019.
 
 - Added thread-based event loop implementation `JsEventLoop`
 - Included new `WithEventLoop` configuration extensions
 - Added constructors to `window` (#12)
 - Fixed `btoa` and `atob` missing (#55)
 - Included `javascript:` URL handler (#47)
+- Included support for .NET Standard 1.3 (#58)
 
 # 0.12.1
 

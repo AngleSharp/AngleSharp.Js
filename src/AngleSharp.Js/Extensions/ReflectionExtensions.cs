@@ -20,7 +20,7 @@ namespace AngleSharp.Js
 
         public static IEnumerable<Type> GetExtensionTypes(this IEnumerable<Assembly> libs, String name) => libs
             .SelectMany(m => m.ExportedTypes)
-            .Where(m => m.GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
+            .Where(m => m.GetTypeInfo().GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
             .ToArray();
 
         public static IEnumerable<Type> GetTypeTree(this Type root)
@@ -89,7 +89,7 @@ namespace AngleSharp.Js
 
         public static PropertyInfo GetInheritedProperty(this Type type, String propertyName, BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.Instance)
         {
-            if (type.IsInterface)
+            if (type.GetTypeInfo().IsInterface)
             {
                 return type.GetInterfaces()
                     .Union(new[] { type })
@@ -103,7 +103,7 @@ namespace AngleSharp.Js
 
         public static IEnumerable<PropertyInfo> GetInheritedProperties(this Type type, BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.Instance)
         {
-            if (type.IsInterface)
+            if (type.GetTypeInfo().IsInterface)
             {
                 return type.GetInterfaces()
                     .Union(new[] { type })

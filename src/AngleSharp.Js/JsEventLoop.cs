@@ -15,6 +15,23 @@ namespace AngleSharp.Js
         private readonly Object _lockObj = new Object();
         private CancellationTokenSource _cts;
 
+        /// <summary>
+        /// Creates a new event loop thread.
+        /// </summary>
+        public JsEventLoop()
+        {
+            var thread = new Thread(Runner)
+            {
+                IsBackground = true,
+                Name = "AngleSharpEventLoop",
+#if !NETSTANDARD1_3
+                Priority = ThreadPriority.Highest,
+#endif
+            };
+            _cts = new CancellationTokenSource();
+            thread.Start(_cts.Token);
+        }
+
         ICancellable IEventLoop.Enqueue(Action<CancellationToken> action, TaskPriority priority)
         {
             var entry = new LoopEntry(action);
@@ -61,17 +78,6 @@ namespace AngleSharp.Js
 
         void IEventLoop.Spin()
         {
-            if (_cts == null)
-            {
-                var thread = new Thread(Runner)
-                {
-                    IsBackground = true,
-                    Name = "AngleSharpEventLoop",
-                    Priority = ThreadPriority.Highest,
-                };
-                _cts = new CancellationTokenSource();
-                thread.Start(_cts.Token);
-            }
         }
 
         void IEventLoop.CancelAll()

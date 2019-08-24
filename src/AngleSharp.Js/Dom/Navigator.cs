@@ -38,6 +38,10 @@ namespace AngleSharp.Js.Dom
         {
         }
 
+#if NETSTANDARD1_3
+        public Boolean IsOnline => true;
+#else
         public Boolean IsOnline => NetworkInterface.GetIsNetworkAvailable();
+#endif
     }
 }

@@ -225,32 +225,29 @@ namespace AngleSharp.Js
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
-            if (method != null && thisObject.Type == Types.Object)
+            if (method != null && thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
             {
-                if (thisObject.AsObject() is DomNodeInstance node)
+                try
                 {
-                    try
+                    if (method.IsStatic)
                     {
-                        if (method.IsStatic)
+                        var newArgs = new List<JsValue>
                         {
-                            var newArgs = new List<JsValue>
-                            {
-                                thisObject,
-                            };
-                            newArgs.AddRange(arguments);
-                            var parameters = instance.BuildArgs(method, newArgs.ToArray());
-                            return method.Invoke(null, parameters).ToJsValue(instance);
-                        }
-                        else
-                        {
-                            var parameters = instance.BuildArgs(method, arguments);
-                            return method.Invoke(node.Value, parameters).ToJsValue(instance);
-                        }
+                            thisObject,
+                        };
+                        newArgs.AddRange(arguments);
+                        var parameters = instance.BuildArgs(method, newArgs.ToArray());
+                        return method.Invoke(null, parameters).ToJsValue(instance);
                     }
-                    catch (TargetInvocationException)
+                    else
                     {
-                        throw new JavaScriptException(instance.Jint.Error);
+                        var parameters = instance.BuildArgs(method, arguments);
+                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
                     }
+                }
+                catch (TargetInvocationException)
+                {
+                    throw new JavaScriptException(instance.Jint.Error);
                 }
             }
 

@@ -1,6 +1,7 @@
 namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Io;
@@ -370,6 +371,9 @@ namespace AngleSharp.Js.Dom
             }
         }
 
+        private IEventLoop GetEventLoop() =>
+            _window?.Document?.Context.GetService<IEventLoop>();
+
         private IDocumentLoader GetLoader() =>
             _window?.Document?.Context.GetService<IDocumentLoader>();
 
@@ -387,7 +391,7 @@ namespace AngleSharp.Js.Dom
         }
 
         private void Fire(String eventName) =>
-            Dispatch(new Event(eventName));
+            GetEventLoop().Enqueue(() => Dispatch(new Event(eventName)));
 
         #endregion
     }
