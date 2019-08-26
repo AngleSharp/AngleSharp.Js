@@ -1,6 +1,6 @@
 # 0.13.0
 
-Released on Friday, August 23 2019.
+Released on Monday, August 26 2019.
 
 - Added thread-based event loop implementation `JsEventLoop`
 - Included new `WithEventLoop` configuration extensions
