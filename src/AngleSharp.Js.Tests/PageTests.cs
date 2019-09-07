@@ -12,7 +12,8 @@ namespace AngleSharp.Js.Tests
         private static Task<IDocument> LoadPage(String url)
         {
             var configuration = Helpers.GetCssConfig()
-                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
+                .WithEventLoop();
             var context = BrowsingContext.New(configuration);
             return context.OpenAsync(url);
         }
