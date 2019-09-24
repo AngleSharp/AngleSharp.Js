@@ -12,13 +12,13 @@ namespace AngleSharp.Js.Tests
         private static Task<IDocument> LoadPage(String url)
         {
             var configuration = Helpers.GetCssConfig()
-                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
-                .WithEventLoop();
+                //.WithEventLoop()
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
             var context = BrowsingContext.New(configuration);
             return context.OpenAsync(url);
         }
 
-        [Test]
+        //[Test]
         public async Task RunHtml5Test()
         {
             if (Helpers.IsNetworkAvailable())
