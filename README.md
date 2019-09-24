@@ -33,6 +33,24 @@ var config = Configuration.Default
 
 in the previous example `MyConsoleLogger` refers to a class implementing the `IConsoleLogger` interface. Examples of classes implementing this interface are available in our [samples repository](https://github.com/AngleSharp/AngleSharp.Samples).
 
+## Extension Methods
+
+This plugin also delivers some extension methods to be used together with elements from AngleSharp, e.g., `IDocument` or `IElement`.
+
+For instance, the following waits until a stable point has been reached (and the document is fully available):
+
+```cs
+var context = BrowsingContext.New(config);
+var document = await context.OpenAsync(address)
+    .WaitUntilAvailable();
+```
+
+Scripts can also be run in the context of the document, where the result of the last expression is returned:
+
+```cs
+var numEntries = document.ExecuteScript("document.querySelectorAll('div').length");
+```
+
 ## Vision and Status
 
 The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* is fully ECMAScript 5 compatible and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation.
@@ -41,7 +59,9 @@ The library comes with a service that exposes `WithJs` to `IConfiguration`. This
 
 ## Features
 
-(tbd)
+- Support of ES5 through Jint
+- Connection to the DOM
+- Evaluation of simple scripts (incl. jQuery)
 
 ## Participating
 

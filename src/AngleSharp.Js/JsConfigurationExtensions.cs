@@ -1,5 +1,6 @@
 namespace AngleSharp
 {
+    using AngleSharp.Browser;
     using AngleSharp.Browser.Dom;
     using AngleSharp.Js;
     using AngleSharp.Js.Dom;
@@ -28,6 +29,32 @@ namespace AngleSharp
         }
 
         /// <summary>
+        /// Includes the thread-based JS event loop in the given context.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithEventLoop(this IConfiguration configuration) =>
+            configuration.WithEventLoop(_ => new JsEventLoop());
+
+        /// <summary>
+        /// Includes some event loop in the given context.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <param name="loop">The existing loop to use.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithEventLoop(this IConfiguration configuration, IEventLoop loop) =>
+            configuration.WithOnly(loop);
+
+        /// <summary>
+        /// Includes some lazy initialized event loop in the given context.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <param name="creator">The constructor function for the loop.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithEventLoop(this IConfiguration configuration, Func<IBrowsingContext, IEventLoop> creator) =>
+            configuration.WithOnly(creator);
+
+        /// <summary>
         /// Sets scripting to true, registers the JavaScript engine and returns
         /// a new configuration with the scripting service and possible
         /// auxiliary services, if not yet registered.
@@ -38,6 +65,7 @@ namespace AngleSharp
         {
             var service = new JsScriptingService();
             var observer = new EventAttributeObserver(service);
+            var handler = new JsNavigationHandler(service);
 
             if (!configuration.Has<INavigator>())
             {
@@ -46,6 +74,7 @@ namespace AngleSharp
 
             return configuration
                 .WithOnly(observer)
+                .With(handler)
                 .With(service);
         }
     }

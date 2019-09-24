@@ -1,20 +1,28 @@
-## Bug Report
+---
+name: Bug Report
+about: Create a report to help us improve
+title: ''
+labels: 'bug'
+assignees: ''
+---
 
-### Prerequisites
+# Bug Report
+
+## Prerequisites
 
 - [ ] Can you reproduce the problem in a [MWE](https://en.wikipedia.org/wiki/Minimal_working_example)?
 - [ ] Are you running the latest version of AngleSharp?
 - [ ] Did you check the FAQs to see if that helps you?
-- [ ] Are you reporting to the correct repository? (if its an issue with the core library, please report to `AngleSharp` directly)
+- [ ] Are you reporting to the correct repository? (there are multiple AngleSharp libraries, e.g., `AngleSharp.Css` for CSS support)
 - [ ] Did you perform a search in the issues?
 
 For more information, see the `CONTRIBUTING` guide.
 
-### Description
+## Description
 
 [Description of the bug]
 
-### Steps to Reproduce
+## Steps to Reproduce
 
 1. [First Step]
 2. [Second Step]
@@ -26,6 +34,6 @@ For more information, see the `CONTRIBUTING` guide.
 
 **Environment details:** [OS, .NET Runtime, ...]
 
-### Possible Solution
+## Possible Solution
 
 [Optionally, share your idea to fix the issue]

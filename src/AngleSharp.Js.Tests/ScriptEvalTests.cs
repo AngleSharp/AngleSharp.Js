@@ -64,7 +64,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task CreateCustomEventViaCustomConstructorWithDetailShouldWork()
         {
-            var result = await EvaluateComplexScriptAsync("var ev = new CustomEvent('bar', false, false, 'baz');", SetResult("ev.type + ev.detail"));
+            var result = await EvaluateComplexScriptAsync("var ev = new CustomEvent('bar', { bubbles: false, cancelable: false, details: 'baz' });", SetResult("ev.type + ev.detail"));
             Assert.AreEqual("barbaz", result);
         }
 

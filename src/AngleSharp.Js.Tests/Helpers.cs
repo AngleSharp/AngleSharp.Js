@@ -1,6 +1,5 @@
 namespace AngleSharp.Js.Tests
 {
-    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
@@ -24,7 +23,6 @@ namespace AngleSharp.Js.Tests
         internal static IConfiguration GetCssConfig() =>
             Configuration.Default
                 .WithJs()
-                .WithOnly<IEventLoop>(ctx => new MockEventLoop(ctx))
                 .WithCss()
                 .WithRenderDevice();
 

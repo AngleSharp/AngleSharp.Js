@@ -1,5 +1,6 @@
 namespace AngleSharp.Scripting
 {
+    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js;
@@ -79,7 +80,8 @@ namespace AngleSharp.Scripting
             using (var reader = new StreamReader(response.Content, encoding, true))
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-                EvaluateScript(options.Document, content);
+                await options.EventLoop.EnqueueAsync(_ =>
+                    EvaluateScript(options.Document, content), TaskPriority.Critical).ConfigureAwait(false);
             }
         }
 
@@ -113,8 +115,11 @@ namespace AngleSharp.Scripting
             return instance;
         }
 
-        private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) =>
-            context.GetServices<Object>().Select(m => m.GetType().Assembly).Distinct();
+        private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) => context
+            .GetServices<Object>()
+            .Select(m => m.GetType().GetAssembly())
+            .Distinct()
+            .Where(m => m.FullName.StartsWith("AngleSharp"));
 
         #endregion
     }

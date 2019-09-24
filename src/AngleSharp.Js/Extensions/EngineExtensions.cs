@@ -69,18 +69,27 @@ namespace AngleSharp.Js
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
             var parameters = method.GetParameters();
+            var initDict = method.GetCustomAttribute<DomInitDictAttribute>();
             var max = parameters.Length;
             var args = new Object[max];
             var offset = 0;
 
             if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
             {
-                args[offset++] = context.Window.Value;
+                if (arguments.Length == 0 || arguments[0].FromJsValue() is IWindow == false)
+                {
+                    args[offset++] = context.Window.Value;
+                }
             }
 
             if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
             {
                 max--;
+            }
+
+            if (initDict != null && arguments.Length + offset > initDict.Offset)
+            {
+                arguments = ExpandInitDict(arguments, parameters, initDict, max, offset);
             }
 
             var n = Math.Min(arguments.Length, max - offset);
@@ -123,6 +132,39 @@ namespace AngleSharp.Js
             }
 
             return args;
+        }
+
+        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterInfo[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
+        {
+            var newArgs = new JsValue[max - offset];
+            var end = initDict.Offset - offset;
+            var obj = arguments[end].AsObject();
+
+            for (var i = 0; i < end; i++)
+            {
+                newArgs[i] = arguments[i];
+            }
+
+            if (obj != null)
+            {
+                for (var i = end + offset; i < max; i++)
+                {
+                    var p = parameters[i];
+                    var name = p.Name;
+
+                    if (obj.HasProperty(name))
+                    {
+                        newArgs[i - offset] = obj.GetProperty(name).Value;
+                    }
+                    else
+                    {
+                        newArgs[i - offset] = JsValue.Undefined;
+                    }
+                }
+            }
+
+            arguments = newArgs;
+            return arguments;
         }
 
         public static void AddConstructors(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
@@ -183,32 +225,29 @@ namespace AngleSharp.Js
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
-            if (method != null && thisObject.Type == Types.Object)
+            if (method != null && thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
             {
-                if (thisObject.AsObject() is DomNodeInstance node)
+                try
                 {
-                    try
+                    if (method.IsStatic)
                     {
-                        if (method.IsStatic)
+                        var newArgs = new List<JsValue>
                         {
-                            var newArgs = new List<JsValue>
-                            {
-                                thisObject,
-                            };
-                            newArgs.AddRange(arguments);
-                            var parameters = instance.BuildArgs(method, newArgs.ToArray());
-                            return method.Invoke(null, parameters).ToJsValue(instance);
-                        }
-                        else
-                        {
-                            var parameters = instance.BuildArgs(method, arguments);
-                            return method.Invoke(node.Value, parameters).ToJsValue(instance);
-                        }
+                            thisObject,
+                        };
+                        newArgs.AddRange(arguments);
+                        var parameters = instance.BuildArgs(method, newArgs.ToArray());
+                        return method.Invoke(null, parameters).ToJsValue(instance);
                     }
-                    catch (TargetInvocationException)
+                    else
                     {
-                        throw new JavaScriptException(instance.Jint.Error);
+                        var parameters = instance.BuildArgs(method, arguments);
+                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
                     }
+                }
+                catch (TargetInvocationException)
+                {
+                    throw new JavaScriptException(instance.Jint.Error);
                 }
             }
 

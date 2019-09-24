@@ -3,6 +3,7 @@ namespace AngleSharp.Dom
     using AngleSharp.Browser;
     using AngleSharp.Js;
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -21,20 +22,27 @@ namespace AngleSharp.Dom
         {
             var context = document.Context;
             var evts = context.GetService<IEventLoop>();
-            var tcs = new TaskCompletionSource<Boolean>();
-            evts.Enqueue(cancel =>
+
+            if (evts != null)
             {
-                try
+                var tcs = new TaskCompletionSource<Boolean>();
+                evts.Enqueue(cancel =>
                 {
-                    action?.Invoke(document);
-                    tcs.SetResult(true);
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            }, TaskPriority.None);
-            return tcs.Task.ContinueWith(_ => document);
+                    try
+                    {
+                        action?.Invoke(document);
+                        tcs.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }, TaskPriority.None);
+                return tcs.Task.ContinueWith(_ => document);
+            }
+
+            action?.Invoke(document);
+            return Task.FromResult(document);
         }
 
         /// <summary>
@@ -85,5 +93,39 @@ namespace AngleSharp.Dom
         /// <returns>A task that is finished when the enqueued tasks completed.</returns>
         public static Task<IDocument> WhenStable(this Task<IDocument> documentTask) =>
             documentTask.Then(_ => { });
+
+        /// <summary>
+        /// Waits until the document from the task is fully available.
+        /// This includes that the document is completed and that a stable
+        /// point has been reached.
+        /// </summary>
+        /// <param name="documentTask">The document task to await.</param>
+        /// <param name="cancellation">The timeout cancellation, if any.</param>
+        /// <returns>A task that is finished when the document is available.</returns>
+        public static async Task WaitUntilAvailable(this Task<IDocument> documentTask, CancellationToken cancellation = default)
+        {
+            var document = await documentTask.ConfigureAwait(false);
+            await document.WaitUntilAvailable(cancellation).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Waits until the document is fully available. This includes
+        /// that the document is completed and that a stable point has
+        /// been reached.
+        /// </summary>
+        /// <param name="document">The document to await.</param>
+        /// <param name="cancellation">The timeout cancellation, if any.</param>
+        /// <returns>A task that is finished when the document is available.</returns>
+        public static async Task WaitUntilAvailable(this IDocument document, CancellationToken cancellation = default)
+        {
+            if (document.ReadyState != DocumentReadyState.Complete)
+            {
+                var abort = new TaskCompletionSource<object>();
+                cancellation.Register(() => abort.TrySetCanceled());
+                await Task.WhenAny(document.AwaitEventAsync("load"), abort.Task).ConfigureAwait(false);
+            }
+
+            await document.WhenStable().ConfigureAwait(false);
+        }
     }
 }

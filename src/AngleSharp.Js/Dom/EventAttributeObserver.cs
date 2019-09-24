@@ -91,9 +91,9 @@ namespace AngleSharp.Js.Dom
         private void RegisterEventCallback<TElement>(String eventName)
             where TElement : IElement
         {
-            _observers.Add("on" + eventName, (element, value) =>
+            _observers.Add("on" + eventName, (sender, value) =>
             {
-                if (element is TElement)
+                if (sender is TElement element)
                 {
                     var document = element.Owner;
                     var engine = _service.GetOrCreateInstance(document);

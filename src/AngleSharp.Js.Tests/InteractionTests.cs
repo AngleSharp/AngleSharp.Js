@@ -1,6 +1,7 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
+    using AngleSharp.Html.Dom;
     using AngleSharp.Scripting;
     using Jint.Runtime;
     using NUnit.Framework;
@@ -111,13 +112,24 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task RunScriptAtPressingLink_Issue47()
+        {
+            var html = "<!doctype html><pre id=test></pre><a href=\"javascript:document.querySelector('#test').textContent='success';\">Test</a>";
+            var config = Configuration.Default.WithJs();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var otherDocument = await document.QuerySelector<IHtmlAnchorElement>("a").NavigateAsync();
+            Assert.AreEqual(document, otherDocument);
+            Assert.AreEqual("success", document.QuerySelector("#test").TextContent);
+        }
+
+        [Test]
         public async Task SetLocationViaSimpleString_Issue31()
         {
             var html = "<!doctype html><span id=test>Test</span><script>window.location = '/foo';</script>";
             var config = Configuration.Default.WithJs();
             var context = BrowsingContext.New(config);
             await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
-                .Then(_ => Assert.AreEqual("foo", context.Active.Location.Href));
+                .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
         }
 
         class Person

@@ -76,10 +76,13 @@ namespace AngleSharp.Js
 
         public JsValue RunScript(String source, JsValue context)
         {
-            _engine.EnterExecutionContext(Lexicals, Variables, context);
-            _engine.Execute(source);
-            _engine.LeaveExecutionContext();
-            return _engine.GetCompletionValue();
+            lock (_engine)
+            {
+                _engine.EnterExecutionContext(Lexicals, Variables, context);
+                _engine.Execute(source);
+                _engine.LeaveExecutionContext();
+                return _engine.GetCompletionValue();
+            }
         }
 
         #endregion

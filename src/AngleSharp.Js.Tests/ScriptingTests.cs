@@ -1,4 +1,4 @@
-﻿namespace AngleSharp.Js.Tests
+namespace AngleSharp.Js.Tests
 {
     using NUnit.Framework;
     using System.Threading.Tasks;
@@ -18,6 +18,20 @@
         {
             var result = await "document.nodeName".EvalScriptAsync();
             Assert.AreEqual("#document", result);
+        }
+
+        [Test]
+        public async Task BtoaWorksAsExpected_Issue55()
+        {
+            var result = await "btoa('test')".EvalScriptAsync();
+            Assert.AreEqual("dGVzdA==", result);
+        }
+
+        [Test]
+        public async Task AtobWorksAsExpected_Issue55()
+        {
+            var result = await "atob('dGVzdA==')".EvalScriptAsync();
+            Assert.AreEqual("test", result);
         }
 
         [Test]
