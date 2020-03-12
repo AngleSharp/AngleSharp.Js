@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.13.0" />
+    <PackageReference Include="AngleSharp" Version="0.14.0-alpha-798" />
     <PackageReference Include="Jint" Version="2.10.4" />
   </ItemGroup>
 

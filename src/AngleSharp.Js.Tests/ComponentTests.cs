@@ -12,7 +12,7 @@ namespace AngleSharp.Js.Tests
         private static async Task<String> RunScriptComponent(String script)
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.WithXml().With(service);
+            var cfg = Configuration.Default.WithXml().WithEventLoop().With(service);
             var html = String.Concat("<!doctype html><script>", script, "</script>");
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var value = service.GetOrCreateJint(document).GetValue("assert");

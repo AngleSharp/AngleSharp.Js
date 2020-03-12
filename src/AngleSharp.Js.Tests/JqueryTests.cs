@@ -65,7 +65,7 @@ namespace AngleSharp.Js.Tests
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJs().With(req).WithDefaultLoader();
+            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
             var sources = new [] { Constants.Jquery2_1_4, @"
 $.ajax('http://example.com/', {
     success: function (data, status, xhr) { 
