@@ -13,7 +13,7 @@ namespace AngleSharp.Js.Tests
         public async Task InvokeFunctionOnLoadEventShouldFireDelayed()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = "<!doctype html><div id=result></div><script>document.addEventListener('load', function () { document.querySelector('#result').textContent = 'done'; }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
                 .WhenStable();
@@ -25,7 +25,7 @@ namespace AngleSharp.Js.Tests
         public async Task InvokeFunctionOnCustomEvent()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = "<!doctype html><div id=result>0</div><script>var i = 0; document.addEventListener('hello', function () { i++; document.querySelector('#result').textContent = i.toString(); }, false);</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var div = document.QuerySelector("#result");
@@ -39,7 +39,7 @@ namespace AngleSharp.Js.Tests
         public async Task InvokeLoadEventFromJsAndCustomEventFromJsAndCs()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -73,7 +73,7 @@ log.push('b');
         public async Task AddClickHandlerClassicallyWillExecute()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -94,7 +94,7 @@ document.dispatchEvent(new MouseEvent('click'));
         public async Task AddAndRemoveClickHandlerWontExecute()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -116,7 +116,7 @@ document.dispatchEvent(new MouseEvent('click'));
         public async Task AddAndInvokeClickHandlerWillChangeCapturedValue()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -137,7 +137,7 @@ document.onclick();
         public async Task AddAndInvokeClickHandlerWithStringFunctionWontWork()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -155,7 +155,7 @@ document.onclick();
         [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeInitially()
         {
-            var cfg = Configuration.Default.WithJs();
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body onload='window.foo = 2+3'>
@@ -173,7 +173,7 @@ window.foo = 1.0;
         [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeLater()
         {
-            var cfg = Configuration.Default.WithJs();
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -192,7 +192,7 @@ document.body.setAttribute('onload', 'window.foo = 2+3');
         public async Task SetTimeoutWithNormalFunction()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -214,7 +214,7 @@ setTimeout(function () {
         {
             //TODO Check this as well on the window level - currently works
             //only against document (se AngleSharp#789)
-            var cfg = Configuration.Default.WithJs();
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
         [Test]
         public async Task DocumentLoadEventIsFired_Issue42()
         {
-            var cfg = Configuration.Default.WithJs();
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
@@ -260,7 +260,7 @@ window.onload = function() {
         public async Task SetTimeoutWithStringAsFunction()
         {
             var service = new JsScriptingService();
-            var cfg = Configuration.Default.With(service);
+            var cfg = Configuration.Default.With(service).WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>

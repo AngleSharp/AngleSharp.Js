@@ -10,7 +10,8 @@ namespace AngleSharp.Js.Tests
         public async Task JavascriptErrorInListenerShouldNotThrowJavascriptException()
         {
             var config = Configuration.Default
-                .WithJs();
+                .WithJs()
+                .WithEventLoop();
 
             var context = BrowsingContext.New(config);
 
@@ -50,7 +51,8 @@ namespace AngleSharp.Js.Tests
           return ret;
 })('abc').length";
             var config = Configuration.Default
-                .WithJs();
+                .WithJs()
+                .WithEventLoop();
             var document = await BrowsingContext.New(config).OpenNewAsync();
             var result = document.ExecuteScript(source);
             Assert.AreEqual(0.0, result);
