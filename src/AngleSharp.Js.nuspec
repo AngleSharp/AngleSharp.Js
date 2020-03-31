@@ -11,20 +11,28 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Integrates a JavaScript engine to AngleSharp.</description>
     <releaseNotes>https://github.com/AngleSharp/AngleSharp.Js/blob/master/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2017-2019, AngleSharp</copyright>
+    <copyright>Copyright 2017-2020, AngleSharp</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies>
       <group targetFramework="netstandard1.3">
-        <dependency id="AngleSharp" version="0.13.0" />
+        <dependency id="AngleSharp" version="0.14.0" />
         <dependency id="Jint" version="2.10.4" />
         <dependency id="System.Threading.Thread" version="4.0.0" />
       </group>
       <group targetFramework="netstandard2.0">
-        <dependency id="AngleSharp" version="0.13.0" />
+        <dependency id="AngleSharp" version="0.14.0" />
         <dependency id="Jint" version="2.10.4" />
       </group>
       <group targetFramework="net46">
-        <dependency id="AngleSharp" version="0.13.0" />
+        <dependency id="AngleSharp" version="0.14.0" />
+        <dependency id="Jint" version="2.10.4" />
+      </group>
+      <group targetFramework="net461">
+        <dependency id="AngleSharp" version="0.14.0" />
+        <dependency id="Jint" version="2.10.4" />
+      </group>
+      <group targetFramework="net472">
+        <dependency id="AngleSharp" version="0.14.0" />
         <dependency id="Jint" version="2.10.4" />
       </group>
     </dependencies>
