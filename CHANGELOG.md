@@ -1,3 +1,10 @@
+# 0.14.0
+
+Released on Tuesday, March 31 2020.
+
+- Fixed deadlock with some versions of jQuery (#63)
+- Enabled the instance creator factory (#11)
+
 # 0.13.0
 
 Released on Friday, September 6 2019.
