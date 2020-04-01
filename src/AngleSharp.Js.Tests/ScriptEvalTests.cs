@@ -14,7 +14,7 @@ namespace AngleSharp.Js.Tests
     {
         public static async Task<String> EvaluateComplexScriptAsync(params String[] sources)
         {
-            var cfg = Configuration.Default.WithJs();
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
             var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
             var html = "<!doctype html><div id=result></div>" + scripts;
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -79,7 +79,7 @@ namespace AngleSharp.Js.Tests
         public async Task PerformXmlHttpRequestSynchronousToDataUrlShouldWork()
         {
             var req = new DataRequester();
-            var cfg = Configuration.Default.With(req).WithJs().WithDefaultLoader();
+            var cfg = Configuration.Default.With(req).WithJs().WithEventLoop().WithDefaultLoader();
             var script = "var xhr = new XMLHttpRequest(); xhr.open('GET', 'data:plain/text,Hello World!', false);xhr.send();document.querySelector('#result').textContent = xhr.responseText;";
             var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -92,7 +92,7 @@ namespace AngleSharp.Js.Tests
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJs().With(req).WithDefaultLoader();
+            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/', false);
@@ -109,7 +109,7 @@ document.querySelector('#result').textContent = xhr.responseText;";
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJs().With(req).WithDefaultLoader();
+            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/');
@@ -131,9 +131,10 @@ xhr.send();";
         [Test]
         public async Task SetContentOfIFrameElement()
         {
-            var cfg = Configuration.Default.
-                WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true }).
-                WithJs();
+            var cfg = Configuration.Default
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
+                .WithJs()
+                .WithEventLoop();
             var html = @"<!doctype html><iframe id=myframe srcdoc=''></iframe><script>
 var iframe = document.querySelector('#myframe');
 var doc = iframe.contentWindow.document;

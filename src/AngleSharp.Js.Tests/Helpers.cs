@@ -14,7 +14,7 @@ namespace AngleSharp.Js.Tests
         public static async Task<String> EvalScriptAsync(this String source)
         {
             var console = new ConsoleLogger();
-            var cfg = Configuration.Default.WithJs().WithConsoleLogger(context => console);
+            var cfg = Configuration.Default.WithJs().WithEventLoop().WithConsoleLogger(context => console);
             var html = $"<!doctype html><script>console.log({source})</script>";
             await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             return console.Content.ToString().Trim();
@@ -23,6 +23,7 @@ namespace AngleSharp.Js.Tests
         internal static IConfiguration GetCssConfig() =>
             Configuration.Default
                 .WithJs()
+                .WithEventLoop()
                 .WithCss()
                 .WithRenderDevice();
 
