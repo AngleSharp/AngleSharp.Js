@@ -13,7 +13,6 @@ namespace AngleSharp.Js
 
     sealed class DomPrototypeInstance : ObjectInstance
     {
-        private readonly Type _type;
         private readonly String _name;
         private readonly EngineInstance _instance;
 
@@ -24,11 +23,10 @@ namespace AngleSharp.Js
             : base(engine.Jint)
         {
             var baseType = type.GetTypeInfo().BaseType ?? typeof(Object);
-            _type = type;
             _name = type.GetOfficialName(baseType);
             _instance = engine;
 
-            SetAllMembers();
+            SetAllMembers(type);
             SetExtensionMembers();
 
             //  DOM objects can have properties added dynamically
@@ -45,21 +43,18 @@ namespace AngleSharp.Js
 
             if (_numericIndexer != null && Int32.TryParse(index, out var numericIndex))
             {
-                var args = new Object[] { numericIndex };
-
                 try
                 {
+                    var args = new Object[] { numericIndex };
                     var orig = _numericIndexer.GetMethod.Invoke(value, args);
-                    var prop = orig.ToJsValue(_instance);
-                    result = new PropertyDescriptor(prop, false, false, false);
+                    result = new PropertyDescriptor(orig.ToJsValue(_instance), false, false, false);
                     return true;
                 }
                 catch (TargetInvocationException ex)
                 {
                     if (ex.InnerException is ArgumentOutOfRangeException)
                     {
-                        var prop = JsValue.Undefined;
-                        result = new PropertyDescriptor(prop, false, false, false);
+                        result = new PropertyDescriptor(JsValue.Undefined, false, false, false);
                         return true;
                     }
 
@@ -93,9 +88,9 @@ namespace AngleSharp.Js
             }
         }
 
-        private void SetAllMembers()
+        private void SetAllMembers(Type parentType)
         {
-            foreach (var type in _type.GetTypeTree())
+            foreach (var type in parentType.GetTypeTree())
             {
                 var typeInfo = type.GetTypeInfo();
                 SetNormalProperties(typeInfo.DeclaredProperties);

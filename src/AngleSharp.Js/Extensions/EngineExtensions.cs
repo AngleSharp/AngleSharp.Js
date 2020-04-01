@@ -2,6 +2,7 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
+    using AngleSharp.Js.Cache;
     using Jint;
     using Jint.Native;
     using Jint.Native.Object;
@@ -10,7 +11,6 @@ namespace AngleSharp.Js
     using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
 
     static class EngineExtensions
@@ -117,7 +117,6 @@ namespace AngleSharp.Js
                     args[i] = parameters[i].ParameterType.GetDefaultValue();
                 }
             }
-                
 
             if (max != parameters.Length)
             {
@@ -185,36 +184,14 @@ namespace AngleSharp.Js
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var ti = type.GetTypeInfo();
-            var names = ti.GetCustomAttributes<DomNameAttribute>();
-            var name = names.FirstOrDefault();
-
-            if (name != null && !ti.IsEnum)
-            {
-                var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
-                var constructor = info != null ? new DomConstructorInstance(engine, info) : new DomConstructorInstance(engine, type);
-                obj.FastSetProperty(name.OfficialName, new PropertyDescriptor(constructor, false, true, false));
-            }
+            var apply = type.GetConstructorAction();
+            apply.Invoke(engine, obj);
         }
 
         public static void AddInstance(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var attributes = type.GetTypeInfo().GetCustomAttributes<DomInstanceAttribute>();
-            var info = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(m => m.GetParameters().Length == 0);
-
-            if (info != null)
-            {
-                foreach (var attribute in attributes)
-                {
-                    var instance = info.Invoke(null);
-
-                    if (instance != null)
-                    {
-                        var node = engine.GetDomNode(instance);
-                        obj.FastSetProperty(attribute.Name, new PropertyDescriptor(node, false, true, false));
-                    }
-                }
-            }
+            var apply = type.GetInstanceAction();
+            apply.Invoke(engine, obj);
         }
 
         public static JsValue RunScript(this EngineInstance engine, String source) =>
