@@ -102,10 +102,11 @@ namespace AngleSharp.Dom
         /// <param name="documentTask">The document task to await.</param>
         /// <param name="cancellation">The timeout cancellation, if any.</param>
         /// <returns>A task that is finished when the document is available.</returns>
-        public static async Task WaitUntilAvailable(this Task<IDocument> documentTask, CancellationToken cancellation = default)
+        public static async Task<IDocument> WaitUntilAvailable(this Task<IDocument> documentTask, CancellationToken cancellation = default)
         {
             var document = await documentTask.ConfigureAwait(false);
             await document.WaitUntilAvailable(cancellation).ConfigureAwait(false);
+            return document;
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace AngleSharp.Dom
         /// <param name="document">The document to await.</param>
         /// <param name="cancellation">The timeout cancellation, if any.</param>
         /// <returns>A task that is finished when the document is available.</returns>
-        public static async Task WaitUntilAvailable(this IDocument document, CancellationToken cancellation = default)
+        public static async Task<IDocument> WaitUntilAvailable(this IDocument document, CancellationToken cancellation = default)
         {
             if (document.ReadyState != DocumentReadyState.Complete)
             {
@@ -126,6 +127,7 @@ namespace AngleSharp.Dom
             }
 
             await document.WhenStable().ConfigureAwait(false);
+            return document;
         }
     }
 }

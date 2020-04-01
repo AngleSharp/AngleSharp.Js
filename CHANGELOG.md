@@ -4,6 +4,7 @@ Released on Tuesday, March 31 2020.
 
 - Fixed deadlock with some versions of jQuery (#63)
 - Enabled the instance creator factory (#11)
+- Return `IDocument` from `WaitUntilAvailable()` (#61)
 
 # 0.13.0
 
