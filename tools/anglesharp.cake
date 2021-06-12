@@ -178,7 +178,7 @@ Task("Publish-Release")
             Name = version,
             Body = String.Join(Environment.NewLine, releaseNotes.Notes),
             Prerelease = false,
-            TargetCommitish = "master",
+            TargetCommitish = "main",
         }).Wait();
     });
 
