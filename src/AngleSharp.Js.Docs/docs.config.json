@@ -10,7 +10,7 @@
       "sections": [
         {
           "generator": "markdown",
-          "segment": "core",
+          "segment": "js",
           "dir": "general"
         }
       ]
@@ -19,7 +19,7 @@
       "sections": [
         {
           "generator": "markdown",
-          "segment": "core",
+          "segment": "js",
           "dir": "tutorials"
         }
       ]
