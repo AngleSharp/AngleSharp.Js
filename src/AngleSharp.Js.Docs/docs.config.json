@@ -1,0 +1,28 @@
+{
+  "name": "AngleSharp.Js",
+  "author": "Florian Rappl",
+  "branch": "devel",
+  "repositoryUrl": "https://github.com/AngleSharp/AngleSharp.Js",
+  "rootDir": "../../",
+  "outputDir": "./dist",
+  "sitemap": {
+    "general": {
+      "sections": [
+        {
+          "generator": "markdown",
+          "segment": "js",
+          "dir": "general"
+        }
+      ]
+    },
+    "docs": {
+      "sections": [
+        {
+          "generator": "markdown",
+          "segment": "js",
+          "dir": "tutorials"
+        }
+      ]
+    }
+  }
+}

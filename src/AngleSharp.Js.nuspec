@@ -5,20 +5,15 @@
     <version>$version$</version>
     <authors>AngleSharp</authors>
     <owners>Florian Rappl</owners>
-    <licenseUrl>https://github.com/AngleSharp/AngleSharp.Js/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <projectUrl>https://anglesharp.github.io</projectUrl>
-    <iconUrl>https://raw.github.com/AngleSharp/AngleSharp.Js/master/logo.png</iconUrl>
+    <icon>logo.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Integrates a JavaScript engine to AngleSharp.</description>
     <releaseNotes>https://github.com/AngleSharp/AngleSharp.Js/blob/master/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2017-2020, AngleSharp</copyright>
+    <copyright>Copyright 2017-2021, AngleSharp</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies>
-      <group targetFramework="netstandard1.3">
-        <dependency id="AngleSharp" version="0.14.0" />
-        <dependency id="Jint" version="2.10.4" />
-        <dependency id="System.Threading.Thread" version="4.3.0" />
-      </group>
       <group targetFramework="netstandard2.0">
         <dependency id="AngleSharp" version="0.14.0" />
         <dependency id="Jint" version="2.10.4" />
