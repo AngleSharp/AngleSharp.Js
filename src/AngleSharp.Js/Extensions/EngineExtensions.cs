@@ -45,6 +45,12 @@ namespace AngleSharp.Js
                 }
                 else if (obj is Enum)
                 {
+                    string name = ((Enum)obj).GetOfficialName();
+                    if (name != null)
+                    {
+                        return new JsValue(name);
+                    }
+
                     return new JsValue(Convert.ToInt32(obj));
                 }
 
