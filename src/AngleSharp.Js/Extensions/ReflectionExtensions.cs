@@ -94,7 +94,7 @@ namespace AngleSharp.Js
 
             // if the enum value does not have a DomNameAttribute, calling member.GetOfficialName() would return the value name
             // to allow previous behaviour to be preserved, if the DomNameAttribute is not present then null will be returned
-            IEnumerable<DomNameAttribute> names = member.GetCustomAttributes<DomNameAttribute>();
+            var names = member.GetCustomAttributes<DomNameAttribute>();
             var officialNameAttribute = names.FirstOrDefault();
             return officialNameAttribute?.OfficialName;
         }

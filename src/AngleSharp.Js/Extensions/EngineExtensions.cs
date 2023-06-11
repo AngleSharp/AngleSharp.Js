@@ -48,7 +48,7 @@ namespace AngleSharp.Js
                     switch (obj)
                     {
                         case DocumentReadyState _:
-                            string name = ((Enum)obj).GetOfficialName();
+                            var name = ((Enum)obj).GetOfficialName();
                             if (name != null)
                             {
                                 return new JsValue(name);
