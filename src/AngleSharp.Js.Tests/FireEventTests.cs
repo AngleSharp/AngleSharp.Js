@@ -4,6 +4,9 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Dom.Events;
     using AngleSharp.Scripting;
     using NUnit.Framework;
+
+    using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -254,6 +257,35 @@ window.onload = function() {
 
             var div = document.QuerySelector("div");
             Assert.AreEqual("Success!", div?.TextContent);
+        }
+
+        [Test]
+        public async Task DocumentReadyStateIsComplete_Issue86()
+        {
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+document.onreadystatechange = function() {
+  var element = document.createElement('div');
+  element.textContent = document.readyState;
+  document.body.appendChild(element);
+};
+</script>
+</body>";
+            var context = BrowsingContext.New(cfg);
+            var document = await context.OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var divs = document.GetElementsByTagName("div");
+
+            // expected value will vary depending on AngleSharp package version
+            // 1.0.2 and greater, expected value will be { "interactive", "complete"
+            // prior to 1.0.2, expected value will be { "1", "2" }
+            var expected = new[] { DocumentReadyState.Interactive, DocumentReadyState.Complete }
+                .Select(e => e.GetOfficialName() ?? Convert.ToInt32(e).ToString());
+            CollectionAssert.AreEqual(expected, divs.Select(d => d.TextContent));
         }
 
         [Test]
