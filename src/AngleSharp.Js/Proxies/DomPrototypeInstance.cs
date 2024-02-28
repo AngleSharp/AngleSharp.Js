@@ -5,7 +5,9 @@ namespace AngleSharp.Js
     using AngleSharp.Text;
     using Jint.Native;
     using Jint.Native.Object;
+    using Jint.Native.Symbol;
     using Jint.Runtime.Descriptors;
+    using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -26,15 +28,14 @@ namespace AngleSharp.Js
             _name = type.GetOfficialName(baseType);
             _instance = engine;
 
+            Set(GlobalSymbolRegistry.ToStringTag, _name);
+
             SetAllMembers(type);
             SetExtensionMembers();
 
             //  DOM objects can have properties added dynamically
-            Extensible = true;
             Prototype = engine.GetDomPrototype(baseType);
         }
-
-        public override String Class => _name;
 
         public Boolean TryGetFromIndex(Object value, String index, out PropertyDescriptor result)
         {
@@ -68,7 +69,7 @@ namespace AngleSharp.Js
             //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
-            if (_stringIndexer != null && !Properties.ContainsKey(index))
+            if (_stringIndexer != null && !HasProperty(index))
             {
                 var args = new Object[] { index };
                 var prop = _stringIndexer.GetMethod.Invoke(value, args).ToJsValue(_instance);
@@ -120,7 +121,7 @@ namespace AngleSharp.Js
                 var name = entry.Key;
                 var value = entry.Value;
 
-                if (Properties.ContainsKey(name))
+                if (HasProperty(name))
                 {
                 }
                 else if (value.Adder != null && value.Remover != null)
@@ -178,20 +179,20 @@ namespace AngleSharp.Js
         private void SetEvent(String name, MethodInfo adder, MethodInfo remover)
         {
             var eventInstance = new DomEventInstance(_instance, adder, remover);
-            FastSetProperty(name, new PropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
+            FastSetProperty(name, new GetSetPropertyDescriptor(eventInstance.Getter, eventInstance.Setter, false, false));
         }
 
         private void SetProperty(String name, MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward)
         {
-            FastSetProperty(name, new PropertyDescriptor(
-                new DomDelegateInstance(_instance, name, (obj, values) =>
+            FastSetProperty(name, new GetSetPropertyDescriptor(
+                new ClrFunction(_instance.Jint, name, (obj, values) =>
                     _instance.Call(getter, obj, values)),
-                new DomDelegateInstance(_instance, name, (obj, values) =>
+                new ClrFunction(_instance.Jint, name, (obj, values) =>
                 {
                     if (putsForward != null)
                     {
                         var ep = Array.Empty<Object>();
-                        var that = obj.AsObject() as DomNodeInstance;
+                        var that = obj as DomNodeInstance;
                         var target = getter.Invoke(that.Value, ep);
                         var propName = putsForward.PropertyName;
                         var prop = getter.ReturnType
@@ -227,10 +228,12 @@ namespace AngleSharp.Js
             // If it already has a property with the given name (usually another method),
             // then convert that method to a two-layer method, which decides which one
             // to pick depending on the number (and probably types) of arguments.
-            if (!Properties.ContainsKey(name))
+            if (!HasProperty(name))
             {
-                var func = new DomFunctionInstance(_instance, method);
-                FastAddProperty(name, func, false, false, false);
+                FastSetProperty(name, new PropertyDescriptor(
+                    new ClrFunction(_instance.Jint, name, (obj, values) =>
+                        _instance.Call(method, obj, values)
+                    ), false, false, false));
             }
         }
     }

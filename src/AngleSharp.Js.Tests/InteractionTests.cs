@@ -3,6 +3,7 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
     using AngleSharp.Scripting;
+    using Jint;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -30,8 +31,9 @@ namespace AngleSharp.Js.Tests
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>function square(x) { return x * x; }</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var square = service.GetOrCreateJint(document).GetValue("square");
-            var result = square.Invoke(4);
+            var engine = service.GetOrCreateJint(document);
+            var square = engine.GetValue("square");
+            var result = engine.Invoke(square, 4);
             Assert.AreEqual(Types.Number, result.Type);
             Assert.AreEqual(16.0, result.AsNumber());
         }

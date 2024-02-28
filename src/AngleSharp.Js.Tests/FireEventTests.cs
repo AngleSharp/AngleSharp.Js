@@ -3,6 +3,7 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Scripting;
+    using Jint;
     using NUnit.Framework;
 
     using System;
@@ -60,11 +61,11 @@ log.push('b');
 
             document.AddEventListener("hello", (s, ev) =>
             {
-                log.Put(log.Get("length").AsNumber().ToString(), "d", false);
+                log.Set(log.Get("length").AsNumber(), "d", false);
             });
 
             document.Dispatch(new Event("hello"));
-            
+
             Assert.AreEqual(4.0, log.Get("length").AsNumber());
             Assert.AreEqual("a", log.Get("0").AsString());
             Assert.AreEqual("b", log.Get("1").AsString());

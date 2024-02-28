@@ -19,7 +19,7 @@ namespace AngleSharp.Js
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
-            
+
             var service = document?.Context.GetService<JsScriptingService>();
             return service?.EvaluateScript(document, scriptCode);
         }

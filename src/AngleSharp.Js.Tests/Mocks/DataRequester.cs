@@ -11,12 +11,12 @@
     sealed class DataRequester : BaseRequester
     {
         private static readonly String Base64Section = ";base64";
-        
+
         public override Boolean SupportsProtocol(String protocol)
         {
             return protocol.Is(ProtocolNames.Data);
         }
-        
+
         protected override Task<IResponse> PerformRequestAsync(Request request, CancellationToken cancel)
         {
             var content = new MemoryStream();

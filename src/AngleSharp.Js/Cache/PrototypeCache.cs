@@ -14,7 +14,7 @@ namespace AngleSharp.Js
         {
             _prototypes = new ConcurrentDictionary<Type, ObjectInstance>
             {
-                [typeof(Object)] = engine.Object.PrototypeObject,
+                [typeof(Object)] = engine.Intrinsics.Object.PrototypeObject,
             };
             _engine = engine;
         }

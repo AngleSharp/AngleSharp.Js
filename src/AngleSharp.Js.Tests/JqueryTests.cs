@@ -66,7 +66,7 @@ namespace AngleSharp.Js.Tests
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
             var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
-            var sources = new [] { Constants.Jquery2_1_4, @"
+            var sources = new[] { Constants.Jquery2_1_4, @"
 $.ajax('http://example.com/', {
     success: function (data, status, xhr) { 
         var res = document.querySelector('#result');
@@ -87,7 +87,7 @@ $.ajax('http://example.com/', {
         [Test]
         public async Task JqueryVersionOne()
         {
-            var result = await (new [] { Constants.Jquery1_11_2, SetResult("$.toString()") }).EvalScriptsAsync()
+            var result = await (new[] { Constants.Jquery1_11_2, SetResult("$.toString()") }).EvalScriptsAsync()
                 .ConfigureAwait(false);
             Assert.AreNotEqual("", result);
         }
