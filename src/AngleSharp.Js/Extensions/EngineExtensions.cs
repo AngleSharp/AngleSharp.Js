@@ -51,7 +51,7 @@ namespace AngleSharp.Js
                             var name = ((Enum)obj).GetOfficialName();
                             if (name != null)
                             {
-                                return new JsValue(name);
+                                return JsValue.FromObjectWithType(engine.Jint, name, typeof(String));
                             }
                             break;
                     }
