@@ -98,11 +98,9 @@ namespace AngleSharp.Js.Dom
                     var document = element.Owner;
                     var engine = _service.GetOrCreateInstance(document);
                     var jint = engine.Jint;
-                    jint.EnterExecutionContext(engine.Lexicals, engine.Variables, engine.Window);
-                    var instance = jint.Function.Construct(new JsValue[] { "event", value });
-                    jint.LeaveExecutionContext();
+                    var instance = jint.Intrinsics.Function.Construct(new JsValue[] { "event", value }, JsValue.Undefined);
 
-                    if (instance is FunctionInstance functor)
+                    if (instance is Function functor)
                     {
                         element.AddEventListener(eventName, functor.ToListener(engine));
                     }

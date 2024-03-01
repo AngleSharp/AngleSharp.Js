@@ -21,27 +21,27 @@ namespace AngleSharp.Js
             {
                 if (obj is String)
                 {
-                    return new JsValue((String)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(String));
                 }
                 else if (obj is Int32)
                 {
-                    return new JsValue((Int32)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Int32));
                 }
                 else if (obj is UInt32)
                 {
-                    return new JsValue((UInt32)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(UInt32));
                 }
                 else if (obj is Double)
                 {
-                    return new JsValue((Double)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Double));
                 }
                 else if (obj is Single)
                 {
-                    return new JsValue((Single)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Single));
                 }
                 else if (obj is Boolean)
                 {
-                    return new JsValue((Boolean)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Boolean));
                 }
                 else if (obj is Enum)
                 {
@@ -51,11 +51,11 @@ namespace AngleSharp.Js
                             var name = ((Enum)obj).GetOfficialName();
                             if (name != null)
                             {
-                                return new JsValue(name);
+                                return JsValue.FromObjectWithType(engine.Jint, name, typeof(String));
                             }
                             break;
                     }
-                    return new JsValue(Convert.ToInt32(obj));
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Enum));
                 }
 
                 return engine.GetDomNode(obj);
@@ -64,17 +64,11 @@ namespace AngleSharp.Js
             return JsValue.Null;
         }
 
-        public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func) =>
-            new ClrFunctionInstance(engine, func);
+        public static ClrFunction AsValue(this Engine engine, string name, Func<JsValue, JsValue[], JsValue> func) =>
+            new ClrFunction(engine, name, func);
 
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter) =>
-            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
-
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter) =>
-            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), null, true, false);
-
-        public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter) =>
-            new PropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
+        public static PropertyDescriptor AsProperty(this Engine engine, JsValue getter = null, JsValue setter = null) =>
+            new GetSetPropertyDescriptor(getter, setter, true, getter != null && setter != null);
 
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
@@ -212,15 +206,26 @@ namespace AngleSharp.Js
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
-            if (method != null && thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
+            if (method != null)
             {
+                DomNodeInstance nodeInstance;
+
+                if (thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
+                {
+                    nodeInstance = node;
+                }
+                else
+                {
+                    nodeInstance = instance.Window;
+                }
+
                 try
                 {
                     if (method.IsStatic)
                     {
                         var newArgs = new List<JsValue>
                         {
-                            thisObject,
+                            nodeInstance,
                         };
                         newArgs.AddRange(arguments);
                         var parameters = instance.BuildArgs(method, newArgs.ToArray());
@@ -229,12 +234,12 @@ namespace AngleSharp.Js
                     else
                     {
                         var parameters = instance.BuildArgs(method, arguments);
-                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
+                        return method.Invoke(nodeInstance.Value, parameters).ToJsValue(instance);
                     }
                 }
                 catch (TargetInvocationException)
                 {
-                    throw new JavaScriptException(instance.Jint.Error);
+                    throw new JavaScriptException(instance.Jint.Intrinsics.Error);
                 }
             }
 

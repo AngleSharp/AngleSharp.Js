@@ -30,5 +30,17 @@ namespace AngleSharp.Js.Dom
         [DomName("top")]
         [DomAccessor(Accessors.Getter)]
         public static IWindow Top(this IWindow window) => window.Document.Context?.Creator?.DefaultView;
+
+        /// <summary>
+        /// Gets the console instance.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <returns></returns>
+        [DomName("console")]
+        [DomAccessor(Accessors.Getter)]
+        public static Console Console(this IWindow window)
+        {
+            return new Console(window);
+        }
     }
 }

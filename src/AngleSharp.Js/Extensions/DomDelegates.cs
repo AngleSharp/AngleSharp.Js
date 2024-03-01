@@ -2,6 +2,7 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
+    using Jint;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
@@ -12,10 +13,10 @@ namespace AngleSharp.Js
 
     static class DomDelegates
     {
-        private static readonly Type[] ToCallbackSignature = new[] { typeof(FunctionInstance), typeof(EngineInstance) };
+        private static readonly Type[] ToCallbackSignature = new[] { typeof(Function), typeof(EngineInstance) };
         private static readonly Type[] ToJsValueSignature = new[] { typeof(Object), typeof(EngineInstance) };
 
-        public static Delegate ToDelegate(this Type type, FunctionInstance function, EngineInstance engine)
+        public static Delegate ToDelegate(this Type type, Function function, EngineInstance engine)
         {
             if (type != typeof(DomEventHandler))
             {
@@ -26,7 +27,7 @@ namespace AngleSharp.Js
             return function.ToListener(engine);
         }
 
-        public static DomEventHandler ToListener(this FunctionInstance function, EngineInstance engine) => (obj, ev) =>
+        public static DomEventHandler ToListener(this Function function, EngineInstance engine) => (obj, ev) =>
         {
             var objAsJs = obj.ToJsValue(engine);
             var evAsJs = ev.ToJsValue(engine);
@@ -38,11 +39,11 @@ namespace AngleSharp.Js
             catch (JavaScriptException jsException)
             {
                 var window = (IWindow)engine.Window.Value;
-                window.Fire<ErrorEvent>(e => e.Init(null, jsException.LineNumber, jsException.Column, jsException));
+                window.Fire<ErrorEvent>(e => e.Init(null, jsException.Location.Start.Line, jsException.Location.Start.Column, jsException));
             }
         };
 
-        public static T ToCallback<T>(this FunctionInstance function, EngineInstance engine)
+        public static T ToCallback<T>(this Function function, EngineInstance engine)
         {
             var methodInfo = typeof(T).GetRuntimeMethods().First(m => m.Name == "Invoke");
             var convert = typeof(EngineExtensions).GetRuntimeMethod("ToJsValue", ToJsValueSignature);

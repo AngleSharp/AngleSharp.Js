@@ -194,3 +194,6 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+# Nuke build tool
+.nuke/temp
