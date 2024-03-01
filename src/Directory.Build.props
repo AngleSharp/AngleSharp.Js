@@ -2,6 +2,9 @@
   <PropertyGroup>
     <Description>Integrates a JavaScript engine to AngleSharp.</Description>
     <Product>AngleSharp.Js</Product>
-    <Version>0.15.0</Version>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 </Project>

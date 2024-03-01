@@ -8,6 +8,8 @@ AngleSharp.Js contains code written by (in order of first pull request / commit)
 * [Georgios Diamantopoulos](https://github.com/georgiosd)
 * [miroslav22](https://github.com/miroslav22)
 * [doominator42](https://github.com/doominator42)
+* [Tom van Enckevort](https://github.com/tomvanenckevort)
+* [Wayne Sebbens](https://github.com/Sebbs128)
 
 Without these awesome people AngleSharp.Js could not exist. Thanks to everyone for your contributions! :beers:
 
