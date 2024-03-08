@@ -109,7 +109,10 @@ namespace AngleSharp.Js
                 }
                 else if (type.Isi("module"))
                 {
-                    return RunModule(source);
+                    // use a unique specifier to import the module into Jint
+                    var specifier = Guid.NewGuid().ToString();
+
+                    return ImportModule(specifier, source);
                 }
                 else
                 {
@@ -173,19 +176,16 @@ namespace AngleSharp.Js
             {
                 var moduleContent = FetchModule(import.Value);
 
-                _engine.Modules.Add(import.Key, moduleContent);
-                _engine.Modules.Import(import.Key);
+                ImportModule(import.Key, moduleContent);
             }
 
             return JsValue.Undefined;
         }
 
-        private JsValue RunModule(String source)
+        private JsValue ImportModule(String specifier, String source)
         {
-            var moduleIdentifier = Guid.NewGuid().ToString();
-
-            _engine.Modules.Add(moduleIdentifier, source);
-            _engine.Modules.Import(moduleIdentifier);
+            _engine.Modules.Add(specifier, source);
+            _engine.Modules.Import(specifier);
 
             return JsValue.Undefined;
         }
