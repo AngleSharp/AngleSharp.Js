@@ -1,12 +1,17 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
+    using AngleSharp.Io;
+    using AngleSharp.Text;
     using Jint;
     using Jint.Native;
     using Jint.Native.Object;
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
     using System.Reflection;
+    using System.Text.Json;
 
     sealed class EngineInstance
     {
@@ -17,6 +22,9 @@ namespace AngleSharp.Js
         private readonly ReferenceCache _references;
         private readonly IEnumerable<Assembly> _libs;
         private readonly DomNodeInstance _window;
+        private readonly IResourceLoader _resourceLoader;
+        private readonly IElement _scriptElement;
+        private readonly string _documentUrl;
 
         #endregion
 
@@ -24,7 +32,16 @@ namespace AngleSharp.Js
 
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
         {
-            _engine = new Engine();
+            _resourceLoader = window.Document.Context.GetService<IResourceLoader>();
+
+            _scriptElement = window.Document.CreateElement(TagNames.Script);
+
+            _documentUrl = window.Document.Url;
+
+            _engine = new Engine((options) =>
+            {
+                options.EnableModules(new JsModuleLoader(this, _documentUrl, false));
+            });
             _prototypes = new PrototypeCache(_engine);
             _references = new ReferenceCache();
             _libs = libs;
@@ -73,12 +90,132 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
-        public JsValue RunScript(String source, JsValue context)
+        public JsValue RunScript(String source, String type, JsValue context)
         {
+            if (string.IsNullOrEmpty(type))
+            {
+                type = MimeTypeNames.DefaultJavaScript;
+            }
+
             lock (_engine)
             {
-                return _engine.Evaluate(source);
+                if (MimeTypeNames.IsJavaScript(type))
+                {
+                    return _engine.Evaluate(source);
+                }
+                else if (type.Isi("importmap"))
+                {
+                    return LoadImportMap(source);
+                }
+                else if (type.Isi("module"))
+                {
+                    return RunModule(source);
+                }
+                else
+                {
+                    return JsValue.Undefined;
+                }
             }
+        }
+
+        private JsValue LoadImportMap(String source)
+        {
+            JsImportMap importMap;
+
+            try
+            {
+                importMap = JsonSerializer.Deserialize<JsImportMap>(source);
+            }
+            catch (JsonException)
+            {
+                importMap = null;
+            }
+
+            // get list of imports based on any scoped imports for the current document path, and any global imports
+            var imports = new Dictionary<string, Uri>();
+            var documentPathName = Url.Create(_documentUrl).PathName.ToLower();
+
+            if (importMap?.Scopes?.Count > 0)
+            {
+                var scopePaths = importMap.Scopes.Keys.OrderByDescending(k => k.Length);
+
+                foreach (var scopePath in scopePaths)
+                {
+                    if (!documentPathName.Contains(scopePath.ToLower()))
+                    {
+                        continue;
+                    }
+
+                    var scopeImports = importMap.Scopes[scopePath];
+
+                    foreach (var scopeImport in scopeImports)
+                    {
+                        if (!imports.ContainsKey(scopeImport.Key))
+                        {
+                            imports.Add(scopeImport.Key, scopeImport.Value);
+                        }
+                    }
+                }
+            }
+
+            if (importMap?.Imports?.Count > 0)
+            {
+                foreach (var globalImport in importMap.Imports)
+                {
+                    if (!imports.ContainsKey(globalImport.Key))
+                    {
+                        imports.Add(globalImport.Key, globalImport.Value);
+                    }
+                }
+            }
+
+            foreach (var import in imports)
+            {
+                var moduleContent = FetchModule(import.Value);
+
+                _engine.Modules.Add(import.Key, moduleContent);
+                _engine.Modules.Import(import.Key);
+            }
+
+            return JsValue.Undefined;
+        }
+
+        private JsValue RunModule(String source)
+        {
+            var moduleIdentifier = Guid.NewGuid().ToString();
+
+            _engine.Modules.Add(moduleIdentifier, source);
+            _engine.Modules.Import(moduleIdentifier);
+
+            return JsValue.Undefined;
+        }
+
+        public string FetchModule(Uri moduleUrl)
+        {
+            if (_resourceLoader == null)
+            {
+                return string.Empty;
+            }
+
+            if (!moduleUrl.IsAbsoluteUri)
+            {
+                moduleUrl = new Uri(new Uri(_documentUrl), moduleUrl);
+            }
+
+            var importUrl = Url.Convert(moduleUrl);
+
+            var request = new ResourceRequest(_scriptElement, importUrl);
+
+            var response = _resourceLoader.FetchAsync(request).Task.Result;
+
+            string content;
+
+            using (var streamReader = new StreamReader(response.Content))
+            {
+                content = streamReader.ReadToEnd();
+            }
+
+            return content;
         }
 
         #endregion

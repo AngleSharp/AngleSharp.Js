@@ -4,6 +4,7 @@ namespace AngleSharp.Scripting
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js;
+    using AngleSharp.Text;
     using Jint;
     using System;
     using System.Collections.Generic;
@@ -57,7 +58,9 @@ namespace AngleSharp.Scripting
         #region Methods
 
         Boolean IScriptingService.SupportsType(String mimeType) =>
-            MimeTypeNames.IsJavaScript(mimeType);
+            MimeTypeNames.IsJavaScript(mimeType) ||
+            mimeType.Isi("module") ||
+            mimeType.Isi("importmap");
 
         /// <summary>
         /// Gets the associated Jint engine or creates it.
@@ -81,7 +84,7 @@ namespace AngleSharp.Scripting
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 await options.EventLoop.EnqueueAsync(_ =>
-                    EvaluateScript(options.Document, content), TaskPriority.Critical).ConfigureAwait(false);
+                    EvaluateScript(options.Document, content, options.Element?.Type), TaskPriority.Critical).ConfigureAwait(false);
             }
         }
 
@@ -90,11 +93,12 @@ namespace AngleSharp.Scripting
         /// </summary>
         /// <param name="document">The context of the evaluation.</param>
         /// <param name="source">The source of the script.</param>
+        /// <param name="type">The type of the script.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Object EvaluateScript(IDocument document, String source)
+        public Object EvaluateScript(IDocument document, String source, String type)
         {
             document = document ?? throw new ArgumentNullException(nameof(document));
-            return GetOrCreateInstance(document).RunScript(source).FromJsValue();
+            return GetOrCreateInstance(document).RunScript(source, type).FromJsValue();
         }
 
         #endregion

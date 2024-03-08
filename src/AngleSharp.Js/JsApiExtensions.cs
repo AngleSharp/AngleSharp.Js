@@ -1,6 +1,7 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
+    using AngleSharp.Io;
     using AngleSharp.Scripting;
     using System;
 
@@ -14,14 +15,15 @@ namespace AngleSharp.Js
         /// </summary>
         /// <param name="document">The document as context.</param>
         /// <param name="scriptCode">The script to run.</param>
+        /// <param name="scriptType">The type of the script to run (defaults to "text/javascript").</param>
         /// <returns>The result of running the script, if any.</returns>
-        public static Object ExecuteScript(this IDocument document, String scriptCode)
+        public static Object ExecuteScript(this IDocument document, String scriptCode, String scriptType = null)
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
 
             var service = document?.Context.GetService<JsScriptingService>();
-            return service?.EvaluateScript(document, scriptCode);
+            return service?.EvaluateScript(document, scriptCode, scriptType ?? MimeTypeNames.DefaultJavaScript);
         }
     }
 }
