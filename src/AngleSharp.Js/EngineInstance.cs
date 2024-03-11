@@ -11,7 +11,6 @@ namespace AngleSharp.Js
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Text.Json;
 
     sealed class EngineInstance
     {
@@ -123,24 +122,17 @@ namespace AngleSharp.Js
 
         private JsValue LoadImportMap(String source)
         {
-            JsImportMap importMap;
-
-            try
-            {
-                importMap = JsonSerializer.Deserialize<JsImportMap>(source);
-            }
-            catch (JsonException)
-            {
-                importMap = null;
-            }
+            var importMap = _engine.Evaluate($"JSON.parse('{source}')").AsObject();
 
             // get list of imports based on any scoped imports for the current document path, and any global imports
-            var imports = new Dictionary<string, Uri>();
+            var moduleImports = new Dictionary<string, string>();
             var documentPathName = Url.Create(_documentUrl).PathName.ToLower();
 
-            if (importMap?.Scopes?.Count > 0)
+            if (importMap.TryGetValue("scopes", out var scopes))
             {
-                var scopePaths = importMap.Scopes.Keys.OrderByDescending(k => k.Length);
+                var scopesObj = scopes.AsObject();
+
+                var scopePaths = scopesObj.GetOwnPropertyKeys().Select(k => k.AsString()).OrderByDescending(k => k.Length);
 
                 foreach (var scopePath in scopePaths)
                 {
@@ -149,32 +141,38 @@ namespace AngleSharp.Js
                         continue;
                     }
 
-                    var scopeImports = importMap.Scopes[scopePath];
+                    var scopeImports = scopesObj[scopePath].AsObject();
 
-                    foreach (var scopeImport in scopeImports)
+                    var scopeImportImportSpecifiers = scopeImports.GetOwnPropertyKeys().Select(k => k.AsString());
+
+                    foreach (var scopeImportSpecifier in scopeImportImportSpecifiers)
                     {
-                        if (!imports.ContainsKey(scopeImport.Key))
+                        if (!moduleImports.ContainsKey(scopeImportSpecifier))
                         {
-                            imports.Add(scopeImport.Key, scopeImport.Value);
+                            moduleImports.Add(scopeImportSpecifier, scopeImports[scopeImportSpecifier].AsString());
                         }
                     }
                 }
             }
 
-            if (importMap?.Imports?.Count > 0)
+            if (importMap.TryGetValue("imports", out var imports))
             {
-                foreach (var globalImport in importMap.Imports)
+                var importsObj = imports.AsObject();
+
+                var importSpecifiers = importsObj.GetOwnPropertyKeys().Select(k => k.AsString());
+
+                foreach (var importSpecifier in importSpecifiers)
                 {
-                    if (!imports.ContainsKey(globalImport.Key))
+                    if (!moduleImports.ContainsKey(importSpecifier))
                     {
-                        imports.Add(globalImport.Key, globalImport.Value);
+                        moduleImports.Add(importSpecifier, importsObj[importSpecifier].AsString());
                     }
                 }
             }
 
-            foreach (var import in imports)
+            foreach (var import in moduleImports)
             {
-                var moduleContent = FetchModule(import.Value);
+                var moduleContent = FetchModule(new Uri(import.Value, UriKind.RelativeOrAbsolute));
 
                 ImportModule(import.Key, moduleContent);
             }
