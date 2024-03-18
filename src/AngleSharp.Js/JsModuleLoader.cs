@@ -64,6 +64,18 @@ namespace AngleSharp.Js
                         moduleUrl,
                         SpecifierType.RelativeOrAbsolute);
             }
+
+            // Before passing to the base default module loader, make sure any relative paths are prepended with a dot
+            // as Jint will otherwise resolve them as absolute file paths when running on Linux
+            if (moduleRequest.Specifier.StartsWith("/"))
+            {
+                moduleRequest = new ModuleRequest($".{moduleRequest.Specifier}", moduleRequest.Attributes);
+            }
+
+            if (referencingModuleLocation?.StartsWith("/") == true)
+            {
+                referencingModuleLocation = $".{referencingModuleLocation}";
+            }
             
             return base.Resolve(referencingModuleLocation, moduleRequest);
         }
