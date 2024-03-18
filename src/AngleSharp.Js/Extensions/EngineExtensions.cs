@@ -198,11 +198,11 @@ namespace AngleSharp.Js
             apply.Invoke(engine, obj);
         }
 
-        public static JsValue RunScript(this EngineInstance engine, String source) =>
-            engine.RunScript(source, engine.Window);
+        public static JsValue RunScript(this EngineInstance engine, String source, String type, String sourceUrl) =>
+            engine.RunScript(source, type, sourceUrl, engine.Window);
 
-        public static JsValue RunScript(this EngineInstance engine, String source, INode context) =>
-            engine.RunScript(source, context.ToJsValue(engine));
+        public static JsValue RunScript(this EngineInstance engine, String source, String type, String sourceUrl, INode context) =>
+            engine.RunScript(source, type, sourceUrl, context.ToJsValue(engine));
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
