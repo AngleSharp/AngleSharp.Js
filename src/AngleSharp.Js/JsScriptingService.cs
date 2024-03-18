@@ -84,7 +84,7 @@ namespace AngleSharp.Scripting
             {
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 await options.EventLoop.EnqueueAsync(_ =>
-                    EvaluateScript(options.Document, content, options.Element?.Type), TaskPriority.Critical).ConfigureAwait(false);
+                    EvaluateScript(options.Document, content, options.Element?.Type, options.Element?.Source), TaskPriority.Critical).ConfigureAwait(false);
             }
         }
 
@@ -94,11 +94,12 @@ namespace AngleSharp.Scripting
         /// <param name="document">The context of the evaluation.</param>
         /// <param name="source">The source of the script.</param>
         /// <param name="type">The type of the script.</param>
+        /// <param name="sourceUrl">The URL of the script.</param>
         /// <returns>The result of the evaluation.</returns>
-        public Object EvaluateScript(IDocument document, String source, String type)
+        public Object EvaluateScript(IDocument document, String source, String type, String sourceUrl)
         {
             document = document ?? throw new ArgumentNullException(nameof(document));
-            return GetOrCreateInstance(document).RunScript(source, type).FromJsValue();
+            return GetOrCreateInstance(document).RunScript(source, type, sourceUrl).FromJsValue();
         }
 
         #endregion

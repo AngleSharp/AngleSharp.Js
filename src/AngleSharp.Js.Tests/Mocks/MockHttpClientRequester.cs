@@ -1,14 +1,14 @@
-using AngleSharp.Io;
-using AngleSharp.Io.Network;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace AngleSharp.Js.Tests.Mocks
 {
+    using AngleSharp.Io;
+    using AngleSharp.Io.Network;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Net;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Mock HttpClientRequester which returns content for a specific request from a local dictionary.
     /// </summary>

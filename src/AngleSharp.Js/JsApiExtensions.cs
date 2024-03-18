@@ -16,14 +16,15 @@ namespace AngleSharp.Js
         /// <param name="document">The document as context.</param>
         /// <param name="scriptCode">The script to run.</param>
         /// <param name="scriptType">The type of the script to run (defaults to "text/javascript").</param>
+        /// <param name="sourceUrl">The URL of the script.</param>
         /// <returns>The result of running the script, if any.</returns>
-        public static Object ExecuteScript(this IDocument document, String scriptCode, String scriptType = null)
+        public static Object ExecuteScript(this IDocument document, String scriptCode, String scriptType = null, String sourceUrl = null)
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
 
             var service = document?.Context.GetService<JsScriptingService>();
-            return service?.EvaluateScript(document, scriptCode, scriptType ?? MimeTypeNames.DefaultJavaScript);
+            return service?.EvaluateScript(document, scriptCode, scriptType ?? MimeTypeNames.DefaultJavaScript, sourceUrl);
         }
     }
 }

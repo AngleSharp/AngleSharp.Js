@@ -8,8 +8,6 @@ namespace AngleSharp.Js
     using Jint.Native.Object;
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Reflection;
 
     sealed class EngineInstance
@@ -21,9 +19,7 @@ namespace AngleSharp.Js
         private readonly ReferenceCache _references;
         private readonly IEnumerable<Assembly> _libs;
         private readonly DomNodeInstance _window;
-        private readonly IResourceLoader _resourceLoader;
-        private readonly IElement _scriptElement;
-        private readonly string _documentUrl;
+        private readonly JsImportMap _importMap;
 
         #endregion
 
@@ -31,15 +27,11 @@ namespace AngleSharp.Js
 
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
         {
-            _resourceLoader = window.Document.Context.GetService<IResourceLoader>();
-
-            _scriptElement = window.Document.CreateElement(TagNames.Script);
-
-            _documentUrl = window.Document.Url;
+            _importMap = new JsImportMap();
 
             _engine = new Engine((options) =>
             {
-                options.EnableModules(new JsModuleLoader(this, _documentUrl, false));
+                options.EnableModules(new JsModuleLoader(this, window.Document, false));
             });
             _prototypes = new PrototypeCache(_engine);
             _references = new ReferenceCache();
@@ -81,6 +73,8 @@ namespace AngleSharp.Js
 
         public Engine Jint => _engine;
 
+        public JsImportMap ImportMap => _importMap;
+
         #endregion
 
         #region Methods
@@ -89,7 +83,7 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
-        public JsValue RunScript(String source, String type, JsValue context)
+        public JsValue RunScript(String source, String type, String sourceUrl, JsValue context)
         {
             if (string.IsNullOrEmpty(type))
             {
@@ -109,7 +103,7 @@ namespace AngleSharp.Js
                 else if (type.Isi("module"))
                 {
                     // use a unique specifier to import the module into Jint
-                    var specifier = Guid.NewGuid().ToString();
+                    var specifier = sourceUrl ?? Guid.NewGuid().ToString();
 
                     return ImportModule(specifier, source);
                 }
@@ -124,34 +118,34 @@ namespace AngleSharp.Js
         {
             var importMap = _engine.Evaluate($"JSON.parse('{source}')").AsObject();
 
-            // get list of imports based on any scoped imports for the current document path, and any global imports
-            var moduleImports = new Dictionary<string, string>();
-            var documentPathName = Url.Create(_documentUrl).PathName.ToLower();
-
             if (importMap.TryGetValue("scopes", out var scopes))
             {
                 var scopesObj = scopes.AsObject();
 
-                var scopePaths = scopesObj.GetOwnPropertyKeys().Select(k => k.AsString()).OrderByDescending(k => k.Length);
-
-                foreach (var scopePath in scopePaths)
+                foreach (var scopeProperty in scopesObj.GetOwnProperties())
                 {
-                    if (!documentPathName.Contains(scopePath.ToLower()))
+                    var scopePath = scopeProperty.Key.AsString();
+
+                    if (_importMap.Scopes.ContainsKey(scopePath))
                     {
                         continue;
                     }
 
+                    var scopeValue = new Dictionary<string, Uri>();
+
                     var scopeImports = scopesObj[scopePath].AsObject();
 
-                    var scopeImportImportSpecifiers = scopeImports.GetOwnPropertyKeys().Select(k => k.AsString());
-
-                    foreach (var scopeImportSpecifier in scopeImportImportSpecifiers)
+                    foreach (var scopeImportProperty in scopeImports.GetOwnProperties())
                     {
-                        if (!moduleImports.ContainsKey(scopeImportSpecifier))
+                        var scopeImportSpecifier = scopeImportProperty.Key.AsString();
+
+                        if (!scopeValue.ContainsKey(scopeImportSpecifier))
                         {
-                            moduleImports.Add(scopeImportSpecifier, scopeImports[scopeImportSpecifier].AsString());
+                            scopeValue.Add(scopeImportSpecifier, new Uri(scopeImports[scopeImportSpecifier].AsString(), UriKind.RelativeOrAbsolute));
                         }
                     }
+
+                    _importMap.Scopes.Add(scopePath, scopeValue);
                 }
             }
 
@@ -159,22 +153,15 @@ namespace AngleSharp.Js
             {
                 var importsObj = imports.AsObject();
 
-                var importSpecifiers = importsObj.GetOwnPropertyKeys().Select(k => k.AsString());
-
-                foreach (var importSpecifier in importSpecifiers)
+                foreach (var importProperty in importsObj.GetOwnProperties())
                 {
-                    if (!moduleImports.ContainsKey(importSpecifier))
+                    var importSpecifier = importProperty.Key.AsString();
+
+                    if (!_importMap.Imports.ContainsKey(importSpecifier))
                     {
-                        moduleImports.Add(importSpecifier, importsObj[importSpecifier].AsString());
+                        _importMap.Imports.Add(importSpecifier, new Uri(importsObj[importSpecifier].AsString(), UriKind.RelativeOrAbsolute));
                     }
                 }
-            }
-
-            foreach (var import in moduleImports)
-            {
-                var moduleContent = FetchModule(new Uri(import.Value, UriKind.RelativeOrAbsolute));
-
-                ImportModule(import.Key, moduleContent);
             }
 
             return JsValue.Undefined;
@@ -186,34 +173,6 @@ namespace AngleSharp.Js
             _engine.Modules.Import(specifier);
 
             return JsValue.Undefined;
-        }
-
-        public string FetchModule(Uri moduleUrl)
-        {
-            if (_resourceLoader == null)
-            {
-                return string.Empty;
-            }
-
-            if (!moduleUrl.IsAbsoluteUri)
-            {
-                moduleUrl = new Uri(new Uri(_documentUrl), moduleUrl);
-            }
-
-            var importUrl = Url.Convert(moduleUrl);
-
-            var request = new ResourceRequest(_scriptElement, importUrl);
-
-            var response = _resourceLoader.FetchAsync(request).Task.Result;
-
-            string content;
-
-            using (var streamReader = new StreamReader(response.Content))
-            {
-                content = streamReader.ReadToEnd();
-            }
-
-            return content;
         }
 
         #endregion
