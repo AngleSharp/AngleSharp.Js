@@ -4,6 +4,8 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
+    using AngleSharp.Html.Dom;
+    using AngleSharp.Js.Attributes;
     using System;
 
     /// <summary>
@@ -41,6 +43,31 @@ namespace AngleSharp.Js.Dom
         public static Console Console(this IWindow window)
         {
             return new Console(window);
+        }
+
+        /// <summary>
+        /// Creates a new IHtmlImageElement instance.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        [DomConstructorFunction("Image")]
+        public static IHtmlImageElement Image(this IWindow window, int? width = null, int? height = null)
+        {
+            var imageElement = window.Document.CreateElement(TagNames.Img) as IHtmlImageElement;
+
+            if (width.HasValue)
+            {
+                imageElement.DisplayWidth = width.Value;
+            }
+
+            if (height.HasValue)
+            {
+                imageElement.DisplayHeight = height.Value;
+            }
+
+            return imageElement;
         }
     }
 }
