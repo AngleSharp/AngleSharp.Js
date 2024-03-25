@@ -76,6 +76,13 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task CreateImageShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("var img = new Image(400, 200); img.src = '/image.jpg';", SetResult("img.width"));
+            Assert.AreEqual("400", result);
+        }
+
+        [Test]
         public async Task PerformXmlHttpRequestSynchronousToDataUrlShouldWork()
         {
             var req = new DataRequester();

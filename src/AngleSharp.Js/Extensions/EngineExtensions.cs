@@ -178,6 +178,14 @@ namespace AngleSharp.Js
             }
         }
 
+        public static void AddConstructorFunctions(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
+        {
+            foreach (var exportedType in assembly.ExportedTypes)
+            {
+                engine.AddConstructorFunction(ctx, exportedType);
+            }
+        }
+
         public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Assembly assembly)
         {
             foreach (var exportedType in assembly.ExportedTypes)
@@ -189,6 +197,12 @@ namespace AngleSharp.Js
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
             var apply = type.GetConstructorAction();
+            apply.Invoke(engine, obj);
+        }
+
+        public static void AddConstructorFunction(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            var apply = type.GetConstructorFunctionAction();
             apply.Invoke(engine, obj);
         }
 

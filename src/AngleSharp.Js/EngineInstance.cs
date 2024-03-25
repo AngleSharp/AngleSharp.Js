@@ -47,6 +47,7 @@ namespace AngleSharp.Js
             foreach (var lib in libs)
             {
                 this.AddConstructors(_window, lib);
+                this.AddConstructorFunctions(_window, lib);
                 this.AddInstances(_window, lib);
             }
 

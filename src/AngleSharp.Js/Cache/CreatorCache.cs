@@ -1,4 +1,6 @@
 using AngleSharp.Attributes;
+using AngleSharp.Js.Attributes;
+using AngleSharp.Js.Proxies;
 using Jint.Native.Object;
 using Jint.Runtime.Descriptors;
 using System;
@@ -35,6 +37,39 @@ namespace AngleSharp.Js.Cache
                 }
 
                 _constructorActions.Add(type, action);
+            }
+
+            return action;
+        }
+
+        private static readonly Dictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorFunctionActions = new Dictionary<Type, Action<EngineInstance, ObjectInstance>>();
+
+        public static Action<EngineInstance, ObjectInstance> GetConstructorFunctionAction(this Type type)
+        {
+            if (!_constructorFunctionActions.TryGetValue(type, out var action))
+            {
+                var constructorFunctions = type.GetTypeInfo().GetMethods().Where(m => m.GetCustomAttributes<DomConstructorFunctionAttribute>().Any());
+
+                if (constructorFunctions.Any())
+                {
+                    action = (engine, obj) =>
+                    {
+                        foreach (var constructorFunction in constructorFunctions)
+                        {
+                            var attribute = constructorFunction.GetCustomAttribute<DomConstructorFunctionAttribute>();
+
+                            var constructorFunctionInstance = new DomConstructorFunctionInstance(engine, constructorFunction, attribute.OfficialName);
+
+                            obj.FastSetProperty(attribute.OfficialName, new PropertyDescriptor(constructorFunctionInstance, false, true, false));
+                        }
+                    };
+                }
+                else
+                {
+                    action = (e, o) => { };
+                }
+
+                _constructorFunctionActions.Add(type, action);
             }
 
             return action;

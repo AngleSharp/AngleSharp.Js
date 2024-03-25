@@ -73,6 +73,17 @@ namespace AngleSharp.Js
                 {
                     return TypeConverter.ToInt32(value);
                 }
+                else if (targetType == typeof(Nullable<Int32>))
+                {
+                    if (value.IsUndefined())
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return TypeConverter.ToInt32(value);
+                    }
+                }
                 else if (targetType == typeof(Double))
                 {
                     return TypeConverter.ToNumber(value);
