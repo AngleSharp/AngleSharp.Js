@@ -20,7 +20,7 @@ namespace AngleSharp.Js.Proxies
         {
             try
             {
-                return _instance.Call(_constructorFunction, _instance.Window, arguments) as DomNodeInstance;
+                return _instance.Call(_constructorFunction, _instance.Window, arguments) as ObjectInstance;
             }
             catch
             {
