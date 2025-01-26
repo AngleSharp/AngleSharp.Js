@@ -13,7 +13,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Integrates a JavaScript engine to AngleSharp.</description>
     <releaseNotes>https://github.com/AngleSharp/AngleSharp.Js/blob/master/CHANGELOG.md</releaseNotes>
-    <copyright>Copyright 2017-2024s, AngleSharp</copyright>
+    <copyright>Copyright 2017-2025, AngleSharp</copyright>
     <tags>html html5 css css3 dom javascript scripting library js scripts runtime jint anglesharp angle</tags>
     <dependencies>
       <group targetFramework="netstandard2.0">
