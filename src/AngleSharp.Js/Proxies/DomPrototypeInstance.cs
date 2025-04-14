@@ -70,7 +70,15 @@ namespace AngleSharp.Js
             if (_stringIndexer != null && !HasProperty(index))
             {
                 var args = new Object[] { index };
-                var prop = _stringIndexer.GetMethod.Invoke(value, args).ToJsValue(_instance);
+                var valueAtIndex = _stringIndexer.GetMethod.Invoke(value, args);
+
+                if (valueAtIndex == null)
+                {
+                    result = PropertyDescriptor.Undefined;
+                    return false;
+                }
+
+                var prop = valueAtIndex.ToJsValue(_instance);
                 result = new PropertyDescriptor(prop, false, false, false);
                 return true;
             }
