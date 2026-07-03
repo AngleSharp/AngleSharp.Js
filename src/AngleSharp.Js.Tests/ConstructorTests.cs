@@ -1,3 +1,6 @@
+using System.Linq;
+using AngleSharp.Dom;
+
 namespace AngleSharp.Js.Tests
 {
     using NUnit.Framework;
@@ -34,6 +37,25 @@ namespace AngleSharp.Js.Tests
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var result = document.QuerySelector("#result").TextContent;
             Assert.AreEqual("true", result);
+        }
+
+        [Test]
+        public void CustomEventConstructedConcurrently()
+        {
+            var ctx1 = BrowsingContext.New(Configuration.Default.WithJs());
+            var ctx2 = BrowsingContext.New(Configuration.Default.WithJs());
+            var html = "<!doctype html><div id=result></div><script>var ev = new CustomEvent('foo'); document.querySelector('#result').textContent = ev.type;</script>";
+            Parallel.Invoke(() => Assert(ctx1), () => Assert(ctx2));
+            return;
+
+            void Assert(IBrowsingContext context) => Task
+                .Run(async () =>
+                {
+                    var document = await context.OpenAsync(m => m.Content(html));
+                    var result = document.QuerySelector("#result").TextContent;
+                    NUnit.Framework.Assert.AreEqual("foo", result);
+                })
+                .Wait();
         }
     }
 }
