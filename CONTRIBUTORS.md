@@ -10,6 +10,9 @@ AngleSharp.Js contains code written by (in order of first pull request / commit)
 * [doominator42](https://github.com/doominator42)
 * [Tom van Enckevort](https://github.com/tomvanenckevort)
 * [Wayne Sebbens](https://github.com/Sebbs128)
+* [Marko Lahma](https://github.com/lahma)
+* [Bogdan Maltcev](https://github.com/badnickname)
+* [arekdygas](https://github.com/arekdygas)
 
 Without these awesome people AngleSharp.Js could not exist. Thanks to everyone for your contributions! :beers:
 

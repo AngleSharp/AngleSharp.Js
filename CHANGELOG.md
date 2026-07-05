@@ -3,8 +3,10 @@
 Released on ?.
 
 - Fixed usage of document ready state (#87) @Sebbs128
+- Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
 - Updated to use AngleSharp v1
-- Updated for Jint v3 (#89) @tomvanenckevort
+- Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
+- Updated CreatorCache to be thread-safe (#110) @badnickname
 
 # 0.15.0
 
