@@ -49,6 +49,9 @@ namespace AngleSharp.Js
                             case Accessors.Adder:
                                 entry.Adder = method;
                                 break;
+                            case Accessors.Method:
+                                entry.Other = method;
+                                break;
                         }
                     }
                     else

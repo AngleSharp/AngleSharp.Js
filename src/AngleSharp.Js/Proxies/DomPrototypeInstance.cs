@@ -148,14 +148,32 @@ namespace AngleSharp.Js
             foreach (var property in properties)
             {
                 var indexParameters = property.GetIndexParameters();
-                var index = property.GetCustomAttribute<DomAccessorAttribute>();
+                var accessor = property.GetCustomAttribute<DomAccessorAttribute>()?.Type;
                 var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
                 var names = property
                     .GetCustomAttributes<DomNameAttribute>()
                     .Select(m => m.OfficialName)
                     .ToArray();
 
-                if (index != null || Array.Exists(names, m => m.Is("item")))
+                if (accessor == Accessors.Method)
+                {
+                    // property decorated with Method accessor, so we need to treat it as a method, not a property
+
+                    if (property.GetMethod == null)
+                    {
+                        throw new InvalidOperationException("Getter not found.");
+                    }
+
+                    foreach (var name in names)
+                    {
+                        SetMethod(name, property.GetMethod);
+                    }
+
+                    // methods were set, so finish processing
+                    return;
+                }
+
+                if (accessor == Accessors.Getter || accessor == Accessors.Setter || Array.Exists(names, m => m.Is("item")))
                 {
                     SetIndexer(property, indexParameters);
                 }
