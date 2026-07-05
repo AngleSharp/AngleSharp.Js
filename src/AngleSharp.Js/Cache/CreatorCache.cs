@@ -4,7 +4,7 @@ using AngleSharp.Js.Proxies;
 using Jint.Native.Object;
 using Jint.Runtime.Descriptors;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
@@ -12,7 +12,7 @@ namespace AngleSharp.Js.Cache
 {
     static class CreatorCache
     {
-        private static readonly Dictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorActions = new Dictionary<Type, Action<EngineInstance, ObjectInstance>>();
+        private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorActions = new();
 
         public static Action<EngineInstance, ObjectInstance> GetConstructorAction(this Type type)
         {
@@ -36,13 +36,13 @@ namespace AngleSharp.Js.Cache
                     action = (e, o) => { };
                 }
 
-                _constructorActions.Add(type, action);
+                _constructorActions.TryAdd(type, action);
             }
 
             return action;
         }
 
-        private static readonly Dictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorFunctionActions = new Dictionary<Type, Action<EngineInstance, ObjectInstance>>();
+        private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorFunctionActions = new();
 
         public static Action<EngineInstance, ObjectInstance> GetConstructorFunctionAction(this Type type)
         {
@@ -69,13 +69,13 @@ namespace AngleSharp.Js.Cache
                     action = (e, o) => { };
                 }
 
-                _constructorFunctionActions.Add(type, action);
+                _constructorFunctionActions.TryAdd(type, action);
             }
 
             return action;
         }
 
-        private static readonly Dictionary<Type, Action<EngineInstance, ObjectInstance>> _instanceActions = new Dictionary<Type, Action<EngineInstance, ObjectInstance>>();
+        private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _instanceActions = new();
 
         public static Action<EngineInstance, ObjectInstance> GetInstanceAction(this Type type)
         {
@@ -105,7 +105,7 @@ namespace AngleSharp.Js.Cache
                     action = (e, o) => { };
                 }
 
-                _instanceActions.Add(type, action);
+                _instanceActions.TryAdd(type, action);
             }
 
             return action;
