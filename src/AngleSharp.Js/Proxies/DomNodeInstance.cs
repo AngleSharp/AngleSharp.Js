@@ -5,11 +5,14 @@ namespace AngleSharp.Js
     using Jint.Native.Object;
     using Jint.Runtime.Descriptors;
     using System;
+    using System.Collections.Generic;
 
     sealed class DomNodeInstance : ObjectInstance
     {
         private readonly EngineInstance _instance;
         private readonly Object _value;
+
+        private Dictionary<DomEventInstance, DomEventInstance.Registration> _eventHandlers;
 
         public DomNodeInstance(EngineInstance engine, Object value)
             : base(engine.Jint)
@@ -23,6 +26,44 @@ namespace AngleSharp.Js
         public Object Value => _value;
 
         public override object ToObject() => _value;
+
+        /// <summary>
+        /// Gets the handler assigned to this node for the given event, if any.
+        /// The handler is per node - the <see cref="DomEventInstance"/> itself is
+        /// shared by every node using the same prototype.
+        /// </summary>
+        public DomEventInstance.Registration GetEventHandler(DomEventInstance ev)
+        {
+            if (_eventHandlers != null && _eventHandlers.TryGetValue(ev, out var registration))
+            {
+                return registration;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Assigns the handler for the given event to this node.
+        /// </summary>
+        public void SetEventHandler(DomEventInstance ev, DomEventInstance.Registration registration)
+        {
+            _eventHandlers = _eventHandlers ?? new Dictionary<DomEventInstance, DomEventInstance.Registration>();
+            _eventHandlers[ev] = registration;
+        }
+
+        /// <summary>
+        /// Removes and returns the handler assigned to this node for the given event, if any.
+        /// </summary>
+        public DomEventInstance.Registration RemoveEventHandler(DomEventInstance ev)
+        {
+            if (_eventHandlers != null && _eventHandlers.TryGetValue(ev, out var registration))
+            {
+                _eventHandlers.Remove(ev);
+                return registration;
+            }
+
+            return null;
+        }
 
         public override PropertyDescriptor GetOwnProperty(JsValue property)
         {
