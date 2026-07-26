@@ -193,8 +193,12 @@ namespace AngleSharp.Js
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var apply = type.GetConstructorAction();
-            apply.Invoke(engine, obj);
+            var definition = type.GetConstructorDefinition();
+
+            if (definition != null)
+            {
+                obj.FastSetProperty(definition.Name, new DomConstructorDescriptor(engine, definition));
+            }
         }
 
         public static void AddConstructorFunction(this EngineInstance engine, ObjectInstance obj, Type type)

@@ -12,11 +12,16 @@ namespace AngleSharp.Js.Cache
 {
     static class CreatorCache
     {
-        private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorActions = new();
+        private static readonly ConcurrentDictionary<Type, ConstructorDefinition> _constructorDefinitions = new();
 
-        public static Action<EngineInstance, ObjectInstance> GetConstructorAction(this Type type)
+        /// <summary>
+        /// Gets what is needed to build the constructor object for a type, or null if the
+        /// type is not exposed as one. The answer depends on the type alone, so the null
+        /// is cached as well - most exported types do not get a constructor.
+        /// </summary>
+        public static ConstructorDefinition GetConstructorDefinition(this Type type)
         {
-            if (!_constructorActions.TryGetValue(type, out var action))
+            if (!_constructorDefinitions.TryGetValue(type, out var definition))
             {
                 var ti = type.GetTypeInfo();
                 var names = ti.GetCustomAttributes<DomNameAttribute>();
@@ -25,21 +30,13 @@ namespace AngleSharp.Js.Cache
                 if (name != null && !ti.IsEnum)
                 {
                     var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
-                    action = (engine, obj) =>
-                    {
-                        var constructor = info != null ? new DomConstructorInstance(engine, info) : new DomConstructorInstance(engine, type);
-                        obj.FastSetProperty(name.OfficialName, new PropertyDescriptor(constructor, false, true, false));
-                    };
-                }
-                else
-                {
-                    action = (e, o) => { };
+                    definition = new ConstructorDefinition(type, name.OfficialName, info);
                 }
 
-                _constructorActions.TryAdd(type, action);
+                _constructorDefinitions.TryAdd(type, definition);
             }
 
-            return action;
+            return definition;
         }
 
         private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorFunctionActions = new();
@@ -110,5 +107,36 @@ namespace AngleSharp.Js.Cache
 
             return action;
         }
+    }
+
+    /// <summary>
+    /// Everything the constructor object of a type is built from. The reflection behind it
+    /// is the same for every engine, so it is resolved once and kept by
+    /// <see cref="CreatorCache"/> - only the object built from it belongs to an engine.
+    /// </summary>
+    sealed class ConstructorDefinition
+    {
+        public ConstructorDefinition(Type type, String name, ConstructorInfo info)
+        {
+            Type = type;
+            Name = name;
+            Info = info;
+        }
+
+        /// <summary>
+        /// Gets the type the constructor creates instances of.
+        /// </summary>
+        public Type Type { get; }
+
+        /// <summary>
+        /// Gets the name the constructor is exposed under.
+        /// </summary>
+        public String Name { get; }
+
+        /// <summary>
+        /// Gets the constructor to invoke, or null if the type cannot be constructed from
+        /// script - naming it is still legal, calling it is not.
+        /// </summary>
+        public ConstructorInfo Info { get; }
     }
 }

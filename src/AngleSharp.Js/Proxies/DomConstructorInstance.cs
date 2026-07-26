@@ -1,11 +1,11 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Js.Cache;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
-    using System;
     using System.Reflection;
 
     sealed class DomConstructorInstance : Constructor
@@ -14,12 +14,13 @@ namespace AngleSharp.Js
         private readonly EngineInstance _instance;
         private readonly ObjectInstance _objectPrototype;
 
-        public DomConstructorInstance(EngineInstance engine, Type type)
-            : base(engine.Jint, type.GetOfficialName())
+        public DomConstructorInstance(EngineInstance engine, ConstructorDefinition definition)
+            : base(engine.Jint, definition.Name)
         {
             var toString = new ClrFunction(Engine, "toString", ToString);
-            _objectPrototype = engine.GetDomPrototype(type);
+            _objectPrototype = engine.GetDomPrototype(definition.Type);
             _instance = engine;
+            _constructor = definition.Info;
             FastSetProperty("toString", new PropertyDescriptor(toString, true, false, true));
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
 
@@ -35,12 +36,6 @@ namespace AngleSharp.Js
             {
                 _objectPrototype.FastSetProperty("constructor", constructor);
             }
-        }
-
-        public DomConstructorInstance(EngineInstance engine, ConstructorInfo constructor)
-            : this(engine, constructor.DeclaringType)
-        {
-            _constructor = constructor;
         }
 
         public override ObjectInstance Construct(JsValue[] arguments, JsValue newTarget)
