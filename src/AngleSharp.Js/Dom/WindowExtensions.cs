@@ -7,6 +7,7 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Html.Dom;
     using AngleSharp.Js.Attributes;
     using System;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Defines a set of extensions for the window object.
@@ -14,6 +15,9 @@ namespace AngleSharp.Js.Dom
     [DomExposed("Window")]
     public static class WindowExtensions
     {
+        private static readonly ConditionalWeakTable<IWindow, Console> Consoles =
+            new ConditionalWeakTable<IWindow, Console>();
+
         /// <summary>
         /// Posts a message.
         /// </summary>
@@ -34,7 +38,9 @@ namespace AngleSharp.Js.Dom
         public static IWindow Top(this IWindow window) => window.Document.Context?.Creator?.DefaultView;
 
         /// <summary>
-        /// Gets the console instance.
+        /// Gets the console instance. The same instance is returned for the same
+        /// window, so that `window.console === window.console` holds and anything
+        /// script puts on the console is still there on the next access.
         /// </summary>
         /// <param name="window"></param>
         /// <returns></returns>
@@ -42,7 +48,7 @@ namespace AngleSharp.Js.Dom
         [DomAccessor(Accessors.Getter)]
         public static Console Console(this IWindow window)
         {
-            return new Console(window);
+            return Consoles.GetValue(window, w => new Console(w));
         }
 
         /// <summary>

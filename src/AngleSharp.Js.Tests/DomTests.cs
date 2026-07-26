@@ -68,5 +68,19 @@ namespace AngleSharp.Js.Tests
             var result = await "new DOMParser().parseFromString(`<div class='a b'></div>`, 'text/html').body.firstChild.classList[1]".EvalScriptAsync();
             Assert.AreEqual("b", result);
         }
+
+        [Test]
+        public async Task ConsoleIsTheSameObjectOnEveryAccess()
+        {
+            var result = await "window.console === window.console".EvalScriptAsync();
+            Assert.AreEqual("True", result);
+        }
+
+        [Test]
+        public async Task ConsoleKeepsPropertiesAssignedToIt()
+        {
+            var result = await "(function () { window.console.marker = 'kept'; return window.console.marker; })()".EvalScriptAsync();
+            Assert.AreEqual("kept", result);
+        }
     }
 }
