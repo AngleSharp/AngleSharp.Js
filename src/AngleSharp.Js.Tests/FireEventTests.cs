@@ -290,6 +290,31 @@ document.onreadystatechange = function() {
         }
 
         [Test]
+        public async Task SetTimeoutWithSeveralDifferentFunctions()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var log = [];
+setTimeout(function () { log.push('a'); }, 0);
+setTimeout(function () { log.push('b'); }, 0);
+setTimeout(function () { log.push('c'); }, 0);
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+            var log = service.GetOrCreateJint(document).GetValue("log").AsArray();
+
+            Assert.AreEqual(3.0, log.Get("length").AsNumber());
+            Assert.AreEqual("a", log.Get("0").AsString());
+            Assert.AreEqual("b", log.Get("1").AsString());
+            Assert.AreEqual("c", log.Get("2").AsString());
+        }
+
+        [Test]
         public async Task SetTimeoutWithStringAsFunction()
         {
             var service = new JsScriptingService();

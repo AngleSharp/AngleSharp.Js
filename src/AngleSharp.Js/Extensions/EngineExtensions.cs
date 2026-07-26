@@ -10,7 +10,6 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
-    using System.Collections.Generic;
     using System.Reflection;
 
     static class EngineExtensions
@@ -72,13 +71,14 @@ namespace AngleSharp.Js
 
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
-            var parameters = method.GetParameters();
-            var initDict = method.GetCustomAttribute<DomInitDictAttribute>();
+            var description = MethodDescription.Of(method);
+            var parameters = description.Parameters;
+            var initDict = description.InitDict;
             var max = parameters.Length;
             var args = new Object[max];
             var offset = 0;
 
-            if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
+            if (description.TakesWindow)
             {
                 if (arguments.Length == 0 || arguments[0].FromJsValue() is IWindow == false)
                 {
@@ -86,7 +86,7 @@ namespace AngleSharp.Js
                 }
             }
 
-            if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
+            if (description.TakesParamArray)
             {
                 max--;
             }
@@ -137,7 +137,7 @@ namespace AngleSharp.Js
             return args;
         }
 
-        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterInfo[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
+        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterDescription[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
         {
             var newArgs = new JsValue[max - offset];
             var end = initDict.Offset - offset;
@@ -228,12 +228,10 @@ namespace AngleSharp.Js
                 {
                     if (method.IsStatic)
                     {
-                        var newArgs = new List<JsValue>
-                        {
-                            nodeInstance,
-                        };
-                        newArgs.AddRange(arguments);
-                        var parameters = instance.BuildArgs(method, newArgs.ToArray());
+                        var newArgs = new JsValue[arguments.Length + 1];
+                        newArgs[0] = nodeInstance;
+                        Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
+                        var parameters = instance.BuildArgs(method, newArgs);
                         return method.Invoke(null, parameters).ToJsValue(instance);
                     }
                     else
