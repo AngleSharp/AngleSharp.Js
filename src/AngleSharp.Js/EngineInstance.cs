@@ -86,6 +86,19 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
+        /// <summary>
+        /// Gets the constructor object of the given type, building it on first ask. The
+        /// prototype keeps it, so that naming the type and reading "constructor" off one of
+        /// its instances arrive at the same object.
+        /// </summary>
+        public DomConstructorInstance GetDomConstructor(ConstructorDefinition definition)
+        {
+            //  Only the prototype of System.Object is not one of ours, and that type is not
+            //  exposed as a constructor, so it never reaches this point.
+            var prototype = (DomPrototypeInstance)GetDomPrototype(definition.Type);
+            return prototype.GetConstructor(definition);
+        }
+
         public JsValue RunScript(String source, String type, String sourceUrl)
         {
             if (string.IsNullOrEmpty(type))

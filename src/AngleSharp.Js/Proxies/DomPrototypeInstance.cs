@@ -1,6 +1,7 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Js.Cache;
     using AngleSharp.Text;
     using Jint.Native.Object;
     using Jint.Native.Symbol;
@@ -20,6 +21,7 @@ namespace AngleSharp.Js
 
         private List<KeyValuePair<String, PropertyDescriptor>> _deferred;
         private Boolean _membersSet;
+        private DomConstructorInstance _constructor;
         private MethodInfo _numericIndexer;
         private MethodInfo _stringIndexer;
 
@@ -58,7 +60,25 @@ namespace AngleSharp.Js
 
                 _deferred = null;
             }
+
+            //  It is the constructor object that registers "constructor" here, and it is
+            //  only built once script names the type. A prototype reached through an
+            //  instance instead - the usual way - would otherwise lack the property.
+            var definition = _type.GetConstructorDefinition();
+
+            if (definition != null)
+            {
+                GetConstructor(definition);
+            }
         }
+
+        /// <summary>
+        /// Gets the constructor object of the type this prototype belongs to, building it
+        /// on first ask. Holding it here is what keeps the one script reads off the window
+        /// and the one an instance reports as its "constructor" the same object.
+        /// </summary>
+        public DomConstructorInstance GetConstructor(ConstructorDefinition definition) =>
+            _constructor ?? (_constructor = new DomConstructorInstance(_instance, definition));
 
         //  The prototype link is only established once the members are known, so reading it
         //  has to initialize as well - not every reader goes through a property lookup.
