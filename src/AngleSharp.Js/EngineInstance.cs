@@ -5,6 +5,7 @@ namespace AngleSharp.Js
     using AngleSharp.Text;
     using Jint;
     using Jint.Native;
+    using Jint.Native.Json;
     using Jint.Native.Object;
     using System;
     using System.Collections.Generic;
@@ -117,7 +118,10 @@ namespace AngleSharp.Js
 
         private JsValue LoadImportMap(String source)
         {
-            var importMap = _engine.Evaluate($"JSON.parse('{source}')").AsObject();
+            //  The source is page content, so it must be handed to a JSON parser rather
+            //  than pasted into a script: a single quote already breaks the parse, and
+            //  anything after a closing quote would run as script.
+            var importMap = new JsonParser(_engine).Parse(source).AsObject();
 
             if (importMap.TryGetValue("scopes", out var scopes))
             {

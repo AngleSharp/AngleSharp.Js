@@ -103,6 +103,34 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task ModuleScriptWithQuoteInImportMapShouldRun()
+        {
+            var config =
+                Configuration.Default
+                                .WithJs()
+                                .With(new MockHttpClientRequester(new Dictionary<string, string>()
+                                {
+                                    { "/example-module.js", "export function test() { document.getElementById('test').remove(); }" }
+                                }))
+                                .WithDefaultLoader(new LoaderOptions() { IsResourceLoadingEnabled = true });
+
+            var context = BrowsingContext.New(config);
+            var html = "<!doctype html><div id=test>Test</div><script type=importmap>{ \"imports\": { \"o'clock\": \"/example-module.js\" } }</script><script type=module>import { test } from \"o'clock\"; test();</script>";
+            var document = await context.OpenAsync(r => r.Content(html));
+            Assert.IsNull(document.GetElementById("test"));
+        }
+
+        [Test]
+        public async Task ImportMapContentIsNotEvaluatedAsScript()
+        {
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            var html = "<!doctype html><div id=test>Test</div><script type=importmap>{ \"imports\": {} }'); document.getElementById('test').remove(); ('</script>";
+            var document = await context.OpenAsync(r => r.Content(html));
+            Assert.IsNotNull(document.GetElementById("test"));
+        }
+
+        [Test]
         public async Task ModuleScriptWithAbsoluteUrlImportMapShouldRun()
         {
             var config =
