@@ -67,18 +67,14 @@ namespace AngleSharp.Js
 
         public override PropertyDescriptor GetOwnProperty(JsValue property)
         {
-            if (Prototype is DomPrototypeInstance prototype)
+            //  An indexer is the only thing that can turn into an own property of the node
+            //  itself. The members of the DOM interface live on the prototype, so finding
+            //  them is the engine's job - answering them here would make the node claim
+            //  every inherited member as its own.
+            if (Prototype is DomPrototypeInstance prototype &&
+                prototype.TryGetFromIndex(_value, property.ToString(), out var descriptor))
             {
-                if (prototype.TryGetFromIndex(_value, property.ToString(), out var descriptor))
-                {
-                    return descriptor;
-                }
-
-                var prototypeProperty = prototype.GetOwnProperty(property);
-                if (prototypeProperty != PropertyDescriptor.Undefined)
-                {
-                    return prototypeProperty;
-                }
+                return descriptor;
             }
 
             return base.GetOwnProperty(property);
