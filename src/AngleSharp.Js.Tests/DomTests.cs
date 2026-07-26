@@ -82,5 +82,33 @@ namespace AngleSharp.Js.Tests
             var result = await "(function () { window.console.marker = 'kept'; return window.console.marker; })()".EvalScriptAsync();
             Assert.AreEqual("kept", result);
         }
+
+        [Test]
+        public async Task InheritedMemberIsNotAnOwnPropertyOfTheNode()
+        {
+            var result = await "document.createElement('div').hasOwnProperty('firstChild')".EvalScriptAsync();
+            Assert.AreEqual("False", result);
+        }
+
+        [Test]
+        public async Task InheritedMemberIsStillVisibleOnTheNode()
+        {
+            var result = await "('firstChild' in document.documentElement) + ',' + (typeof document.documentElement.appendChild)".EvalScriptAsync();
+            Assert.AreEqual("true,function", result);
+        }
+
+        [Test]
+        public async Task InheritedAccessorStillReadsAndWrites()
+        {
+            var result = await "(function () { var d = document.createElement('div'); d.id = 'jint'; return d.id; })()".EvalScriptAsync();
+            Assert.AreEqual("jint", result);
+        }
+
+        [Test]
+        public async Task AssignedPropertyIsReportedConsistently()
+        {
+            var result = await "(function () { var d = document.createElement('div'); d.custom = 1; return d.hasOwnProperty('custom') + ',' + Object.getOwnPropertyNames(d).join(); })()".EvalScriptAsync();
+            Assert.AreEqual("true,custom", result);
+        }
     }
 }
