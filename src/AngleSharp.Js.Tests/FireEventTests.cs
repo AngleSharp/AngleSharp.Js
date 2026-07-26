@@ -157,6 +157,76 @@ document.onclick();
         }
 
         [Test]
+        public async Task ClickHandlerIsKeptPerElement()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<div id=a></div>
+<div id=b></div>
+<script>
+var log = [];
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+var f = function () { log.push('f'); };
+var g = function () { log.push('g'); };
+a.onclick = f;
+b.onclick = g;
+var aIsF = a.onclick === f;
+var bIsG = b.onclick === g;
+var shared = a.onclick === b.onclick;
+a.dispatchEvent(new MouseEvent('click'));
+b.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            Assert.IsTrue(engine.GetValue("aIsF").AsBoolean());
+            Assert.IsTrue(engine.GetValue("bIsG").AsBoolean());
+            Assert.IsFalse(engine.GetValue("shared").AsBoolean());
+
+            var log = engine.GetValue("log").AsArray();
+            Assert.AreEqual(2.0, log.Get("length").AsNumber());
+            Assert.AreEqual("f", log.Get("0").AsString());
+            Assert.AreEqual("g", log.Get("1").AsString());
+        }
+
+        [Test]
+        public async Task ClearingClickHandlerOfOneElementKeepsTheOther()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<div id=a></div>
+<div id=b></div>
+<script>
+var log = [];
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+a.onclick = function () { log.push('f'); };
+b.onclick = function () { log.push('g'); };
+a.onclick = null;
+var cleared = a.onclick === null;
+a.dispatchEvent(new MouseEvent('click'));
+b.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            Assert.IsTrue(engine.GetValue("cleared").AsBoolean());
+
+            var log = engine.GetValue("log").AsArray();
+            Assert.AreEqual(1.0, log.Get("length").AsNumber());
+            Assert.AreEqual("g", log.Get("0").AsString());
+        }
+
+        [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeInitially()
         {
             var cfg = Configuration.Default.WithJs().WithEventLoop();

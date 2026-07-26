@@ -13,8 +13,6 @@ namespace AngleSharp.Js
         private readonly EngineInstance _engine;
         private readonly MethodInfo _addHandler;
         private readonly MethodInfo _removeHandler;
-        private DomEventHandler _handler;
-        private Function _function;
 
         public DomEventInstance(EngineInstance engine, MethodInfo addHandler, MethodInfo removeHandler)
         {
@@ -29,8 +27,12 @@ namespace AngleSharp.Js
 
         public ClrFunction Setter { get; }
 
-        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments) =>
-            _function ?? JsValue.Null;
+        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments)
+        {
+            var node = thisObject.As<DomNodeInstance>();
+            var registration = node?.GetEventHandler(this);
+            return registration?.Function ?? JsValue.Null;
+        }
 
         private JsValue SetEventHandler(JsValue thisObject, JsValue[] arguments)
         {
@@ -38,28 +40,50 @@ namespace AngleSharp.Js
 
             if (node != null)
             {
-                if (_handler != null)
+                var previous = node.RemoveEventHandler(this);
+
+                if (previous != null)
                 {
-                    _removeHandler?.Invoke(node.Value, new Object[] { _handler });
-                    _handler = null;
-                    _function = null;
+                    _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
                 }
 
-                if (arguments[0] is Function)
+                if (arguments[0] is Function function)
                 {
-                    _function = arguments[0].As<Function>();
-                    _handler = (s, ev) =>
+                    DomEventHandler handler = (s, ev) =>
                     {
                         var sender = s.ToJsValue(_engine);
                         var args = ev.ToJsValue(_engine);
-                        _function.Call(sender, new[] { args });
+                        function.Call(sender, new[] { args });
                     };
 
-                    _addHandler?.Invoke(node.Value, new Object[] { _handler });
+                    node.SetEventHandler(this, new Registration(function, handler));
+                    _addHandler?.Invoke(node.Value, new Object[] { handler });
                 }
             }
 
             return arguments[0];
+        }
+
+        /// <summary>
+        /// The handler currently assigned to a single node for a single event.
+        /// </summary>
+        public sealed class Registration
+        {
+            public Registration(Function function, DomEventHandler handler)
+            {
+                Function = function;
+                Handler = handler;
+            }
+
+            /// <summary>
+            /// The function that was assigned, as it has to be handed back on read.
+            /// </summary>
+            public Function Function { get; }
+
+            /// <summary>
+            /// The listener that was subscribed, as it has to be handed back on removal.
+            /// </summary>
+            public DomEventHandler Handler { get; }
         }
     }
 }
