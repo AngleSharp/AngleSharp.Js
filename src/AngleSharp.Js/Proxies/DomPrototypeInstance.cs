@@ -222,8 +222,8 @@ namespace AngleSharp.Js
                         SetMethod(name, property.GetMethod);
                     }
 
-                    // methods were set, so finish processing
-                    return;
+                    // methods were set, so continue with the next property
+                    continue;
                 }
 
                 if (accessor == Accessors.Getter || accessor == Accessors.Setter || Array.Exists(names, m => m.Is("item")))
