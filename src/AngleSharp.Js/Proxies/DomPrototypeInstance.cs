@@ -16,31 +16,82 @@ namespace AngleSharp.Js
         private readonly String _name;
         private readonly EngineInstance _instance;
         private readonly Type _type;
+        private readonly Type _baseType;
 
+        private List<KeyValuePair<String, PropertyDescriptor>> _deferred;
+        private Boolean _membersSet;
         private MethodInfo _numericIndexer;
         private MethodInfo _stringIndexer;
 
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
         {
-            var baseType = type.GetTypeInfo().BaseType ?? typeof(Object);
-            _name = type.GetOfficialName(baseType);
+            _baseType = type.GetTypeInfo().BaseType ?? typeof(Object);
+            _name = type.GetOfficialName(_baseType);
             _instance = engine;
             _type = type;
+        }
+
+        //  A document uses a handful of the DOM types an assembly exposes, but a prototype
+        //  is created for every one of them. Reflecting over the whole type tree is by far
+        //  the most expensive part of that, so it waits until the prototype is looked at.
+        //  Jint calls this before serving any property, and marks the instance initialized
+        //  beforehand, so the registration below can use the object as usual.
+        protected override void Initialize()
+        {
+            _membersSet = true;
 
             Set(GlobalSymbolRegistry.ToStringTag, _name);
 
-            SetAllMembers(type);
+            SetAllMembers(_type);
             SetExtensionMembers();
 
             //  DOM objects can have properties added dynamically
-            Prototype = engine.GetDomPrototype(baseType);
+            Prototype = _instance.GetDomPrototype(_baseType);
+
+            if (_deferred != null)
+            {
+                foreach (var property in _deferred)
+                {
+                    FastSetProperty(property.Key, property.Value);
+                }
+
+                _deferred = null;
+            }
+        }
+
+        //  The prototype link is only established once the members are known, so reading it
+        //  has to initialize as well - not every reader goes through a property lookup.
+        protected override ObjectInstance GetPrototypeOf()
+        {
+            EnsureInitialized();
+            return base.GetPrototypeOf();
+        }
+
+        /// <summary>
+        /// Defines a property on the prototype without forcing its members to be
+        /// registered. The property is applied after the members, so it keeps
+        /// overriding a member of the same name.
+        /// </summary>
+        public void DefineDeferredProperty(String name, PropertyDescriptor descriptor)
+        {
+            if (_membersSet)
+            {
+                FastSetProperty(name, descriptor);
+            }
+            else
+            {
+                _deferred = _deferred ?? new List<KeyValuePair<String, PropertyDescriptor>>();
+                _deferred.Add(new KeyValuePair<String, PropertyDescriptor>(name, descriptor));
+            }
         }
 
         public Boolean TryGetFromIndex(Object value, String index, out PropertyDescriptor result)
         {
             //  If we have a numeric indexer and the property is numeric
             result = default;
+
+            EnsureInitialized();
 
             if (_numericIndexer != null && Int32.TryParse(index, out var numericIndex))
             {

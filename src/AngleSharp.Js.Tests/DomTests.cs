@@ -28,6 +28,20 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task PrototypeChainOfElementIsBuiltCompletely()
+        {
+            var result = await "(function () { var p = Object.getPrototypeOf(document.createElement('div')), t = []; while (p) { t.push(p[Symbol.toStringTag]); p = Object.getPrototypeOf(p); } return t.join(); })()".EvalScriptAsync();
+            Assert.AreEqual("HTMLDivElement,HTMLElement,Element,Node,EventTarget,", result);
+        }
+
+        [Test]
+        public async Task ConstructorPropertyOfPrototypeRefersBackToTheConstructor()
+        {
+            var result = await "HTMLDivElement.prototype.constructor === HTMLDivElement".EvalScriptAsync();
+            Assert.AreEqual("True", result);
+        }
+
+        [Test]
         public async Task NumericIndexerOfHtmlCollectionYieldsTheElement()
         {
             var result = await "document.getElementsByTagName('script')[0].nodeName".EvalScriptAsync();

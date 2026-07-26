@@ -22,7 +22,19 @@ namespace AngleSharp.Js
             _instance = engine;
             FastSetProperty("toString", new PropertyDescriptor(toString, true, false, true));
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
-            _objectPrototype.FastSetProperty("constructor", new PropertyDescriptor(this, true, false, true));
+
+            var constructor = new PropertyDescriptor(this, true, false, true);
+
+            //  Every exposed type gets a constructor, so writing this directly would make
+            //  each of their prototypes register its members right away.
+            if (_objectPrototype is DomPrototypeInstance domPrototype)
+            {
+                domPrototype.DefineDeferredProperty("constructor", constructor);
+            }
+            else
+            {
+                _objectPrototype.FastSetProperty("constructor", constructor);
+            }
         }
 
         public DomConstructorInstance(EngineInstance engine, ConstructorInfo constructor)
