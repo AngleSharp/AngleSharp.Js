@@ -114,6 +114,30 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task RunSameScriptSourceInSeveralDocumentsKeepsStateSeparate()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJs();
+            var source = "(function () { window.counter = (window.counter || 0) + 1; return window.counter; })()";
+            var first = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var second = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+
+            Assert.AreEqual(1.0, first.ExecuteScript(source));
+            Assert.AreEqual(1.0, second.ExecuteScript(source));
+            Assert.AreEqual(2.0, first.ExecuteScript(source));
+            Assert.AreEqual(2.0, second.ExecuteScript(source));
+        }
+
+        [Test]
+        public async Task RunScriptSnippetWithSyntaxErrorThrows()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJs();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            Assert.Throws<JavaScriptException>(() => document.ExecuteScript("function ("));
+        }
+
+        [Test]
         public async Task RunScriptAtPressingLink_Issue47()
         {
             var html = "<!doctype html><pre id=test></pre><a href=\"javascript:document.querySelector('#test').textContent='success';\">Test</a>";
