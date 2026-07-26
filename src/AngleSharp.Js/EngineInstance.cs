@@ -2,6 +2,7 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
     using AngleSharp.Io;
+    using AngleSharp.Js.Cache;
     using AngleSharp.Text;
     using Jint;
     using Jint.Native;
@@ -85,7 +86,7 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
-        public JsValue RunScript(String source, String type, String sourceUrl, JsValue context)
+        public JsValue RunScript(String source, String type, String sourceUrl)
         {
             if (string.IsNullOrEmpty(type))
             {
@@ -96,7 +97,10 @@ namespace AngleSharp.Js
             {
                 if (MimeTypeNames.IsJavaScript(type))
                 {
-                    return _engine.Evaluate(source);
+                    var prepared = ScriptCache.GetOrCreate(source);
+                    //  An invalid result means the source did not parse; hand it to the
+                    //  engine as text so the syntax error is reported as usual.
+                    return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source);
                 }
                 else if (type.Isi("importmap"))
                 {
