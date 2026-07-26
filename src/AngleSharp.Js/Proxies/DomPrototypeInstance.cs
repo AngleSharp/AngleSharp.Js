@@ -15,9 +15,10 @@ namespace AngleSharp.Js
     {
         private readonly String _name;
         private readonly EngineInstance _instance;
+        private readonly Type _type;
 
-        private PropertyInfo _numericIndexer;
-        private PropertyInfo _stringIndexer;
+        private MethodInfo _numericIndexer;
+        private MethodInfo _stringIndexer;
 
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
@@ -25,6 +26,7 @@ namespace AngleSharp.Js
             var baseType = type.GetTypeInfo().BaseType ?? typeof(Object);
             _name = type.GetOfficialName(baseType);
             _instance = engine;
+            _type = type;
 
             Set(GlobalSymbolRegistry.ToStringTag, _name);
 
@@ -45,7 +47,7 @@ namespace AngleSharp.Js
                 try
                 {
                     var args = new Object[] { numericIndex };
-                    var orig = _numericIndexer.GetMethod.Invoke(value, args);
+                    var orig = _numericIndexer.Invoke(value, args);
                     result = new PropertyDescriptor(orig.ToJsValue(_instance), false, false, false);
                     return true;
                 }
@@ -70,7 +72,7 @@ namespace AngleSharp.Js
             if (_stringIndexer != null && !HasProperty(index))
             {
                 var args = new Object[] { index };
-                var valueAtIndex = _stringIndexer.GetMethod.Invoke(value, args);
+                var valueAtIndex = _stringIndexer.Invoke(value, args);
 
                 if (valueAtIndex == null)
                 {
@@ -229,17 +231,52 @@ namespace AngleSharp.Js
 
         private void SetIndexer(PropertyInfo property, ParameterInfo[] indexParameters)
         {
-            if (indexParameters.Length == 1)
+            if (indexParameters.Length != 1)
             {
-                if (indexParameters[0].ParameterType == typeof(Int32))
-                {
-                    _numericIndexer = property;
-                }
-                else if (indexParameters[0].ParameterType == typeof(String))
-                {
-                    _stringIndexer = property;
-                }
+                return;
             }
+
+            var getter = ResolveAccessor(property.GetMethod);
+
+            if (getter == null)
+            {
+                return;
+            }
+
+            if (indexParameters[0].ParameterType == typeof(Int32))
+            {
+                _numericIndexer = getter;
+            }
+            else if (indexParameters[0].ParameterType == typeof(String))
+            {
+                _stringIndexer = getter;
+            }
+        }
+
+        private MethodInfo ResolveAccessor(MethodInfo accessor)
+        {
+            //  An interface may re-implement a member of one of its own base interfaces
+            //  explicitly, e.g. "T IReadOnlyList<T>.this[Int32 index]" declared on an
+            //  IHtmlCollection<T>. Such a member is private and abstract - invoking it
+            //  reflectively throws an EntryPointNotFoundException because the actual
+            //  implementation lives in a different slot. Resolve it against the type the
+            //  prototype was created for, which is where the implementation can be found.
+            if (accessor == null || accessor.IsPublic)
+            {
+                return accessor;
+            }
+
+            var name = accessor.Name;
+            var simpleName = name.Substring(name.LastIndexOf('.') + 1);
+            var parameters = accessor.GetParameters();
+            var parameterTypes = new Type[parameters.Length];
+
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                parameterTypes[i] = parameters[i].ParameterType;
+            }
+
+            return _type.GetRuntimeMethod(simpleName, parameterTypes) ?? accessor;
         }
 
         private void SetMethod(String name, MethodInfo method)
