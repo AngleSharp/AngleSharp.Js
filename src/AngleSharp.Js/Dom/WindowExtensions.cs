@@ -18,6 +18,8 @@ namespace AngleSharp.Js.Dom
     {
         private static readonly ConditionalWeakTable<IWindow, Console> Consoles =
             new ConditionalWeakTable<IWindow, Console>();
+        private static readonly ConditionalWeakTable<IWindow, Worker> WorkerOwners =
+            new ConditionalWeakTable<IWindow, Worker>();
 
         /// <summary>
         /// Posts a message.
@@ -25,10 +27,27 @@ namespace AngleSharp.Js.Dom
         [DomName("postMessage")]
         public static void PostMessage(this IWindow window, String message, String targetOrigin = "*", Object transfer = null)
         {
+            if (WorkerOwners.TryGetValue(window, out var owner))
+            {
+                owner.PostMessageToOwner(message);
+                return;
+            }
+
             var ev = new MessageEvent("message", false, false, message, targetOrigin);
             var document = window.Document;
             var loop = document.Context.GetService<IEventLoop>();
             loop.EnqueueAsync(_ => window.Fire(ev));
+        }
+
+        internal static void RegisterWorkerWindow(IWindow workerWindow, Worker owner)
+        {
+            if (workerWindow == null || owner == null)
+            {
+                return;
+            }
+
+            WorkerOwners.Remove(workerWindow);
+            WorkerOwners.Add(workerWindow, owner);
         }
 
         /// <summary>

@@ -10,6 +10,7 @@ Released on ?.
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname
 - Added `JsScriptingOptions` to tune the engine via `WithJs` (#75) @lahma
+- Added support for Web Workers (#78)
 
 # 0.15.0
 
