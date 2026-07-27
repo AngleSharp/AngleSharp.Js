@@ -2,8 +2,10 @@ namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Html.Parser;
     using AngleSharp.Scripting;
     using Jint;
+    using Jint.Native;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -36,6 +38,59 @@ namespace AngleSharp.Js.Tests
             var result = engine.Invoke(square, 4);
             Assert.AreEqual(Types.Number, result.Type);
             Assert.AreEqual(16.0, result.AsNumber());
+        }
+
+        [Test]
+        public async Task InvokeFunctionWithCSharpCreatedElement()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script>function f1(element) { document.body.appendChild(element); }</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var section = document.CreateElement("section");
+            var f1 = engine.GetValue("f1");
+            var jsSection = JsValue.FromObject(engine, section);
+
+            engine.Invoke(f1, jsSection);
+
+            Assert.AreSame(section, document.Body.LastElementChild);
+            //  One node, one JS object: were a hand-over to mint a fresh proxy, the expandos and
+            //  the event handlers script attached through the previous one would be lost.
+            Assert.AreSame(jsSection, JsValue.FromObject(engine, section));
+            Assert.AreSame(jsSection, engine.Evaluate("document.body.lastElementChild"));
+        }
+
+        [Test]
+        public async Task InvokeFunctionWithCSharpCreatedElementUsesDomMembers()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script>function f1(element) { element.textContent = element.tagName; }</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var section = document.CreateElement("section");
+
+            engine.Invoke(engine.GetValue("f1"), section);
+
+            Assert.AreEqual("SECTION", section.TextContent);
+        }
+
+        [Test]
+        public async Task ExternalNonDomObjectKeepsItsClrMembers()
+        {
+            //  A parser is an EventTarget, but it is not part of the DOM - a host object reaches
+            //  script the way every other host object does, through its CLR members.
+            var service = new JsScriptingService();
+            service.External.Add("parser", new HtmlParser());
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script></script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            var result = engine.Evaluate("typeof parser.ParseDocument");
+
+            Assert.AreEqual("function", result.AsString());
         }
 
         [Test]

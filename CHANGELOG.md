@@ -3,6 +3,7 @@
 Released on ?.
 
 - Fixed `StackOverflowException` from deeply recursive scripts (#75) @lahma
+- Fixed invoking JavaScript functions with DOM objects created in C#, which reached script as a plain CLR wrapper instead of as the DOM object (#76)
 - Fixed usage of document ready state (#87) @Sebbs128
 - Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
 - Fixed missing `parent` on Window objects (#68)
