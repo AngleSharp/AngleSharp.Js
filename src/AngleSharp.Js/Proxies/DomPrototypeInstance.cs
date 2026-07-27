@@ -3,6 +3,7 @@ namespace AngleSharp.Js
     using AngleSharp.Attributes;
     using AngleSharp.Js.Cache;
     using AngleSharp.Text;
+    using Jint.Native;
     using Jint.Native.Object;
     using Jint.Native.Symbol;
     using Jint.Runtime.Descriptors;
@@ -24,7 +25,8 @@ namespace AngleSharp.Js
         private Boolean _membersSet;
         private DomConstructorInstance _constructor;
         private Indexer _numericIndexer;
-        private Indexer _stringIndexer;
+        private Indexer _stringIndexerGetter;
+        private Indexer _stringIndexerSetter;
 
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
@@ -150,19 +152,49 @@ namespace AngleSharp.Js
             //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
-            if (_stringIndexer != null && !HasProperty(index))
+            if (_stringIndexerGetter != null && !HasProperty(index))
             {
                 var args = new Object[] { index };
-                var valueAtIndex = _stringIndexer.Invoke(value, args);
+                var valueAtIndex = _stringIndexerGetter.Invoke(value, args);
 
-                if (valueAtIndex == null)
+                if (valueAtIndex == null && _stringIndexerSetter == null)
                 {
                     result = PropertyDescriptor.Undefined;
                     return false;
                 }
 
-                var prop = valueAtIndex.ToJsValue(_instance);
-                result = new PropertyDescriptor(prop, false, false, false);
+                var getter = new ClrFunction(_instance.Jint, index, (obj, values) =>
+                {
+                    var current = _stringIndexerGetter.Invoke(value, args);
+                    return current == null ? JsValue.Undefined : current.ToJsValue(_instance);
+                });
+
+                ClrFunction setter = null;
+
+                if (_stringIndexerSetter != null)
+                {
+                    setter = new ClrFunction(_instance.Jint, index, (obj, values) =>
+                    {
+                        var valueToSet = values.Length > 0 ? values[0] : JsValue.Undefined;
+                        _stringIndexerSetter.Invoke(value, new Object[] { index, valueToSet }, _instance);
+                        return valueToSet;
+                    });
+                }
+
+                result = new GetSetPropertyDescriptor(getter, setter, false, false);
+                return true;
+            }
+
+            return false;
+        }
+
+        public Boolean TrySetToIndex(Object value, String index, JsValue newValue)
+        {
+            EnsureInitialized();
+
+            if (_stringIndexerSetter != null && !HasProperty(index))
+            {
+                _stringIndexerSetter.Invoke(value, new Object[] { index, newValue }, _instance);
                 return true;
             }
 
@@ -256,7 +288,9 @@ namespace AngleSharp.Js
                     continue;
                 }
 
-                if (accessor == Accessors.Getter || accessor == Accessors.Setter || Array.Exists(names, m => m.Is("item")))
+                var isIndexedAccessor = accessor.HasValue && (accessor.Value & (Accessors.Getter | Accessors.Setter)) != 0;
+
+                if (isIndexedAccessor || Array.Exists(names, m => m.Is("item")))
                 {
                     SetIndexer(property, indexParameters);
                 }
@@ -318,19 +352,26 @@ namespace AngleSharp.Js
             }
 
             var getter = property.GetMethod;
-
-            if (getter == null)
-            {
-                return;
-            }
+            var setter = property.SetMethod;
 
             if (indexParameters[0].ParameterType == typeof(Int32))
             {
-                _numericIndexer = new Indexer(getter);
+                if (getter != null)
+                {
+                    _numericIndexer = new Indexer(getter);
+                }
             }
             else if (indexParameters[0].ParameterType == typeof(String))
             {
-                _stringIndexer = new Indexer(getter);
+                if (getter != null)
+                {
+                    _stringIndexerGetter = new Indexer(getter);
+                }
+
+                if (setter != null)
+                {
+                    _stringIndexerSetter = new Indexer(setter);
+                }
             }
         }
 
@@ -373,8 +414,32 @@ namespace AngleSharp.Js
                 _resolved = declared.IsPublic ? null : new ConcurrentDictionary<Type, MethodInfo>();
             }
 
-            public Object Invoke(Object target, Object[] arguments) =>
-                Resolve(target.GetType()).Invoke(target, arguments);
+            public Object Invoke(Object target, Object[] arguments, EngineInstance engine = null)
+            {
+                var method = Resolve(target.GetType());
+
+                if (engine != null)
+                {
+                    var parameters = method.GetParameters();
+                    var converted = new Object[arguments.Length];
+
+                    for (var i = 0; i < arguments.Length; i++)
+                    {
+                        if (arguments[i] is JsValue value)
+                        {
+                            converted[i] = value.As(parameters[i].ParameterType, engine);
+                        }
+                        else
+                        {
+                            converted[i] = arguments[i];
+                        }
+                    }
+
+                    arguments = converted;
+                }
+
+                return method.Invoke(target, arguments);
+            }
 
             private MethodInfo Resolve(Type targetType) =>
                 _resolved == null ? _declared : _resolved.GetOrAdd(targetType, ResolveCore);

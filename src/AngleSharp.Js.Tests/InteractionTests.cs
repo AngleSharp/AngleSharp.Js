@@ -158,6 +158,35 @@ namespace AngleSharp.Js.Tests
                 .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
         }
 
+        [Test]
+        public async Task RunJavaScriptFunctionFromCSharpUpdatesDataset_Issue77()
+        {
+            var service = new JsScriptingService();
+            var config = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<script>
+function test() {
+    var element = document.querySelector('section');
+    element.dataset.level = '2';
+    element.dataset.title = 'section 2';
+    return 'test executed';
+}
+</script>
+<section data-level='1' data-title='section 1'></section>";
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var test = engine.GetValue("test");
+            var result = engine.Invoke(test);
+            var section = document.QuerySelector<IHtmlElement>("section");
+
+            Assert.AreEqual(Types.String, result.Type);
+            Assert.AreEqual("test executed", result.AsString());
+            Assert.AreEqual("2", section.Dataset["level"]);
+            Assert.AreEqual("section 2", section.Dataset["title"]);
+            Assert.AreEqual("2", section.GetAttribute("data-level"));
+            Assert.AreEqual("section 2", section.GetAttribute("data-title"));
+        }
+
         class Person
         {
             public String Name

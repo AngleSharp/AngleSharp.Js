@@ -82,6 +82,16 @@ namespace AngleSharp.Js
 
         protected override void SetOwnProperty(JsValue property, PropertyDescriptor desc)
         {
+            if (Prototype is DomPrototypeInstance prototype)
+            {
+                var value = desc.Value;
+
+                if (prototype.TrySetToIndex(_value, property.ToString(), value))
+                {
+                    return;
+                }
+            }
+
             base.SetOwnProperty(property, desc);
 
             if (_value is IWindow)

@@ -1,12 +1,13 @@
 # 1.0.0
 
-Released on ?.
+Released on Thursday, July 31 2026.
 
 - Fixed `StackOverflowException` from deeply recursive scripts (#75) @lahma
 - Fixed usage of document ready state (#87) @Sebbs128
 - Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
 - Fixed missing `parent` on Window objects (#68)
 - Fixed missing `NodeFilter` (#101)
+- Fixed dataset updates from C#-invoked JavaScript functions not reflected in DOM (#77)
 - Fixed XMLHttpRequest handling for relative URLs and failed requests
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
