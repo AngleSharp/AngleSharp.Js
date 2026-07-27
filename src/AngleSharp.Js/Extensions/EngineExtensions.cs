@@ -100,13 +100,15 @@ namespace AngleSharp.Js
 
             for (var i = 0; i < n; i++)
             {
-                if (parameters[i].IsOptional && arguments[i].IsUndefined())
+                var parameter = parameters[i + offset];
+
+                if (parameter.IsOptional && arguments[i].IsUndefined())
                 {
-                    args[i + offset] = parameters[i].DefaultValue;
+                    args[i + offset] = parameter.DefaultValue;
                 }
                 else
                 {
-                    args[i + offset] = arguments[i].As(parameters[i].ParameterType, context);
+                    args[i + offset] = arguments[i].As(parameter.ParameterType, context);
                 }
             }
 

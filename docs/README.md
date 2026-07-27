@@ -2,4 +2,4 @@
 
 We have more detailed information regarding the following subjects:
 
-- [API Documentation](tutorials/01-API.md)
+- [Getting Started](general/01-Basics.md)

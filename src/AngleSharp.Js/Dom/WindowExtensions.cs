@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Dom
 {
+    using AngleSharp;
     using AngleSharp.Attributes;
     using AngleSharp.Browser;
     using AngleSharp.Dom;
@@ -17,6 +18,8 @@ namespace AngleSharp.Js.Dom
     {
         private static readonly ConditionalWeakTable<IWindow, Console> Consoles =
             new ConditionalWeakTable<IWindow, Console>();
+        private static readonly ConditionalWeakTable<IWindow, Worker> WorkerOwners =
+            new ConditionalWeakTable<IWindow, Worker>();
 
         /// <summary>
         /// Posts a message.
@@ -24,10 +27,38 @@ namespace AngleSharp.Js.Dom
         [DomName("postMessage")]
         public static void PostMessage(this IWindow window, String message, String targetOrigin = "*", Object transfer = null)
         {
+            if (WorkerOwners.TryGetValue(window, out var owner))
+            {
+                owner.PostMessageToOwner(message);
+                return;
+            }
+
             var ev = new MessageEvent("message", false, false, message, targetOrigin);
             var document = window.Document;
             var loop = document.Context.GetService<IEventLoop>();
             loop.EnqueueAsync(_ => window.Fire(ev));
+        }
+
+        internal static void RegisterWorkerWindow(IWindow workerWindow, Worker owner)
+        {
+            if (workerWindow == null || owner == null)
+            {
+                return;
+            }
+
+            WorkerOwners.Remove(workerWindow);
+            WorkerOwners.Add(workerWindow, owner);
+        }
+
+        /// <summary>
+        /// Gets the parent window context.
+        /// </summary>
+        [DomName("parent")]
+        [DomAccessor(Accessors.Getter)]
+        public static IWindow Parent(this IWindow window)
+        {
+            var context = window.Document.Context;
+            return GetWindow(context?.Parent) ?? window;
         }
 
         /// <summary>
@@ -35,7 +66,17 @@ namespace AngleSharp.Js.Dom
         /// </summary>
         [DomName("top")]
         [DomAccessor(Accessors.Getter)]
-        public static IWindow Top(this IWindow window) => window.Document.Context?.Creator?.DefaultView;
+        public static IWindow Top(this IWindow window)
+        {
+            var context = window.Document.Context;
+
+            while (context?.Parent != null)
+            {
+                context = context.Parent;
+            }
+
+            return GetWindow(context) ?? window;
+        }
 
         /// <summary>
         /// Gets the console instance. The same instance is returned for the same
@@ -75,5 +116,7 @@ namespace AngleSharp.Js.Dom
 
             return imageElement;
         }
+
+        private static IWindow GetWindow(IBrowsingContext context) => context?.Active?.DefaultView;
     }
 }
