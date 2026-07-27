@@ -16,5 +16,13 @@ namespace AngleSharp.Js
         /// an uncatchable StackOverflowException.
         /// </summary>
         public Int32 MaxCallStackDepth { get; set; } = 10000;
+
+        //  An engine is built per window, long after the options were handed over, so
+        //  reading them then would let a later edit of the caller's object decide how
+        //  the next document behaves. The service takes this copy instead.
+        internal JsScriptingOptions Clone() => new JsScriptingOptions
+        {
+            MaxCallStackDepth = MaxCallStackDepth,
+        };
     }
 }

@@ -40,14 +40,15 @@ namespace AngleSharp.Scripting
         }
 
         /// <summary>
-        /// Creates a new JavaScript engine using the given options.
+        /// Creates a new JavaScript engine using the given options. The options
+        /// are copied, so that editing them afterwards leaves this engine alone.
         /// </summary>
         /// <param name="options">The options tuning the engine.</param>
         public JsScriptingService(JsScriptingOptions options)
         {
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _options = (options ?? throw new ArgumentNullException(nameof(options))).Clone();
         }
 
         #endregion

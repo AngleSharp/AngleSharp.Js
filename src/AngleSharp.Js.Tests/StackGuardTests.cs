@@ -14,6 +14,10 @@ namespace AngleSharp.Js.Tests
         //  tests below cannot assert anything weaker than "we got here at all".
         private const String RunawayRecursion = "function boom() { return boom(); } boom();";
 
+        //  Deeper than a 1 MB stack holds, so the engine has to keep going on a fresh one
+        //  instead of reporting the depth as an error.
+        private const String DeepRecursion = "function depth(n) { return n === 0 ? 0 : 1 + depth(n - 1); } depth(1500);";
+
         [Test]
         public async Task RunawayRecursionInPageScriptDoesNotEscapeOpenAsync()
         {
@@ -50,9 +54,25 @@ namespace AngleSharp.Js.Tests
                 .WithEventLoop();
 
             var document = await BrowsingContext.New(config).OpenNewAsync();
-            //  Deeper than a 1 MB stack holds, so the engine has to keep going on a fresh
-            //  one instead of reporting the depth as an error.
-            var result = document.ExecuteScript("function depth(n) { return n === 0 ? 0 : 1 + depth(n - 1); } depth(1500);");
+            var result = document.ExecuteScript(DeepRecursion);
+
+            Assert.AreEqual(1500.0, result);
+        }
+
+        [Test]
+        public async Task EditingTheOptionsAfterwardsLeavesTheServiceAlone()
+        {
+            var options = new JsScriptingOptions();
+            var config = Configuration.Default
+                .WithJs(options)
+                .WithEventLoop();
+
+            //  The engine is only built once a document asks for it, so an edit landing
+            //  in between must not be the one deciding how that document behaves.
+            options.MaxCallStackDepth = 200;
+
+            var document = await BrowsingContext.New(config).OpenNewAsync();
+            var result = document.ExecuteScript(DeepRecursion);
 
             Assert.AreEqual(1500.0, result);
         }
