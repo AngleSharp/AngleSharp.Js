@@ -5,6 +5,7 @@ using Jint.Native.Object;
 using Jint.Runtime.Descriptors;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -13,6 +14,8 @@ namespace AngleSharp.Js.Cache
     static class CreatorCache
     {
         private static readonly ConcurrentDictionary<Type, ConstructorDefinition> _constructorDefinitions = new();
+        private static readonly ConcurrentDictionary<Type, EnumLiteralDefinition> _enumLiteralDefinitions = new();
+        private static readonly ConcurrentDictionary<Assembly, ISet<String>> _nonEnumTypeNames = new();
 
         /// <summary>
         /// Gets what is needed to build the constructor object for a type, or null if the
@@ -37,6 +40,77 @@ namespace AngleSharp.Js.Cache
             }
 
             return definition;
+        }
+
+        /// <summary>
+        /// Gets what is needed to publish an enum as a standalone DOM literal object,
+        /// or null if the enum should not be exposed that way.
+        /// </summary>
+        public static EnumLiteralDefinition GetEnumLiteralDefinition(this Type type)
+        {
+            if (!_enumLiteralDefinitions.TryGetValue(type, out var definition))
+            {
+                var ti = type.GetTypeInfo();
+
+                if (ti.IsEnum)
+                {
+                    var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+
+                    if (name != null)
+                    {
+                        var typeNames = GetNonEnumTypeNames(type.GetAssembly());
+
+                        if (!typeNames.Contains(name))
+                        {
+                            var members = ti.DeclaredFields
+                                .Where(m => m.IsLiteral)
+                                .Select(m => new EnumLiteralMember(
+                                    m.GetCustomAttribute<DomNameAttribute>()?.OfficialName,
+                                    m.GetRawConstantValue()))
+                                .Where(m => m.Name != null)
+                                .ToArray();
+
+                            if (members.Length > 0)
+                            {
+                                definition = new EnumLiteralDefinition(name, members);
+                            }
+                        }
+                    }
+                }
+
+                _enumLiteralDefinitions.TryAdd(type, definition);
+            }
+
+            return definition;
+        }
+
+        private static ISet<String> GetNonEnumTypeNames(Assembly assembly)
+        {
+            if (!_nonEnumTypeNames.TryGetValue(assembly, out var names))
+            {
+                names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var exportedType in assembly.ExportedTypes)
+                {
+                    var ti = exportedType.GetTypeInfo();
+
+                    if (ti.IsEnum)
+                    {
+                        continue;
+                    }
+
+                    var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+
+                    if (name != null)
+                    {
+                        names.Add(name);
+                    }
+                }
+
+                _nonEnumTypeNames.TryAdd(assembly, names);
+            }
+
+            return names;
         }
 
         private static readonly ConcurrentDictionary<Type, Action<EngineInstance, ObjectInstance>> _constructorFunctionActions = new();
@@ -107,6 +181,32 @@ namespace AngleSharp.Js.Cache
 
             return action;
         }
+    }
+
+    sealed class EnumLiteralDefinition
+    {
+        public EnumLiteralDefinition(String name, EnumLiteralMember[] members)
+        {
+            Name = name;
+            Members = members;
+        }
+
+        public String Name { get; }
+
+        public EnumLiteralMember[] Members { get; }
+    }
+
+    readonly struct EnumLiteralMember
+    {
+        public EnumLiteralMember(String name, Object value)
+        {
+            Name = name;
+            Value = value;
+        }
+
+        public String Name { get; }
+
+        public Object Value { get; }
     }
 
     /// <summary>

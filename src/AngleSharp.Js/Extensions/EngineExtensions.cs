@@ -5,6 +5,7 @@ namespace AngleSharp.Js
     using AngleSharp.Js.Cache;
     using Jint;
     using Jint.Native;
+    using Jint.Native.Number;
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
@@ -195,6 +196,32 @@ namespace AngleSharp.Js
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
+            var enumDefinition = type.GetEnumLiteralDefinition();
+
+            if (enumDefinition != null)
+            {
+                var target = obj.Get(enumDefinition.Name) as ObjectInstance;
+
+                if (target == null)
+                {
+                    target = engine.Jint.Intrinsics.Object.Construct(Array.Empty<JsValue>(), JsValue.Undefined);
+                    obj.FastSetProperty(enumDefinition.Name, new PropertyDescriptor(target, false, true, false));
+                }
+
+                foreach (var member in enumDefinition.Members)
+                {
+                    var constant = JsNumber.Create(Convert.ToDouble(member.Value));
+
+                    target.FastSetProperty(member.Name, new PropertyDescriptor(
+                        constant,
+                        false,
+                        true,
+                        false));
+                }
+
+                return;
+            }
+
             var definition = type.GetConstructorDefinition();
 
             if (definition != null)

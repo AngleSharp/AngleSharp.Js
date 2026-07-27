@@ -77,5 +77,12 @@ namespace AngleSharp.Js.Tests
             var result = await "document.querySelector('script') === document.getElementsByTagName('body')[0]".EvalScriptAsync();
             Assert.AreEqual("False", result);
         }
+
+        [Test]
+        public async Task NodeFilterIsAvailableForCreateNodeIterator_Issue101()
+        {
+            var result = await "(function () { var d = new DOMParser().parseFromString('<!doctype html><html><body><div></div></body></html>', 'text/html'); var it = d.createNodeIterator(d.body, NodeFilter.SHOW_ELEMENT, null); return typeof NodeFilter + ',' + (it.referenceNode === d.body); })()".EvalScriptAsync();
+            Assert.AreEqual("object,true", result);
+        }
     }
 }

@@ -1,10 +1,12 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Attributes;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
     using Jint.Runtime.Interop;
+    using System.Linq;
     using System;
     using System.Reflection;
 
@@ -103,6 +105,27 @@ namespace AngleSharp.Js
                 else if (targetType == typeof(UInt16))
                 {
                     return TypeConverter.ToUint16(value);
+                }
+                else if (targetType.GetTypeInfo().IsEnum)
+                {
+                    if (value.IsString())
+                    {
+                        var literal = TypeConverter.ToString(value);
+                        var member = targetType
+                            .GetTypeInfo()
+                            .DeclaredFields
+                            .Where(m => m.IsLiteral)
+                            .FirstOrDefault(m => m.GetCustomAttribute<DomNameAttribute>()?.OfficialName == literal || m.Name == literal);
+
+                        if (member != null)
+                        {
+                            return Enum.Parse(targetType, member.Name);
+                        }
+                    }
+
+                    var underlyingType = Enum.GetUnderlyingType(targetType);
+                    var raw = Convert.ChangeType(TypeConverter.ToNumber(value), underlyingType);
+                    return Enum.ToObject(targetType, raw);
                 }
                 else
                 {
