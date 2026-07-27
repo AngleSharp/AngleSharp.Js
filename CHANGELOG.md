@@ -2,6 +2,8 @@
 
 Released on ?.
 
+- Fixed `StackOverflowException` from deeply recursive scripts (#75)
+- Added `JsScriptingOptions` to tune the engine via `WithJs` (#75)
 - Fixed usage of document ready state (#87) @Sebbs128
 - Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
 - Updated to use AngleSharp v1

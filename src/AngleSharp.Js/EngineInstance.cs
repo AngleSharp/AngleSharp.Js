@@ -16,6 +16,9 @@ namespace AngleSharp.Js
     {
         #region Fields
 
+        //  Jint's StackGuard.Disabled, which is internal.
+        private const Int32 StackGuardDisabled = -1;
+
         private readonly Engine _engine;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
@@ -27,13 +30,18 @@ namespace AngleSharp.Js
 
         #region ctor
 
-        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
+        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
         {
             _importMap = new JsImportMap();
 
-            _engine = new Engine((options) =>
+            _engine = new Engine((o) =>
             {
-                options.EnableModules(new JsModuleLoader(this, window.Document, false));
+                o.EnableModules(new JsModuleLoader(this, window.Document, false));
+                //  Left alone, the JS call stack is the native one, and a script recursing
+                //  deeper than it holds takes the whole process down - a StackOverflowException
+                //  cannot be caught. Guarded, the engine continues on a fresh stack and finally
+                //  reports an ordinary "Maximum call stack size exceeded" error instead.
+                o.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
             });
             _libs = libs;
             _prototypes = new PrototypeCache(_engine, libs);

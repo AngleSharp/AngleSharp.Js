@@ -61,9 +61,20 @@ namespace AngleSharp
         /// </summary>
         /// <param name="configuration">The configuration to use.</param>
         /// <returns>The new configuration.</returns>
-        public static IConfiguration WithJs(this IConfiguration configuration)
+        public static IConfiguration WithJs(this IConfiguration configuration) =>
+            configuration.WithJs(new JsScriptingOptions());
+
+        /// <summary>
+        /// Sets scripting to true, registers the JavaScript engine with the
+        /// given options and returns a new configuration with the scripting
+        /// service and possible auxiliary services, if not yet registered.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <param name="options">The options tuning the engine.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithJs(this IConfiguration configuration, JsScriptingOptions options)
         {
-            var service = new JsScriptingService();
+            var service = new JsScriptingService(options);
             var observer = new EventAttributeObserver(service);
             var handler = new JsNavigationHandler(service);
 

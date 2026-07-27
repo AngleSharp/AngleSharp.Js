@@ -37,7 +37,17 @@ var config = Configuration.Default
     .WithJs(); // from AngleSharp.Js
 ```
 
-This will register a scripting engine for JS files. The JS parsing options and more could be set with parameters of the `WithJs` method.
+This will register a scripting engine for JS files. The engine can be tuned by passing a `JsScriptingOptions` instance to `WithJs`:
+
+```cs
+var config = Configuration.Default
+    .WithJs(new JsScriptingOptions
+    {
+        // how deep a script may recurse before the engine reports
+        // "Maximum call stack size exceeded" (10000 by default)
+        MaxCallStackDepth = 5000,
+    });
+```
 
 You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,
 

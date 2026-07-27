@@ -25,18 +25,29 @@ namespace AngleSharp.Scripting
 
         private readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
         private readonly Dictionary<String, Object> _external;
+        private readonly JsScriptingOptions _options;
 
         #endregion
 
         #region ctor
 
         /// <summary>
-        /// Creates a new JavaScript engine.
+        /// Creates a new JavaScript engine using the default options.
         /// </summary>
         public JsScriptingService()
+            : this(new JsScriptingOptions())
+        {
+        }
+
+        /// <summary>
+        /// Creates a new JavaScript engine using the given options.
+        /// </summary>
+        /// <param name="options">The options tuning the engine.</param>
+        public JsScriptingService(JsScriptingOptions options)
         {
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         #endregion
@@ -113,7 +124,7 @@ namespace AngleSharp.Scripting
             if (!_contexts.TryGetValue(objectContext, out var instance))
             {
                 var libs = GetAssemblies(document.Context).ToArray();
-                instance = new EngineInstance(objectContext, _external, libs);
+                instance = new EngineInstance(objectContext, _external, libs, _options);
                 _contexts.Add(objectContext, instance);
             }
 
