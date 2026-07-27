@@ -101,6 +101,9 @@ With an event loop configured, use the document extensions to control when work 
 | `WhenStable()` | Wait until the work already in the event loop has completed. |
 | `WaitUntilAvailable()` | Wait for document completion and then for the event loop to stabilize. |
 
+These methods do not wait for asynchronous I/O that a script starts after the marker has been
+queued. For example, await an event dispatched by the script after an `XMLHttpRequest` finishes.
+
 For example, wait for scripts that change the document before reading the result:
 
 ```cs
@@ -134,6 +137,9 @@ var document = await BrowsingContext.New(configuration)
 JavaScript can call delegates and access the public members of objects exposed this way. For
 advanced integration, `GetOrCreateJint(document)` returns the document's Jint `Engine`, which
 lets host code inspect JavaScript values or invoke JavaScript functions directly.
+
+Registering a `JsScriptingService` directly does not add the auxiliary integration that
+`WithJs()` supplies: inline event-handler attributes and `javascript:` URL navigation.
 
 ### Capture `console.log`
 
@@ -183,7 +189,7 @@ they meet a script's needs:
 | --- | --- |
 | `DOMParser` | `parseFromString` creates a document through the configured `IDocumentFactory`. The requested MIME type must be supported by that configuration. |
 | `Image` | Creates an AngleSharp `<img>` element; optional width and height become its display dimensions. |
-| `window.postMessage` | Queues a `message` event on the current window. It requires an event loop; it does not transfer objects or deliver to another browsing context. |
+| `window.postMessage` | Queues a `message` event on the current window. It requires an event loop; it does not transfer objects, deliver to another browsing context, or enforce `targetOrigin`. |
 | `XMLHttpRequest` | Supports `open`, `send`, request headers, status, text responses, and lifecycle events through the configured document loader. |
 | `console` | Supports `console.log` only. |
 | `screen` | Exposes fixed 1920-by-1080 dimensions and 24-bit color depth for compatibility. |
@@ -208,7 +214,8 @@ Notable limitations include:
 - Network-backed features such as external scripts and `XMLHttpRequest` require suitable
   AngleSharp requesters and resource loading configuration.
 - `XMLHttpRequest` currently provides text responses only. Its `response`, `responseXML`, and
-  `upload` properties are unavailable, and `responseType` always has its empty value.
+  `upload` properties are unavailable, `responseType` always has its empty value, and its
+  `timeout` and `withCredentials` settings do not affect requests.
 - The JavaScript engine executes application-provided or page-provided code in your process.
   Treat untrusted scripts as untrusted code and apply the constraints appropriate to your
   application.
