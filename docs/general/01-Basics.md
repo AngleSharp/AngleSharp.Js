@@ -41,6 +41,20 @@ await document.WaitUntilAvailable();
 such as `onclick`, a navigation handler for `javascript:` URLs, and a default `navigator`
 when the configuration does not already provide one.
 
+### Customize the event loop
+
+`WithEventLoop()` creates a dedicated `JsEventLoop` for each browsing context. To select the
+stack size of its worker thread, use the factory overload:
+
+```cs
+var configuration = Configuration.Default
+    .WithJs()
+    .WithEventLoop(_ => new JsEventLoop(32 * 1024 * 1024));
+```
+
+You can instead provide an `IEventLoop` implementation when the host application owns
+scheduling. Use the factory overload when each browsing context needs an independent loop.
+
 ### Configure the execution stack
 
 `JsScriptingOptions.MaxCallStackDepth` defaults to 10,000. It makes deep JavaScript recursion
@@ -135,6 +149,18 @@ var configuration = Configuration.Default
 Implement `IConsoleLogger.Log(Object[] values)` to send the values to your application's
 logging system. Without a logger, calls to `console.log` do not produce output.
 
+For example, a minimal logger can forward values to `System.Diagnostics`:
+
+```cs
+sealed class ApplicationConsoleLogger : IConsoleLogger
+{
+    public void Log(Object[] values)
+    {
+        Debug.WriteLine(String.Join(" ", values));
+    }
+}
+```
+
 ## DOM APIs and integration points
 
 AngleSharp.Js exposes AngleSharp DOM interfaces to JavaScript dynamically. The available
@@ -147,6 +173,20 @@ In addition to the DOM provided by AngleSharp, the package supplies:
 - `javascript:` URL navigation.
 - Inline event-handler attributes and DOM event callbacks.
 - ES modules and import maps through Jint's module loader.
+
+### Built-in browser facades
+
+The additional browser-like APIs are deliberately small. Use this table when deciding whether
+they meet a script's needs:
+
+| API | Available behavior |
+| --- | --- |
+| `DOMParser` | `parseFromString` creates a document through the configured `IDocumentFactory`. The requested MIME type must be supported by that configuration. |
+| `Image` | Creates an AngleSharp `<img>` element; optional width and height become its display dimensions. |
+| `window.postMessage` | Queues a `message` event on the current window. It requires an event loop; it does not transfer objects or deliver to another browsing context. |
+| `XMLHttpRequest` | Supports `open`, `send`, request headers, status, text responses, and lifecycle events through the configured document loader. |
+| `console` | Supports `console.log` only. |
+| `screen` | Exposes fixed 1920-by-1080 dimensions and 24-bit color depth for compatibility. |
 
 To replace the supplied behavior, register your own compatible AngleSharp service before
 calling `WithJs()`. In particular, `WithJs()` preserves an existing `INavigator`, and the
@@ -161,12 +201,14 @@ complete browser parity.
 
 Notable limitations include:
 
-- Layout is not calculated unless you add appropriate AngleSharp rendering services. The
-  package's fallback `scroll*`, `client*`, and `offset*` element properties return `0`.
+- The package does not calculate layout. Its `scroll*`, `client*`, and `offset*` element
+  properties return `0`.
 - The default `navigator` is intentionally minimal. Its platform is empty, registration
   methods are no-ops, and its user-agent value is a fixed compatibility string.
 - Network-backed features such as external scripts and `XMLHttpRequest` require suitable
   AngleSharp requesters and resource loading configuration.
+- `XMLHttpRequest` currently provides text responses only. Its `response`, `responseXML`, and
+  `upload` properties are unavailable, and `responseType` always has its empty value.
 - The JavaScript engine executes application-provided or page-provided code in your process.
   Treat untrusted scripts as untrusted code and apply the constraints appropriate to your
   application.
