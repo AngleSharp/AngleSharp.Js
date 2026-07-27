@@ -118,28 +118,54 @@ namespace AngleSharp.Js
             }
         }
 
-        public Boolean TryGetFromIndex(Object value, String index, out PropertyDescriptor result)
+        /// <summary>
+        /// Asks the indexers this prototype offers about one property name, against the object
+        /// being indexed rather than against the prototype itself.
+        /// </summary>
+        /// <remarks>
+        /// The raw CLR value comes back instead of a <see cref="PropertyDescriptor"/> because
+        /// only one of the three callers wants a descriptor: the engine asks a host object for
+        /// the value of an own property and for its mere existence separately, and building a
+        /// descriptor for either is pure waste - and for a named entry it builds two
+        /// <see cref="ClrFunction"/>s with it.
+        /// </remarks>
+        public IndexerResult TryGetFromIndex(Object value, JsValue property, out Object result)
         {
-            //  If we have a numeric indexer and the property is numeric
-            result = default;
+            result = null;
 
             EnsureInitialized();
 
+            //  Reached for every property lookup on every node, and most DOM types carry no
+            //  indexer at all. Nothing below may run before that is ruled out - not even
+            //  turning the key into a String.
+            if (_numericIndexer == null && _stringIndexerGetter == null)
+            {
+                return IndexerResult.None;
+            }
+
+            //  A symbol is never an index, and JsSymbol.ToString() composes "Symbol(...)"
+            //  every time it is asked. Library code probes Symbol.toStringTag constantly.
+            if (property is JsSymbol)
+            {
+                return IndexerResult.None;
+            }
+
+            var index = property.ToString();
+
+            //  If we have a numeric indexer and the property is numeric
             if (_numericIndexer != null && Int32.TryParse(index, out var numericIndex))
             {
                 try
                 {
                     var args = new Object[] { numericIndex };
-                    var orig = _numericIndexer.Invoke(value, args);
-                    result = new PropertyDescriptor(orig.ToJsValue(_instance), false, false, false);
-                    return true;
+                    result = _numericIndexer.Invoke(value, args);
+                    return IndexerResult.Value;
                 }
                 catch (TargetInvocationException ex)
                 {
                     if (ex.InnerException is ArgumentOutOfRangeException)
                     {
-                        result = PropertyDescriptor.Undefined;
-                        return true;
+                        return IndexerResult.Absent;
                     }
 
                     throw;
@@ -152,53 +178,77 @@ namespace AngleSharp.Js
             //  Eg. object.callMethod1()  vs  object['callMethod1'] is not necessarily the same if the object has a string indexer?? (I'm not an ECMA expert!)
             //  node.attributes is one such object - has both a string and numeric indexer
             //  This GetOwnProperty override might need an additional parameter to let us know this was called via an indexer
-            if (_stringIndexerGetter != null && !HasProperty(index))
+            //
+            //  HasProperty takes a JsValue, so handing it the String would build one per
+            //  lookup - and every read of an ordinary member of an indexed collection, say
+            //  the length a loop tests, comes through here. The engine already passed one in.
+            if (_stringIndexerGetter != null && !HasProperty(property as JsString ?? (JsValue)index))
             {
                 var args = new Object[] { index };
                 var valueAtIndex = _stringIndexerGetter.Invoke(value, args);
 
                 if (valueAtIndex == null && _stringIndexerSetter == null)
                 {
-                    result = PropertyDescriptor.Undefined;
-                    return false;
+                    return IndexerResult.None;
                 }
 
-                var getter = new ClrFunction(_instance.Jint, index, (obj, values) =>
-                {
-                    var current = _stringIndexerGetter.Invoke(value, args);
-                    return current == null ? JsValue.Undefined : current.ToJsValue(_instance);
-                });
-
-                ClrFunction setter = null;
-
-                if (_stringIndexerSetter != null)
-                {
-                    setter = new ClrFunction(_instance.Jint, index, (obj, values) =>
-                    {
-                        var valueToSet = values.Length > 0 ? values[0] : JsValue.Undefined;
-                        _stringIndexerSetter.Invoke(value, new Object[] { index, valueToSet }, _instance);
-                        return valueToSet;
-                    });
-                }
-
-                result = new GetSetPropertyDescriptor(getter, setter, false, false);
-                return true;
+                //  Null with a setter present is still an own property - one that reads as
+                //  undefined - because a write to it still has to reach the setter.
+                result = valueAtIndex;
+                return IndexerResult.Named;
             }
 
-            return false;
+            return IndexerResult.None;
         }
 
-        public Boolean TrySetToIndex(Object value, String index, JsValue newValue)
+        /// <summary>
+        /// Builds the descriptor for a name the string indexer claims. It is an accessor pair
+        /// rather than a value so that both directions stay live: the getter re-reads the
+        /// indexer, and the setter is what forwards a write to it.
+        /// </summary>
+        public PropertyDescriptor CreateNamedDescriptor(Object value, String index)
+        {
+            var args = new Object[] { index };
+
+            var getter = new ClrFunction(_instance.Jint, index, (obj, values) =>
+            {
+                var current = _stringIndexerGetter.Invoke(value, args);
+                return current == null ? JsValue.Undefined : current.ToJsValue(_instance);
+            });
+
+            ClrFunction setter = null;
+
+            if (_stringIndexerSetter != null)
+            {
+                setter = new ClrFunction(_instance.Jint, index, (obj, values) =>
+                {
+                    var valueToSet = values.Length > 0 ? values[0] : JsValue.Undefined;
+                    _stringIndexerSetter.Invoke(value, new Object[] { index, valueToSet }, _instance);
+                    return valueToSet;
+                });
+            }
+
+            return new GetSetPropertyDescriptor(getter, setter, false, false);
+        }
+
+        public Boolean TrySetToIndex(Object value, JsValue property, JsValue newValue)
         {
             EnsureInitialized();
 
-            if (_stringIndexerSetter != null && !HasProperty(index))
+            if (_stringIndexerSetter == null)
             {
-                _stringIndexerSetter.Invoke(value, new Object[] { index, newValue }, _instance);
-                return true;
+                return false;
             }
 
-            return false;
+            var index = property.ToString();
+
+            if (HasProperty(property as JsString ?? (JsValue)index))
+            {
+                return false;
+            }
+
+            _stringIndexerSetter.Invoke(value, new Object[] { index, newValue }, _instance);
+            return true;
         }
 
         private void SetExtensionMembers()
@@ -388,6 +438,32 @@ namespace AngleSharp.Js
                         _instance.Call(method, obj, values)
                     ), false, false, false));
             }
+        }
+
+        /// <summary>
+        /// What the indexers of a prototype have to say about a property name.
+        /// </summary>
+        public enum IndexerResult
+        {
+            /// <summary>
+            /// No indexer claims the name, so the ordinary own-property lookup decides.
+            /// </summary>
+            None,
+            /// <summary>
+            /// The numeric indexer answered, and the answer is the value handed back.
+            /// </summary>
+            Value,
+            /// <summary>
+            /// The numeric indexer claims the name but has nothing at it, so the object has no
+            /// own property of that name and the ordinary lookup is not consulted either.
+            /// </summary>
+            Absent,
+            /// <summary>
+            /// The string indexer claims the name. The value handed back is what it reads as
+            /// right now, and may be null - a name the indexer only accepts writes for is
+            /// still an own property, described by an accessor pair.
+            /// </summary>
+            Named
         }
 
         /// <summary>

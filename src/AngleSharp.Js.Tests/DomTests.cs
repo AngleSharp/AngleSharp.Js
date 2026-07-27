@@ -128,5 +128,70 @@ namespace AngleSharp.Js.Tests
             var result = await "(function () { var d = document.createElement('div'); d.custom = 1; return d.hasOwnProperty('custom') + ',' + Object.getOwnPropertyNames(d).join(); })()".EvalScriptAsync();
             Assert.AreEqual("true,custom", result);
         }
+
+        //  Reading an index, testing it for existence and enumerating it are three different
+        //  questions the engine asks, and the node answers each of them from a different
+        //  method. They have to agree.
+        [Test]
+        public async Task IndexedEntryIsReportedAsAnOwnPropertyAndReads()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(0) + ',' + (0 in c) + ',' + c[0].nodeName; })()".EvalScriptAsync();
+            Assert.AreEqual("true,true,SCRIPT", result);
+        }
+
+        [Test]
+        public async Task IndexBeyondTheEndIsNoOwnPropertyAndReadsUndefined()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(5) + ',' + (5 in c) + ',' + (typeof c[5]); })()".EvalScriptAsync();
+            Assert.AreEqual("false,false,undefined", result);
+        }
+
+        //  A member of an indexed collection is still an inherited one.
+        [Test]
+        public async Task MemberOfAnIndexedCollectionIsNotMistakenForAnIndex()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty('length') + ',' + ('length' in c) + ',' + c.length; })()".EvalScriptAsync();
+            Assert.AreEqual("false,true,1", result);
+        }
+
+        //  A symbol cannot be an index, and it must not be turned into one either - the
+        //  well-known symbols are probed on every kind of object by library code.
+        [Test]
+        public async Task SymbolKeyOnAnIndexedCollectionIsNotTreatedAsAnIndex()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(Symbol.toStringTag) + ',' + (typeof c[Symbol.toStringTag]); })()".EvalScriptAsync();
+            Assert.AreEqual("false,string", result);
+        }
+
+        //  The node's own property set lives in the DOM, so nothing in the engine changes
+        //  when an entry appears there. A name that was absent has to start resolving on the
+        //  node from the very next read, rather than staying on whatever the prototype said.
+        [Test]
+        public async Task NamedEntryStartsResolvingOnTheNodeAsSoonAsItExists()
+        {
+            var result = await "(function () { var d = document.createElement('div'), a = d.attributes, before = typeof a.title; d.setAttribute('title', 't'); return before + ',' + a.title.value + ',' + a.hasOwnProperty('title'); })()".EvalScriptAsync();
+            Assert.AreEqual("undefined,t,true", result);
+        }
+
+        [Test]
+        public async Task AccessorDefinedOnANodeByScriptIsInvokedOnRead()
+        {
+            var result = await "(function () { var d = document.createElement('div'); Object.defineProperty(d, 'marker', { get: function () { return 'from getter'; } }); return d.marker + ',' + d.hasOwnProperty('marker'); })()".EvalScriptAsync();
+            Assert.AreEqual("from getter,true", result);
+        }
+
+        [Test]
+        public async Task NonEnumerablePropertyOfANodeIsSeenButNotEnumerated()
+        {
+            var result = await "(function () { var d = document.createElement('div'); Object.defineProperty(d, 'hidden2', { value: 1 }); return d.hasOwnProperty('hidden2') + ',' + d.propertyIsEnumerable('hidden2') + ',' + Object.keys(d).length; })()".EvalScriptAsync();
+            Assert.AreEqual("true,false,0", result);
+        }
+
+        [Test]
+        public async Task PropertyAssignedToANodeIsCopiedAndSerialized()
+        {
+            var result = await "(function () { var d = document.createElement('div'); d.custom = 'v'; return JSON.stringify(d) + ',' + JSON.stringify(Object.assign({}, d)); })()".EvalScriptAsync();
+            Assert.AreEqual("{\"custom\":\"v\"},{\"custom\":\"v\"}", result);
+        }
     }
 }
