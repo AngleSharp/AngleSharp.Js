@@ -55,6 +55,24 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual("undefined", result);
         }
 
+        //  Two closed forms of IHtmlCollection<T> in one document - each resolves its own
+        //  indexer, and the explicit IReadOnlyList<T> re-implementation behind them is the
+        //  one accessor that cannot be invoked as declared.
+        [Test]
+        public async Task NumericIndexerWorksForHtmlCollectionsOfDifferentItemTypes()
+        {
+            var result = await "(function () { var d = new DOMParser().parseFromString(`<img id=x>`, 'text/html'); return d.getElementsByTagName('img')[0].id + ',' + d.images[0].id; })()".EvalScriptAsync();
+            Assert.AreEqual("x,x", result);
+        }
+
+        //  col and colgroup are separate classes sharing the HTMLTableColElement prototype.
+        [Test]
+        public async Task NumericIndexerWorksForElementsSharingAPrototype()
+        {
+            var result = await "(function () { var d = new DOMParser().parseFromString(`<table><colgroup class='a b'><col class='c d'></colgroup></table>`, 'text/html'); var g = d.getElementsByTagName('colgroup')[0], c = d.getElementsByTagName('col')[0]; return g.classList[1] + ',' + c.classList[1]; })()".EvalScriptAsync();
+            Assert.AreEqual("b,d", result);
+        }
+
         [Test]
         public async Task NumericIndexerOfNodeListYieldsTheNode()
         {

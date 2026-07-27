@@ -8,6 +8,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -22,8 +23,8 @@ namespace AngleSharp.Js
         private List<KeyValuePair<String, PropertyDescriptor>> _deferred;
         private Boolean _membersSet;
         private DomConstructorInstance _constructor;
-        private MethodInfo _numericIndexer;
-        private MethodInfo _stringIndexer;
+        private Indexer _numericIndexer;
+        private Indexer _stringIndexer;
 
         public DomPrototypeInstance(EngineInstance engine, Type type)
             : base(engine.Jint)
@@ -48,8 +49,17 @@ namespace AngleSharp.Js
             SetAllMembers(_type);
             SetExtensionMembers();
 
-            //  DOM objects can have properties added dynamically
-            Prototype = _instance.GetDomPrototype(_baseType);
+            //  The base type may fold onto this very prototype - a class carrying no DOM name of
+            //  its own shares the one of its nearest named ancestor. Jint's setter answers a
+            //  prototype cycle by quietly doing nothing, which would leave Object.prototype in
+            //  place and silently cut the chain short, so rule it out here.
+            var parent = _instance.GetDomPrototype(_baseType);
+
+            if (!ReferenceEquals(parent, this))
+            {
+                //  DOM objects can have properties added dynamically
+                Prototype = parent;
+            }
 
             if (_deferred != null)
             {
@@ -64,7 +74,7 @@ namespace AngleSharp.Js
             //  It is the constructor object that registers "constructor" here, and it is
             //  only built once script names the type. A prototype reached through an
             //  instance instead - the usual way - would otherwise lack the property.
-            var definition = _type.GetConstructorDefinition();
+            var definition = _type.GetConstructorDefinition(_instance.Libs);
 
             if (definition != null)
             {
@@ -307,7 +317,7 @@ namespace AngleSharp.Js
                 return;
             }
 
-            var getter = ResolveAccessor(property.GetMethod);
+            var getter = property.GetMethod;
 
             if (getter == null)
             {
@@ -316,38 +326,12 @@ namespace AngleSharp.Js
 
             if (indexParameters[0].ParameterType == typeof(Int32))
             {
-                _numericIndexer = getter;
+                _numericIndexer = new Indexer(getter);
             }
             else if (indexParameters[0].ParameterType == typeof(String))
             {
-                _stringIndexer = getter;
+                _stringIndexer = new Indexer(getter);
             }
-        }
-
-        private MethodInfo ResolveAccessor(MethodInfo accessor)
-        {
-            //  An interface may re-implement a member of one of its own base interfaces
-            //  explicitly, e.g. "T IReadOnlyList<T>.this[Int32 index]" declared on an
-            //  IHtmlCollection<T>. Such a member is private and abstract - invoking it
-            //  reflectively throws an EntryPointNotFoundException because the actual
-            //  implementation lives in a different slot. Resolve it against the type the
-            //  prototype was created for, which is where the implementation can be found.
-            if (accessor == null || accessor.IsPublic)
-            {
-                return accessor;
-            }
-
-            var name = accessor.Name;
-            var simpleName = name.Substring(name.LastIndexOf('.') + 1);
-            var parameters = accessor.GetParameters();
-            var parameterTypes = new Type[parameters.Length];
-
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                parameterTypes[i] = parameters[i].ParameterType;
-            }
-
-            return _type.GetRuntimeMethod(simpleName, parameterTypes) ?? accessor;
         }
 
         private void SetMethod(String name, MethodInfo method)
@@ -362,6 +346,57 @@ namespace AngleSharp.Js
                     new ClrFunction(_instance.Jint, name, (obj, values) =>
                         _instance.Call(method, obj, values)
                     ), false, false, false));
+            }
+        }
+
+        /// <summary>
+        /// One of the indexers a prototype offers, invoked against whichever object is being
+        /// indexed rather than against the type the prototype was created for.
+        /// </summary>
+        /// <remarks>
+        /// A prototype stands for a DOM type, not for a single class - col and colgroup are
+        /// both an HTMLTableColElement, and every element class carrying no name of its own
+        /// shares the prototype of its nearest named ancestor. An accessor bound to one of
+        /// those classes cannot be invoked on the others, so the target decides.
+        /// </remarks>
+        private sealed class Indexer
+        {
+            private readonly MethodInfo _declared;
+            private readonly ConcurrentDictionary<Type, MethodInfo> _resolved;
+
+            public Indexer(MethodInfo declared)
+            {
+                _declared = declared;
+
+                //  A public accessor is dispatched virtually and works on any implementation;
+                //  only an explicitly re-implemented one has to be looked up per target.
+                _resolved = declared.IsPublic ? null : new ConcurrentDictionary<Type, MethodInfo>();
+            }
+
+            public Object Invoke(Object target, Object[] arguments) =>
+                Resolve(target.GetType()).Invoke(target, arguments);
+
+            private MethodInfo Resolve(Type targetType) =>
+                _resolved == null ? _declared : _resolved.GetOrAdd(targetType, ResolveCore);
+
+            private MethodInfo ResolveCore(Type targetType)
+            {
+                //  An interface may re-implement a member of one of its own base interfaces
+                //  explicitly, e.g. "T IReadOnlyList<T>.this[Int32 index]" declared on an
+                //  IHtmlCollection<T>. Such a member is private and abstract - invoking it
+                //  reflectively throws an EntryPointNotFoundException because the actual
+                //  implementation lives in a different slot.
+                var name = _declared.Name;
+                var simpleName = name.Substring(name.LastIndexOf('.') + 1);
+                var parameters = _declared.GetParameters();
+                var parameterTypes = new Type[parameters.Length];
+
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    parameterTypes[i] = parameters[i].ParameterType;
+                }
+
+                return targetType.GetRuntimeMethod(simpleName, parameterTypes) ?? _declared;
             }
         }
     }
