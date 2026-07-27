@@ -1,0 +1,207 @@
+namespace AngleSharp.Js.Cache
+{
+    using AngleSharp.Attributes;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+
+    /// <summary>
+    /// Maps a CLR type onto the single type whose prototype represents it in JS.
+    /// </summary>
+    /// <remarks>
+    /// An instance is wrapped from an internal concrete class (HtmlDivElement), while the
+    /// constructor exposed to scripts is built from the exported interface (IHtmlDivElement).
+    /// Left alone the two end up with a prototype each, so neither "instanceof" nor
+    /// "Object.getPrototypeOf(div) === HTMLDivElement.prototype" can ever hold. Both sides are
+    /// therefore folded onto the class that defines the DOM name - the topmost class carrying
+    /// it - which is also the class the prototype chain is built from.
+    /// </remarks>
+    static class PrototypeTypeCache
+    {
+        private static readonly ConcurrentDictionary<Assembly, IReadOnlyDictionary<String, Type>> _definingTypes = new();
+        private static readonly ConcurrentDictionary<Assembly, IReadOnlyDictionary<String, Type>> _exposedTypes = new();
+
+        /// <summary>
+        /// Gets what the constructor object of the type a prototype belongs to is built from,
+        /// or null if the type is not exposed as one.
+        /// </summary>
+        /// <remarks>
+        /// A prototype is keyed by the class defining the DOM name, but it is the exported
+        /// interface next to it that carries the [DomName] - HtmlDivElement has none of its
+        /// own, IHtmlDivElement is what names HTMLDivElement - so the class has to be traded
+        /// back for the interface first.
+        /// </remarks>
+        public static ConstructorDefinition GetConstructorDefinition(this Type type, IEnumerable<Assembly> libs)
+        {
+            var definition = type.GetConstructorDefinition();
+
+            if (definition == null)
+            {
+                var name = GetCanonicalName(type);
+
+                if (name != null)
+                {
+                    foreach (var lib in libs)
+                    {
+                        if (GetExposedTypes(lib).TryGetValue(name, out var exposedType))
+                        {
+                            return exposedType.GetConstructorDefinition();
+                        }
+                    }
+                }
+            }
+
+            return definition;
+        }
+
+        public static Type GetDomPrototypeType(this Type type, IEnumerable<Assembly> libs)
+        {
+            var typeInfo = type.GetTypeInfo();
+
+            //  An enum carries the [DomName] of its owner (NodeType is named "Document"), and the
+            //  closed instantiations of a generic are mutually non-assignable, so a member resolved
+            //  against one of them cannot be invoked on another (IHtmlCollection<T>). Neither may
+            //  be folded onto somebody else's prototype.
+            if (typeInfo.IsEnum || typeInfo.IsGenericType)
+            {
+                return type;
+            }
+
+            var name = GetCanonicalName(type);
+
+            if (name != null)
+            {
+                foreach (var lib in libs)
+                {
+                    if (GetDefiningTypes(lib).TryGetValue(name, out var definingType))
+                    {
+                        return definingType;
+                    }
+                }
+            }
+
+            return type;
+        }
+
+        /// <summary>
+        /// Gets the DOM name a type is represented by, which for the many element classes
+        /// carrying no name of their own (HtmlBoldElement, HtmlSemanticElement, ...) is the name
+        /// of their nearest named ancestor - just like in a browser, where a "b" element is an
+        /// HTMLElement.
+        /// </summary>
+        private static String GetCanonicalName(Type type)
+        {
+            var current = type;
+
+            while (current != null)
+            {
+                var baseType = current.GetTypeInfo().BaseType;
+                var name = current.GetOfficialName(baseType);
+
+                if (name != null)
+                {
+                    return name;
+                }
+
+                current = baseType;
+            }
+
+            return null;
+        }
+
+        private static IReadOnlyDictionary<String, Type> GetDefiningTypes(Assembly assembly) =>
+            _definingTypes.GetOrAdd(assembly, CreateDefiningTypes);
+
+        private static IReadOnlyDictionary<String, Type> CreateDefiningTypes(Assembly assembly)
+        {
+            //  Ordinal on purpose: XmlHttpRequest is named "XMLHttpRequest" while the
+            //  RequesterState enum next to it is named "XmlHttpRequest".
+            var result = new Dictionary<String, Type>(StringComparer.Ordinal);
+
+            foreach (var type in GetLoadableTypes(assembly))
+            {
+                var typeInfo = type.GetTypeInfo();
+
+                //  Only a class can define a prototype: the interface is what the DOM exposes,
+                //  but the class is what an instance is built from and what its base type - and
+                //  hence the prototype chain - is taken from.
+                if (!typeInfo.IsClass || typeInfo.IsGenericType)
+                {
+                    continue;
+                }
+
+                var baseType = typeInfo.BaseType;
+                var name = type.GetOfficialName(baseType);
+
+                if (name == null || String.Equals(name, GetNameOf(baseType), StringComparison.Ordinal))
+                {
+                    //  Either nothing to define, or the base type already defines the very same
+                    //  name - so this class is not the topmost one carrying it.
+                    continue;
+                }
+
+                //  A name may legitimately be defined twice (col and colgroup are both an
+                //  HTMLTableColElement); share a prototype, but pick the same one every time.
+                if (!result.TryGetValue(name, out var existing) ||
+                    String.CompareOrdinal(type.FullName, existing.FullName) < 0)
+                {
+                    result[name] = type;
+                }
+            }
+
+            return result;
+        }
+
+        private static String GetNameOf(Type type) =>
+            type?.GetOfficialName(type.GetTypeInfo().BaseType);
+
+        private static IReadOnlyDictionary<String, Type> GetExposedTypes(Assembly assembly) =>
+            _exposedTypes.GetOrAdd(assembly, CreateExposedTypes);
+
+        /// <summary>
+        /// Collects the types a DOM name is exposed by, which is what
+        /// <see cref="EngineExtensions.AddConstructors"/> walks - hence exported types only.
+        /// </summary>
+        private static IReadOnlyDictionary<String, Type> CreateExposedTypes(Assembly assembly)
+        {
+            var result = new Dictionary<String, Type>(StringComparer.Ordinal);
+
+            foreach (var type in assembly.ExportedTypes)
+            {
+                var typeInfo = type.GetTypeInfo();
+
+                if (typeInfo.IsEnum)
+                {
+                    //  An enum carries the [DomName] of the type owning it, not one of its own.
+                    continue;
+                }
+
+                var name = typeInfo.GetCustomAttributes<DomNameAttribute>().FirstOrDefault()?.OfficialName;
+
+                //  An interface wins over a class: it is the DOM type, and the class is only
+                //  one way of implementing it.
+                if (name != null && (!result.TryGetValue(name, out var existing) ||
+                    (typeInfo.IsInterface && !existing.GetTypeInfo().IsInterface)))
+                {
+                    result[name] = type;
+                }
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                return ex.Types.Where(m => m != null);
+            }
+        }
+    }
+}

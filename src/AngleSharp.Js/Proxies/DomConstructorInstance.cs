@@ -3,9 +3,11 @@ namespace AngleSharp.Js
     using AngleSharp.Js.Cache;
     using Jint.Native;
     using Jint.Native.Object;
+    using Jint.Native.Symbol;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
+    using System;
     using System.Reflection;
 
     sealed class DomConstructorInstance : Constructor
@@ -13,6 +15,7 @@ namespace AngleSharp.Js
         private readonly ConstructorInfo _constructor;
         private readonly EngineInstance _instance;
         private readonly ObjectInstance _objectPrototype;
+        private readonly Type _type;
 
         public DomConstructorInstance(EngineInstance engine, ConstructorDefinition definition)
             : base(engine.Jint, definition.Name)
@@ -21,6 +24,12 @@ namespace AngleSharp.Js
             _objectPrototype = engine.GetDomPrototype(definition.Type);
             _instance = engine;
             _constructor = definition.Info;
+            _type = definition.Type;
+
+            //  Jint's Constructor leaves the prototype at Object.prototype, which would make a
+            //  DOM constructor the one function in the engine without call, apply or bind.
+            Prototype = (ObjectInstance)engine.Jint.Intrinsics.Function.Get("prototype");
+
             FastSetProperty("toString", new PropertyDescriptor(toString, true, false, true));
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
 
@@ -36,6 +45,85 @@ namespace AngleSharp.Js
             {
                 _objectPrototype.FastSetProperty("constructor", constructor);
             }
+        }
+
+        /// <summary>
+        /// Answers "instanceof" itself, because the prototype chain cannot always carry the
+        /// answer: a mixin such as ParentNode has no class of its own to hang a prototype off,
+        /// and the closed instantiations of IHtmlCollection&lt;T&gt; are separate types that a
+        /// single prototype cannot stand for. Built on first ask - most types are never asked.
+        /// </summary>
+        public override PropertyDescriptor GetOwnProperty(JsValue property)
+        {
+            if (property == GlobalSymbolRegistry.HasInstance)
+            {
+                var descriptor = base.GetOwnProperty(property);
+
+                if (descriptor == PropertyDescriptor.Undefined)
+                {
+                    var hasInstance = new ClrFunction(Engine, "[Symbol.hasInstance]", HasInstance, 1, PropertyFlag.Configurable);
+                    descriptor = new PropertyDescriptor(hasInstance, false, false, false);
+                    SetOwnProperty(property, descriptor);
+                }
+
+                return descriptor;
+            }
+
+            return base.GetOwnProperty(property);
+        }
+
+        private JsValue HasInstance(JsValue thisObject, JsValue[] arguments)
+        {
+            var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
+
+            if (value is DomNodeInstance node && IsInstance(node.Value))
+            {
+                return JsBoolean.True;
+            }
+
+            //  Not a DOM object of this type, but something may still have been given this
+            //  prototype - Object.create(HTMLDivElement.prototype) is an instance in a browser.
+            return InheritsFromPrototype(value as ObjectInstance) ? JsBoolean.True : JsBoolean.False;
+        }
+
+        private Boolean IsInstance(Object value)
+        {
+            var type = value.GetType();
+
+            if (_type.IsAssignableFrom(type))
+            {
+                return true;
+            }
+
+            //  IHtmlCollection<T> is exposed as HTMLCollection, so an instance of any of its
+            //  closed forms answers to it.
+            if (_type.GetTypeInfo().IsGenericTypeDefinition)
+            {
+                foreach (var contract in type.GetTypeInfo().ImplementedInterfaces)
+                {
+                    if (contract.GetTypeInfo().IsGenericType && contract.GetGenericTypeDefinition() == _type)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private Boolean InheritsFromPrototype(ObjectInstance obj)
+        {
+            while (obj != null)
+            {
+                obj = obj.Prototype;
+
+                if (ReferenceEquals(obj, _objectPrototype))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override ObjectInstance Construct(JsValue[] arguments, JsValue newTarget)

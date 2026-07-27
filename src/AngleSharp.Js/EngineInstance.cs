@@ -35,9 +35,9 @@ namespace AngleSharp.Js
             {
                 options.EnableModules(new JsModuleLoader(this, window.Document, false));
             });
-            _prototypes = new PrototypeCache(_engine);
-            _references = new ReferenceCache();
             _libs = libs;
+            _prototypes = new PrototypeCache(_engine, libs);
+            _references = new ReferenceCache();
 
             foreach (var assignment in assignments)
             {
