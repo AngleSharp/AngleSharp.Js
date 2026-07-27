@@ -7,7 +7,7 @@ namespace AngleSharp.Js
     using System;
     using System.Collections.Generic;
 
-    sealed class DomNodeInstance : ObjectInstance
+    sealed class DomNodeInstance : ObjectInstance, IDomProxy
     {
         private readonly EngineInstance _instance;
         private readonly Object _value;

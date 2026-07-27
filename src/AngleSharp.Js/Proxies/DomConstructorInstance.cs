@@ -76,7 +76,7 @@ namespace AngleSharp.Js
         {
             var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
 
-            if (value is DomNodeInstance node && IsInstance(node.Value))
+            if (value is IDomProxy node && IsInstance(node.Value))
             {
                 return JsBoolean.True;
             }

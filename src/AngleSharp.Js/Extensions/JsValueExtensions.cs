@@ -56,7 +56,7 @@ namespace AngleSharp.Js
                     return val.AsString();
                 case Types.Object:
                     var obj = val.AsObject();
-                    var node = obj as DomNodeInstance;
+                    var node = obj as IDomProxy;
                     return node != null ? node.Value : obj;
                 case Types.Undefined:
                     return JsValue.Undefined.ToString();
