@@ -284,16 +284,36 @@ setTimeout(function () {
         }
 
         [Test]
-        public async Task DomContentLoadedEventIsFired_Issue50()
+        public async Task DomContentLoadedEventIsFiredOnDocument_Issue50()
         {
-            //TODO Check this as well on the window level - currently works
-            //only against document (se AngleSharp#789)
             var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var element = document.createElement('div');
+  element.textContent = 'Success!';
+  document.body.appendChild(element);
+});
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var div = document.QuerySelector("div");
+            Assert.AreEqual("Success!", div?.TextContent);
+        }
+
+        [Test]
+        public async Task DomContentLoadedEventIsFiredOnWindow_Issue50()
+        {
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
   var element = document.createElement('div');
   element.textContent = 'Success!';
   document.body.appendChild(element);
