@@ -159,6 +159,36 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SetLocationViaBareIdentifier_Issue98()
+        {
+            var html = "<!doctype html><script>location = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task SetLocationHrefViaAlias_Issue98()
+        {
+            var html = "<!doctype html><script>var loc = location; loc.href = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task SetWindowHrefDoesNotNavigate_Issue98()
+        {
+            var html = "<!doctype html><script>window.href = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/", context.Active.Location.Href));
+        }
+
+        [Test]
         public async Task RunJavaScriptFunctionFromCSharpUpdatesDataset_Issue77()
         {
             var service = new JsScriptingService();

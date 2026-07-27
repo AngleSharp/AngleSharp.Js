@@ -329,7 +329,7 @@ namespace AngleSharp.Js
                     if (putsForward != null)
                     {
                         var ep = Array.Empty<Object>();
-                        var that = obj as DomNodeInstance;
+                        var that = obj as DomNodeInstance ?? _instance.Window;
                         var target = getter.Invoke(that.Value, ep);
                         var propName = putsForward.PropertyName;
                         var prop = getter.ReturnType
