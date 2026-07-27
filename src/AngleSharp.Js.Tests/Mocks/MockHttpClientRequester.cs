@@ -2,6 +2,7 @@ namespace AngleSharp.Js.Tests.Mocks
 {
     using AngleSharp.Io;
     using AngleSharp.Io.Network;
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
@@ -16,6 +17,8 @@ namespace AngleSharp.Js.Tests.Mocks
     {
         private readonly Dictionary<string, string> _mockResponses;
 
+        public String LastRequestedPath { get; private set; }
+
         public MockHttpClientRequester(Dictionary<string, string> mockResponses) : base()
         {
             _mockResponses = mockResponses;
@@ -23,7 +26,11 @@ namespace AngleSharp.Js.Tests.Mocks
 
         protected override Task<IResponse> PerformRequestAsync(Request request, CancellationToken cancel)
         {
-            var response = new DefaultResponse();
+            var response = new DefaultResponse
+            {
+                Address = request.Address
+            };
+            LastRequestedPath = request.Address.PathName;
 
             if (_mockResponses.TryGetValue(request.Address.PathName, out var responseContent))
             {

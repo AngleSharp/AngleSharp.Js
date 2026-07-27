@@ -8,6 +8,7 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
     using System.Text;
@@ -77,6 +78,58 @@ namespace AngleSharp.Js.Tests
         {
             var result = await EvaluateComplexScriptAsync("var xhr = new XMLHttpRequest(); xhr.open('GET', 'foo');", SetResult("xhr.readyState.toString()"));
             Assert.AreEqual("1", result);
+        }
+
+        [Test]
+        public async Task PerformXmlHttpRequestToRelativeUrlShouldWork()
+        {
+            var requester = new MockHttpClientRequester(new Dictionary<String, String>
+            {
+                { "/path/assets/result.txt", "Hello World!" }
+            });
+            var cfg = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(requester)
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var script = @"
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'assets/result.txt', false);
+xhr.send();";
+            script += "document.querySelector('#result').textContent = xhr.responseText;";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Address("https://example.com/path/index.html").Content("<!doctype html><div id=result></div>"));
+            var result = document.QuerySelector("#result");
+
+            await document.Then(script).ConfigureAwait(false);
+
+            Assert.AreEqual("/path/assets/result.txt", requester.LastRequestedPath);
+            Assert.AreEqual("Hello World!", result.TextContent);
+        }
+
+        [Test]
+        public async Task FailedXmlHttpRequestShouldReachDoneAndFireError()
+        {
+            var cfg = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new FaultyHttpClientRequester())
+                .WithDefaultLoader();
+            var script = @"
+var xhr = new XMLHttpRequest();
+xhr.onerror = function () {
+    document.querySelector('#result').textContent = xhr.readyState.toString();
+    document.querySelector('#result').dispatchEvent(new CustomEvent('xhrdone'));
+};
+xhr.open('GET', 'https://example.com/');
+xhr.send();";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content("<!doctype html><div id=result></div>"));
+            var result = document.QuerySelector("#result");
+            var completed = result.AwaitEventAsync("xhrdone");
+
+            await document.Then(script).ConfigureAwait(false);
+            await completed.ConfigureAwait(false);
+
+            Assert.AreEqual("4", result.TextContent);
         }
 
         [Test]

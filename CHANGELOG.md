@@ -9,6 +9,8 @@ Released on ?.
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname
+- Report uncaught event-loop exceptions through the browsing context
+- Fixed XMLHttpRequest handling for relative URLs and failed requests
 
 # 0.15.0
 

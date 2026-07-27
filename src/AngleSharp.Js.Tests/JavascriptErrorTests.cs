@@ -1,6 +1,8 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Dom;
     using NUnit.Framework;
+    using System;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -29,6 +31,23 @@ namespace AngleSharp.Js.Tests
             ";
 
             await context.OpenAsync(r => r.Content(content));
+        }
+
+        [Test]
+        public async Task JavascriptErrorInTimerIsTrackedByBrowsingContext()
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop();
+            var context = BrowsingContext.New(config);
+            var errors = context.CollectErrors();
+            var document = await context.OpenAsync(r => r.Content("<script>setTimeout(function () { undefinedVariable.invalidMethod(); }, 0);</script>"));
+
+            await Task.Delay(100).ConfigureAwait(false);
+            await document.WhenStable().ConfigureAwait(false);
+
+            Assert.AreEqual(1, errors.Count);
+            Assert.IsInstanceOf<Exception>(errors[0]);
         }
 
         [Test]
