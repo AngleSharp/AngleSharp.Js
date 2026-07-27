@@ -11,6 +11,14 @@ namespace AngleSharp.Js
     /// </summary>
     public sealed class JsEventLoop : IEventLoop, IDisposable
     {
+        //  Scripts run on this thread, and the JS call stack is the native one. The usual
+        //  1 MB holds roughly a thousand JavaScript frames, well short of what a browser
+        //  offers, and every frame beyond it costs the engine a hop onto a fresh stack.
+        //  The size is reserved address space rather than memory, but a 32 bit process has
+        //  little of it to spare when it runs many loops, so only a 64 bit one is enlarged;
+        //  zero leaves the thread with the default of the process.
+        private static readonly Int32 DefaultMaxStackSize = IntPtr.Size == 8 ? 16 * 1024 * 1024 : 0;
+
         private readonly Dictionary<TaskPriority, Queue<LoopEntry>> _queues = new Dictionary<TaskPriority, Queue<LoopEntry>>();
         private readonly Object _lockObj = new Object();
         private CancellationTokenSource _cts;
@@ -19,8 +27,17 @@ namespace AngleSharp.Js
         /// Creates a new event loop thread.
         /// </summary>
         public JsEventLoop()
+            : this(DefaultMaxStackSize)
         {
-            var thread = new Thread(Runner)
+        }
+
+        /// <summary>
+        /// Creates a new event loop thread with the given stack size.
+        /// </summary>
+        /// <param name="maxStackSize">The stack size of the thread running the scripts.</param>
+        public JsEventLoop(Int32 maxStackSize)
+        {
+            var thread = new Thread(Runner, maxStackSize)
             {
                 IsBackground = true,
                 Name = "AngleSharpEventLoop",
