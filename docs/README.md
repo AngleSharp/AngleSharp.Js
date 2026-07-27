@@ -2,4 +2,4 @@
 
 We have more detailed information regarding the following subjects:
 
-- [Scripting with AngleSharp.Js](general/01-Basics.md)
+- [Getting Started](general/01-Basics.md)

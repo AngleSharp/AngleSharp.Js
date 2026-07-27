@@ -1,8 +1,8 @@
 ---
-title: "Scripting with AngleSharp.Js"
+title: "Getting Started"
 section: "AngleSharp.Js"
 ---
-# Scripting with AngleSharp.Js
+# Getting Started
 
 AngleSharp.Js runs JavaScript against an AngleSharp document. It integrates the
 [Jint](https://github.com/sebastienros/jint) interpreter with AngleSharp, so scripts can
