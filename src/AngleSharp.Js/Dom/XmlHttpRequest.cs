@@ -206,7 +206,7 @@ namespace AngleSharp.Js.Dom
                     _method = HttpMethod.Get;
                 }
 
-                _url = Url.Create(url);
+                _url = new Url(new Url(_window.Document.Url), url);
                 _async = async;
                 _url.UserName = username;
                 _url.Password = password;
@@ -377,6 +377,11 @@ namespace AngleSharp.Js.Dom
             {
                 ReadyState = RequesterState.Done;
                 Fire(TimeoutEvent);
+            }
+            catch (Exception)
+            {
+                ReadyState = RequesterState.Done;
+                Fire(ErrorEvent);
             }
         }
 

@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Fixtures\Html5Test\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AngleSharp.Io" Version="1.0.0" />
     <PackageReference Include="GitHubActionsTestLogger" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>

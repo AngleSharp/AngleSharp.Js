@@ -34,7 +34,7 @@ namespace AngleSharp
         /// <param name="configuration">The configuration to use.</param>
         /// <returns>The new configuration.</returns>
         public static IConfiguration WithEventLoop(this IConfiguration configuration) =>
-            configuration.WithEventLoop(_ => new JsEventLoop());
+            configuration.WithEventLoop(context => new JsEventLoop(context));
 
         /// <summary>
         /// Includes some event loop in the given context.

@@ -6,9 +6,11 @@ Released on ?.
 - Fixed usage of document ready state (#87) @Sebbs128
 - Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
 - Fixed missing `parent` on Window objects (#68)
+- Fixed XMLHttpRequest handling for relative URLs and failed requests
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname
+- Added report for uncaught event-loop exceptions through the browsing context
 - Added `JsScriptingOptions` to tune the engine via `WithJs` (#75) @lahma
 - Added support for Web Workers (#78)
 

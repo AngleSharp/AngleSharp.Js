@@ -21,13 +21,23 @@ namespace AngleSharp.Js
 
         private readonly Dictionary<TaskPriority, Queue<LoopEntry>> _queues = new Dictionary<TaskPriority, Queue<LoopEntry>>();
         private readonly Object _lockObj = new Object();
+        private readonly Action<Exception> _trackError;
         private CancellationTokenSource _cts;
 
         /// <summary>
         /// Creates a new event loop thread.
         /// </summary>
         public JsEventLoop()
-            : this(DefaultMaxStackSize)
+            : this(DefaultMaxStackSize, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new event loop thread that reports task errors to the given context.
+        /// </summary>
+        /// <param name="context">The browsing context to report errors to.</param>
+        public JsEventLoop(IBrowsingContext context)
+            : this(DefaultMaxStackSize, context == null ? null : new Action<Exception>(context.TrackError))
         {
         }
 
@@ -36,7 +46,13 @@ namespace AngleSharp.Js
         /// </summary>
         /// <param name="maxStackSize">The stack size of the thread running the scripts.</param>
         public JsEventLoop(Int32 maxStackSize)
+            : this(maxStackSize, null)
         {
+        }
+
+        private JsEventLoop(Int32 maxStackSize, Action<Exception> trackError)
+        {
+            _trackError = trackError;
             var thread = new Thread(Runner, maxStackSize)
             {
                 IsBackground = true,
@@ -51,7 +67,7 @@ namespace AngleSharp.Js
 
         ICancellable IEventLoop.Enqueue(Action<CancellationToken> action, TaskPriority priority)
         {
-            var entry = new LoopEntry(action);
+            var entry = new LoopEntry(action, _trackError);
 
             lock (_lockObj)
             {
@@ -134,10 +150,12 @@ namespace AngleSharp.Js
         {
             private readonly CancellationTokenSource cts = new CancellationTokenSource();
             private readonly Action<CancellationToken> _action;
+            private readonly Action<Exception> _trackError;
 
-            public LoopEntry(Action<CancellationToken> action)
+            public LoopEntry(Action<CancellationToken> action, Action<Exception> trackError)
             {
                 _action = action;
+                _trackError = trackError;
             }
 
             public Boolean IsCompleted { get; set; } = false;
@@ -150,7 +168,10 @@ namespace AngleSharp.Js
                 IsRunning = true;
 
                 try { _action.Invoke(cts.Token); }
-                catch { }
+                catch (Exception ex)
+                {
+                    _trackError?.Invoke(ex);
+                }
 
                 IsRunning = false;
                 IsCompleted = true;

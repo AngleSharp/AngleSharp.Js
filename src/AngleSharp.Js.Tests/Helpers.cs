@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Browser.Dom.Events;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
@@ -26,6 +27,39 @@ namespace AngleSharp.Js.Tests
                 .WithEventLoop()
                 .WithCss()
                 .WithRenderDevice();
+
+        internal static List<Exception> CollectErrors(this IBrowsingContext context)
+        {
+            var errors = new List<Exception>();
+            context.AddEventListener("error", (_, ev) =>
+            {
+                if (ev is TrackEvent trackEvent)
+                {
+                    errors.Add(trackEvent.Error);
+                }
+            });
+            return errors;
+        }
+
+        internal static async Task<IElement> WaitForSelectorAsync(this IDocument document, String selector, TimeSpan timeout)
+        {
+            var deadline = DateTime.UtcNow.Add(timeout);
+
+            while (DateTime.UtcNow < deadline)
+            {
+                IElement element = null;
+                await document.Then(current => element = current.QuerySelector(selector)).ConfigureAwait(false);
+
+                if (element != null)
+                {
+                    return element;
+                }
+
+                await Task.Delay(100).ConfigureAwait(false);
+            }
+
+            return null;
+        }
 
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)
         {
