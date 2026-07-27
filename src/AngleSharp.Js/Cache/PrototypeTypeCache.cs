@@ -22,6 +22,30 @@ namespace AngleSharp.Js.Cache
     {
         private static readonly ConcurrentDictionary<Assembly, IReadOnlyDictionary<String, Type>> _definingTypes = new();
         private static readonly ConcurrentDictionary<Assembly, IReadOnlyDictionary<String, Type>> _exposedTypes = new();
+        private static readonly ConcurrentDictionary<Type, Boolean> _domTypes = new();
+
+        //  AngleSharp hangs its non-DOM infrastructure - the parsers, the browsing context, the
+        //  requesters - off the very same EventTarget class the DOM is built on, so that name
+        //  alone says nothing about being part of the DOM. Everything the DOM does expose
+        //  carries a more specific name of its own.
+        private const String EventTargetName = "EventTarget";
+
+        /// <summary>
+        /// Gets whether instances of the type are represented by a DOM prototype rather than by
+        /// Jint's ordinary CLR wrapper.
+        /// </summary>
+        /// <remarks>
+        /// The name may well be inherited - a "b" element answers true through HTMLElement -
+        /// which is exactly what makes the DOM view the right one for it. Unlike
+        /// <see cref="GetDomPrototypeType"/> the answer depends on the type alone and not on the
+        /// engine's set of libraries, so the cache is process-wide.
+        /// </remarks>
+        public static Boolean IsDomType(this Type type) =>
+            _domTypes.GetOrAdd(type, static current =>
+            {
+                var name = GetCanonicalName(current);
+                return name != null && !String.Equals(name, EventTargetName, StringComparison.Ordinal);
+            });
 
         /// <summary>
         /// Gets what the constructor object of the type a prototype belongs to is built from,

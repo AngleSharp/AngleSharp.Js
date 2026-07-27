@@ -8,6 +8,7 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Json;
     using Jint.Native.Object;
+    using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
     using System.Reflection;
@@ -37,6 +38,11 @@ namespace AngleSharp.Js
             _engine = new Engine((o) =>
             {
                 o.EnableModules(new JsModuleLoader(this, window.Document, false));
+                //  The handler answers out of the caches assigned right below, which only exist
+                //  once this constructor returns. Jint wraps nothing while it is configuring
+                //  itself, so that is safe - and Engine.Options is internal, so registering the
+                //  handler afterwards is not an option.
+                o.SetWrapObjectHandler(WrapObject);
                 //  Left alone, the JS call stack is the native one, and a script recursing
                 //  deeper than it holds takes the whole process down - a StackOverflowException
                 //  cannot be caught. Guarded, the engine continues on a fresh stack and finally
@@ -212,6 +218,19 @@ namespace AngleSharp.Js
         private DomNodeInstance CreateInstance(Object obj) => new DomNodeInstance(this, obj);
 
         private ObjectInstance CreatePrototype(Type type) => new DomPrototypeInstance(this, type);
+
+        /// <summary>
+        /// Converts a value handed over from C#, which reaches Jint through JsValue.FromObject
+        /// rather than through <see cref="EngineExtensions.ToJsValue"/>.
+        /// </summary>
+        /// <remarks>
+        /// A DOM object has to arrive as the DOM proxy for the very same reason it does when the
+        /// DOM itself yields one: the proxy is what carries the DOM members, and it is what makes
+        /// the object script already holds and the one passed in from C# the same object. Anything
+        /// else stays with Jint's CLR wrapper, which is what a host object is expected to be.
+        /// </remarks>
+        private ObjectInstance WrapObject(Engine engine, Object target, Type type) =>
+            target.GetType().IsDomType() ? GetDomNode(target) : ObjectWrapper.Create(engine, target, type);
 
         #endregion
     }
