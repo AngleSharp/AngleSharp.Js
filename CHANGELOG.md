@@ -2,13 +2,14 @@
 
 Released on ?.
 
-- Fixed `StackOverflowException` from deeply recursive scripts (#75)
-- Added `JsScriptingOptions` to tune the engine via `WithJs` (#75)
+- Fixed `StackOverflowException` from deeply recursive scripts (#75) @lahma
 - Fixed usage of document ready state (#87) @Sebbs128
 - Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
+- Fixed missing `parent` on Window objects (#68)
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname
+- Added `JsScriptingOptions` to tune the engine via `WithJs` (#75) @lahma
 
 # 0.15.0
 

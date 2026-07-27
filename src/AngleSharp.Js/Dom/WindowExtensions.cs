@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Dom
 {
+    using AngleSharp;
     using AngleSharp.Attributes;
     using AngleSharp.Browser;
     using AngleSharp.Dom;
@@ -31,11 +32,32 @@ namespace AngleSharp.Js.Dom
         }
 
         /// <summary>
+        /// Gets the parent window context.
+        /// </summary>
+        [DomName("parent")]
+        [DomAccessor(Accessors.Getter)]
+        public static IWindow Parent(this IWindow window)
+        {
+            var context = window.Document.Context;
+            return GetWindow(context?.Parent) ?? window;
+        }
+
+        /// <summary>
         /// Gets the top window context.
         /// </summary>
         [DomName("top")]
         [DomAccessor(Accessors.Getter)]
-        public static IWindow Top(this IWindow window) => window.Document.Context?.Creator?.DefaultView;
+        public static IWindow Top(this IWindow window)
+        {
+            var context = window.Document.Context;
+
+            while (context?.Parent != null)
+            {
+                context = context.Parent;
+            }
+
+            return GetWindow(context) ?? window;
+        }
 
         /// <summary>
         /// Gets the console instance. The same instance is returned for the same
@@ -75,5 +97,7 @@ namespace AngleSharp.Js.Dom
 
             return imageElement;
         }
+
+        private static IWindow GetWindow(IBrowsingContext context) => context?.Active?.DefaultView;
     }
 }

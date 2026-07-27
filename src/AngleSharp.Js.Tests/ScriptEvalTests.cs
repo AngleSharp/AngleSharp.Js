@@ -204,6 +204,45 @@ doc.body.textContent = 'Hello world.';
         }
 
         [Test]
+        public async Task WindowParentShouldPointToOwningWindowAndBeReadOnly()
+        {
+            var cfg = Configuration.Default
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
+                .WithJs()
+                .WithEventLoop();
+            var html = @"<!doctype html><div id=result></div><iframe id=myframe srcdoc=''></iframe><script>
+var iframe = document.querySelector('#myframe');
+var topSelf = window.parent === window;
+var childParent = iframe.contentWindow.parent === window;
+var originalParent = iframe.contentWindow.parent;
+iframe.contentWindow.parent = null;
+var isReadOnly = iframe.contentWindow.parent === originalParent;
+document.querySelector('#result').textContent = [topSelf, childParent, isReadOnly].join('|');
+</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var result = document.QuerySelector("#result");
+            Assert.AreEqual("true|true|true", result.TextContent);
+        }
+
+        [Test]
+        public async Task IframeBrowsingContextShouldHaveParentInCore()
+        {
+            var cfg = Configuration.Default
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var html = "<!doctype html><iframe id=myframe srcdoc=''></iframe>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+
+            var frame = document.GetElementById("myframe") as IHtmlInlineFrameElement;
+            var frameWindow = frame.ContentWindow;
+            var topContext = document.Context;
+            var childContext = frameWindow.Document.Context;
+
+            Assert.IsNull(topContext.Parent);
+            Assert.AreSame(topContext, childContext.Parent);
+            Assert.AreEqual(document, childContext.Parent.Active);
+        }
+
+        [Test]
         public async Task RunMainScriptFromHtml5Test()
         {
             var script = @"var p=[],w=window,d=document,e=f=0;p.push('ua='+encodeURIComponent(navigator.userAgent));e|=w.ActiveXObject?1:0;e|=w.opera?2:0;e|=w.chrome?4:0;
