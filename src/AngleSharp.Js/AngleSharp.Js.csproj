@@ -10,6 +10,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <AngleSharpVersion>1.*</AngleSharpVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.5.0" />
+    <PackageReference Include="AngleSharp" Version="$(AngleSharpVersion)" />
     <PackageReference Include="Jint" Version="4.14.0" />
   </ItemGroup>
 
