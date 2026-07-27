@@ -1,12 +1,16 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
+    using AngleSharp.Html;
     using AngleSharp.Html.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Dom;
     using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
     using System;
+    using System.IO;
+    using System.Reflection;
+    using System.Text;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -133,6 +137,53 @@ xhr.send();";
             Assert.IsTrue(req.IsStarted);
             await result.AwaitEventAsync("xhrdone").ConfigureAwait(false);
             Assert.AreEqual(message, result.TextContent);
+        }
+
+        [Test]
+        public async Task PerformXmlHttpRequestWithUrlSearchParamsBodyShouldSerializeCorrectly()
+        {
+            var req = new CaptureRequester();
+            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
+            var script = @"
+var body = new URLSearchParams();
+body.append('query', 'dom api');
+body.append('page', '1');
+var xhr = new XMLHttpRequest();
+xhr.open('POST', 'http://example.com/', false);
+xhr.send(body);
+document.querySelector('#result').textContent = body.toString();";
+            var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
+            await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+
+            Assert.AreEqual("query=dom%20api&page=1", req.Body);
+            Assert.AreEqual("application/x-www-form-urlencoded; charset=UTF-8", req.Headers[HeaderNames.ContentType]);
+        }
+
+        [Test]
+        public void SerializeFormDataSetBodyShouldProduceMultipartContent()
+        {
+            var formData = new FormDataSet();
+            formData.Append("name", "Ada Lovelace", "text/plain");
+            formData.Append("role", "Mathematician", "text/plain");
+
+            var method = typeof(XmlHttpRequest).GetMethod("Serialize", BindingFlags.Static | BindingFlags.NonPublic);
+            var serialized = method.Invoke(null, new Object[] { formData });
+            var serializedType = serialized.GetType();
+            var content = (Stream)serializedType.GetProperty("Content").GetValue(serialized);
+            var contentType = (String)serializedType.GetProperty("ContentType").GetValue(serialized);
+
+            String body;
+
+            using (var reader = new StreamReader(content, Encoding.UTF8, true, 1024, true))
+            {
+                body = reader.ReadToEnd();
+            }
+
+            Assert.IsTrue(body.Contains("name=\"name\""), body);
+            Assert.IsTrue(body.Contains("Ada Lovelace"), body);
+            Assert.IsTrue(body.Contains("name=\"role\""), body);
+            Assert.IsTrue(body.Contains("Mathematician"), body);
+            Assert.IsTrue(contentType.StartsWith("multipart/form-data; boundary="), contentType);
         }
 
         [Test]
