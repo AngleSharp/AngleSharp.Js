@@ -232,6 +232,27 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual("1,title,t", result);
         }
 
+        //  An element whose id happens to be numeric must not surface as an index of the
+        //  collection. The array-like projection owns every array-index key - an index past the
+        //  end is authoritatively absent - so the named entry answers only non-index names,
+        //  which is also how WebIDL resolves the collision. Every answer has to say the same
+        //  thing, the descriptor included.
+        [Test]
+        public async Task NamedEntryWithAnIndexShapedNameIsNotAnIndex()
+        {
+            var result = await "(function () { var f = document.createElement('form'); f.id = '5'; document.documentElement.appendChild(f); var c = document.forms; return (Object.getOwnPropertyDescriptor(c, '5') === undefined) + ',' + ('5' in c) + ',' + (c['5'] === undefined) + ',' + c.hasOwnProperty('5') + ',' + (c[0] === f); })()".EvalScriptAsync();
+            Assert.AreEqual("true,false,true,false,true", result);
+        }
+
+        //  The guard above must not overreach: a named entry whose name is not an array index
+        //  keeps resolving, descriptor and all.
+        [Test]
+        public async Task NamedEntryWithAnOrdinaryNameStillResolves()
+        {
+            var result = await "(function () { var f = document.createElement('form'); f.id = 'login'; document.documentElement.appendChild(f); var c = document.forms; return (c.login === f) + ',' + (Object.getOwnPropertyDescriptor(c, 'login') !== undefined); })()".EvalScriptAsync();
+            Assert.AreEqual("true,true", result);
+        }
+
         //  A symbol cannot be an index, and it must not be turned into one either - the
         //  well-known symbols are probed on every kind of object by library code.
         [Test]

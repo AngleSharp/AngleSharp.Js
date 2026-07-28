@@ -1,6 +1,7 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Js.Cache;
+    using Jint;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Native.Symbol;
@@ -109,6 +110,16 @@ namespace AngleSharp.Js
                 return descriptor;
             }
 
+            //  The base has answered every array-index key authoritatively - an index past the
+            //  end is a miss its value and existence hooks already committed to - so the string
+            //  indexer must not be asked about one. WebIDL says the same: an object supporting
+            //  indexed properties never serves an array-index name from its named getter. An
+            //  element whose id is "5" is findable through a non-index name, never through 5.
+            if (IsArrayIndexName(property))
+            {
+                return PropertyDescriptor.Undefined;
+            }
+
             if (Prototype is DomPrototypeInstance prototype &&
                 prototype.TryGetFromNamedIndex(_value, property, out _))
             {
@@ -116,6 +127,33 @@ namespace AngleSharp.Js
             }
 
             return PropertyDescriptor.Undefined;
+        }
+
+        //  The test the engine's array-like model applies to a key, mirrored exactly so this
+        //  class and its base always classify a name the same way: a number holding a UInt32
+        //  below the maximum, or its canonical string form - no sign, no space, no leading zero.
+        private static Boolean IsArrayIndexName(JsValue property)
+        {
+            if (property.IsNumber())
+            {
+                var value = property.AsNumber();
+                var index = (UInt32)value;
+                return value == index && index != UInt32.MaxValue;
+            }
+
+            if (property.IsString())
+            {
+                var name = property.ToString();
+
+                if (name.Length == 0 || (name.Length > 1 && (name[0] < '1' || name[0] > '9')))
+                {
+                    return false;
+                }
+
+                return UInt32.TryParse(name, out var index) && index != UInt32.MaxValue;
+            }
+
+            return false;
         }
 
         protected override void SetOwnProperty(JsValue property, PropertyDescriptor desc)
