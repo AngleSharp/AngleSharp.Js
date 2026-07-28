@@ -14,11 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Nuke.Common.Tooling;
-
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.NuGet.NuGetTasks;
-
 using Project = Nuke.Common.ProjectModel.Project;
 
 class Build : NukeBuild
@@ -37,12 +34,15 @@ class Build : NukeBuild
     [Nuke.Common.Parameter("ReleaseNotesFilePath - To determine the SemanticVersion")]
     readonly AbsolutePath ReleaseNotesFilePath = RootDirectory / "CHANGELOG.md";
 
+    [Nuke.Common.Parameter("AngleSharp package version override (e.g. 1.0.0 for compatibility checks)")]
+    readonly string AngleSharpVersion;
+
     [Solution]
     readonly Solution Solution;
 
     string TargetProjectName => "AngleSharp.Js";
 
-    string TargetLibName => TargetProjectName;
+    string TargetLibName => $"{TargetProjectName}";
 
     AbsolutePath SourceDirectory => RootDirectory / "src";
 
@@ -119,42 +119,58 @@ class Build : NukeBuild
     Target Restore => _ => _
         .Executes(() =>
         {
-            DotNetRestore(s => s
-                .SetProjectFile(Solution));
+            DotNetRestore(s =>
+            {
+                var settings = s.SetProjectFile(Solution);
+
+                if (!String.IsNullOrEmpty(AngleSharpVersion))
+                {
+                    settings = settings.SetProperty("AngleSharpVersion", AngleSharpVersion);
+                }
+
+                return settings;
+            });
         });
 
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
-            DotNetBuild(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .SetContinuousIntegrationBuild(IsServerBuild)
-                .EnableNoRestore());
+            DotNetBuild(s =>
+            {
+                var settings = s
+                    .SetProjectFile(Solution)
+                    .SetConfiguration(Configuration)
+                    .EnableNoRestore();
+
+                if (!String.IsNullOrEmpty(AngleSharpVersion))
+                {
+                    settings = settings.SetProperty("AngleSharpVersion", AngleSharpVersion);
+                }
+
+                return settings;
+            });
         });
 
     Target RunUnitTests => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
-            DotNetTest(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .EnableNoRestore()
-                .EnableNoBuild()
-                .SetProcessEnvironmentVariable("prefetched", "false")
-                .When(_ => GitHubActions.Instance is not null, x => x.SetLoggers("GitHubActions"))
-            );
+            DotNetTest(s =>
+            {
+                var settings = s
+                    .SetProjectFile(Solution)
+                    .SetConfiguration(Configuration)
+                    .EnableNoRestore()
+                    .EnableNoBuild();
 
-            DotNetTest(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .EnableNoRestore()
-                .EnableNoBuild()
-                .SetProcessEnvironmentVariable("prefetched", "true")
-                .When(_ => GitHubActions.Instance is not null, x => x.SetLoggers("GitHubActions"))
-            );
+                if (!String.IsNullOrEmpty(AngleSharpVersion))
+                {
+                    settings = settings.SetProperty("AngleSharpVersion", AngleSharpVersion);
+                }
+
+                return settings;
+            });
         });
 
     Target CopyFiles => _ => _
@@ -166,14 +182,14 @@ class Build : NukeBuild
                 var targetDir = NugetDirectory / "lib" / item;
                 var srcDir = BuildDirectory / item;
 
-                (srcDir / $"{TargetProjectName}.dll").Copy(targetDir / $"{TargetProjectName}.dll", policy: ExistsPolicy.FileOverwriteIfNewer);
-                (srcDir / $"{TargetProjectName}.pdb").Copy(targetDir / $"{TargetProjectName}.pdb", policy: ExistsPolicy.FileOverwriteIfNewer);
-                (srcDir / $"{TargetProjectName}.xml").Copy(targetDir / $"{TargetProjectName}.xml", policy: ExistsPolicy.FileOverwriteIfNewer);
+                (srcDir / $"{TargetProjectName}.dll").Copy(targetDir / $"{TargetProjectName}.dll", ExistsPolicy.FileOverwriteIfNewer);
+                (srcDir / $"{TargetProjectName}.pdb").Copy(targetDir / $"{TargetProjectName}.pdb", ExistsPolicy.FileOverwriteIfNewer);
+                (srcDir / $"{TargetProjectName}.xml").Copy(targetDir / $"{TargetProjectName}.xml", ExistsPolicy.FileOverwriteIfNewer);
             }
 
-            (SourceDirectory / $"{TargetProjectName}.nuspec").Copy(NugetDirectory / $"{TargetProjectName}.nuspec", policy: ExistsPolicy.FileOverwriteIfNewer);
-            (RootDirectory / "logo.png").Copy(NugetDirectory / "logo.png", policy: ExistsPolicy.FileOverwriteIfNewer);
-            (RootDirectory / "README.md").Copy(NugetDirectory / "README.md", policy: ExistsPolicy.FileOverwriteIfNewer);
+            (SourceDirectory / $"{TargetProjectName}.nuspec").Copy(NugetDirectory / $"{TargetProjectName}.nuspec", ExistsPolicy.FileOverwriteIfNewer);
+            (RootDirectory / "logo.png").Copy(NugetDirectory / "logo.png", ExistsPolicy.FileOverwriteIfNewer);
+            (RootDirectory / "README.md").Copy(NugetDirectory / "README.md", ExistsPolicy.FileOverwriteIfNewer);
         });
 
     Target CreatePackage => _ => _
@@ -186,9 +202,9 @@ class Build : NukeBuild
                 .SetTargetPath(nuspec)
                 .SetVersion(Version)
                 .SetOutputDirectory(NugetDirectory)
-                .EnableSymbols()
-                .SetSymbolPackageFormat(NuGetSymbolPackageFormat.snupkg)
-                .SetConfiguration(Configuration)
+                .SetSymbols(true)
+                .SetSymbolPackageFormat("snupkg")
+                .AddProperty("Configuration", Configuration)
             );
         });
 

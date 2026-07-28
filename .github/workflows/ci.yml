@@ -56,7 +56,7 @@ jobs:
           10.0.x
 
     - name: Build
-      run: ./build.sh
+      run: ./build.sh -AngleSharpVersion 1.5.0
 
   windows:
     runs-on: windows-latest
@@ -72,9 +72,9 @@ jobs:
     - name: Build
       run: |
         if ($env:GITHUB_REF -eq "refs/heads/main") {
-          .\build.ps1 -Target Publish
+          .\build.ps1 -Target Publish -AngleSharpVersion 1.5.0
         } elseif ($env:GITHUB_REF -eq "refs/heads/devel") {
-          .\build.ps1 -Target PrePublish
+          .\build.ps1 -Target PrePublish -AngleSharpVersion 1.5.0
         } else {
-          .\build.ps1
+          .\build.ps1 -AngleSharpVersion 1.5.0
         }
