@@ -7,7 +7,7 @@ namespace AngleSharp.Js
     using System;
     using System.Collections.Generic;
 
-    sealed class DomNodeInstance : ObjectInstance
+    sealed class DomNodeInstance : ObjectInstance, IDomProxy
     {
         private readonly EngineInstance _instance;
         private readonly Object _value;
@@ -71,13 +71,115 @@ namespace AngleSharp.Js
             //  itself. The members of the DOM interface live on the prototype, so finding
             //  them is the engine's job - answering them here would make the node claim
             //  every inherited member as its own.
-            if (Prototype is DomPrototypeInstance prototype &&
-                prototype.TryGetFromIndex(_value, property.ToString(), out var descriptor))
+            switch (LookupIndex(property, out var indexed))
             {
-                return descriptor;
+                case DomPrototypeInstance.IndexerResult.Value:
+                    return new PropertyDescriptor(indexed.ToJsValue(_instance), false, false, false);
+                case DomPrototypeInstance.IndexerResult.Absent:
+                    return PropertyDescriptor.Undefined;
+                case DomPrototypeInstance.IndexerResult.Named:
+                    return ((DomPrototypeInstance)Prototype).CreateNamedDescriptor(_value, property.ToString());
             }
 
             return base.GetOwnProperty(property);
+        }
+
+        /// <summary>
+        /// Hands the engine the value of an own property directly, with no descriptor in
+        /// between. Jint asks this wherever it only wants the value, which is every read a
+        /// script performs, so an indexed read no longer allocates a descriptor for the
+        /// engine to unwrap and drop.
+        /// </summary>
+        /// <remarks>
+        /// Returning false is a statement that the node has no own property of that name,
+        /// not that the value was awkward to produce: the engine trusts it, does not ask
+        /// again, and continues the read on the prototype. It is exactly what the discarded
+        /// descriptor used to prove, which is what lets the engine keep its prototype cache
+        /// while a node's own property set lives outside the engine entirely.
+        /// </remarks>
+        protected override Boolean TryGetOwnPropertyValue(JsValue property, JsValue receiver, out JsValue value)
+        {
+            switch (LookupIndex(property, out var indexed))
+            {
+                case DomPrototypeInstance.IndexerResult.Value:
+                    value = indexed.ToJsValue(_instance);
+                    return true;
+                case DomPrototypeInstance.IndexerResult.Absent:
+                    value = JsValue.Undefined;
+                    return false;
+                case DomPrototypeInstance.IndexerResult.Named:
+                    //  What the accessor pair's getter would have returned, without building
+                    //  the pair. Null means the name is only writable, and reads as undefined.
+                    value = indexed == null ? JsValue.Undefined : indexed.ToJsValue(_instance);
+                    return true;
+            }
+
+            //  What is left is what script or the window mirror wrote onto the node. Jint's
+            //  own fallback would route back through GetOwnProperty and ask the indexers a
+            //  second time, so the property bag is read here instead.
+            var descriptor = base.GetOwnProperty(property);
+
+            if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
+            {
+                value = JsValue.Undefined;
+                return false;
+            }
+
+            if (descriptor.Get == null)
+            {
+                //  Value also covers a descriptor that produces its value on read - the
+                //  deferred constructors on the window are of that kind.
+                value = descriptor.Value ?? JsValue.Undefined;
+                return true;
+            }
+
+            //  An accessor has to be invoked against the receiver, and that is the engine's
+            //  job. Script installs those on nodes - React tracks input values that way.
+            return base.TryGetOwnPropertyValue(property, receiver, out value);
+        }
+
+        /// <summary>
+        /// Answers whether an own property exists, and whether it enumerates, without
+        /// building a descriptor for it. Backs "in", hasOwnProperty, Object.assign, object
+        /// spread and JSON.stringify.
+        /// </summary>
+        /// <remarks>
+        /// The answer has to be the one <see cref="GetOwnProperty"/> would give at the same
+        /// moment - the engine does not verify it, and a wrong "missing" silently drops the
+        /// property from every one of those. Both go through the same lookup for that reason.
+        /// </remarks>
+        protected override OwnPropertyProbe ProbeOwnProperty(JsValue property)
+        {
+            switch (LookupIndex(property, out _))
+            {
+                case DomPrototypeInstance.IndexerResult.Value:
+                    //  The attributes GetOwnProperty gives an indexed entry.
+                    return OwnPropertyProbe.NonEnumerable;
+                case DomPrototypeInstance.IndexerResult.Absent:
+                    return OwnPropertyProbe.Missing;
+                case DomPrototypeInstance.IndexerResult.Named:
+                    return OwnPropertyProbe.NonEnumerable;
+            }
+
+            var descriptor = base.GetOwnProperty(property);
+
+            if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
+            {
+                return OwnPropertyProbe.Missing;
+            }
+
+            return descriptor.Enumerable ? OwnPropertyProbe.Enumerable : OwnPropertyProbe.NonEnumerable;
+        }
+
+        private DomPrototypeInstance.IndexerResult LookupIndex(JsValue property, out Object indexed)
+        {
+            if (Prototype is DomPrototypeInstance prototype)
+            {
+                return prototype.TryGetFromIndex(_value, property, out indexed);
+            }
+
+            indexed = null;
+            return DomPrototypeInstance.IndexerResult.None;
         }
 
         protected override void SetOwnProperty(JsValue property, PropertyDescriptor desc)
@@ -86,7 +188,7 @@ namespace AngleSharp.Js
             {
                 var value = desc.Value;
 
-                if (prototype.TrySetToIndex(_value, property.ToString(), value))
+                if (prototype.TrySetToIndex(_value, property, value))
                 {
                     return;
                 }

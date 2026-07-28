@@ -58,7 +58,7 @@ namespace AngleSharp.Js
                 _engine.SetValue(assignment.Key, assignment.Value);
             }
 
-            _window = GetDomNode(window);
+            _window = (DomNodeInstance)GetDomNode(window);
 
             foreach (var lib in libs)
             {
@@ -96,7 +96,7 @@ namespace AngleSharp.Js
 
         #region Methods
 
-        public DomNodeInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
+        public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
@@ -215,7 +215,20 @@ namespace AngleSharp.Js
 
         #region Helpers
 
-        private DomNodeInstance CreateInstance(Object obj) => new DomNodeInstance(this, obj);
+        //  A collection is projected by the array-like proxy, which lets the engine read its
+        //  indices and length directly; everything else by the ordinary one. The decision is a
+        //  property of the type, so it is resolved once per type for the whole process.
+        private ObjectInstance CreateInstance(Object obj)
+        {
+            var collection = obj.GetType().GetIndexedCollection();
+
+            if (collection != null)
+            {
+                return new DomCollectionInstance(this, obj, collection);
+            }
+
+            return new DomNodeInstance(this, obj);
+        }
 
         private ObjectInstance CreatePrototype(Type type) => new DomPrototypeInstance(this, type);
 

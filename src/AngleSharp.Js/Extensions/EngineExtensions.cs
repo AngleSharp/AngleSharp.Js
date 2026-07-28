@@ -246,9 +246,9 @@ namespace AngleSharp.Js
         {
             if (method != null)
             {
-                DomNodeInstance nodeInstance;
+                IDomProxy nodeInstance;
 
-                if (thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
+                if (thisObject.Type == Types.Object && thisObject.AsObject() is IDomProxy node)
                 {
                     nodeInstance = node;
                 }
@@ -262,7 +262,7 @@ namespace AngleSharp.Js
                     if (method.IsStatic)
                     {
                         var newArgs = new JsValue[arguments.Length + 1];
-                        newArgs[0] = nodeInstance;
+                        newArgs[0] = (JsValue)nodeInstance;
                         Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
                         var parameters = instance.BuildArgs(method, newArgs);
                         return method.Invoke(null, parameters).ToJsValue(instance);
