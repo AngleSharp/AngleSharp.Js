@@ -23,7 +23,7 @@ namespace AngleSharp.Js
         private readonly Engine _engine;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
-        private readonly IEnumerable<Assembly> _libs;
+        private readonly LibrarySet _libs;
         private readonly DomNodeInstance _window;
         private readonly JsImportMap _importMap;
 
@@ -49,8 +49,8 @@ namespace AngleSharp.Js
                 //  reports an ordinary "Maximum call stack size exceeded" error instead.
                 o.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
             });
-            _libs = libs;
-            _prototypes = new PrototypeCache(_engine, libs);
+            _libs = new LibrarySet(libs);
+            _prototypes = new PrototypeCache(_engine, _libs);
             _references = new ReferenceCache();
 
             foreach (var assignment in assignments)
@@ -58,7 +58,7 @@ namespace AngleSharp.Js
                 _engine.SetValue(assignment.Key, assignment.Value);
             }
 
-            _window = GetDomNode(window);
+            _window = (DomNodeInstance)GetDomNode(window);
 
             foreach (var lib in libs)
             {
@@ -84,7 +84,7 @@ namespace AngleSharp.Js
 
         #region Properties
 
-        public IEnumerable<Assembly> Libs => _libs;
+        public IEnumerable<Assembly> Libs => _libs.Assemblies;
 
         public DomNodeInstance Window => _window;
 
@@ -96,7 +96,7 @@ namespace AngleSharp.Js
 
         #region Methods
 
-        public DomNodeInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
+        public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
@@ -109,8 +109,8 @@ namespace AngleSharp.Js
         {
             //  Only the prototype of System.Object is not one of ours, and that type is not
             //  exposed as a constructor, so it never reaches this point.
-            var prototype = (DomPrototypeInstance)GetDomPrototype(definition.Type);
-            return prototype.GetConstructor(definition);
+            var prototype = GetDomPrototype(definition.Type);
+            return DomPrototypeState.Of(prototype).GetConstructor(definition);
         }
 
         public JsValue RunScript(String source, String type, String sourceUrl)
@@ -215,9 +215,42 @@ namespace AngleSharp.Js
 
         #region Helpers
 
-        private DomNodeInstance CreateInstance(Object obj) => new DomNodeInstance(this, obj);
+        //  A collection is projected by the array-like proxy, which lets the engine read its
+        //  indices and length directly; everything else by the ordinary one. The decision is a
+        //  property of the type, so it is resolved once per type for the whole process.
+        private ObjectInstance CreateInstance(Object obj)
+        {
+            var collection = obj.GetType().GetIndexedCollection();
 
-        private ObjectInstance CreatePrototype(Type type) => new DomPrototypeInstance(this, type);
+            if (collection != null)
+            {
+                return new DomCollectionInstance(this, obj, collection);
+            }
+
+            return new DomNodeInstance(this, obj);
+        }
+
+        /// <summary>
+        /// Builds this engine's prototype for a DOM type: an object over the member layout the
+        /// whole process shares for that type, chained to the prototype of its base type and
+        /// carrying what only this engine knows about it.
+        /// </summary>
+        private ObjectInstance CreatePrototype(Type type)
+        {
+            var shape = DomShapeCache.GetOrCreate(type, _libs, _engine);
+            var prototype = shape.Shape.Instantiate(_engine, GetParentPrototype(type, shape.BaseType));
+            JsObjectShape.SetHostState(prototype, new DomPrototypeState(this, prototype, shape));
+            return prototype;
+        }
+
+        //  The base type may fold onto this very prototype - a class carrying no DOM name of its
+        //  own shares the one of its nearest named ancestor. Asking for it would then re-enter
+        //  the cache entry currently being built, so the fold is ruled out before the ask and the
+        //  chain stops at Object.prototype, which is where it used to stop as well.
+        private ObjectInstance GetParentPrototype(Type type, Type baseType) =>
+            ReferenceEquals(_prototypes.Canonicalize(baseType), type)
+                ? _engine.Intrinsics.Object.PrototypeObject
+                : GetDomPrototype(baseType);
 
         /// <summary>
         /// Converts a value handed over from C#, which reaches Jint through JsValue.FromObject

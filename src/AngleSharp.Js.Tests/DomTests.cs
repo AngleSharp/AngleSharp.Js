@@ -128,5 +128,169 @@ namespace AngleSharp.Js.Tests
             var result = await "(function () { var d = document.createElement('div'); d.custom = 1; return d.hasOwnProperty('custom') + ',' + Object.getOwnPropertyNames(d).join(); })()".EvalScriptAsync();
             Assert.AreEqual("true,custom", result);
         }
+
+        //  Reading an index, testing it for existence and enumerating it are three different
+        //  questions the engine asks, and the node answers each of them from a different
+        //  method. They have to agree.
+        [Test]
+        public async Task IndexedEntryIsReportedAsAnOwnPropertyAndReads()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(0) + ',' + (0 in c) + ',' + c[0].nodeName; })()".EvalScriptAsync();
+            Assert.AreEqual("true,true,SCRIPT", result);
+        }
+
+        [Test]
+        public async Task IndexBeyondTheEndIsNoOwnPropertyAndReadsUndefined()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(5) + ',' + (5 in c) + ',' + (typeof c[5]); })()".EvalScriptAsync();
+            Assert.AreEqual("false,false,undefined", result);
+        }
+
+        //  A member of an indexed collection must not be mistaken for an index. "length" is
+        //  the collection's own property rather than an inherited one, which is what the
+        //  array-like projection reports for it - a browser has it on the prototype instead.
+        [Test]
+        public async Task MemberOfAnIndexedCollectionIsNotMistakenForAnIndex()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return ('length' in c) + ',' + c.length + ',' + c.propertyIsEnumerable('length'); })()".EvalScriptAsync();
+            Assert.AreEqual("true,1,false", result);
+        }
+
+        //  A DOM collection is array-like, not an array - which is exactly what a browser
+        //  reports for one.
+        [Test]
+        public async Task CollectionIsNotAnArray()
+        {
+            var result = await "Array.isArray(document.getElementsByTagName('script'))".EvalScriptAsync();
+            Assert.AreEqual("False", result);
+        }
+
+        [Test]
+        public async Task CollectionKeepsItsDomIdentity()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return Object.prototype.toString.call(c) + ',' + (c instanceof HTMLCollection); })()".EvalScriptAsync();
+            Assert.AreEqual("[object HTMLCollection],true", result);
+        }
+
+        [Test]
+        public async Task CollectionCanBeIterated()
+        {
+            var result = await "(function () { var n = 0; for (var s of document.getElementsByTagName('script')) { n += s.nodeName.length; } return n; })()".EvalScriptAsync();
+            Assert.AreEqual("6", result);
+        }
+
+        [Test]
+        public async Task CollectionCanBeSpread()
+        {
+            var result = await "[...document.getElementsByTagName('script')].length".EvalScriptAsync();
+            Assert.AreEqual("1", result);
+        }
+
+        [Test]
+        public async Task ArrayGenericsRunOverACollection()
+        {
+            var result = await "Array.prototype.map.call(document.getElementsByTagName('script'), function (e) { return e.nodeName; }).join()".EvalScriptAsync();
+            Assert.AreEqual("SCRIPT", result);
+        }
+
+        [Test]
+        public async Task IndicesOfACollectionAreEnumerated()
+        {
+            var result = await "JSON.stringify(Object.keys(document.getElementsByTagName('script')))".EvalScriptAsync();
+            Assert.AreEqual("[\"0\"]", result);
+        }
+
+        //  The platform-object shape: the projection owns its indices, so script cannot delete
+        //  one or define over it.
+        [Test]
+        public async Task IndexOfACollectionCannotBeDeleted()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return delete c[0]; })()".EvalScriptAsync();
+            Assert.AreEqual("False", result);
+        }
+
+        [Test]
+        public async Task ExpandoOnACollectionIsStillPossible()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); c.marker = 'kept'; return c.marker + ',' + c.hasOwnProperty('marker'); })()".EvalScriptAsync();
+            Assert.AreEqual("kept,true", result);
+        }
+
+        //  Existence is answered from the collection's length alone, without producing the
+        //  element - so it has to keep agreeing with what reading it would say.
+        [Test]
+        public async Task ExistenceOfAnIndexAgreesWithReadingIt()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); var r = []; for (var i = 0; i < 3; i++) { r.push((i in c) + ':' + (c[i] !== undefined)); } return r.join(); })()".EvalScriptAsync();
+            Assert.AreEqual("true:true,false:false,false:false", result);
+        }
+
+        [Test]
+        public async Task NumericIndexerOfNamedNodeMapStillReadsBothWays()
+        {
+            var result = await "(function () { var d = document.createElement('div'); d.setAttribute('title', 't'); var a = d.attributes; return a.length + ',' + a[0].name + ',' + a.title.value; })()".EvalScriptAsync();
+            Assert.AreEqual("1,title,t", result);
+        }
+
+        //  An element whose id happens to be numeric must not surface as an index of the
+        //  collection. The array-like projection owns every array-index key - an index past the
+        //  end is authoritatively absent - so the named entry answers only non-index names,
+        //  which is also how WebIDL resolves the collision. Every answer has to say the same
+        //  thing, the descriptor included.
+        [Test]
+        public async Task NamedEntryWithAnIndexShapedNameIsNotAnIndex()
+        {
+            var result = await "(function () { var f = document.createElement('form'); f.id = '5'; document.documentElement.appendChild(f); var c = document.forms; return (Object.getOwnPropertyDescriptor(c, '5') === undefined) + ',' + ('5' in c) + ',' + (c['5'] === undefined) + ',' + c.hasOwnProperty('5') + ',' + (c[0] === f); })()".EvalScriptAsync();
+            Assert.AreEqual("true,false,true,false,true", result);
+        }
+
+        //  The guard above must not overreach: a named entry whose name is not an array index
+        //  keeps resolving, descriptor and all.
+        [Test]
+        public async Task NamedEntryWithAnOrdinaryNameStillResolves()
+        {
+            var result = await "(function () { var f = document.createElement('form'); f.id = 'login'; document.documentElement.appendChild(f); var c = document.forms; return (c.login === f) + ',' + (Object.getOwnPropertyDescriptor(c, 'login') !== undefined); })()".EvalScriptAsync();
+            Assert.AreEqual("true,true", result);
+        }
+
+        //  A symbol cannot be an index, and it must not be turned into one either - the
+        //  well-known symbols are probed on every kind of object by library code.
+        [Test]
+        public async Task SymbolKeyOnAnIndexedCollectionIsNotTreatedAsAnIndex()
+        {
+            var result = await "(function () { var c = document.getElementsByTagName('script'); return c.hasOwnProperty(Symbol.toStringTag) + ',' + (typeof c[Symbol.toStringTag]); })()".EvalScriptAsync();
+            Assert.AreEqual("false,string", result);
+        }
+
+        //  The node's own property set lives in the DOM, so nothing in the engine changes
+        //  when an entry appears there. A name that was absent has to start resolving on the
+        //  node from the very next read, rather than staying on whatever the prototype said.
+        [Test]
+        public async Task NamedEntryStartsResolvingOnTheNodeAsSoonAsItExists()
+        {
+            var result = await "(function () { var d = document.createElement('div'), a = d.attributes, before = typeof a.title; d.setAttribute('title', 't'); return before + ',' + a.title.value + ',' + a.hasOwnProperty('title'); })()".EvalScriptAsync();
+            Assert.AreEqual("undefined,t,true", result);
+        }
+
+        [Test]
+        public async Task AccessorDefinedOnANodeByScriptIsInvokedOnRead()
+        {
+            var result = await "(function () { var d = document.createElement('div'); Object.defineProperty(d, 'marker', { get: function () { return 'from getter'; } }); return d.marker + ',' + d.hasOwnProperty('marker'); })()".EvalScriptAsync();
+            Assert.AreEqual("from getter,true", result);
+        }
+
+        [Test]
+        public async Task NonEnumerablePropertyOfANodeIsSeenButNotEnumerated()
+        {
+            var result = await "(function () { var d = document.createElement('div'); Object.defineProperty(d, 'hidden2', { value: 1 }); return d.hasOwnProperty('hidden2') + ',' + d.propertyIsEnumerable('hidden2') + ',' + Object.keys(d).length; })()".EvalScriptAsync();
+            Assert.AreEqual("true,false,0", result);
+        }
+
+        [Test]
+        public async Task PropertyAssignedToANodeIsCopiedAndSerialized()
+        {
+            var result = await "(function () { var d = document.createElement('div'); d.custom = 'v'; return JSON.stringify(d) + ',' + JSON.stringify(Object.assign({}, d)); })()".EvalScriptAsync();
+            Assert.AreEqual("{\"custom\":\"v\"},{\"custom\":\"v\"}", result);
+        }
     }
 }

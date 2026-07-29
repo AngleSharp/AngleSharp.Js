@@ -14,6 +14,7 @@ Released on Friday, July 31 2026.
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname
+- Updated DOM prototypes to be built from a member layout shared by the whole process, which resolves a type once instead of once per document and lets the engine cache warm member reads @lahma
 - Added report for uncaught event-loop exceptions through the browsing context
 - Added `JsScriptingOptions` to tune the engine via `WithJs` (#75) @lahma
 - Added support for Web Workers (#78)
