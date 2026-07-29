@@ -52,8 +52,46 @@ namespace AngleSharp.Js.Tests
             Assert.AreNotSame(one, other, "Each engine must have a prototype object of its own.");
             Assert.AreSame(DomPrototypeState.Of(one).Shape, DomPrototypeState.Of(other).Shape,
                 "Both engines must build their prototype from the same shared description.");
-            Assert.AreEqual(ObjectRepresentation.SharedBuiltinLayout, first.Advanced.GetObjectRepresentation(one));
-            Assert.AreEqual(ObjectRepresentation.SharedBuiltinLayout, second.Advanced.GetObjectRepresentation(other));
+            Assert.IsTrue(first.Advanced.HasSharedShape(one));
+            Assert.IsTrue(second.Advanced.HasSharedShape(other));
+        }
+
+        /// <summary>
+        /// The property this whole change exists to obtain, asserted rather than observed once:
+        /// a DOM prototype's own members are described by a layout it shares with the same
+        /// prototype in every other engine, which is what admits it as a holder of the engine's
+        /// prototype-member cache and lets a warm read off a node be served from it.
+        /// </summary>
+        /// <remarks>
+        /// Instantiating from a member layout falls back to the ordinary per-object property
+        /// dictionary silently and correctly when it cannot shape an object, so nothing about a
+        /// document would look wrong if this stopped happening - only every warm member read on
+        /// every node would get slower. The control below is the object that can never be shaped
+        /// and is not meant to be.
+        /// </remarks>
+        [Test]
+        public void PrototypesAreShapedAndTheProxiesAreNot()
+        {
+            var engine = Open("<!doctype html><html><body><span id='s'>x</span></body></html>");
+
+            Assert.IsTrue(engine.Advanced.HasSharedShape((ObjectInstance)engine.Evaluate(DivPrototype)),
+                "An element prototype must be built from the shared member layout.");
+            //  Reading "length" off the collection would not do: an array-like proxy answers that
+            //  one itself, so it never reaches the prototype whose layout is the point here.
+            Assert.IsTrue(engine.Advanced.HasSharedShape((ObjectInstance)engine.Evaluate(
+                "(function () { var p = Object.getPrototypeOf(document.getElementsByTagName('span')); p.constructor; return p; })()")),
+                "A collection prototype must be built from the shared member layout.");
+            Assert.IsTrue(engine.Advanced.HasSharedShape((ObjectInstance)engine.Evaluate(
+                "(function () { window.document; return Object.getPrototypeOf(window); })()")),
+                "The window prototype must be built from the shared member layout.");
+
+            //  A node is a host object of ours, whose own properties are its own business and
+            //  describe no layout anything else could share - which is exactly the refusal the
+            //  prototypes had to be moved out of, and the reason they are no longer of our type.
+            Assert.IsFalse(engine.Advanced.HasSharedShape((ObjectInstance)engine.Evaluate("document.createElement('div')")),
+                "A DOM node is a host object; it shares its layout with nothing.");
+            Assert.IsFalse(engine.Advanced.HasSharedShape((ObjectInstance)engine.Evaluate("document.getElementsByTagName('span')")),
+                "A DOM collection is a host object; it shares its layout with nothing.");
         }
 
         /// <summary>

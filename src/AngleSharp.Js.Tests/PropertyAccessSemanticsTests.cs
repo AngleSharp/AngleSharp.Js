@@ -72,7 +72,7 @@ namespace AngleSharp.Js.Tests
             AssertOrdinaryAsync(
                 "(function () { var d = document.createElement('div'); d.tagName; return Object.getPrototypeOf(d); })()",
                 (engine, instance) =>
-                    Assert.AreEqual(ObjectRepresentation.SharedBuiltinLayout, engine.Advanced.GetObjectRepresentation(instance),
+                    Assert.IsTrue(engine.Advanced.HasSharedShape(instance),
                         "A DOM prototype must be an object over a shared member layout."));
 
         [Test]
