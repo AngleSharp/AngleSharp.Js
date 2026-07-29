@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="$(AngleSharpVersion)" />
-    <PackageReference Include="Jint" Version="4.15.2" />
+    <PackageReference Include="Jint" Version="4.15.3" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">

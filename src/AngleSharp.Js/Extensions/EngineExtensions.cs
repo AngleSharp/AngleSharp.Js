@@ -226,8 +226,43 @@ namespace AngleSharp.Js
 
             if (definition != null)
             {
-                obj.FastSetProperty(definition.Name, new DomConstructorDescriptor(engine, definition));
+                obj.FastSetProperty(definition.Name, CreateConstructorProperty(engine, definition));
             }
+        }
+
+        /// <summary>
+        /// The property an exposed type is published under, on the window and on the global object.
+        /// A document names a handful of the types an assembly exposes, but a property is registered
+        /// for every one of them, so the constructor object behind it is only built once script reads
+        /// the property.
+        /// </summary>
+        /// <remarks>
+        /// The attributes are the ones an eagerly written constructor had: enumerable, but neither
+        /// writable nor configurable. A lazy descriptor rather than a hand-written custom-valued one
+        /// because it stops being lazy once it holds its value, and the engine's global-identifier
+        /// cache declines a descriptor that could still compute - permanently, since it has no way to
+        /// learn that a custom value became a constant. A type name is exactly the sort of global a
+        /// script reads over and over.
+        /// </remarks>
+        private static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
+            PropertyDescriptor.CreateLazy(
+                new ConstructorRequest(engine, definition),
+                static request => request.Instance.GetDomConstructor(request.Definition),
+                PropertyFlag.OnlyEnumerable);
+
+        //  Handed to the factory instead of captured by it, so that the delegate above is the same
+        //  one for every type rather than a closure allocated per registered name.
+        private readonly struct ConstructorRequest
+        {
+            public ConstructorRequest(EngineInstance instance, ConstructorDefinition definition)
+            {
+                Instance = instance;
+                Definition = definition;
+            }
+
+            public EngineInstance Instance { get; }
+
+            public ConstructorDefinition Definition { get; }
         }
 
         public static void AddConstructorFunction(this EngineInstance engine, ObjectInstance obj, Type type)
