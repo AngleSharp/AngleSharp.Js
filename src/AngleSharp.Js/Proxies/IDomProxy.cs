@@ -17,5 +17,11 @@ namespace AngleSharp.Js
         /// Gets the DOM object this proxy stands for.
         /// </summary>
         Object Value { get; }
+
+        /// <summary>
+        /// Gets the engine the proxy belongs to. A prototype member is shared by every engine
+        /// and reaches its own through whichever object it was invoked on.
+        /// </summary>
+        EngineInstance Instance { get; }
     }
 }

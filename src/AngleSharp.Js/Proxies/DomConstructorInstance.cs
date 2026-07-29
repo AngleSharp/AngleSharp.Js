@@ -31,20 +31,11 @@ namespace AngleSharp.Js
             Prototype = (ObjectInstance)engine.Jint.Intrinsics.Function.Get("prototype");
 
             FastSetProperty("toString", new PropertyDescriptor(toString, true, false, true));
+
+            //  Nothing is written back onto the prototype. Its member layout declares
+            //  "constructor" as a slot resolved on first read, and that read arrives here, so the
+            //  two directions still meet at one object without this end having to reach over.
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
-
-            var constructor = new PropertyDescriptor(this, true, false, true);
-
-            //  Every exposed type gets a constructor, so writing this directly would make
-            //  each of their prototypes register its members right away.
-            if (_objectPrototype is DomPrototypeInstance domPrototype)
-            {
-                domPrototype.DefineDeferredProperty("constructor", constructor);
-            }
-            else
-            {
-                _objectPrototype.FastSetProperty("constructor", constructor);
-            }
         }
 
         /// <summary>

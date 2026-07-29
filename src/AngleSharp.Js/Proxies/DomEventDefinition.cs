@@ -4,39 +4,42 @@ namespace AngleSharp.Js
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
-    using Jint.Runtime.Interop;
     using System;
     using System.Reflection;
 
-    sealed class DomEventInstance
+    /// <summary>
+    /// One event-handler member of a DOM type - "onclick" and its kin - as the accessor pair
+    /// a prototype declares for it.
+    /// </summary>
+    /// <remarks>
+    /// The pair is process-shared along with the rest of the type's members, so this object
+    /// must stay free of anything belonging to an engine: it holds the two reflected accessors
+    /// and derives everything else from the receiver. It doubles as the key a node files its
+    /// handler under, which is what keeps the handler itself - the one thing here that is per
+    /// node and per engine - on the node.
+    /// </remarks>
+    sealed class DomEventDefinition
     {
-        private readonly EngineInstance _engine;
         private readonly MethodInfo _addHandler;
         private readonly MethodInfo _removeHandler;
 
-        public DomEventInstance(EngineInstance engine, MethodInfo addHandler, MethodInfo removeHandler)
+        public DomEventDefinition(MethodInfo addHandler, MethodInfo removeHandler)
         {
-            _engine = engine;
             _addHandler = addHandler;
             _removeHandler = removeHandler;
-            Getter = new ClrFunction(engine.Jint, "get", GetEventHandler);
-            Setter = new ClrFunction(engine.Jint, "set", SetEventHandler);
         }
 
-        public ClrFunction Getter { get; }
-
-        public ClrFunction Setter { get; }
-
-        private JsValue GetEventHandler(JsValue thisObject, JsValue[] arguments)
+        public JsValue GetHandler(JsValue thisObject, JsValue[] arguments)
         {
             var node = thisObject.As<DomNodeInstance>();
             var registration = node?.GetEventHandler(this);
             return registration?.Function ?? JsValue.Null;
         }
 
-        private JsValue SetEventHandler(JsValue thisObject, JsValue[] arguments)
+        public JsValue SetHandler(JsValue thisObject, JsValue[] arguments)
         {
             var node = thisObject.As<DomNodeInstance>();
+            var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
 
             if (node != null)
             {
@@ -47,12 +50,14 @@ namespace AngleSharp.Js
                     _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
                 }
 
-                if (arguments[0] is Function function)
+                if (value is Function function)
                 {
+                    var engine = node.Instance;
+
                     DomEventHandler handler = (s, ev) =>
                     {
-                        var sender = s.ToJsValue(_engine);
-                        var args = ev.ToJsValue(_engine);
+                        var sender = s.ToJsValue(engine);
+                        var args = ev.ToJsValue(engine);
                         function.Call(sender, new[] { args });
                     };
 
@@ -61,7 +66,7 @@ namespace AngleSharp.Js
                 }
             }
 
-            return arguments[0];
+            return value;
         }
 
         /// <summary>

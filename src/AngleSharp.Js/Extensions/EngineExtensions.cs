@@ -242,6 +242,54 @@ namespace AngleSharp.Js
             apply.Invoke(engine, obj);
         }
 
+        /// <summary>
+        /// Gets the engine a value belongs to, or null when nothing about it says.
+        /// </summary>
+        /// <remarks>
+        /// A member declared on a shared prototype layout runs on behalf of whichever engine
+        /// instantiated it, so it has to work that out from the receiver. A DOM object answers
+        /// directly; anything else - the global object, or a plain object given a DOM prototype
+        /// by Object.create - answers through the first prototype in its chain that is one of
+        /// ours. Only a call made with no receiver at all leaves the question unanswerable.
+        /// </remarks>
+        public static EngineInstance GetEngineInstance(this JsValue value)
+        {
+            if (value is IDomProxy proxy)
+            {
+                return proxy.Instance;
+            }
+
+            for (var obj = value as ObjectInstance; obj != null; obj = obj.Prototype)
+            {
+                var state = DomPrototypeState.Of(obj);
+
+                if (state != null)
+                {
+                    return state.Instance;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Invokes a DOM member on behalf of the engine the receiver belongs to.
+        /// </summary>
+        public static JsValue CallShared(MethodInfo method, JsValue thisObject, JsValue[] arguments)
+        {
+            var instance = thisObject.GetEngineInstance();
+
+            if (instance == null)
+            {
+                //  A DOM member torn off its object and called with no receiver - what a browser
+                //  answers with a TypeError, and what the engine-bound member this replaces used
+                //  to answer by invoking against the window and failing further in.
+                throw new JavaScriptException("Illegal invocation.");
+            }
+
+            return instance.Call(method, thisObject, arguments);
+        }
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)

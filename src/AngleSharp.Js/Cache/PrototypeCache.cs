@@ -12,9 +12,9 @@ namespace AngleSharp.Js
     {
         private readonly ConcurrentDictionary<Type, ObjectInstance> _prototypes;
         private readonly ConcurrentDictionary<Type, Type> _canonicalTypes;
-        private readonly IEnumerable<Assembly> _libs;
+        private readonly LibrarySet _libs;
 
-        public PrototypeCache(Engine engine, IEnumerable<Assembly> libs)
+        public PrototypeCache(Engine engine, LibrarySet libs)
         {
             _prototypes = new ConcurrentDictionary<Type, ObjectInstance>
             {
@@ -29,7 +29,7 @@ namespace AngleSharp.Js
 
         //  Memoized per engine rather than globally: the set of libraries a document uses is what
         //  decides the outcome, and that is fixed for an engine but not for the process.
-        private Type Canonicalize(Type type) =>
-            _canonicalTypes.GetOrAdd(type, m => m.GetDomPrototypeType(_libs));
+        public Type Canonicalize(Type type) =>
+            _canonicalTypes.GetOrAdd(type, m => m.GetDomPrototypeType(_libs.Assemblies));
     }
 }

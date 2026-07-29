@@ -26,6 +26,8 @@ namespace AngleSharp.Js
         private readonly Object _value;
         private readonly IndexedCollection _collection;
 
+        private DomPrototypeState _state;
+
         public DomCollectionInstance(EngineInstance engine, Object value, IndexedCollection collection)
             : base(engine.Jint)
         {
@@ -33,7 +35,9 @@ namespace AngleSharp.Js
             _value = value;
             _collection = collection;
 
-            Prototype = engine.GetDomPrototype(value.GetType());
+            var prototype = engine.GetDomPrototype(value.GetType());
+            Prototype = prototype;
+            _state = DomPrototypeState.Of(prototype);
 
             //  A DOM collection is iterable in a browser, and wiring the array iterator is what
             //  the specifications themselves prescribe for it. Jint recognises that exact
@@ -44,6 +48,27 @@ namespace AngleSharp.Js
         }
 
         public Object Value => _value;
+
+        public EngineInstance Instance => _instance;
+
+        //  Remembered rather than reached through two type tests per lookup, and checked against
+        //  the prototype in force because a script may hand the collection another one.
+        private DomPrototypeState State
+        {
+            get
+            {
+                var state = _state;
+                var prototype = Prototype;
+
+                if (state == null || !ReferenceEquals(state.Prototype, prototype))
+                {
+                    state = DomPrototypeState.Of(prototype);
+                    _state = state;
+                }
+
+                return state;
+            }
+        }
 
         public override Object ToObject() => _value;
 
@@ -120,10 +145,12 @@ namespace AngleSharp.Js
                 return PropertyDescriptor.Undefined;
             }
 
-            if (Prototype is DomPrototypeInstance prototype &&
-                prototype.TryGetFromNamedIndex(_value, property, out _))
+            var state = State;
+            var indexers = state?.Indexers;
+
+            if (indexers != null && indexers.TryGetFromNamedIndex(state.Prototype, _value, property, out _))
             {
-                return prototype.CreateNamedDescriptor(_value, property.ToString());
+                return state.CreateNamedDescriptor(_value, property.ToString());
             }
 
             return PropertyDescriptor.Undefined;
@@ -158,8 +185,10 @@ namespace AngleSharp.Js
 
         protected override void SetOwnProperty(JsValue property, PropertyDescriptor desc)
         {
-            if (Prototype is DomPrototypeInstance prototype &&
-                prototype.TrySetToIndex(_value, property, desc.Value))
+            var state = State;
+            var indexers = state?.Indexers;
+
+            if (indexers != null && indexers.TrySetToIndex(state.Prototype, _instance, _value, property, desc.Value))
             {
                 return;
             }
