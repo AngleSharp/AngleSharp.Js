@@ -12,7 +12,8 @@ namespace AngleSharp.Js
         private readonly EngineInstance _instance;
         private readonly Object _value;
 
-        private Dictionary<DomEventInstance, DomEventInstance.Registration> _eventHandlers;
+        private Dictionary<DomEventDefinition, DomEventDefinition.Registration> _eventHandlers;
+        private DomPrototypeState _state;
 
         public DomNodeInstance(EngineInstance engine, Object value)
             : base(engine.Jint)
@@ -20,19 +21,50 @@ namespace AngleSharp.Js
             _instance = engine;
             _value = value;
 
-            Prototype = engine.GetDomPrototype(value.GetType());
+            var prototype = engine.GetDomPrototype(value.GetType());
+            Prototype = prototype;
+            _state = DomPrototypeState.Of(prototype);
+        }
+
+        /// <summary>
+        /// Gets what this node's prototype knows, or null if a script has given it a prototype
+        /// that is not one of ours.
+        /// </summary>
+        /// <remarks>
+        /// Every property lookup on every node asks this - it is what decides whether an indexer
+        /// claims the name - so the answer is remembered rather than reached through two type
+        /// tests per lookup. The prototype of a node is not fixed, though: a script may hand it
+        /// another one, so what is remembered is checked against the prototype in force.
+        /// </remarks>
+        private DomPrototypeState State
+        {
+            get
+            {
+                var state = _state;
+                var prototype = Prototype;
+
+                if (state == null || !ReferenceEquals(state.Prototype, prototype))
+                {
+                    state = DomPrototypeState.Of(prototype);
+                    _state = state;
+                }
+
+                return state;
+            }
         }
 
         public Object Value => _value;
+
+        public EngineInstance Instance => _instance;
 
         public override object ToObject() => _value;
 
         /// <summary>
         /// Gets the handler assigned to this node for the given event, if any.
-        /// The handler is per node - the <see cref="DomEventInstance"/> itself is
-        /// shared by every node using the same prototype.
+        /// The handler is per node - the <see cref="DomEventDefinition"/> itself is
+        /// shared by every node of the type, in every engine.
         /// </summary>
-        public DomEventInstance.Registration GetEventHandler(DomEventInstance ev)
+        public DomEventDefinition.Registration GetEventHandler(DomEventDefinition ev)
         {
             if (_eventHandlers != null && _eventHandlers.TryGetValue(ev, out var registration))
             {
@@ -45,16 +77,16 @@ namespace AngleSharp.Js
         /// <summary>
         /// Assigns the handler for the given event to this node.
         /// </summary>
-        public void SetEventHandler(DomEventInstance ev, DomEventInstance.Registration registration)
+        public void SetEventHandler(DomEventDefinition ev, DomEventDefinition.Registration registration)
         {
-            _eventHandlers = _eventHandlers ?? new Dictionary<DomEventInstance, DomEventInstance.Registration>();
+            _eventHandlers = _eventHandlers ?? new Dictionary<DomEventDefinition, DomEventDefinition.Registration>();
             _eventHandlers[ev] = registration;
         }
 
         /// <summary>
         /// Removes and returns the handler assigned to this node for the given event, if any.
         /// </summary>
-        public DomEventInstance.Registration RemoveEventHandler(DomEventInstance ev)
+        public DomEventDefinition.Registration RemoveEventHandler(DomEventDefinition ev)
         {
             if (_eventHandlers != null && _eventHandlers.TryGetValue(ev, out var registration))
             {
@@ -73,12 +105,12 @@ namespace AngleSharp.Js
             //  every inherited member as its own.
             switch (LookupIndex(property, out var indexed))
             {
-                case DomPrototypeInstance.IndexerResult.Value:
+                case DomIndexers.IndexerResult.Value:
                     return new PropertyDescriptor(indexed.ToJsValue(_instance), false, false, false);
-                case DomPrototypeInstance.IndexerResult.Absent:
+                case DomIndexers.IndexerResult.Absent:
                     return PropertyDescriptor.Undefined;
-                case DomPrototypeInstance.IndexerResult.Named:
-                    return ((DomPrototypeInstance)Prototype).CreateNamedDescriptor(_value, property.ToString());
+                case DomIndexers.IndexerResult.Named:
+                    return State.CreateNamedDescriptor(_value, property.ToString());
             }
 
             return base.GetOwnProperty(property);
@@ -101,13 +133,13 @@ namespace AngleSharp.Js
         {
             switch (LookupIndex(property, out var indexed))
             {
-                case DomPrototypeInstance.IndexerResult.Value:
+                case DomIndexers.IndexerResult.Value:
                     value = indexed.ToJsValue(_instance);
                     return true;
-                case DomPrototypeInstance.IndexerResult.Absent:
+                case DomIndexers.IndexerResult.Absent:
                     value = JsValue.Undefined;
                     return false;
-                case DomPrototypeInstance.IndexerResult.Named:
+                case DomIndexers.IndexerResult.Named:
                     //  What the accessor pair's getter would have returned, without building
                     //  the pair. Null means the name is only writable, and reads as undefined.
                     value = indexed == null ? JsValue.Undefined : indexed.ToJsValue(_instance);
@@ -152,12 +184,12 @@ namespace AngleSharp.Js
         {
             switch (LookupIndex(property, out _))
             {
-                case DomPrototypeInstance.IndexerResult.Value:
+                case DomIndexers.IndexerResult.Value:
                     //  The attributes GetOwnProperty gives an indexed entry.
                     return OwnPropertyProbe.NonEnumerable;
-                case DomPrototypeInstance.IndexerResult.Absent:
+                case DomIndexers.IndexerResult.Absent:
                     return OwnPropertyProbe.Missing;
-                case DomPrototypeInstance.IndexerResult.Named:
+                case DomIndexers.IndexerResult.Named:
                     return OwnPropertyProbe.NonEnumerable;
             }
 
@@ -171,27 +203,28 @@ namespace AngleSharp.Js
             return descriptor.Enumerable ? OwnPropertyProbe.Enumerable : OwnPropertyProbe.NonEnumerable;
         }
 
-        private DomPrototypeInstance.IndexerResult LookupIndex(JsValue property, out Object indexed)
+        private DomIndexers.IndexerResult LookupIndex(JsValue property, out Object indexed)
         {
-            if (Prototype is DomPrototypeInstance prototype)
+            var state = State;
+            var indexers = state?.Indexers;
+
+            if (indexers != null)
             {
-                return prototype.TryGetFromIndex(_value, property, out indexed);
+                return indexers.TryGetFromIndex(state.Prototype, _value, property, out indexed);
             }
 
             indexed = null;
-            return DomPrototypeInstance.IndexerResult.None;
+            return DomIndexers.IndexerResult.None;
         }
 
         protected override void SetOwnProperty(JsValue property, PropertyDescriptor desc)
         {
-            if (Prototype is DomPrototypeInstance prototype)
-            {
-                var value = desc.Value;
+            var state = State;
+            var indexers = state?.Indexers;
 
-                if (prototype.TrySetToIndex(_value, property, value))
-                {
-                    return;
-                }
+            if (indexers != null && indexers.TrySetToIndex(state.Prototype, _instance, _value, property, desc.Value))
+            {
+                return;
             }
 
             base.SetOwnProperty(property, desc);
