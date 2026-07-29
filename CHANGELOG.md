@@ -1,6 +1,6 @@
 # 1.0.0
 
-Released on Thursday, July 31 2026.
+Released on Friday, July 31 2026.
 
 - Fixed `StackOverflowException` from deeply recursive scripts (#75) @lahma
 - Fixed invoking JavaScript functions with DOM objects created in C#, which reached script as a plain CLR wrapper instead of as the DOM object (#76)
