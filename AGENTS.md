@@ -22,7 +22,7 @@ The orchestrator is NUKE (`nuke/Build.cs`), bootstrapped by `build.ps1` / `build
 For the normal edit/test loop use the SDK directly — much faster than the NUKE bootstrap:
 
 ```powershell
-dotnet build src/AngleSharp.Js.slnx
+dotnet build src/AngleSharp.Js.sln
 dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0
 dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0 --filter "FullyQualifiedName~InstanceOfTests"
 dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0 --filter "Name=WindowIsAnInstanceOfWindow"

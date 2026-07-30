@@ -1,9 +1,0 @@
-<Solution>
-  <Project Path="AngleSharp.Js/AngleSharp.Js.csproj" />
-  <Project Path="AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj" />
-  <!-- The NUKE build script is here to be editable from the IDE; build.ps1 bootstraps it
-       separately, so it is not part of a solution build. -->
-  <Project Path="../nuke/_build.csproj">
-    <Build Project="false" />
-  </Project>
-</Solution>
