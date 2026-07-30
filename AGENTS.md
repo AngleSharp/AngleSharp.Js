@@ -40,8 +40,8 @@ dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0 --filt
   `AssemblyVersion` is pinned to `1.0.0.0` so the strong-name identity survives that.
 - `RunUnitTests` runs the suite twice, differing only in a `prefetched` environment variable
   that nothing in this repo currently reads — a single run is equivalent locally.
-- `global.json` pins the SDK to the 10.0 feature band (`rollForward: latestFeature`); the NUKE
-  build project targets `net10.0`, so an older SDK cannot bootstrap it anyway.
+- There is deliberately no `global.json` — the repository does not restrict the SDK version. The
+  bootstrap scripts use the STS channel, CI installs 10.0.x.
 
 ## Architecture
 
