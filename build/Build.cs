@@ -1,11 +1,11 @@
+using Fallout.Common;
+using Fallout.Common.CI.GitHubActions;
+using Fallout.Common.IO;
+using Fallout.Common.Tools.DotNet;
+using Fallout.Common.Tools.GitHub;
+using Fallout.Common.Utilities.Collections;
+using Fallout.Solutions;
 using Microsoft.Build.Exceptions;
-using Nuke.Common;
-using Nuke.Common.CI.GitHubActions;
-using Nuke.Common.IO;
-using Nuke.Common.ProjectModel;
-using Nuke.Common.Tools.DotNet;
-using Nuke.Common.Tools.GitHub;
-using Nuke.Common.Utilities.Collections;
 using Octokit;
 using Octokit.Internal;
 using Serilog;
@@ -13,26 +13,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;
-using Project = Nuke.Common.ProjectModel.Project;
+using static Fallout.Common.Tools.DotNet.DotNetTasks;
+using Project = Fallout.Solutions.Project;
 
-class Build : NukeBuild
+class Build : FalloutBuild
 {
-    /// Support plugins are available for:
-    ///   - JetBrains ReSharper        https://nuke.build/resharper
-    ///   - JetBrains Rider            https://nuke.build/rider
-    ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
-    ///   - Microsoft VSCode           https://nuke.build/vscode
-
     public static int Main () => Execute<Build>(x => x.RunUnitTests);
 
-    [Nuke.Common.Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
+    [Fallout.Common.Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
-    [Nuke.Common.Parameter("ReleaseNotesFilePath - To determine the SemanticVersion")]
+    [Fallout.Common.Parameter("ReleaseNotesFilePath - To determine the SemanticVersion")]
     readonly AbsolutePath ReleaseNotesFilePath = RootDirectory / "CHANGELOG.md";
 
-    [Nuke.Common.Parameter("AngleSharp package version override (e.g. 1.0.0 for compatibility checks)")]
+    [Fallout.Common.Parameter("AngleSharp package version override (e.g. 1.0.0 for compatibility checks)")]
     readonly string AngleSharpVersion;
 
     [Solution]
@@ -52,7 +46,7 @@ class Build : NukeBuild
 
     Project TargetProject { get; set; }
 
-    // Note: The ChangeLogTasks from Nuke itself look buggy. So using the Cake source code.
+    // Note: The built-in ChangeLogTasks (inherited from NUKE) look buggy. So using the Cake source code.
     IReadOnlyList<ReleaseNotes> ChangeLog { get; set; }
 
     ReleaseNotes LatestReleaseNotes { get; set; }
@@ -244,7 +238,7 @@ class Build : NukeBuild
             var credentials = new Credentials(gitHubToken);
 
             GitHubTasks.GitHubClient = new GitHubClient(
-                new ProductHeaderValue(nameof(NukeBuild)),
+                new ProductHeaderValue(nameof(FalloutBuild)),
                 new InMemoryCredentialStore(credentials));
 
             GitHubTasks.GitHubClient.Repository.Release
@@ -280,7 +274,7 @@ class Build : NukeBuild
             var credentials = new Credentials(gitHubToken);
 
             GitHubTasks.GitHubClient = new GitHubClient(
-                new ProductHeaderValue(nameof(NukeBuild)),
+                new ProductHeaderValue(nameof(FalloutBuild)),
                 new InMemoryCredentialStore(credentials));
 
             GitHubTasks.GitHubClient.Repository.Release

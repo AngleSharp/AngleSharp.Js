@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace></RootNamespace>
+    <NoWarn>CS0649;CS0169</NoWarn>
+    <FalloutRootDirectory>..</FalloutRootDirectory>
+    <FalloutScriptDirectory>..</FalloutScriptDirectory>
+    <FalloutTelemetryVersion>1</FalloutTelemetryVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fallout.Common" Version="11.0.18" />
+    <!-- Transitive pin: Fallout.Common 11.0.18 still resolves 10.0.6, which carries advisories. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
