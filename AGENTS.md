@@ -194,6 +194,9 @@ Assert.AreEqual("True", result);
 - `IEnumerable<String>.EvalScriptsAsync()` runs several scripts against one document and
   returns the innerHTML of `#result` — use it for DOM-mutation tests.
 - `Helpers.GetCssConfig()` for tests needing CSS/render device.
+- If a timing-sensitive behavior works in real browsers but fails in this test runtime,
+  treat it as a bug candidate in `AngleSharp.Js` or upstream `AngleSharp` and investigate
+  root cause. Do **not** weaken or rewrite the test just to match the current behavior.
 - The main assembly grants `InternalsVisibleTo` to the test assembly, but reaching into
   internals is rare; prefer a script-level regression test.
 - `IntegrationTests` and `PageTests` hit the network and report `Inconclusive` when it is

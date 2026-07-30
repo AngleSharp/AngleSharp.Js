@@ -134,5 +134,139 @@ $.ajax('http://example.com/', {
             var result = await (new[] { script, SetResult("document.querySelector('#foo').textContent") }).EvalScriptsAsync();
             Assert.AreEqual("failed", result);
         }
+
+        [Test]
+        public async Task JqueryCanParseAndAppendHtmlFragments()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+var nodes = $.parseHTML('<ul><li data-id=\'1\'>A</li><li data-id=\'2\'>B</li></ul>');
+$(document.body).append(nodes);
+document.querySelector('#result').textContent = $('li').map(function () { return $(this).data('id'); }).get().join(',');")
+                .ConfigureAwait(false);
+            Assert.AreEqual("1,2", result);
+        }
+
+        [Test]
+        public async Task JqueryDelegatedClickHandlerShouldFire()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$(document.body).append('<ul id=\'todos\'><li><button class=\'remove\'>remove</button></li></ul>');
+$('#todos').on('click', '.remove', function () {
+    $('#result').text('delegated');
+});
+$('.remove').trigger('click');")
+                .ConfigureAwait(false);
+            Assert.AreEqual("delegated", result);
+        }
+
+        [Test]
+        public async Task JqueryDeferredShouldResolveThenCallback()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+var deferred = $.Deferred();
+deferred.then(function (value) {
+    $('#result').text(value);
+});
+deferred.resolve('done');")
+                .ConfigureAwait(false);
+            Assert.AreEqual("done", result);
+        }
+
+        [Test]
+        public async Task JqueryCanSerializeFormFields()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$(document.body).append('<form id=\'f\'><input name=\'q\' value=\'anglesharp\'><input type=\'checkbox\' name=\'x\' value=\'1\' checked></form>');
+$('#result').text($('#f').serialize());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("q=anglesharp&amp;x=1", result);
+        }
+
+        [Test]
+        public async Task JqueryToggleClassShouldAffectSelectorMatches()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$('#result').addClass('active');
+$('#result').toggleClass('active');
+$('#result').text($('.active').length.toString());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("0", result);
+        }
+
+        [Test]
+        public async Task JqueryDataShouldStoreAndReadObjectValues()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$('#result').data('config', { enabled: true, retries: 2 });
+var cfg = $('#result').data('config');
+$('#result').text(cfg.enabled.toString() + ':' + cfg.retries.toString());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("true:2", result);
+        }
+
+        [Test]
+        public async Task JqueryCloneTrueShouldCopyEventHandlers()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+var source = $('<button id=\'source\'>go</button>');
+var clicks = 0;
+source.on('click', function () { clicks++; });
+var clone = source.clone(true);
+$(document.body).append(clone);
+clone.trigger('click');
+clone.trigger('click');
+$('#result').text(clicks.toString());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("2", result);
+        }
+
+        [Test]
+        public async Task JqueryMapShouldProjectDomCollection()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$(document.body).append('<div class=\'item\'>a</div><div class=\'item\'>b</div><div class=\'item\'>c</div>');
+var joined = $('.item').map(function (_, el) { return el.textContent.toUpperCase(); }).get().join('-');
+$('#result').text(joined);")
+                .ConfigureAwait(false);
+            Assert.AreEqual("A-B-C", result);
+        }
+
+        [Test]
+        public async Task JqueryClosestShouldFindParentMatch()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$(document.body).append('<section class=\'panel\'><div><span id=\'inner\'>x</span></div></section>');
+var hasPanel = $('#inner').closest('.panel').length;
+$('#result').text(hasPanel.toString());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("1", result);
+        }
+
+        [Test]
+        public async Task JqueryQueueShouldRunInOrder()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+var steps = [];
+var el = $('#result');
+el.queue(function (next) { steps.push('a'); next(); });
+el.queue(function (next) { steps.push('b'); next(); });
+el.dequeue();
+el.promise().then(function () {
+    el.text(steps.join(''));
+});")
+                .ConfigureAwait(false);
+            Assert.AreEqual("ab", result);
+        }
+
+        [Test]
+        public async Task JqueryWrapShouldCreateWrapperElement()
+        {
+            var result = await EvaluateScriptWithJqueryAsync(@"
+$(document.body).append('<span id=\'target\'>wrapped</span>');
+$('#target').wrap('<div class=\'wrapper\'></div>');
+$('#result').text($('#target').parent().hasClass('wrapper').toString());")
+                .ConfigureAwait(false);
+            Assert.AreEqual("true", result);
+        }
     }
 }
