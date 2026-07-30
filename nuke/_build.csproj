@@ -11,13 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="10.0.0" />
+    <PackageReference Include="Nuke.Common" Version="10.1.0" />
+    <!-- Transitive pins for advisories in Nuke.Common's dependency graph. -->
     <PackageReference Include="NuGet.Packaging" Version="6.12.5" PrivateAssets="All" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageDownload Include="NuGet.CommandLine" Version="[6.12.5]" />
   </ItemGroup>
 
 </Project>

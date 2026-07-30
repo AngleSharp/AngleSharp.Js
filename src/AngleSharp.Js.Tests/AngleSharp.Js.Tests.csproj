@@ -1,15 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> <!-- https://github.com/Tyrrrz/GitHubActionsTestLogger/issues/5 -->
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AngleSharp.Js\AngleSharp.Js.csproj">
-      <TargetFramework>netstandard2.0</TargetFramework>
-    </ProjectReference>
+    <ProjectReference Include="..\AngleSharp.Js\AngleSharp.Js.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,16 +15,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp.Io" Version="1.0.0" />
-    <PackageReference Include="GitHubActionsTestLogger" Version="2.4.1">
+    <PackageReference Include="AngleSharp.Css" />
+    <PackageReference Include="AngleSharp.Io" />
+    <PackageReference Include="AngleSharp.Xml" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="GitHubActionsTestLogger">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="AngleSharp.Css" Version="1.0.0" />
-    <PackageReference Include="AngleSharp.Xml" Version="1.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NUnit" Version="3.14.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
   </ItemGroup>
 </Project>

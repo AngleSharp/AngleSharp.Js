@@ -16,27 +16,32 @@ The orchestrator is NUKE (`nuke/Build.cs`), bootstrapped by `build.ps1` / `build
 ```powershell
 .\build.ps1                        # restore, compile, run the full test suite
 .\build.ps1 -Target Compile        # other targets: Clean Restore Compile RunUnitTests
-.\build.ps1 -Target Package        #   CopyFiles CreatePackage Package PrePublish Publish
+.\build.ps1 -Target Package        #   CreatePackage Package PrePublish Publish
 ```
 
 For the normal edit/test loop use the SDK directly — much faster than the NUKE bootstrap:
 
 ```powershell
 dotnet build src/AngleSharp.Js.sln
-dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net8.0
-dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net8.0 --filter "FullyQualifiedName~InstanceOfTests"
-dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net8.0 --filter "Name=WindowIsAnInstanceOfWindow"
+dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0
+dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0 --filter "FullyQualifiedName~InstanceOfTests"
+dotnet test src/AngleSharp.Js.Tests/AngleSharp.Js.Tests.csproj -f net10.0 --filter "Name=WindowIsAnInstanceOfWindow"
 ```
 
-- Always pass `-f net8.0` when iterating. On Windows both projects also target `net462` and
-  `net472`, so omitting it runs everything three times.
+- Always pass `-f net10.0` when iterating. On Windows the test project also targets `net462`
+  and `net472`, so omitting it runs everything three times.
 - `TreatWarningsAsErrors` is on (`src/Directory.Build.props`) — a warning breaks the build.
   There is no separate lint step; the compiler is it.
-- The package version is parsed from the top entry of `CHANGELOG.md` (`ReleaseNotesParser`),
-  not from a csproj property. Release-worthy changes get a `CHANGELOG.md` line.
+- Package versions are centralized in `src/Directory.Packages.props` (CPM is on), so a
+  `PackageReference` in a csproj carries no `Version`. AngleSharp and Jint are deliberately
+  stated as ranges: `dotnet pack` publishes them verbatim as the package's dependency ranges.
+- The package version is parsed from the top entry of `CHANGELOG.md` (`ReleaseNotesParser`)
+  and passed to the build as `-p:Version`. Release-worthy changes get a `CHANGELOG.md` line.
+  `AssemblyVersion` is pinned to `1.0.0.0` so the strong-name identity survives that.
 - `RunUnitTests` runs the suite twice, differing only in a `prefetched` environment variable
   that nothing in this repo currently reads — a single run is equivalent locally.
-- There is no `global.json`; the bootstrap scripts use the STS channel, CI installs 10.0.x.
+- There is deliberately no `global.json` — the repository does not restrict the SDK version. The
+  bootstrap scripts use the STS channel, CI installs 10.0.x.
 
 ## Architecture
 
@@ -154,8 +159,8 @@ Concrete .NET techniques that apply here:
   caches, and `Engine.PrepareScript` moves parsing and static analysis off the run path.
 
 Constraint worth knowing before reaching for a newer BCL API: the library targets
-`netstandard2.0`, `net462`, `net472` and `net8.0`, and takes no dependency beyond AngleSharp
-and Jint. `Span<T>`, `MemoryExtensions`, `ArrayPool<T>` and friends are therefore **not**
+`netstandard2.0`, `net462`, `net472`, `net8.0` and `net10.0`, and takes no dependency beyond
+AngleSharp and Jint. `Span<T>`, `MemoryExtensions`, `ArrayPool<T>` and friends are therefore **not**
 available unconditionally — they would need a `System.Memory` package reference or a
 `#if NET8_0_OR_GREATER` guard, so weigh that against the actual gain. `LangVersion` is
 `latest`, so modern C# *syntax* is always fine.
