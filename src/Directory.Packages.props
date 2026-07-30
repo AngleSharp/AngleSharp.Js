@@ -1,0 +1,23 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="AngleSharp.Js">
+    <PackageVersion Include="AngleSharp" Version="[$(AngleSharpVersion),2.0.0)" />
+    <!-- Ranged for the same reason as AngleSharp: pack publishes this verbatim, and Jint 5 is
+         assumed breaking for a binding layer that reflects over its object model. -->
+    <PackageVersion Include="Jint" Version="[4.15.3,5.0.0)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="AngleSharp.Css" Version="1.0.0" />
+    <PackageVersion Include="AngleSharp.Io" Version="1.0.0" />
+    <PackageVersion Include="AngleSharp.Xml" Version="1.0.0" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="NUnit" Version="3.14.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
+  </ItemGroup>
+</Project>

@@ -1,11 +1,37 @@
 <Project>
-  <PropertyGroup>
-    <Description>Integrates a JavaScript engine to AngleSharp.</Description>
+  <PropertyGroup Label="Identity">
     <Product>AngleSharp.Js</Product>
-    <Version>1.0.0</Version>
+    <Description>Integrates a JavaScript engine to AngleSharp.</Description>
+    <Authors>AngleSharp</Authors>
+    <Copyright>Copyright 2017-2026, AngleSharp</Copyright>
+  </PropertyGroup>
+
+  <!-- The package version is driven by CHANGELOG.md (see nuke/Build.cs), which would otherwise
+       push a new AssemblyVersion — and therefore a new strong-name identity — on every minor
+       release. Pin it to the major so .NET Framework consumers keep binding without redirects;
+       FileVersion and InformationalVersion still carry the real version. -->
+  <PropertyGroup Label="Versioning">
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Compilation">
     <LangVersion>latest</LangVersion>
-    <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Key.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- The oldest AngleSharp we support. Directory.Packages.props turns this into the bounded
+       range `[$(AngleSharpVersion),2.0.0)`, which `dotnet pack` publishes verbatim as the
+       package's dependency range — so the 2.0 ceiling holds even when CI overrides the floor.
+       NuGet resolves the lowest match, so a build cannot quietly take a dependency on an API
+       added in a later 1.x. -->
+  <PropertyGroup Label="Dependencies">
+    <AngleSharpVersion Condition=" '$(AngleSharpVersion)' == '' ">1.5.0</AngleSharpVersion>
+  </PropertyGroup>
+
+  <!-- Deterministic output on the build server, so the symbols match the published binary. -->
+  <PropertyGroup Condition=" '$(GITHUB_ACTIONS)' == 'true' ">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 </Project>
