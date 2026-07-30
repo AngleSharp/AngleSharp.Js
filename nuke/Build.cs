@@ -138,6 +138,7 @@ class Build : NukeBuild
                     .SetProjectFile(Solution)
                     .SetConfiguration(Configuration)
                     .SetVersion(Version)
+                    .SetContinuousIntegrationBuild(IsServerBuild)
                     .EnableNoRestore();
 
                 if (!String.IsNullOrEmpty(AngleSharpVersion))
@@ -184,6 +185,7 @@ class Build : NukeBuild
                     .SetConfiguration(Configuration)
                     .SetVersion(Version)
                     .SetOutputDirectory(NugetDirectory)
+                    .SetContinuousIntegrationBuild(IsServerBuild)
                     .EnableNoRestore()
                     .EnableNoBuild();
 
