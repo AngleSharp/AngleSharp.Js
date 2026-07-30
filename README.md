@@ -63,15 +63,17 @@ var numEntries = document.ExecuteScript("document.querySelectorAll('div').length
 
 ## Vision and Status
 
-The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* is fully ECMAScript 5 compatible and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation.
+The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* implements ECMAScript 2015 (ES6) through ECMAScript 2025 — classes and private fields, modules, generators, `async`/`await`, `Promise`, `Proxy`/`Reflect`, `Symbol`, typed arrays, `BigInt`, optional chaining, and iterator helpers among them — and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation. See the [Jint feature list](https://github.com/sebastienros/jint#supported-features) for the authoritative matrix.
 
-The library comes with a service that exposes `WithJs` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be published in compatibility with .NET Standard (2.0). The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
+The library comes with a service that exposes `WithJs` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one), including `type="module"` and `type="importmap"`. The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be published in compatibility with .NET Standard (2.0). The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
 
 ## Features
 
-- Support of ES5 through Jint
+- Support of modern JavaScript (ES2015 through ES2025) through Jint
 - Connection to the DOM
-- Evaluation of simple scripts (incl. jQuery)
+- ES modules and import maps (`<script type="module">`, `<script type="importmap">`)
+- Web Workers
+- Evaluation of real-world libraries (the test suite runs jQuery 1 through 4, React 16 and Bootstrap 5)
 
 ## Participating
 
