@@ -10,8 +10,11 @@ over AngleSharp's `[DomName]`-style attributes.
 
 ## Commands
 
-The orchestrator is NUKE (`nuke/Build.cs`), bootstrapped by `build.ps1` / `build.sh`
-(`build.cmd` forwards to either). Default target is `RunUnitTests`.
+The orchestrator is [Fallout](https://fallout.build) (`build/Build.cs`), the maintained hard fork
+of NUKE. `build.ps1` / `build.sh` (`build.cmd` forwards to either) provision the SDK, then
+`dotnet tool restore` + `dotnet fallout`; the CLI itself is pinned in
+`.config/dotnet-tools.json` and resolves `build/_build.csproj` by convention. Default target is
+`RunUnitTests`.
 
 ```powershell
 .\build.ps1                        # restore, compile, run the full test suite
@@ -19,7 +22,7 @@ The orchestrator is NUKE (`nuke/Build.cs`), bootstrapped by `build.ps1` / `build
 .\build.ps1 -Target Package        #   CreatePackage Package PrePublish Publish
 ```
 
-For the normal edit/test loop use the SDK directly — much faster than the NUKE bootstrap:
+For the normal edit/test loop use the SDK directly — much faster than the Fallout bootstrap:
 
 ```powershell
 dotnet build src/AngleSharp.Js.sln

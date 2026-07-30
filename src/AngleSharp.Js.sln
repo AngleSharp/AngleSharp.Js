@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Js", "AngleSharp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngleSharp.Js.Tests", "AngleSharp.Js.Tests\AngleSharp.Js.Tests.csproj", "{18B0B97B-8795-4DC2-A1E7-8070255BE718}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "_build", "..\nuke\_build.csproj", "{07DA52AA-8F6F-4F43-B09E-6AE899E95E43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "_build", "..\build\_build.csproj", "{07DA52AA-8F6F-4F43-B09E-6AE899E95E43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
