@@ -1,7 +1,31 @@
 <Project>
-  <PropertyGroup>
-    <Description>Integrates a JavaScript engine to AngleSharp.</Description>
+  <PropertyGroup Label="Identity">
     <Product>AngleSharp.Js</Product>
-    <Version>0.15.0</Version>
+    <Description>Integrates a JavaScript engine to AngleSharp.</Description>
+    <Authors>AngleSharp</Authors>
+    <Copyright>Copyright 2017-2026, AngleSharp</Copyright>
+  </PropertyGroup>
+
+  <!-- Fallback for builds that bypass the Fallout script. A release takes its version from the top
+       entry of CHANGELOG.md, which build/Build.cs passes in as -p:Version, so this value only
+       affects a plain `dotnet build` and no longer needs bumping for a release. -->
+  <PropertyGroup Label="Versioning">
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Compilation">
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- The oldest AngleSharp we support. Directory.Packages.props turns this into the bounded
+       range `[$(AngleSharpVersion),2.0.0)`, which `dotnet pack` publishes verbatim as the
+       package's dependency range — so the 2.0 ceiling holds even when CI overrides the floor.
+       NuGet resolves the lowest match, so a build cannot quietly take a dependency on an API
+       added in a later 1.x. -->
+  <PropertyGroup Label="Dependencies">
+    <AngleSharpVersion Condition=" '$(AngleSharpVersion)' == '' ">1.5.0</AngleSharpVersion>
   </PropertyGroup>
 </Project>

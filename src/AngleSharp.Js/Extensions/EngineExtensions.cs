@@ -5,12 +5,12 @@ namespace AngleSharp.Js
     using AngleSharp.Js.Cache;
     using Jint;
     using Jint.Native;
+    using Jint.Native.Number;
     using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
-    using System.Collections.Generic;
     using System.Reflection;
 
     static class EngineExtensions
@@ -21,31 +21,41 @@ namespace AngleSharp.Js
             {
                 if (obj is String)
                 {
-                    return new JsValue((String)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(String));
                 }
                 else if (obj is Int32)
                 {
-                    return new JsValue((Int32)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Int32));
                 }
                 else if (obj is UInt32)
                 {
-                    return new JsValue((UInt32)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(UInt32));
                 }
                 else if (obj is Double)
                 {
-                    return new JsValue((Double)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Double));
                 }
                 else if (obj is Single)
                 {
-                    return new JsValue((Single)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Single));
                 }
                 else if (obj is Boolean)
                 {
-                    return new JsValue((Boolean)obj);
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Boolean));
                 }
                 else if (obj is Enum)
                 {
-                    return new JsValue(Convert.ToInt32(obj));
+                    switch (obj)
+                    {
+                        case DocumentReadyState _:
+                            var name = ((Enum)obj).GetOfficialName();
+                            if (name != null)
+                            {
+                                return JsValue.FromObjectWithType(engine.Jint, name, typeof(String));
+                            }
+                            break;
+                    }
+                    return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Enum));
                 }
 
                 return engine.GetDomNode(obj);
@@ -54,27 +64,22 @@ namespace AngleSharp.Js
             return JsValue.Null;
         }
 
-        public static ClrFunctionInstance AsValue(this Engine engine, Func<JsValue, JsValue[], JsValue> func) =>
-            new ClrFunctionInstance(engine, func);
+        public static ClrFunction AsValue(this Engine engine, string name, Func<JsValue, JsValue[], JsValue> func) =>
+            new ClrFunction(engine, name, func);
 
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter, Action<JsValue, JsValue> setter) =>
-            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), new SetterFunctionInstance(engine, setter), true, true);
-
-        public static PropertyDescriptor AsProperty(this Engine engine, Func<JsValue, JsValue> getter) =>
-            new PropertyDescriptor(new GetterFunctionInstance(engine, getter), null, true, false);
-
-        public static PropertyDescriptor AsProperty(this Engine engine, Action<JsValue, JsValue> setter) =>
-            new PropertyDescriptor(null, new SetterFunctionInstance(engine, setter), true, false);
+        public static PropertyDescriptor AsProperty(this Engine engine, JsValue getter = null, JsValue setter = null) =>
+            new GetSetPropertyDescriptor(getter, setter, true, getter != null && setter != null);
 
         public static Object[] BuildArgs(this EngineInstance context, MethodBase method, JsValue[] arguments)
         {
-            var parameters = method.GetParameters();
-            var initDict = method.GetCustomAttribute<DomInitDictAttribute>();
+            var description = MethodDescription.Of(method);
+            var parameters = description.Parameters;
+            var initDict = description.InitDict;
             var max = parameters.Length;
             var args = new Object[max];
             var offset = 0;
 
-            if (parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow))
+            if (description.TakesWindow)
             {
                 if (arguments.Length == 0 || arguments[0].FromJsValue() is IWindow == false)
                 {
@@ -82,7 +87,7 @@ namespace AngleSharp.Js
                 }
             }
 
-            if (max > 0 && parameters[max - 1].GetCustomAttribute<ParamArrayAttribute>() != null)
+            if (description.TakesParamArray)
             {
                 max--;
             }
@@ -96,13 +101,15 @@ namespace AngleSharp.Js
 
             for (var i = 0; i < n; i++)
             {
-                if (parameters[i].IsOptional && arguments[i].IsUndefined())
+                var parameter = parameters[i + offset];
+
+                if (parameter.IsOptional && arguments[i].IsUndefined())
                 {
-                    args[i + offset] = parameters[i].DefaultValue;
+                    args[i + offset] = parameter.DefaultValue;
                 }
                 else
                 {
-                    args[i + offset] = arguments[i].As(parameters[i].ParameterType, context);
+                    args[i + offset] = arguments[i].As(parameter.ParameterType, context);
                 }
             }
 
@@ -133,7 +140,7 @@ namespace AngleSharp.Js
             return args;
         }
 
-        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterInfo[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
+        private static JsValue[] ExpandInitDict(JsValue[] arguments, ParameterDescription[] parameters, DomInitDictAttribute initDict, Int32 max, Int32 offset)
         {
             var newArgs = new JsValue[max - offset];
             var end = initDict.Offset - offset;
@@ -144,21 +151,18 @@ namespace AngleSharp.Js
                 newArgs[i] = arguments[i];
             }
 
-            if (obj != null)
+            for (var i = end + offset; i < max; i++)
             {
-                for (var i = end + offset; i < max; i++)
-                {
-                    var p = parameters[i];
-                    var name = p.Name;
+                var p = parameters[i];
+                var name = p.Name;
 
-                    if (obj.HasProperty(name))
-                    {
-                        newArgs[i - offset] = obj.GetProperty(name).Value;
-                    }
-                    else
-                    {
-                        newArgs[i - offset] = JsValue.Undefined;
-                    }
+                if (obj.HasProperty(name))
+                {
+                    newArgs[i - offset] = obj.Get(name);
+                }
+                else
+                {
+                    newArgs[i - offset] = JsValue.Undefined;
                 }
             }
 
@@ -174,6 +178,14 @@ namespace AngleSharp.Js
             }
         }
 
+        public static void AddConstructorFunctions(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
+        {
+            foreach (var exportedType in assembly.ExportedTypes)
+            {
+                engine.AddConstructorFunction(ctx, exportedType);
+            }
+        }
+
         public static void AddInstances(this EngineInstance engine, ObjectInstance obj, Assembly assembly)
         {
             foreach (var exportedType in assembly.ExportedTypes)
@@ -184,7 +196,78 @@ namespace AngleSharp.Js
 
         public static void AddConstructor(this EngineInstance engine, ObjectInstance obj, Type type)
         {
-            var apply = type.GetConstructorAction();
+            var enumDefinition = type.GetEnumLiteralDefinition();
+
+            if (enumDefinition != null)
+            {
+                var target = obj.Get(enumDefinition.Name) as ObjectInstance;
+
+                if (target == null)
+                {
+                    target = engine.Jint.Intrinsics.Object.Construct(Array.Empty<JsValue>(), JsValue.Undefined);
+                    obj.FastSetProperty(enumDefinition.Name, new PropertyDescriptor(target, false, true, false));
+                }
+
+                foreach (var member in enumDefinition.Members)
+                {
+                    var constant = JsNumber.Create(Convert.ToDouble(member.Value));
+
+                    target.FastSetProperty(member.Name, new PropertyDescriptor(
+                        constant,
+                        false,
+                        true,
+                        false));
+                }
+
+                return;
+            }
+
+            var definition = type.GetConstructorDefinition();
+
+            if (definition != null)
+            {
+                obj.FastSetProperty(definition.Name, CreateConstructorProperty(engine, definition));
+            }
+        }
+
+        /// <summary>
+        /// The property an exposed type is published under, on the window and on the global object.
+        /// A document names a handful of the types an assembly exposes, but a property is registered
+        /// for every one of them, so the constructor object behind it is only built once script reads
+        /// the property.
+        /// </summary>
+        /// <remarks>
+        /// The attributes are the ones an eagerly written constructor had: enumerable, but neither
+        /// writable nor configurable. A lazy descriptor rather than a hand-written custom-valued one
+        /// because it stops being lazy once it holds its value, and the engine's global-identifier
+        /// cache declines a descriptor that could still compute - permanently, since it has no way to
+        /// learn that a custom value became a constant. A type name is exactly the sort of global a
+        /// script reads over and over.
+        /// </remarks>
+        private static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
+            PropertyDescriptor.CreateLazy(
+                new ConstructorRequest(engine, definition),
+                static request => request.Instance.GetDomConstructor(request.Definition),
+                PropertyFlag.OnlyEnumerable);
+
+        //  Handed to the factory instead of captured by it, so that the delegate above is the same
+        //  one for every type rather than a closure allocated per registered name.
+        private readonly struct ConstructorRequest
+        {
+            public ConstructorRequest(EngineInstance instance, ConstructorDefinition definition)
+            {
+                Instance = instance;
+                Definition = definition;
+            }
+
+            public EngineInstance Instance { get; }
+
+            public ConstructorDefinition Definition { get; }
+        }
+
+        public static void AddConstructorFunction(this EngineInstance engine, ObjectInstance obj, Type type)
+        {
+            var apply = type.GetConstructorFunctionAction();
             apply.Invoke(engine, obj);
         }
 
@@ -194,37 +277,88 @@ namespace AngleSharp.Js
             apply.Invoke(engine, obj);
         }
 
-        public static JsValue RunScript(this EngineInstance engine, String source) =>
-            engine.RunScript(source, engine.Window);
+        /// <summary>
+        /// Gets the engine a value belongs to, or null when nothing about it says.
+        /// </summary>
+        /// <remarks>
+        /// A member declared on a shared prototype layout runs on behalf of whichever engine
+        /// instantiated it, so it has to work that out from the receiver. A DOM object answers
+        /// directly; anything else - the global object, or a plain object given a DOM prototype
+        /// by Object.create - answers through the first prototype in its chain that is one of
+        /// ours. Only a call made with no receiver at all leaves the question unanswerable.
+        /// </remarks>
+        public static EngineInstance GetEngineInstance(this JsValue value)
+        {
+            if (value is IDomProxy proxy)
+            {
+                return proxy.Instance;
+            }
 
-        public static JsValue RunScript(this EngineInstance engine, String source, INode context) =>
-            engine.RunScript(source, context.ToJsValue(engine));
+            for (var obj = value as ObjectInstance; obj != null; obj = obj.Prototype)
+            {
+                var state = DomPrototypeState.Of(obj);
+
+                if (state != null)
+                {
+                    return state.Instance;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Invokes a DOM member on behalf of the engine the receiver belongs to.
+        /// </summary>
+        public static JsValue CallShared(MethodInfo method, JsValue thisObject, JsValue[] arguments)
+        {
+            var instance = thisObject.GetEngineInstance();
+
+            if (instance == null)
+            {
+                //  A DOM member torn off its object and called with no receiver - what a browser
+                //  answers with a TypeError, and what the engine-bound member this replaces used
+                //  to answer by invoking against the window and failing further in.
+                throw new JavaScriptException("Illegal invocation.");
+            }
+
+            return instance.Call(method, thisObject, arguments);
+        }
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
-            if (method != null && thisObject.Type == Types.Object && thisObject.AsObject() is DomNodeInstance node)
+            if (method != null)
             {
+                IDomProxy nodeInstance;
+
+                if (thisObject.Type == Types.Object && thisObject.AsObject() is IDomProxy node)
+                {
+                    nodeInstance = node;
+                }
+                else
+                {
+                    nodeInstance = instance.Window;
+                }
+
                 try
                 {
                     if (method.IsStatic)
                     {
-                        var newArgs = new List<JsValue>
-                        {
-                            thisObject,
-                        };
-                        newArgs.AddRange(arguments);
-                        var parameters = instance.BuildArgs(method, newArgs.ToArray());
+                        var newArgs = new JsValue[arguments.Length + 1];
+                        newArgs[0] = (JsValue)nodeInstance;
+                        Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
+                        var parameters = instance.BuildArgs(method, newArgs);
                         return method.Invoke(null, parameters).ToJsValue(instance);
                     }
                     else
                     {
                         var parameters = instance.BuildArgs(method, arguments);
-                        return method.Invoke(node.Value, parameters).ToJsValue(instance);
+                        return method.Invoke(nodeInstance.Value, parameters).ToJsValue(instance);
                     }
                 }
                 catch (TargetInvocationException)
                 {
-                    throw new JavaScriptException(instance.Jint.Error);
+                    throw new JavaScriptException(instance.Jint.Intrinsics.Error);
                 }
             }
 

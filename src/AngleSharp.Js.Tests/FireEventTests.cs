@@ -3,7 +3,11 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Scripting;
+    using Jint;
     using NUnit.Framework;
+
+    using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -57,11 +61,11 @@ log.push('b');
 
             document.AddEventListener("hello", (s, ev) =>
             {
-                log.Put(log.Get("length").AsNumber().ToString(), "d", false);
+                log.Set(log.Get("length").AsNumber(), "d", false);
             });
 
             document.Dispatch(new Event("hello"));
-            
+
             Assert.AreEqual(4.0, log.Get("length").AsNumber());
             Assert.AreEqual("a", log.Get("0").AsString());
             Assert.AreEqual("b", log.Get("1").AsString());
@@ -153,6 +157,76 @@ document.onclick();
         }
 
         [Test]
+        public async Task ClickHandlerIsKeptPerElement()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<div id=a></div>
+<div id=b></div>
+<script>
+var log = [];
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+var f = function () { log.push('f'); };
+var g = function () { log.push('g'); };
+a.onclick = f;
+b.onclick = g;
+var aIsF = a.onclick === f;
+var bIsG = b.onclick === g;
+var shared = a.onclick === b.onclick;
+a.dispatchEvent(new MouseEvent('click'));
+b.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            Assert.IsTrue(engine.GetValue("aIsF").AsBoolean());
+            Assert.IsTrue(engine.GetValue("bIsG").AsBoolean());
+            Assert.IsFalse(engine.GetValue("shared").AsBoolean());
+
+            var log = engine.GetValue("log").AsArray();
+            Assert.AreEqual(2.0, log.Get("length").AsNumber());
+            Assert.AreEqual("f", log.Get("0").AsString());
+            Assert.AreEqual("g", log.Get("1").AsString());
+        }
+
+        [Test]
+        public async Task ClearingClickHandlerOfOneElementKeepsTheOther()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<div id=a></div>
+<div id=b></div>
+<script>
+var log = [];
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+a.onclick = function () { log.push('f'); };
+b.onclick = function () { log.push('g'); };
+a.onclick = null;
+var cleared = a.onclick === null;
+a.dispatchEvent(new MouseEvent('click'));
+b.dispatchEvent(new MouseEvent('click'));
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            Assert.IsTrue(engine.GetValue("cleared").AsBoolean());
+
+            var log = engine.GetValue("log").AsArray();
+            Assert.AreEqual(1.0, log.Get("length").AsNumber());
+            Assert.AreEqual("g", log.Get("0").AsString());
+        }
+
+        [Test]
         public async Task BodyOnloadWorksWhenSetAsAttributeInitially()
         {
             var cfg = Configuration.Default.WithJs().WithEventLoop();
@@ -210,16 +284,36 @@ setTimeout(function () {
         }
 
         [Test]
-        public async Task DomContentLoadedEventIsFired_Issue50()
+        public async Task DomContentLoadedEventIsFiredOnDocument_Issue50()
         {
-            //TODO Check this as well on the window level - currently works
-            //only against document (se AngleSharp#789)
             var cfg = Configuration.Default.WithJs().WithEventLoop();
             var html = @"<!doctype html>
 <html>
 <body>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var element = document.createElement('div');
+  element.textContent = 'Success!';
+  document.body.appendChild(element);
+});
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var div = document.QuerySelector("div");
+            Assert.AreEqual("Success!", div?.TextContent);
+        }
+
+        [Test]
+        public async Task DomContentLoadedEventIsFiredOnWindow_Issue50()
+        {
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
   var element = document.createElement('div');
   element.textContent = 'Success!';
   document.body.appendChild(element);
@@ -254,6 +348,60 @@ window.onload = function() {
 
             var div = document.QuerySelector("div");
             Assert.AreEqual("Success!", div?.TextContent);
+        }
+
+        [Test]
+        public async Task DocumentReadyStateIsComplete_Issue86()
+        {
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+document.onreadystatechange = function() {
+  var element = document.createElement('div');
+  element.textContent = document.readyState;
+  document.body.appendChild(element);
+};
+</script>
+</body>";
+            var context = BrowsingContext.New(cfg);
+            var document = await context.OpenAsync(m => m.Content(html))
+                .WhenStable();
+
+            var divs = document.GetElementsByTagName("div");
+
+            // expected value will vary depending on AngleSharp package version
+            // 1.0.2 and greater, expected value will be { "interactive", "complete"
+            // prior to 1.0.2, expected value will be { "1", "2" }
+            var expected = new[] { DocumentReadyState.Interactive, DocumentReadyState.Complete }
+                .Select(e => e.GetOfficialName() ?? Convert.ToInt32(e).ToString());
+            CollectionAssert.AreEqual(expected, divs.Select(d => d.TextContent));
+        }
+
+        [Test]
+        public async Task SetTimeoutWithSeveralDifferentFunctions()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service).WithEventLoop();
+            var html = @"<!doctype html>
+<html>
+<body>
+<script>
+var log = [];
+setTimeout(function () { log.push('a'); }, 0);
+setTimeout(function () { log.push('b'); }, 0);
+setTimeout(function () { log.push('c'); }, 0);
+</script>
+</body>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html))
+                .WhenStable();
+            var log = service.GetOrCreateJint(document).GetValue("log").AsArray();
+
+            Assert.AreEqual(3.0, log.Get("length").AsNumber());
+            Assert.AreEqual("a", log.Get("0").AsString());
+            Assert.AreEqual("b", log.Get("1").AsString());
+            Assert.AreEqual("c", log.Get("2").AsString());
         }
 
         [Test]

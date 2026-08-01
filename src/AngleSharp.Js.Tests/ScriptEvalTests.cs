@@ -1,12 +1,17 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
+    using AngleSharp.Html;
     using AngleSharp.Html.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Dom;
     using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
     using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Reflection;
+    using System.Text;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -14,7 +19,11 @@ namespace AngleSharp.Js.Tests
     {
         public static async Task<String> EvaluateComplexScriptAsync(params String[] sources)
         {
-            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var cfg = Configuration.Default
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop();
             var scripts = "<script>" + String.Join("</script><script>", sources) + "</script>";
             var html = "<!doctype html><div id=result></div>" + scripts;
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -76,10 +85,79 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task PerformXmlHttpRequestToRelativeUrlShouldWork()
+        {
+            var requester = new MockHttpClientRequester(new Dictionary<String, String>
+            {
+                { "/path/assets/result.txt", "Hello World!" }
+            });
+            var cfg = Configuration.Default
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop()
+                .With(requester)
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var script = @"
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'assets/result.txt', false);
+xhr.send();";
+            script += "document.querySelector('#result').textContent = xhr.responseText;";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Address("https://example.com/path/index.html").Content("<!doctype html><div id=result></div>"));
+            var result = document.QuerySelector("#result");
+
+            await document.Then(script).ConfigureAwait(false);
+
+            Assert.AreEqual("/path/assets/result.txt", requester.LastRequestedPath);
+            Assert.AreEqual("Hello World!", result.TextContent);
+        }
+
+        [Test]
+        public async Task FailedXmlHttpRequestShouldReachDoneAndFireError()
+        {
+            var cfg = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new FaultyHttpClientRequester())
+                .WithDefaultLoader()
+                .WithNavigator()
+                .WithCookies();
+            var script = @"
+var xhr = new XMLHttpRequest();
+xhr.onerror = function () {
+    document.querySelector('#result').textContent = xhr.readyState.toString();
+    document.querySelector('#result').dispatchEvent(new CustomEvent('xhrdone'));
+};
+xhr.open('GET', 'https://example.com/');
+xhr.send();";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content("<!doctype html><div id=result></div>"));
+            var result = document.QuerySelector("#result");
+            var completed = result.AwaitEventAsync("xhrdone");
+
+            await document.Then(script).ConfigureAwait(false);
+            await completed.ConfigureAwait(false);
+
+            Assert.AreEqual("4", result.TextContent);
+        }
+
+        [Test]
+        public async Task CreateImageShouldWork()
+        {
+            var result = await EvaluateComplexScriptAsync("var img = new Image(400, 200); img.src = '/image.jpg';", SetResult("img.width"));
+            Assert.AreEqual("400", result);
+        }
+
+        [Test]
         public async Task PerformXmlHttpRequestSynchronousToDataUrlShouldWork()
         {
             var req = new DataRequester();
-            var cfg = Configuration.Default.With(req).WithJs().WithEventLoop().WithDefaultLoader();
+            var cfg = Configuration.Default
+                .With(req)
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop()
+                .WithDefaultLoader();
             var script = "var xhr = new XMLHttpRequest(); xhr.open('GET', 'data:plain/text,Hello World!', false);xhr.send();document.querySelector('#result').textContent = xhr.responseText;";
             var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
@@ -92,7 +170,13 @@ namespace AngleSharp.Js.Tests
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
+            var cfg = Configuration.Default
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop()
+                .With(req)
+                .WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/', false);
@@ -109,7 +193,13 @@ document.querySelector('#result').textContent = xhr.responseText;";
         {
             var message = "Hi!";
             var req = new DelayedRequester(10, message);
-            var cfg = Configuration.Default.WithJs().WithEventLoop().With(req).WithDefaultLoader();
+            var cfg = Configuration.Default
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop()
+                .With(req)
+                .WithDefaultLoader();
             var script = @"
 var xhr = new XMLHttpRequest(); 
 xhr.open('GET', 'http://example.com/');
@@ -129,10 +219,38 @@ xhr.send();";
         }
 
         [Test]
+        public async Task PerformXmlHttpRequestWithUrlSearchParamsBodyShouldSerializeCorrectly()
+        {
+            var req = new CaptureRequester();
+            var cfg = Configuration.Default
+                .WithNavigator()
+                .WithCookies()
+                .WithJs()
+                .WithEventLoop()
+                .With(req)
+                .WithDefaultLoader();
+            var script = @"
+var body = new URLSearchParams();
+body.append('query', 'dom api');
+body.append('page', '1');
+var xhr = new XMLHttpRequest();
+xhr.open('POST', 'http://example.com/', false);
+xhr.send(body);
+document.querySelector('#result').textContent = body.toString();";
+            var html = "<!doctype html><div id=result></div><script>" + script + "</script>";
+            await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+
+            Assert.AreEqual("query=dom%20api&page=1", req.Body);
+            Assert.AreEqual("application/x-www-form-urlencoded; charset=UTF-8", req.Headers[HeaderNames.ContentType]);
+        }
+
+        [Test]
         public async Task SetContentOfIFrameElement()
         {
             var cfg = Configuration.Default
                 .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
+                .WithNavigator()
+                .WithCookies()
                 .WithJs()
                 .WithEventLoop();
             var html = @"<!doctype html><iframe id=myframe srcdoc=''></iframe><script>
@@ -143,6 +261,46 @@ doc.body.textContent = 'Hello world.';
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
             var result = document.GetElementById("myframe") as IHtmlInlineFrameElement;
             Assert.AreEqual("Hello world.", result.ContentDocument.Body.TextContent);
+        }
+
+        [Test]
+        public async Task WindowParentShouldPointToOwningWindowAndBeReadOnly()
+        {
+            var cfg = Configuration.Default
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true })
+                .WithNavigator()
+                .WithJs()
+                .WithEventLoop();
+            var html = @"<!doctype html><div id=result></div><iframe id=myframe srcdoc=''></iframe><script>
+var iframe = document.querySelector('#myframe');
+var topSelf = window.parent === window;
+var childParent = iframe.contentWindow.parent === window;
+var originalParent = iframe.contentWindow.parent;
+iframe.contentWindow.parent = null;
+var isReadOnly = iframe.contentWindow.parent === originalParent;
+document.querySelector('#result').textContent = [topSelf, childParent, isReadOnly].join('|');
+</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var result = document.QuerySelector("#result");
+            Assert.AreEqual("true|true|true", result.TextContent);
+        }
+
+        [Test]
+        public async Task IframeBrowsingContextShouldHaveParentInCore()
+        {
+            var cfg = Configuration.Default
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var html = "<!doctype html><iframe id=myframe srcdoc=''></iframe>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+
+            var frame = document.GetElementById("myframe") as IHtmlInlineFrameElement;
+            var frameWindow = frame.ContentWindow;
+            var topContext = document.Context;
+            var childContext = frameWindow.Document.Context;
+
+            Assert.IsNull(topContext.Parent);
+            Assert.AreSame(topContext, childContext.Parent);
+            Assert.AreEqual(document, childContext.Parent.Active);
         }
 
         [Test]
@@ -161,7 +319,7 @@ s.src='//api.whichbrowser.net/rel/detect.js?' + p.join('&');d.getElementsByTagNa
         [Test]
         public async Task QueryUserAgentShouldMatchAgent()
         {
-            var userAgent = new Navigator().UserAgent;
+            var userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 OPR/32.0.1948.19 (Edition beta)";
             var result = await EvaluateComplexScriptAsync(SetResult("navigator.userAgent"));
             Assert.AreEqual(userAgent, result);
         }

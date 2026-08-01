@@ -11,16 +11,49 @@ namespace AngleSharp.Js
     /// </summary>
     public sealed class JsEventLoop : IEventLoop, IDisposable
     {
+        //  Scripts run on this thread, and the JS call stack is the native one. The usual
+        //  1 MB holds roughly a thousand JavaScript frames, well short of what a browser
+        //  offers, and every frame beyond it costs the engine a hop onto a fresh stack.
+        //  The size is reserved address space rather than memory, but a 32 bit process has
+        //  little of it to spare when it runs many loops, so only a 64 bit one is enlarged;
+        //  zero leaves the thread with the default of the process.
+        private static readonly Int32 DefaultMaxStackSize = IntPtr.Size == 8 ? 16 * 1024 * 1024 : 0;
+
         private readonly Dictionary<TaskPriority, Queue<LoopEntry>> _queues = new Dictionary<TaskPriority, Queue<LoopEntry>>();
         private readonly Object _lockObj = new Object();
+        private readonly Action<Exception> _trackError;
         private CancellationTokenSource _cts;
 
         /// <summary>
         /// Creates a new event loop thread.
         /// </summary>
         public JsEventLoop()
+            : this(DefaultMaxStackSize, null)
         {
-            var thread = new Thread(Runner)
+        }
+
+        /// <summary>
+        /// Creates a new event loop thread that reports task errors to the given context.
+        /// </summary>
+        /// <param name="context">The browsing context to report errors to.</param>
+        public JsEventLoop(IBrowsingContext context)
+            : this(DefaultMaxStackSize, context == null ? null : new Action<Exception>(context.TrackError))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new event loop thread with the given stack size.
+        /// </summary>
+        /// <param name="maxStackSize">The stack size of the thread running the scripts.</param>
+        public JsEventLoop(Int32 maxStackSize)
+            : this(maxStackSize, null)
+        {
+        }
+
+        private JsEventLoop(Int32 maxStackSize, Action<Exception> trackError)
+        {
+            _trackError = trackError;
+            var thread = new Thread(Runner, maxStackSize)
             {
                 IsBackground = true,
                 Name = "AngleSharpEventLoop",
@@ -34,7 +67,7 @@ namespace AngleSharp.Js
 
         ICancellable IEventLoop.Enqueue(Action<CancellationToken> action, TaskPriority priority)
         {
-            var entry = new LoopEntry(action);
+            var entry = new LoopEntry(action, _trackError);
 
             lock (_lockObj)
             {
@@ -117,10 +150,12 @@ namespace AngleSharp.Js
         {
             private readonly CancellationTokenSource cts = new CancellationTokenSource();
             private readonly Action<CancellationToken> _action;
+            private readonly Action<Exception> _trackError;
 
-            public LoopEntry(Action<CancellationToken> action)
+            public LoopEntry(Action<CancellationToken> action, Action<Exception> trackError)
             {
                 _action = action;
+                _trackError = trackError;
             }
 
             public Boolean IsCompleted { get; set; } = false;
@@ -133,7 +168,10 @@ namespace AngleSharp.Js
                 IsRunning = true;
 
                 try { _action.Invoke(cts.Token); }
-                catch { }
+                catch (Exception ex)
+                {
+                    _trackError?.Invoke(ex);
+                }
 
                 IsRunning = false;
                 IsCompleted = true;

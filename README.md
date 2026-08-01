@@ -2,7 +2,7 @@
 
 # AngleSharp.Js
 
-[![Build Status](https://img.shields.io/appveyor/ci/FlorianRappl/AngleSharp-Scripting.svg?style=flat-square)](https://ci.appveyor.com/project/FlorianRappl/AngleSharp-Scripting)
+[![CI](https://github.com/AngleSharp/AngleSharp.Js/actions/workflows/ci.yml/badge.svg)](https://github.com/AngleSharp/AngleSharp.Js/actions/workflows/ci.yml)
 [![GitHub Tag](https://img.shields.io/github/tag/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/releases)
 [![NuGet Count](https://img.shields.io/nuget/dt/AngleSharp.Js.svg?style=flat-square)](https://www.nuget.org/packages/AngleSharp.Js/)
 [![Issues Open](https://img.shields.io/github/issues/AngleSharp/AngleSharp.Js.svg?style=flat-square)](https://github.com/AngleSharp/AngleSharp.Js/issues)
@@ -21,7 +21,32 @@ var config = Configuration.Default
     .WithJs(); // from AngleSharp.Js
 ```
 
-This will register a scripting engine for JS files. The JS parsing options and more could be set with parameters of the `WithJs` method.
+For many real-world scripts this is only the starting point. AngleSharp.Js exposes DOM APIs from
+the AngleSharp services you register, so you usually also want to bring in packages such as
+AngleSharp.Io and AngleSharp.Css to get a broader browser-like surface:
+
+```cs
+var config = Configuration.Default
+    .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true }) // AngleSharp.Io
+    .WithCss()                                                                 // AngleSharp.Css
+    .WithJs()
+    .WithEventLoop();
+```
+
+Depending on the script, additional AngleSharp libraries may be required as well. For very
+special scenarios, packages such as AngleSharp.Wasm can also be relevant.
+
+This will register a scripting engine for JS files. The engine can be tuned by passing a `JsScriptingOptions` instance to `WithJs`:
+
+```cs
+var config = Configuration.Default
+    .WithJs(new JsScriptingOptions
+    {
+        // how deep a script may recurse before the engine reports
+        // "Maximum call stack size exceeded" (10000 by default)
+        MaxCallStackDepth = 5000,
+    });
+```
 
 You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,
 
@@ -53,15 +78,17 @@ var numEntries = document.ExecuteScript("document.querySelectorAll('div').length
 
 ## Vision and Status
 
-The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* is fully ECMAScript 5 compatible and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation.
+The repository contains DOM bindings for the *Jint* JavaScript engine. *Jint* implements ECMAScript 2015 (ES6) through ECMAScript 2025 — classes and private fields, modules, generators, `async`/`await`, `Promise`, `Proxy`/`Reflect`, `Symbol`, typed arrays, `BigInt`, optional chaining, and iterator helpers among them — and provides the basis for evaluating JavaScripts in the context of the AngleSharp DOM representation. See the [Jint feature list](https://github.com/sebastienros/jint#supported-features) for the authoritative matrix.
 
-The library comes with a service that exposes `WithJs` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one). The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be published in compatibility with .NET Standard (2.0). The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
+The library comes with a service that exposes `WithJs` to `IConfiguration`. This enables automatic evaluation of `script` elements that have a valid JavaScript type (or without any explicit type, since JavaScript is the default one), including `type="module"` and `type="importmap"`. The DOM bindings are generated on the fly via reflection. Since *Jint* is interpreting JavaScript, the library can be published in compatibility with .NET Standard (2.0). The downside is that the performance is definitely worse than any compiled JavaScript engine would deliver. For most scripts that should not be a big issue.
 
 ## Features
 
-- Support of ES5 through Jint
+- Support of modern JavaScript (ES2015 through ES2025) through Jint
 - Connection to the DOM
-- Evaluation of simple scripts (incl. jQuery)
+- ES modules and import maps (`<script type="module">`, `<script type="importmap">`)
+- Web Workers
+- Evaluation of real-world libraries (the test suite runs jQuery 1 through 4, React 16 and Bootstrap 5)
 
 ## Participating
 
@@ -81,12 +108,4 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 
 ## License
 
-The MIT License (MIT)
-
-Copyright (c) 2015 - 2020 AngleSharp
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+AngleSharp.Js is released using the MIT license. For more information see the [license file](./LICENSE).

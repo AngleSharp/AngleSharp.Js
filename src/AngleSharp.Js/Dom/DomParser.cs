@@ -40,7 +40,7 @@ namespace AngleSharp.Js.Dom
         {
             var ctx = _window?.Document.Context;
             var factory = ctx?.GetService<IDocumentFactory>() ?? throw new DomException(DomError.NotSupported);
-            
+
             using (var content = new MemoryStream(TextEncoding.Utf8.GetBytes(str)))
             {
                 var response = new DefaultResponse

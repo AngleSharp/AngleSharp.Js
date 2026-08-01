@@ -1,28 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>AngleSharp.Js.Tests</RootNamespace>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <IsPackable>false</IsPackable>
-    <LangVersion>7.1</LangVersion>
-    <AssemblyName>AngleSharp.Js.Tests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> <!-- https://github.com/Tyrrrz/GitHubActionsTestLogger/issues/5 -->
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AngleSharp.Js\AngleSharp.Js.csproj">
-      <TargetFramework>netstandard2.0</TargetFramework>
-    </ProjectReference>
+    <ProjectReference Include="..\AngleSharp.Js\AngleSharp.Js.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
-    <PackageReference Include="AngleSharp.Css" Version="0.14.0" />
-    <PackageReference Include="AngleSharp.Xml" Version="0.14.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <EmbeddedResource Include="Fixtures\Html5Test\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp.Css" />
+    <PackageReference Include="AngleSharp.Io" />
+    <PackageReference Include="AngleSharp.Xml" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="GitHubActionsTestLogger">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>

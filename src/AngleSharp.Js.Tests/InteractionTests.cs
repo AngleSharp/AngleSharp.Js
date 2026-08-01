@@ -2,7 +2,10 @@ namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Html.Parser;
     using AngleSharp.Scripting;
+    using Jint;
+    using Jint.Native;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -30,10 +33,64 @@ namespace AngleSharp.Js.Tests
             var cfg = Configuration.Default.With(service);
             var html = "<!doctype html><script>function square(x) { return x * x; }</script>";
             var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
-            var square = service.GetOrCreateJint(document).GetValue("square");
-            var result = square.Invoke(4);
+            var engine = service.GetOrCreateJint(document);
+            var square = engine.GetValue("square");
+            var result = engine.Invoke(square, 4);
             Assert.AreEqual(Types.Number, result.Type);
             Assert.AreEqual(16.0, result.AsNumber());
+        }
+
+        [Test]
+        public async Task InvokeFunctionWithCSharpCreatedElement()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script>function f1(element) { document.body.appendChild(element); }</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var section = document.CreateElement("section");
+            var f1 = engine.GetValue("f1");
+            var jsSection = JsValue.FromObject(engine, section);
+
+            engine.Invoke(f1, jsSection);
+
+            Assert.AreSame(section, document.Body.LastElementChild);
+            //  One node, one JS object: were a hand-over to mint a fresh proxy, the expandos and
+            //  the event handlers script attached through the previous one would be lost.
+            Assert.AreSame(jsSection, JsValue.FromObject(engine, section));
+            Assert.AreSame(jsSection, engine.Evaluate("document.body.lastElementChild"));
+        }
+
+        [Test]
+        public async Task InvokeFunctionWithCSharpCreatedElementUsesDomMembers()
+        {
+            var service = new JsScriptingService();
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script>function f1(element) { element.textContent = element.tagName; }</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var section = document.CreateElement("section");
+
+            engine.Invoke(engine.GetValue("f1"), section);
+
+            Assert.AreEqual("SECTION", section.TextContent);
+        }
+
+        [Test]
+        public async Task ExternalNonDomObjectKeepsItsClrMembers()
+        {
+            //  A parser is an EventTarget, but it is not part of the DOM - a host object reaches
+            //  script the way every other host object does, through its CLR members.
+            var service = new JsScriptingService();
+            service.External.Add("parser", new HtmlParser());
+            var cfg = Configuration.Default.With(service);
+            var html = "<!doctype html><script></script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+
+            var result = engine.Evaluate("typeof parser.ParseDocument");
+
+            Assert.AreEqual("function", result.AsString());
         }
 
         [Test]
@@ -112,6 +169,30 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task RunSameScriptSourceInSeveralDocumentsKeepsStateSeparate()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJs();
+            var source = "(function () { window.counter = (window.counter || 0) + 1; return window.counter; })()";
+            var first = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var second = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+
+            Assert.AreEqual(1.0, first.ExecuteScript(source));
+            Assert.AreEqual(1.0, second.ExecuteScript(source));
+            Assert.AreEqual(2.0, first.ExecuteScript(source));
+            Assert.AreEqual(2.0, second.ExecuteScript(source));
+        }
+
+        [Test]
+        public async Task RunScriptSnippetWithSyntaxErrorThrows()
+        {
+            var html = "<!doctype html><span id=test>Test</span>";
+            var config = Configuration.Default.WithJs();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            Assert.Throws<JavaScriptException>(() => document.ExecuteScript("function ("));
+        }
+
+        [Test]
         public async Task RunScriptAtPressingLink_Issue47()
         {
             var html = "<!doctype html><pre id=test></pre><a href=\"javascript:document.querySelector('#test').textContent='success';\">Test</a>";
@@ -130,6 +211,65 @@ namespace AngleSharp.Js.Tests
             var context = BrowsingContext.New(config);
             await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
                 .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task SetLocationViaBareIdentifier_Issue98()
+        {
+            var html = "<!doctype html><script>location = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task SetLocationHrefViaAlias_Issue98()
+        {
+            var html = "<!doctype html><script>var loc = location; loc.href = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/foo", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task SetWindowHrefDoesNotNavigate_Issue98()
+        {
+            var html = "<!doctype html><script>window.href = '/foo';</script>";
+            var config = Configuration.Default.WithJs();
+            var context = BrowsingContext.New(config);
+            await context.OpenAsync(m => m.Content(html).Address("http://example.com"))
+                .Then(_ => Assert.AreEqual("http://example.com/", context.Active.Location.Href));
+        }
+
+        [Test]
+        public async Task RunJavaScriptFunctionFromCSharpUpdatesDataset_Issue77()
+        {
+            var service = new JsScriptingService();
+            var config = Configuration.Default.With(service);
+            var html = @"<!doctype html>
+<script>
+function test() {
+    var element = document.querySelector('section');
+    element.dataset.level = '2';
+    element.dataset.title = 'section 2';
+    return 'test executed';
+}
+</script>
+<section data-level='1' data-title='section 1'></section>";
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content(html));
+            var engine = service.GetOrCreateJint(document);
+            var test = engine.GetValue("test");
+            var result = engine.Invoke(test);
+            var section = document.QuerySelector<IHtmlElement>("section");
+
+            Assert.AreEqual(Types.String, result.Type);
+            Assert.AreEqual("test executed", result.AsString());
+            Assert.AreEqual("2", section.Dataset["level"]);
+            Assert.AreEqual("section 2", section.Dataset["title"]);
+            Assert.AreEqual("2", section.GetAttribute("data-level"));
+            Assert.AreEqual("section 2", section.GetAttribute("data-title"));
         }
 
         class Person

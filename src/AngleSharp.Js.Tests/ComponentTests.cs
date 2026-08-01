@@ -1,7 +1,7 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Scripting;
-    using AngleSharp.Xml;
+    using Jint;
     using NUnit.Framework;
     using System;
     using System.Threading.Tasks;

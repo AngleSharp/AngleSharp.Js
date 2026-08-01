@@ -55,8 +55,8 @@ namespace AngleSharp.Js
         public static String GetOfficialName(this MemberInfo member)
         {
             var names = member.GetCustomAttributes<DomNameAttribute>();
-            var officalNameAttribute = names.FirstOrDefault();
-            return officalNameAttribute?.OfficialName ?? member.Name;
+            var officialNameAttribute = names.FirstOrDefault();
+            return officialNameAttribute?.OfficialName ?? member.Name;
         }
 
         public static String GetOfficialName(this Type currentType, Type baseType)
@@ -85,6 +85,18 @@ namespace AngleSharp.Js
             }
 
             return name;
+        }
+
+        public static String GetOfficialName(this Enum value)
+        {
+            var enumType = value.GetType();
+            var member = enumType.GetMember(value.ToString()).FirstOrDefault();
+
+            // if the enum value does not have a DomNameAttribute, calling member.GetOfficialName() would return the value name
+            // to allow previous behaviour to be preserved, if the DomNameAttribute is not present then null will be returned
+            var names = member.GetCustomAttributes<DomNameAttribute>();
+            var officialNameAttribute = names.FirstOrDefault();
+            return officialNameAttribute?.OfficialName;
         }
 
         public static PropertyInfo GetInheritedProperty(this Type type, String propertyName, BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.Instance)

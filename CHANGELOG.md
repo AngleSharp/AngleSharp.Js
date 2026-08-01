@@ -1,3 +1,26 @@
+# 1.0.0
+
+Released on Friday, July 31 2026.
+
+- Fixed `StackOverflowException` from deeply recursive scripts (#75) @lahma
+- Fixed invoking JavaScript functions with DOM objects created in C#, which reached script as a plain CLR wrapper instead of as the DOM object (#76)
+- Fixed usage of document ready state (#87) @Sebbs128
+- Fixed `HasChildNodes` is now exposed as a method to DOM (#106) @arekdygas
+- Fixed missing `parent` on Window objects (#68)
+- Fixed missing `NodeFilter` (#101)
+- Fixed dataset updates from C#-invoked JavaScript functions not reflected in DOM (#77)
+- Fixed bare `location = '...'` assignment not updating navigation state (#98)
+- Fixed XMLHttpRequest handling for relative URLs and failed requests
+- Removed `Navigator` implementation (moved to *AngleSharp.Io*)
+- Removed `XmlHttpRequester` implementation (moved to *AngleSharp.Io*)
+- Updated to use AngleSharp v1
+- Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
+- Updated CreatorCache to be thread-safe (#110) @badnickname
+- Updated DOM prototypes to be built from a member layout shared by the whole process, which resolves a type once instead of once per document and lets the engine cache warm member reads @lahma
+- Added report for uncaught event-loop exceptions through the browsing context
+- Added `JsScriptingOptions` to tune the engine via `WithJs` (#75) @lahma
+- Added support for Web Workers (#78)
+
 # 0.15.0
 
 Released on Sunday, June 12 2021.
@@ -16,12 +39,12 @@ Released on Tuesday, March 31 2020.
 
 Released on Friday, September 6 2019.
 
-- Added thread-based event loop implementation `JsEventLoop`
-- Included new `WithEventLoop` configuration extensions
+- Fixed missing `btoa` and `atob` functions (#55)
+- Added `javascript:` URL handler (#47)
+- Added new `WithEventLoop` configuration extensions
+- Added support for .NET Standard 1.3 (#58)
 - Added constructors to `window` (#12)
-- Fixed `btoa` and `atob` missing (#55)
-- Included `javascript:` URL handler (#47)
-- Included support for .NET Standard 1.3 (#58)
+- Added thread-based event loop implementation `JsEventLoop`
 
 # 0.12.1
 
@@ -34,13 +57,13 @@ Released on Wednesday, May 15 2019.
 Released on Tuesday, May 14 2019.
 
 - Properly forward setting window.location (#31)
-- Respect window.onload event (#42)
-- Support for more APIs to enable jQuery (#43)
-- Respect DOMContentLoaded event (#50)
 - Restored compatibility with AngleSharp v0.12 (#51)
 - Renamed to `AngleSharp.Js` (focus only on JavaScript) (#51)
 - Renamed the `WithJavaScript` extension method to `WithJs`
-- Changed the namespace from `AngleSharp.Scripting.JavaScript` to `AngleSharp.Js`
+- Updated the namespace from `AngleSharp.Scripting.JavaScript` to `AngleSharp.Js`
+- Added support for window.onload event (#42)
+- Added support for more APIs to enable jQuery (#43)
+- Added support for DOMContentLoaded event (#50)
 
 # 0.5.1
 

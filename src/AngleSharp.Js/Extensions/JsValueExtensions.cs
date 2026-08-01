@@ -1,9 +1,12 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Attributes;
+    using Jint;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
     using Jint.Runtime.Interop;
+    using System.Linq;
     using System;
     using System.Reflection;
 
@@ -20,13 +23,13 @@ namespace AngleSharp.Js
             }
             else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
             {
-                var f = obj as FunctionInstance;
+                var f = obj as Function;
 
                 if (f == null && obj is String b)
                 {
                     var e = engine.Jint;
-                    var p = new[] { new JsValue(b) };
-                    f = new ClrFunctionInstance(e, (_this, args) => e.Eval.Call(_this, p));
+                    var p = new[] { JsValue.FromObjectWithType(e, b, typeof(String)) };
+                    f = new ClrFunction(e, "AsComplex", (_this, args) => e.Intrinsics.Eval.Call(_this, p));
                 }
 
                 if (f != null)
@@ -53,10 +56,10 @@ namespace AngleSharp.Js
                     return val.AsString();
                 case Types.Object:
                     var obj = val.AsObject();
-                    var node = obj as DomNodeInstance;
+                    var node = obj as IDomProxy;
                     return node != null ? node.Value : obj;
                 case Types.Undefined:
-                    return Undefined.Text;
+                    return JsValue.Undefined.ToString();
                 case Types.Null:
                     return null;
             }
@@ -71,6 +74,17 @@ namespace AngleSharp.Js
                 if (targetType == typeof(Int32))
                 {
                     return TypeConverter.ToInt32(value);
+                }
+                else if (targetType == typeof(Nullable<Int32>))
+                {
+                    if (value.IsUndefined())
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return TypeConverter.ToInt32(value);
+                    }
                 }
                 else if (targetType == typeof(Double))
                 {
@@ -91,6 +105,27 @@ namespace AngleSharp.Js
                 else if (targetType == typeof(UInt16))
                 {
                     return TypeConverter.ToUint16(value);
+                }
+                else if (targetType.GetTypeInfo().IsEnum)
+                {
+                    if (value.IsString())
+                    {
+                        var literal = TypeConverter.ToString(value);
+                        var member = targetType
+                            .GetTypeInfo()
+                            .DeclaredFields
+                            .Where(m => m.IsLiteral)
+                            .FirstOrDefault(m => m.GetCustomAttribute<DomNameAttribute>()?.OfficialName == literal || m.Name == literal);
+
+                        if (member != null)
+                        {
+                            return Enum.Parse(targetType, member.Name);
+                        }
+                    }
+
+                    var underlyingType = Enum.GetUnderlyingType(targetType);
+                    var raw = Convert.ChangeType(TypeConverter.ToNumber(value), underlyingType);
+                    return Enum.ToObject(targetType, raw);
                 }
                 else
                 {

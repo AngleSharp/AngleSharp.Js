@@ -9,7 +9,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task GetCssSheetRuleFromJavaScript()
         {
-            var config = Configuration.Default.WithCss().WithJs();
+            var config = Configuration.Default.WithCss().WithNavigator().WithJs();
             var context = BrowsingContext.New(config);
             var style = "body { color: red; }";
             var script = "var sheet = document.querySelector('style').sheet; var color = sheet.cssRules[0].style.color; document.querySelector('div').textContent = color;";
@@ -20,7 +20,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task GetCssInlineStyleFromJavaScript()
         {
-            var config = Configuration.Default.WithCss().WithJs();
+            var config = Configuration.Default.WithCss().WithNavigator().WithJs();
             var context = BrowsingContext.New(config);
             var style = "color: blue;";
             var script = "var color = document.querySelector('div').style.color; document.querySelector('div').textContent = color;";
