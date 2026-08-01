@@ -22,12 +22,17 @@ Add `WithJs()` to the AngleSharp configuration. Add `WithEventLoop()` when scrip
 or resource callbacks must run in the browser-like task queue. Add a loader when the document
 needs to fetch external scripts or other resources.
 
+For many real-world scripts, `WithJs()` alone is not enough. AngleSharp.Js exposes interfaces
+from the AngleSharp services present in the browsing context, so you usually want to include
+AngleSharp.Io and AngleSharp.Css to provide most of the required API surface.
+
 ```cs
 var configuration = Configuration.Default
     .WithDefaultLoader(new LoaderOptions
     {
         IsResourceLoadingEnabled = true,
     })
+    .WithCss()
     .WithJs()
     .WithEventLoop();
 
@@ -36,6 +41,9 @@ var document = await context.OpenAsync("https://example.com");
 
 await document.WaitUntilAvailable();
 ```
+
+Some highly specialized scripts may also depend on additional AngleSharp packages. For example,
+in niche scenarios, libraries such as AngleSharp.Wasm can be relevant.
 
 `WithJs()` registers the JavaScript scripting service, support for inline event attributes
 such as `onclick`, a navigation handler for `javascript:` URLs, and a default `navigator`

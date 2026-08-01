@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup Label="Tests">
-    <PackageVersion Include="AngleSharp.Css" Version="1.0.0" />
-    <PackageVersion Include="AngleSharp.Io" Version="1.0.0" />
-    <PackageVersion Include="AngleSharp.Xml" Version="1.0.0" />
+    <PackageVersion Include="AngleSharp.Css" Version="1.0.1" />
+    <PackageVersion Include="AngleSharp.Io" Version="1.1.0" />
+    <PackageVersion Include="AngleSharp.Xml" Version="1.1.0" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />

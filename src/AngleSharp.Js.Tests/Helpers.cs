@@ -24,6 +24,7 @@ namespace AngleSharp.Js.Tests
         internal static IConfiguration GetCssConfig() =>
             Configuration.Default
                 .WithJs()
+                .WithNavigator()
                 .WithEventLoop()
                 .WithCss()
                 .WithRenderDevice();
@@ -63,7 +64,8 @@ namespace AngleSharp.Js.Tests
 
         public static async Task<String> EvalScriptsAsync(this IEnumerable<String> sources)
         {
-            var cfg = GetCssConfig().WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var cfg = GetCssConfig()
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
             var content = String.Join("</script><script>", sources);
             var html = $"<!doctype html><div id=result></div><script>{content}</script>";
             var document = await BrowsingContext.New(cfg)

@@ -11,6 +11,8 @@ Released on Friday, July 31 2026.
 - Fixed dataset updates from C#-invoked JavaScript functions not reflected in DOM (#77)
 - Fixed bare `location = '...'` assignment not updating navigation state (#98)
 - Fixed XMLHttpRequest handling for relative URLs and failed requests
+- Removed `Navigator` implementation (moved to *AngleSharp.Io*)
+- Removed `XmlHttpRequester` implementation (moved to *AngleSharp.Io*)
 - Updated to use AngleSharp v1
 - Updated for Jint v4 (#89, #97) @tomvanenckevort @lahma
 - Updated CreatorCache to be thread-safe (#110) @badnickname

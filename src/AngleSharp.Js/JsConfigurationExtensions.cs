@@ -78,11 +78,6 @@ namespace AngleSharp
             var observer = new EventAttributeObserver(service);
             var handler = new JsNavigationHandler(service);
 
-            if (!configuration.Has<INavigator>())
-            {
-                configuration = configuration.With<INavigator>(context => new Navigator());
-            }
-
             return configuration
                 .WithOnly(observer)
                 .With(handler)

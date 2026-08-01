@@ -21,6 +21,21 @@ var config = Configuration.Default
     .WithJs(); // from AngleSharp.Js
 ```
 
+For many real-world scripts this is only the starting point. AngleSharp.Js exposes DOM APIs from
+the AngleSharp services you register, so you usually also want to bring in packages such as
+AngleSharp.Io and AngleSharp.Css to get a broader browser-like surface:
+
+```cs
+var config = Configuration.Default
+    .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true }) // AngleSharp.Io
+    .WithCss()                                                                 // AngleSharp.Css
+    .WithJs()
+    .WithEventLoop();
+```
+
+Depending on the script, additional AngleSharp libraries may be required as well. For very
+special scenarios, packages such as AngleSharp.Wasm can also be relevant.
+
 This will register a scripting engine for JS files. The engine can be tuned by passing a `JsScriptingOptions` instance to `WithJs`:
 
 ```cs
