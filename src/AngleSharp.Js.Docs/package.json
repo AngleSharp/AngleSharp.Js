@@ -1,6 +1,6 @@
 {
   "name": "@anglesharp/js",
-  "version": "0.16.0",
+  "version": "1.0.1",
   "preview": true,
   "description": "The doclet for the AngleSharp.Js documentation.",
   "keywords": [
