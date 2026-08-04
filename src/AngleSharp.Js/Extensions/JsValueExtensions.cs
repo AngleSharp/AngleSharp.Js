@@ -115,7 +115,7 @@ namespace AngleSharp.Js
                             .GetTypeInfo()
                             .DeclaredFields
                             .Where(m => m.IsLiteral)
-                            .FirstOrDefault(m => m.GetCustomAttribute<DomNameAttribute>()?.OfficialName == literal || m.Name == literal);
+                            .FirstOrDefault(m => m.GetCustomAttributes<DomNameAttribute>().FirstOrDefault()?.OfficialName == literal || m.Name == literal);
 
                         if (member != null)
                         {

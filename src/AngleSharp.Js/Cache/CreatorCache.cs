@@ -54,7 +54,7 @@ namespace AngleSharp.Js.Cache
 
                 if (ti.IsEnum)
                 {
-                    var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+                    var name = ti.GetCustomAttributes<DomNameAttribute>(true).FirstOrDefault()?.OfficialName;
 
                     if (name != null)
                     {
@@ -65,7 +65,7 @@ namespace AngleSharp.Js.Cache
                             var members = ti.DeclaredFields
                                 .Where(m => m.IsLiteral)
                                 .Select(m => new EnumLiteralMember(
-                                    m.GetCustomAttribute<DomNameAttribute>()?.OfficialName,
+                                    m.GetCustomAttributes<DomNameAttribute>().FirstOrDefault()?.OfficialName,
                                     m.GetRawConstantValue()))
                                 .Where(m => m.Name != null)
                                 .ToArray();
@@ -99,7 +99,7 @@ namespace AngleSharp.Js.Cache
                         continue;
                     }
 
-                    var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+                    var name = ti.GetCustomAttributes<DomNameAttribute>(true).FirstOrDefault()?.OfficialName;
 
                     if (name != null)
                     {

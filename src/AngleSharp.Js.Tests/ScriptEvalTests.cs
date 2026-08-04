@@ -43,6 +43,13 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task EvaluatingSimpleScriptShouldWorkWithMultipleDomNameAttributes_Issue136()
+        {
+            var result = await EvaluateComplexScriptAsync(SetResult("(2 + 3).toString()"));
+            Assert.AreEqual("5", result);
+        }
+
+        [Test]
         public async Task AccessGlobalVariablesFromOtherScriptShouldWork()
         {
             var result = await EvaluateComplexScriptAsync("var a = 5;", SetResult("a.toString()"));

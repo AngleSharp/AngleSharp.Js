@@ -62,7 +62,7 @@ namespace AngleSharp.Js
         public static String GetOfficialName(this Type currentType, Type baseType)
         {
             var ti = currentType.GetTypeInfo();
-            var name = ti.GetCustomAttribute<DomNameAttribute>(true)?.OfficialName;
+            var name = ti.GetCustomAttributes<DomNameAttribute>(true).FirstOrDefault()?.OfficialName;
 
             if (name == null)
             {
@@ -77,7 +77,7 @@ namespace AngleSharp.Js
 
                 foreach (var impl in interfaces)
                 {
-                    name = impl.GetTypeInfo().GetCustomAttribute<DomNameAttribute>(false)?.OfficialName;
+                    name = impl.GetTypeInfo().GetCustomAttributes<DomNameAttribute>(false).FirstOrDefault()?.OfficialName;
 
                     if (name != null)
                         break;

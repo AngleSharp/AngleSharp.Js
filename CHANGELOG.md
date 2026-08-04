@@ -2,7 +2,7 @@
 
 Released on Wednesday, August 5 2026.
 
-- tbd
+- Fixed `AmbiguousMatchException` in case of multiple `DomName` attributes (#136)
 
 # 1.0.0
 
