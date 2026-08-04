@@ -11,6 +11,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
 
     static class EngineExtensions
@@ -174,8 +175,93 @@ namespace AngleSharp.Js
         {
             foreach (var exportedType in assembly.ExportedTypes)
             {
-                engine.AddConstructor(ctx, exportedType);
+                var enumDefinition = exportedType.GetEnumLiteralDefinition();
+
+                if (enumDefinition != null)
+                {
+                    SetEnumLiteral(engine, ctx, enumDefinition);
+                }
             }
+
+            var definitions = SelectConstructors(assembly.ExportedTypes);
+
+            foreach (var definition in definitions)
+            {
+                ctx.FastSetProperty(definition.Key, CreateConstructorProperty(engine, definition.Value));
+            }
+        }
+
+        private static void SetEnumLiteral(EngineInstance engine, ObjectInstance obj, EnumLiteralDefinition enumDefinition)
+        {
+            var target = obj.Get(enumDefinition.Name) as ObjectInstance;
+
+            if (target == null)
+            {
+                target = engine.Jint.Intrinsics.Object.Construct(Array.Empty<JsValue>(), JsValue.Undefined);
+                obj.FastSetProperty(enumDefinition.Name, new PropertyDescriptor(target, false, true, false));
+            }
+
+            foreach (var member in enumDefinition.Members)
+            {
+                var constant = JsNumber.Create(Convert.ToDouble(member.Value));
+
+                target.FastSetProperty(member.Name, new PropertyDescriptor(
+                    constant,
+                    false,
+                    true,
+                    false));
+            }
+        }
+
+        internal static IReadOnlyDictionary<String, ConstructorDefinition> SelectConstructors(IEnumerable<Type> exportedTypes)
+        {
+            var selected = new Dictionary<String, ConstructorCandidate>(StringComparer.Ordinal);
+
+            foreach (var exportedType in exportedTypes)
+            {
+                var definition = exportedType.GetConstructorDefinition();
+
+                if (definition == null)
+                {
+                    continue;
+                }
+
+                var rank = GetExposureRank(exportedType);
+
+                foreach (var name in definition.Names)
+                {
+                    if (!selected.TryGetValue(name, out var existing) || rank > existing.Rank)
+                    {
+                        selected[name] = new ConstructorCandidate(definition, rank);
+                    }
+                }
+            }
+
+            var result = new Dictionary<String, ConstructorDefinition>(selected.Count, StringComparer.Ordinal);
+
+            foreach (var selectedName in selected)
+            {
+                result[selectedName.Key] = selectedName.Value.Definition;
+            }
+
+            return result;
+        }
+
+        private static Int32 GetExposureRank(Type type)
+        {
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsClass)
+            {
+                return 2;
+            }
+
+            if (typeInfo.IsInterface)
+            {
+                return 1;
+            }
+
+            return 0;
         }
 
         public static void AddConstructorFunctions(this EngineInstance engine, ObjectInstance ctx, Assembly assembly)
@@ -200,24 +286,7 @@ namespace AngleSharp.Js
 
             if (enumDefinition != null)
             {
-                var target = obj.Get(enumDefinition.Name) as ObjectInstance;
-
-                if (target == null)
-                {
-                    target = engine.Jint.Intrinsics.Object.Construct(Array.Empty<JsValue>(), JsValue.Undefined);
-                    obj.FastSetProperty(enumDefinition.Name, new PropertyDescriptor(target, false, true, false));
-                }
-
-                foreach (var member in enumDefinition.Members)
-                {
-                    var constant = JsNumber.Create(Convert.ToDouble(member.Value));
-
-                    target.FastSetProperty(member.Name, new PropertyDescriptor(
-                        constant,
-                        false,
-                        true,
-                        false));
-                }
+                SetEnumLiteral(engine, obj, enumDefinition);
 
                 return;
             }
@@ -226,7 +295,10 @@ namespace AngleSharp.Js
 
             if (definition != null)
             {
-                obj.FastSetProperty(definition.Name, CreateConstructorProperty(engine, definition));
+                foreach (var name in definition.Names)
+                {
+                    obj.FastSetProperty(name, CreateConstructorProperty(engine, definition));
+                }
             }
         }
 
@@ -263,6 +335,19 @@ namespace AngleSharp.Js
             public EngineInstance Instance { get; }
 
             public ConstructorDefinition Definition { get; }
+        }
+
+        private readonly struct ConstructorCandidate
+        {
+            public ConstructorCandidate(ConstructorDefinition definition, Int32 rank)
+            {
+                Definition = definition;
+                Rank = rank;
+            }
+
+            public ConstructorDefinition Definition { get; }
+
+            public Int32 Rank { get; }
         }
 
         public static void AddConstructorFunction(this EngineInstance engine, ObjectInstance obj, Type type)

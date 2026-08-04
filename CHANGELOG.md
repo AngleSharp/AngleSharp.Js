@@ -3,6 +3,7 @@
 Released on Wednesday, August 5 2026.
 
 - Fixed `AmbiguousMatchException` in case of multiple `DomName` attributes (#136)
+- Added support for aliases with multiple `DomName` attributes
 
 # 1.0.0
 

@@ -61,30 +61,47 @@ namespace AngleSharp.Js
 
         public static String GetOfficialName(this Type currentType, Type baseType)
         {
+            return currentType.GetOfficialNames(baseType).FirstOrDefault();
+        }
+
+        public static String[] GetOfficialNames(this Type currentType, Type baseType)
+        {
             var ti = currentType.GetTypeInfo();
-            var name = ti.GetCustomAttributes<DomNameAttribute>(true).FirstOrDefault()?.OfficialName;
+            var names = ti.GetCustomAttributes<DomNameAttribute>(true)
+                .Select(m => m.OfficialName)
+                .Where(m => m != null)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
 
-            if (name == null)
+            if (names.Length > 0)
             {
-                var interfaces = ti.ImplementedInterfaces;
+                return names;
+            }
 
-                if (baseType != null)
+            var interfaces = ti.ImplementedInterfaces;
+
+            if (baseType != null)
+            {
+                var bi = baseType.GetTypeInfo();
+                var exclude = bi.ImplementedInterfaces;
+                interfaces = interfaces.Except(exclude);
+            }
+
+            foreach (var impl in interfaces)
+            {
+                names = impl.GetTypeInfo().GetCustomAttributes<DomNameAttribute>(false)
+                    .Select(m => m.OfficialName)
+                    .Where(m => m != null)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+
+                if (names.Length > 0)
                 {
-                    var bi = baseType.GetTypeInfo();
-                    var exclude = bi.ImplementedInterfaces;
-                    interfaces = interfaces.Except(exclude);
-                }
-
-                foreach (var impl in interfaces)
-                {
-                    name = impl.GetTypeInfo().GetCustomAttributes<DomNameAttribute>(false).FirstOrDefault()?.OfficialName;
-
-                    if (name != null)
-                        break;
+                    return names;
                 }
             }
 
-            return name;
+            return Array.Empty<String>();
         }
 
         public static String GetOfficialName(this Enum value)

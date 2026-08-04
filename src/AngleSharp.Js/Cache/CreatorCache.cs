@@ -27,13 +27,16 @@ namespace AngleSharp.Js.Cache
             if (!_constructorDefinitions.TryGetValue(type, out var definition))
             {
                 var ti = type.GetTypeInfo();
-                var names = ti.GetCustomAttributes<DomNameAttribute>();
-                var name = names.FirstOrDefault();
+                var names = ti.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName)
+                    .Where(m => m != null)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
 
-                if (name != null && !ti.IsEnum)
+                if (names.Length > 0 && !ti.IsEnum)
                 {
                     var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
-                    definition = new ConstructorDefinition(type, name.OfficialName, info);
+                    definition = new ConstructorDefinition(type, names, info);
                 }
 
                 _constructorDefinitions.TryAdd(type, definition);
@@ -216,10 +219,10 @@ namespace AngleSharp.Js.Cache
     /// </summary>
     sealed class ConstructorDefinition
     {
-        public ConstructorDefinition(Type type, String name, ConstructorInfo info)
+        public ConstructorDefinition(Type type, String[] names, ConstructorInfo info)
         {
             Type = type;
-            Name = name;
+            Names = names;
             Info = info;
         }
 
@@ -229,9 +232,14 @@ namespace AngleSharp.Js.Cache
         public Type Type { get; }
 
         /// <summary>
-        /// Gets the name the constructor is exposed under.
+        /// Gets the names the constructor is exposed under.
         /// </summary>
-        public String Name { get; }
+        public String[] Names { get; }
+
+        /// <summary>
+        /// Gets the primary name of the constructor.
+        /// </summary>
+        public String Name => Names[0];
 
         /// <summary>
         /// Gets the constructor to invoke, or null if the type cannot be constructed from
