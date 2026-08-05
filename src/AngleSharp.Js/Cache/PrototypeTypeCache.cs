@@ -157,21 +157,23 @@ namespace AngleSharp.Js.Cache
                 }
 
                 var baseType = typeInfo.BaseType;
-                var name = type.GetOfficialName(baseType);
+                var names = type.GetOfficialNames(baseType);
 
-                if (name == null || String.Equals(name, GetNameOf(baseType), StringComparison.Ordinal))
+                foreach (var name in names)
                 {
-                    //  Either nothing to define, or the base type already defines the very same
-                    //  name - so this class is not the topmost one carrying it.
-                    continue;
-                }
+                    if (String.Equals(name, GetNameOf(baseType), StringComparison.Ordinal))
+                    {
+                        //  The base type already defines this very name, so this class is not
+                        //  the topmost one carrying it.
+                        continue;
+                    }
 
-                //  A name may legitimately be defined twice (col and colgroup are both an
-                //  HTMLTableColElement); share a prototype, but pick the same one every time.
-                if (!result.TryGetValue(name, out var existing) ||
-                    String.CompareOrdinal(type.FullName, existing.FullName) < 0)
-                {
-                    result[name] = type;
+                    //  A name may legitimately be defined twice (col and colgroup are both an
+                    //  HTMLTableColElement); share a prototype and keep the first class seen.
+                    if (!result.ContainsKey(name))
+                    {
+                        result[name] = type;
+                    }
                 }
             }
 
@@ -202,18 +204,39 @@ namespace AngleSharp.Js.Cache
                     continue;
                 }
 
-                var name = typeInfo.GetCustomAttributes<DomNameAttribute>().FirstOrDefault()?.OfficialName;
+                var names = typeInfo.GetCustomAttributes<DomNameAttribute>()
+                    .Select(m => m.OfficialName)
+                    .Where(m => m != null)
+                    .Distinct(StringComparer.Ordinal);
+                var rank = GetExposureRank(type);
 
-                //  An interface wins over a class: it is the DOM type, and the class is only
-                //  one way of implementing it.
-                if (name != null && (!result.TryGetValue(name, out var existing) ||
-                    (typeInfo.IsInterface && !existing.GetTypeInfo().IsInterface)))
+                foreach (var name in names)
                 {
-                    result[name] = type;
+                    if (!result.TryGetValue(name, out var existing) || rank > GetExposureRank(existing))
+                    {
+                        result[name] = type;
+                    }
                 }
             }
 
             return result;
+        }
+
+        private static Int32 GetExposureRank(Type type)
+        {
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsClass)
+            {
+                return 2;
+            }
+
+            if (typeInfo.IsInterface)
+            {
+                return 1;
+            }
+
+            return 0;
         }
 
         private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
