@@ -7,6 +7,7 @@ namespace AngleSharp.Js
     using Jint.Native.Symbol;
     using Jint.Runtime.Descriptors;
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
 
     /// <summary>
@@ -47,6 +48,15 @@ namespace AngleSharp.Js
             FastSetProperty(GlobalSymbolRegistry.Iterator, new PropertyDescriptor(
                 engine.Jint.Intrinsics.Array.PrototypeObject.Get(GlobalSymbolRegistry.Iterator),
                 true, false, true));
+
+            if (IsIterable(type))
+            {
+                var arrayPrototype = engine.Jint.Intrinsics.Array.PrototypeObject;
+                FastSetProperty("entries", new PropertyDescriptor(arrayPrototype.Get("entries"), true, false, true));
+                FastSetProperty("forEach", new PropertyDescriptor(arrayPrototype.Get("forEach"), true, false, true));
+                FastSetProperty("keys", new PropertyDescriptor(arrayPrototype.Get("keys"), true, false, true));
+                FastSetProperty("values", new PropertyDescriptor(arrayPrototype.Get("values"), true, false, true));
+            }
         }
 
         public Object Value => _value;
@@ -122,6 +132,24 @@ namespace AngleSharp.Js
         /// the whole test suite is the proof.
         /// </remarks>
         protected override Boolean HasIndex(UInt32 index) => index < Length;
+
+        private static Boolean IsIterable(Type type)
+        {
+            if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            {
+                return true;
+            }
+
+            foreach (var contract in type.GetTypeInfo().ImplementedInterfaces)
+            {
+                if (contract.GetTypeInfo().IsGenericType && contract.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Named entries - "document.forms.login", "el.attributes.title" - are the one thing a

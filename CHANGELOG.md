@@ -5,6 +5,7 @@ Released on Saturday, September 5 2026.
 - Updated to require at least AngleSharp 1.8.0
 - Added support for the `DomReturnType` attribute
 - Added support for the `DomSameObject` attribute
+- Added iterable integration for `IEnumerable<T>` instances
 
 # 1.0.1
 
