@@ -24,6 +24,11 @@ namespace AngleSharp.Js
         Type DomType { get; }
 
         /// <summary>
+        /// Refreshes the DOM object this proxy stands for.
+        /// </summary>
+        void Update(Object value);
+
+        /// <summary>
         /// Gets the engine the proxy belongs to. A prototype member is shared by every engine
         /// and reaches its own through whichever object it was invoked on.
         /// </summary>

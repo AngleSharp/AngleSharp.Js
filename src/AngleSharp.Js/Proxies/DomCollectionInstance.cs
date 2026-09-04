@@ -23,9 +23,9 @@ namespace AngleSharp.Js
     sealed class DomCollectionInstance : ArrayLikeObject, IDomProxy
     {
         private readonly EngineInstance _instance;
-        private readonly Object _value;
         private readonly Type _type;
         private readonly IndexedCollection _collection;
+        private Object _value;
 
         private DomPrototypeState _state;
 
@@ -54,6 +54,8 @@ namespace AngleSharp.Js
         public Type DomType => _type;
 
         public EngineInstance Instance => _instance;
+
+        public void Update(Object value) => _value = value;
 
         //  Remembered rather than reached through two type tests per lookup, and checked against
         //  the prototype in force because a script may hand the collection another one.

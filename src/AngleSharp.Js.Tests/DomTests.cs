@@ -88,6 +88,27 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SameObjectPropertyReturnsTheSameObjectOnEveryAccess()
+        {
+            var result = await "document.images === document.images".EvalScriptAsync();
+            Assert.AreEqual("True", result);
+        }
+
+        [Test]
+        public async Task SameObjectCollectionKeepsItsPropertiesAndUpdatesItsContents()
+        {
+            var result = await "(function () { var d = new DOMParser().parseFromString(`<body></body>`, 'text/html'); var images = d.images; images.marker = 'kept'; var img = d.createElement('img'); d.body.appendChild(img); return (images === d.images) + ',' + images.marker + ',' + images.length + ',' + (images[0] === img); })()".EvalScriptAsync();
+            Assert.AreEqual("true,kept,1,true", result);
+        }
+
+        [Test]
+        public async Task SameObjectTokenListKeepsItsPropertiesAndUpdatesItsContents()
+        {
+            var result = await "(function () { var d = document.createElement('div'); var list = d.classList; list.marker = 'kept'; d.className = 'a b'; return (list === d.classList) + ',' + list.marker + ',' + list.length + ',' + list[1]; })()".EvalScriptAsync();
+            Assert.AreEqual("true,kept,2,b", result);
+        }
+
+        [Test]
         public async Task ConsoleIsTheSameObjectOnEveryAccess()
         {
             var result = await "window.console === window.console".EvalScriptAsync();

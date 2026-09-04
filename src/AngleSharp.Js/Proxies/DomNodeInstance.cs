@@ -10,8 +10,8 @@ namespace AngleSharp.Js
     sealed class DomNodeInstance : ObjectInstance, IDomProxy
     {
         private readonly EngineInstance _instance;
-        private readonly Object _value;
         private readonly Type _type;
+        private Object _value;
 
         private Dictionary<DomEventDefinition, DomEventDefinition.Registration> _eventHandlers;
         private DomPrototypeState _state;
@@ -60,6 +60,8 @@ namespace AngleSharp.Js
         public Type DomType => _type;
 
         public EngineInstance Instance => _instance;
+
+        public void Update(Object value) => _value = value;
 
         public override object ToObject() => _value;
 

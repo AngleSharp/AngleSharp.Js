@@ -420,6 +420,19 @@ namespace AngleSharp.Js
             return instance.Call(method, thisObject, arguments);
         }
 
+        public static JsValue CallSameObject(MethodInfo method, JsValue thisObject)
+        {
+            var instance = thisObject.GetEngineInstance();
+
+            if (instance == null)
+            {
+                throw new JavaScriptException("Illegal invocation.");
+            }
+
+            var target = thisObject is IDomProxy node ? node.Value : instance.Window.Value;
+            return instance.GetSameObject(target, method);
+        }
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)
