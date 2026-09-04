@@ -173,6 +173,13 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task QuerySelectorAllUsesItsDeclaredDomReturnType()
+        {
+            var result = await "(function () { var c = document.querySelectorAll('script'); return Object.prototype.toString.call(c) + ',' + (c instanceof NodeList) + ',' + (c instanceof HTMLCollection); })()".EvalScriptAsync();
+            Assert.AreEqual("[object NodeList],true,false", result);
+        }
+
+        [Test]
         public async Task CollectionCanBeIterated()
         {
             var result = await "(function () { var n = 0; for (var s of document.getElementsByTagName('script')) { n += s.nodeName.length; } return n; })()".EvalScriptAsync();

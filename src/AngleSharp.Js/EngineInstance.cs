@@ -98,6 +98,8 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
+        public ObjectInstance GetDomNode(Object obj, Type type) => CreateInstance(obj, type);
+
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
         /// <summary>
@@ -218,16 +220,18 @@ namespace AngleSharp.Js
         //  A collection is projected by the array-like proxy, which lets the engine read its
         //  indices and length directly; everything else by the ordinary one. The decision is a
         //  property of the type, so it is resolved once per type for the whole process.
-        private ObjectInstance CreateInstance(Object obj)
+        private ObjectInstance CreateInstance(Object obj) => CreateInstance(obj, obj.GetType());
+
+        private ObjectInstance CreateInstance(Object obj, Type type)
         {
-            var collection = obj.GetType().GetIndexedCollection();
+            var collection = type.GetIndexedCollection();
 
             if (collection != null)
             {
-                return new DomCollectionInstance(this, obj, collection);
+                return new DomCollectionInstance(this, obj, type, collection);
             }
 
-            return new DomNodeInstance(this, obj);
+            return new DomNodeInstance(this, obj, type);
         }
 
         /// <summary>
@@ -254,7 +258,7 @@ namespace AngleSharp.Js
 
         /// <summary>
         /// Converts a value handed over from C#, which reaches Jint through JsValue.FromObject
-        /// rather than through <see cref="EngineExtensions.ToJsValue"/>.
+        /// rather than through <see cref="EngineExtensions.ToJsValue(Object, EngineInstance)"/>.
         /// </summary>
         /// <remarks>
         /// A DOM object has to arrive as the DOM proxy for the very same reason it does when the

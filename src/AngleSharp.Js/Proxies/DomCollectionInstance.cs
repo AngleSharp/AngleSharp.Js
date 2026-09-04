@@ -24,18 +24,20 @@ namespace AngleSharp.Js
     {
         private readonly EngineInstance _instance;
         private readonly Object _value;
+        private readonly Type _type;
         private readonly IndexedCollection _collection;
 
         private DomPrototypeState _state;
 
-        public DomCollectionInstance(EngineInstance engine, Object value, IndexedCollection collection)
+        public DomCollectionInstance(EngineInstance engine, Object value, Type type, IndexedCollection collection)
             : base(engine.Jint)
         {
             _instance = engine;
             _value = value;
+            _type = type;
             _collection = collection;
 
-            var prototype = engine.GetDomPrototype(value.GetType());
+            var prototype = engine.GetDomPrototype(type);
             Prototype = prototype;
             _state = DomPrototypeState.Of(prototype);
 
@@ -48,6 +50,8 @@ namespace AngleSharp.Js
         }
 
         public Object Value => _value;
+
+        public Type DomType => _type;
 
         public EngineInstance Instance => _instance;
 

@@ -11,17 +11,19 @@ namespace AngleSharp.Js
     {
         private readonly EngineInstance _instance;
         private readonly Object _value;
+        private readonly Type _type;
 
         private Dictionary<DomEventDefinition, DomEventDefinition.Registration> _eventHandlers;
         private DomPrototypeState _state;
 
-        public DomNodeInstance(EngineInstance engine, Object value)
+        public DomNodeInstance(EngineInstance engine, Object value, Type type)
             : base(engine.Jint)
         {
             _instance = engine;
             _value = value;
+            _type = type;
 
-            var prototype = engine.GetDomPrototype(value.GetType());
+            var prototype = engine.GetDomPrototype(type);
             Prototype = prototype;
             _state = DomPrototypeState.Of(prototype);
         }
@@ -54,6 +56,8 @@ namespace AngleSharp.Js
         }
 
         public Object Value => _value;
+
+        public Type DomType => _type;
 
         public EngineInstance Instance => _instance;
 
