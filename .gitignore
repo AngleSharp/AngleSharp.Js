@@ -197,3 +197,5 @@ pip-log.txt
 
 # Fallout build tool
 .fallout/temp
+# The Python-era "build" pattern above would swallow the build project directory
+!/build/

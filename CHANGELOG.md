@@ -1,7 +1,17 @@
+# 1.1.0
+
+Released on Saturday, September 5 2026.
+
+- Updated to require at least AngleSharp 1.8.0
+- Added support for the `DomReturnType` attribute
+- Added support for the `DomSameObject` attribute
+- Added iterable integration for `IEnumerable<T>` instances
+
 # 1.0.1
 
 Released on Wednesday, August 5 2026.
 
+- Updated to require at least AngleSharp 1.5.0
 - Fixed `AmbiguousMatchException` in case of multiple `DomName` attributes (#136)
 - Added support for aliases with multiple `DomName` attributes
 

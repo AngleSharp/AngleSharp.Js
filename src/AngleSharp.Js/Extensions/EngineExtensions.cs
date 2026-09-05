@@ -65,6 +65,16 @@ namespace AngleSharp.Js
             return JsValue.Null;
         }
 
+        public static JsValue ToJsValue(this Object obj, EngineInstance engine, Type type)
+        {
+            if (obj != null && type != null && type.IsDomType())
+            {
+                return engine.GetDomNode(obj, type);
+            }
+
+            return obj.ToJsValue(engine);
+        }
+
         public static ClrFunction AsValue(this Engine engine, string name, Func<JsValue, JsValue[], JsValue> func) =>
             new ClrFunction(engine, name, func);
 
@@ -410,6 +420,19 @@ namespace AngleSharp.Js
             return instance.Call(method, thisObject, arguments);
         }
 
+        public static JsValue CallSameObject(MethodInfo method, JsValue thisObject)
+        {
+            var instance = thisObject.GetEngineInstance();
+
+            if (instance == null)
+            {
+                throw new JavaScriptException("Illegal invocation.");
+            }
+
+            var target = thisObject is IDomProxy node ? node.Value : instance.Window.Value;
+            return instance.GetSameObject(target, method);
+        }
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)
@@ -427,18 +450,20 @@ namespace AngleSharp.Js
 
                 try
                 {
+                    var description = MethodDescription.Of(method);
+
                     if (method.IsStatic)
                     {
                         var newArgs = new JsValue[arguments.Length + 1];
                         newArgs[0] = (JsValue)nodeInstance;
                         Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
                         var parameters = instance.BuildArgs(method, newArgs);
-                        return method.Invoke(null, parameters).ToJsValue(instance);
+                        return method.Invoke(null, parameters).ToJsValue(instance, description.ReturnType);
                     }
                     else
                     {
                         var parameters = instance.BuildArgs(method, arguments);
-                        return method.Invoke(nodeInstance.Value, parameters).ToJsValue(instance);
+                        return method.Invoke(nodeInstance.Value, parameters).ToJsValue(instance, description.ReturnType);
                     }
                 }
                 catch (TargetInvocationException)

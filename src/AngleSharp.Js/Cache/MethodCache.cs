@@ -28,6 +28,7 @@ namespace AngleSharp.Js.Cache
 
             Parameters = descriptions;
             InitDict = method.GetCustomAttribute<DomInitDictAttribute>();
+            ReturnType = method.GetCustomAttribute<DomReturnTypeAttribute>()?.ReturnType;
             TakesWindow = parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow);
             TakesParamArray = parameters.Length > 0 &&
                 parameters[parameters.Length - 1].GetCustomAttribute<ParamArrayAttribute>() != null;
@@ -39,6 +40,8 @@ namespace AngleSharp.Js.Cache
         public ParameterDescription[] Parameters { get; }
 
         public DomInitDictAttribute InitDict { get; }
+
+        public Type ReturnType { get; }
 
         public Boolean TakesWindow { get; }
 

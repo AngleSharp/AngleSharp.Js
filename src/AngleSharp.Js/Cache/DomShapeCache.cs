@@ -258,6 +258,7 @@ namespace AngleSharp.Js.Cache
                 var indexParameters = property.GetIndexParameters();
                 var accessor = property.GetCustomAttribute<DomAccessorAttribute>()?.Type;
                 var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
+                var sameObject = property.GetCustomAttribute<DomSameObjectAttribute>() != null;
                 var names = property
                     .GetCustomAttributes<DomNameAttribute>()
                     .Select(m => m.OfficialName)
@@ -290,7 +291,7 @@ namespace AngleSharp.Js.Cache
 
                 foreach (var name in names)
                 {
-                    SetProperty(name, property.GetMethod, property.SetMethod, putsForward);
+                    SetProperty(name, property.GetMethod, property.SetMethod, putsForward, sameObject);
                 }
             }
         }
@@ -309,8 +310,8 @@ namespace AngleSharp.Js.Cache
         private void SetEvent(String name, MethodInfo adder, MethodInfo remover) =>
             Define(name, new EventMember(new DomEventDefinition(adder, remover)));
 
-        private void SetProperty(String name, MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward) =>
-            Define(name, new PropertyMember(getter, setter, putsForward));
+        private void SetProperty(String name, MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward, Boolean sameObject = false) =>
+            Define(name, new PropertyMember(getter, setter, putsForward, sameObject));
 
         private void SetIndexer(PropertyInfo property, ParameterInfo[] indexParameters)
         {
@@ -428,12 +429,14 @@ namespace AngleSharp.Js.Cache
             private readonly MethodInfo _getter;
             private readonly MethodInfo _setter;
             private readonly DomPutForwardsAttribute _putsForward;
+            private readonly Boolean _sameObject;
 
-            public PropertyMember(MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward)
+            public PropertyMember(MethodInfo getter, MethodInfo setter, DomPutForwardsAttribute putsForward, Boolean sameObject)
             {
                 _getter = getter;
                 _setter = setter;
                 _putsForward = putsForward;
+                _sameObject = sameObject;
             }
 
             //  Both halves are declared even when only one accessor exists, because that is what
@@ -446,6 +449,9 @@ namespace AngleSharp.Js.Cache
                 var getter = _getter;
                 var setter = _setter;
                 var putsForward = _putsForward;
+                var read = _sameObject
+                    ? (Func<JsValue, JsValue[], JsValue>)((thisObject, arguments) => EngineExtensions.CallSameObject(getter, thisObject))
+                    : ((thisObject, arguments) => EngineExtensions.CallShared(getter, thisObject, arguments));
 
                 //  The forwarding case is decided here rather than per write: it is rare, and the
                 //  ordinary setter is on the hot path for every attribute a script assigns.
@@ -455,7 +461,7 @@ namespace AngleSharp.Js.Cache
 
                 builder.Accessor(
                     name,
-                    (thisObject, arguments) => EngineExtensions.CallShared(getter, thisObject, arguments),
+                    read,
                     write,
                     enumerable: false,
                     configurable: false);

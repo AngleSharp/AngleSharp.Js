@@ -67,7 +67,7 @@ namespace AngleSharp.Js
         {
             var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
 
-            if (value is IDomProxy node && IsInstance(node.Value))
+            if (value is IDomProxy node && IsInstance(node.DomType))
             {
                 return JsBoolean.True;
             }
@@ -77,10 +77,8 @@ namespace AngleSharp.Js
             return InheritsFromPrototype(value as ObjectInstance) ? JsBoolean.True : JsBoolean.False;
         }
 
-        private Boolean IsInstance(Object value)
+        private Boolean IsInstance(Type type)
         {
-            var type = value.GetType();
-
             if (_type.IsAssignableFrom(type))
             {
                 return true;

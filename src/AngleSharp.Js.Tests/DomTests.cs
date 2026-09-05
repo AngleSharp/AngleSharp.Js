@@ -88,6 +88,27 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SameObjectPropertyReturnsTheSameObjectOnEveryAccess()
+        {
+            var result = await "document.images === document.images".EvalScriptAsync();
+            Assert.AreEqual("True", result);
+        }
+
+        [Test]
+        public async Task SameObjectCollectionKeepsItsPropertiesAndUpdatesItsContents()
+        {
+            var result = await "(function () { var d = new DOMParser().parseFromString(`<body></body>`, 'text/html'); var images = d.images; images.marker = 'kept'; var img = d.createElement('img'); d.body.appendChild(img); return (images === d.images) + ',' + images.marker + ',' + images.length + ',' + (images[0] === img); })()".EvalScriptAsync();
+            Assert.AreEqual("true,kept,1,true", result);
+        }
+
+        [Test]
+        public async Task SameObjectTokenListKeepsItsPropertiesAndUpdatesItsContents()
+        {
+            var result = await "(function () { var d = document.createElement('div'); var list = d.classList; list.marker = 'kept'; d.className = 'a b'; return (list === d.classList) + ',' + list.marker + ',' + list.length + ',' + list[1]; })()".EvalScriptAsync();
+            Assert.AreEqual("true,kept,2,b", result);
+        }
+
+        [Test]
         public async Task ConsoleIsTheSameObjectOnEveryAccess()
         {
             var result = await "window.console === window.console".EvalScriptAsync();
@@ -170,6 +191,27 @@ namespace AngleSharp.Js.Tests
         {
             var result = await "(function () { var c = document.getElementsByTagName('script'); return Object.prototype.toString.call(c) + ',' + (c instanceof HTMLCollection); })()".EvalScriptAsync();
             Assert.AreEqual("[object HTMLCollection],true", result);
+        }
+
+        [Test]
+        public async Task QuerySelectorAllUsesItsDeclaredDomReturnType()
+        {
+            var result = await "(function () { var c = document.querySelectorAll('script'); return Object.prototype.toString.call(c) + ',' + (c instanceof NodeList) + ',' + (c instanceof HTMLCollection); })()".EvalScriptAsync();
+            Assert.AreEqual("[object NodeList],true,false", result);
+        }
+
+        [Test]
+        public async Task QuerySelectorAllResultCanUseNodeListForEach()
+        {
+            var result = await "(function () { var nodes = document.querySelectorAll('script'); var names = []; nodes.forEach(function (node, index, collection) { names.push(index + ':' + node.nodeName + ':' + (collection === nodes)); }); return typeof nodes.forEach + ',' + names.join(); })()".EvalScriptAsync();
+            Assert.AreEqual("function,0:SCRIPT:true", result);
+        }
+
+        [Test]
+        public async Task QuerySelectorAllResultCanUseNodeListIterators()
+        {
+            var result = await "(function () { var nodes = document.querySelectorAll('script'); var entry = nodes.entries().next().value; return typeof nodes.entries + ',' + typeof nodes.keys + ',' + typeof nodes.values + ',' + nodes.keys().next().value + ',' + nodes.values().next().value.nodeName + ',' + entry[0] + ':' + entry[1].nodeName; })()".EvalScriptAsync();
+            Assert.AreEqual("function,function,function,0,SCRIPT,0:SCRIPT", result);
         }
 
         [Test]

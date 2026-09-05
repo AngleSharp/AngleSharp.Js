@@ -8,10 +8,12 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Json;
     using Jint.Native.Object;
+    using Jint.Runtime;
     using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     sealed class EngineInstance
     {
@@ -23,6 +25,7 @@ namespace AngleSharp.Js
         private readonly Engine _engine;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
+        private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
         private readonly DomNodeInstance _window;
         private readonly JsImportMap _importMap;
@@ -52,6 +55,7 @@ namespace AngleSharp.Js
             _libs = new LibrarySet(libs);
             _prototypes = new PrototypeCache(_engine, _libs);
             _references = new ReferenceCache();
+            _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
 
             foreach (var assignment in assignments)
             {
@@ -98,7 +102,34 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
+        public ObjectInstance GetDomNode(Object obj, Type type) => CreateInstance(obj, type);
+
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
+
+        public JsValue GetSameObject(Object owner, MethodInfo getter)
+        {
+            if (getter == null)
+            {
+                return JsValue.Undefined;
+            }
+
+            try
+            {
+                var current = getter.Invoke(owner, Array.Empty<Object>());
+
+                if (current == null)
+                {
+                    return JsValue.Null;
+                }
+
+                var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
+                return cache.GetOrUpdate(getter, current, () => CreateInstance(current, getter.ReturnType));
+            }
+            catch (TargetInvocationException)
+            {
+                throw new JavaScriptException(_engine.Intrinsics.Error);
+            }
+        }
 
         /// <summary>
         /// Gets the constructor object of the given type, building it on first ask. The
@@ -218,16 +249,18 @@ namespace AngleSharp.Js
         //  A collection is projected by the array-like proxy, which lets the engine read its
         //  indices and length directly; everything else by the ordinary one. The decision is a
         //  property of the type, so it is resolved once per type for the whole process.
-        private ObjectInstance CreateInstance(Object obj)
+        private ObjectInstance CreateInstance(Object obj) => CreateInstance(obj, obj.GetType());
+
+        private ObjectInstance CreateInstance(Object obj, Type type)
         {
-            var collection = obj.GetType().GetIndexedCollection();
+            var collection = type.GetIndexedCollection();
 
             if (collection != null)
             {
-                return new DomCollectionInstance(this, obj, collection);
+                return new DomCollectionInstance(this, obj, type, collection);
             }
 
-            return new DomNodeInstance(this, obj);
+            return new DomNodeInstance(this, obj, type);
         }
 
         /// <summary>
@@ -254,7 +287,7 @@ namespace AngleSharp.Js
 
         /// <summary>
         /// Converts a value handed over from C#, which reaches Jint through JsValue.FromObject
-        /// rather than through <see cref="EngineExtensions.ToJsValue"/>.
+        /// rather than through <see cref="EngineExtensions.ToJsValue(Object, EngineInstance)"/>.
         /// </summary>
         /// <remarks>
         /// A DOM object has to arrive as the DOM proxy for the very same reason it does when the
@@ -264,6 +297,29 @@ namespace AngleSharp.Js
         /// </remarks>
         private ObjectInstance WrapObject(Engine engine, Object target, Type type) =>
             target.GetType().IsDomType() ? GetDomNode(target) : ObjectWrapper.Create(engine, target, type);
+
+        private sealed class SameObjectCache
+        {
+            private readonly Dictionary<MethodInfo, ObjectInstance> _entries = new Dictionary<MethodInfo, ObjectInstance>();
+
+            public ObjectInstance GetOrUpdate(MethodInfo getter, Object value, Func<ObjectInstance> create)
+            {
+                lock (_entries)
+                {
+                    if (!_entries.TryGetValue(getter, out var instance))
+                    {
+                        instance = create.Invoke();
+                        _entries.Add(getter, instance);
+                    }
+                    else if (instance is IDomProxy proxy)
+                    {
+                        proxy.Update(value);
+                    }
+
+                    return instance;
+                }
+            }
+        }
 
         #endregion
     }

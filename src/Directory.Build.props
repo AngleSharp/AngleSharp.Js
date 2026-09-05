@@ -10,7 +10,7 @@
        entry of CHANGELOG.md, which build/Build.cs passes in as -p:Version, so this value only
        affects a plain `dotnet build` and no longer needs bumping for a release. -->
   <PropertyGroup Label="Versioning">
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Label="Compilation">
@@ -26,6 +26,6 @@
        NuGet resolves the lowest match, so a build cannot quietly take a dependency on an API
        added in a later 1.x. -->
   <PropertyGroup Label="Dependencies">
-    <AngleSharpVersion Condition=" '$(AngleSharpVersion)' == '' ">1.5.0</AngleSharpVersion>
+    <AngleSharpVersion Condition=" '$(AngleSharpVersion)' == '' ">1.8.0</AngleSharpVersion>
   </PropertyGroup>
 </Project>
