@@ -122,6 +122,13 @@ namespace AngleSharp.Js
                     return JsValue.Null;
                 }
 
+                // Nodes and windows already have a canonical proxy. Preserve its identity,
+                // concrete prototype and script-owned properties across SameObject getters.
+                if (current is INode || current is IWindow)
+                {
+                    return GetDomNode(current);
+                }
+
                 var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
                 return cache.GetOrUpdate(getter, current, () => CreateInstance(current, getter.ReturnType));
             }

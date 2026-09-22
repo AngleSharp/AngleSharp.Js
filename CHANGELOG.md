@@ -1,3 +1,7 @@
+# 1.1.1
+
+- Fixed canonical DOM node identity and concrete prototypes through `DomSameObject` getters (#140)
+
 # 1.1.0
 
 Released on Saturday, September 5 2026.
