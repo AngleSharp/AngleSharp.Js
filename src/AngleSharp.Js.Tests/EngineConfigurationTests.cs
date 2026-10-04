@@ -69,5 +69,30 @@ namespace AngleSharp.Js.Tests
                 Assert.AreEqual(2, calls);
             }
         }
+
+        [Test]
+        public async Task NativeEngineInitializationCanUseDomBindings()
+        {
+            using (var sourceContext = BrowsingContext.New(Configuration.Default))
+            {
+                var source = await sourceContext.OpenAsync(request => request.Content("<p>captured</p>")).ConfigureAwait(false);
+                var element = source.QuerySelector("p");
+                var config = Configuration.Default.WithJs(new JsScriptingOptions
+                {
+                    ConfigureEngine = options => options.Configure(engine =>
+                    {
+                        engine.SetValue("hostNode", element);
+                        Assert.IsTrue(engine.Global.HasOwnProperty("document"));
+                    }),
+                }).WithEventLoop();
+
+                using (var context = BrowsingContext.New(config))
+                {
+                    var document = await context.OpenNewAsync().ConfigureAwait(false);
+                    Assert.AreEqual("captured", document.ExecuteScript("document.body.textContent = hostNode.textContent; hostNode.textContent"));
+                    Assert.AreEqual("captured", document.Body.TextContent);
+                }
+            }
+        }
     }
 }

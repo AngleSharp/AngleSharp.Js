@@ -22,12 +22,13 @@ namespace AngleSharp.Js
         //  Jint's StackGuard.Disabled, which is internal.
         private const Int32 StackGuardDisabled = -1;
 
-        private readonly Engine _engine;
-        private readonly PrototypeCache _prototypes;
+        // Assigned by the first Jint initialization callback, before host callbacks can use the DOM.
+        private Engine _engine;
+        private PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
-        private readonly DomNodeInstance _window;
+        private DomNodeInstance _window;
         private readonly JsImportMap _importMap;
 
         #endregion
@@ -37,15 +38,17 @@ namespace AngleSharp.Js
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
         {
             _importMap = new JsImportMap();
+            _libs = new LibrarySet(libs);
+            _references = new ReferenceCache();
+            _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
 
             _engine = new Engine((o) =>
             {
+                o.Configure(engine => InitializeDomBindings(engine, window, assignments, libs));
                 options.ConfigureEngine?.Invoke(o);
                 o.EnableModules(new JsModuleLoader(this, window.Document, false));
-                //  The handler answers out of the caches assigned right below, which only exist
-                //  once this constructor returns. Jint wraps nothing while it is configuring
-                //  itself, so that is safe - and Engine.Options is internal, so registering the
-                //  handler afterwards is not an option.
+                // Jint installs the wrapper before running initialization callbacks. Our first
+                // callback prepares the caches and globals before a host callback can wrap a DOM value.
                 o.SetWrapObjectHandler(WrapObject);
                 //  Left alone, the JS call stack is the native one, and a script recursing
                 //  deeper than it holds takes the whole process down - a StackOverflowException
@@ -53,10 +56,12 @@ namespace AngleSharp.Js
                 //  reports an ordinary "Maximum call stack size exceeded" error instead.
                 o.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
             });
-            _libs = new LibrarySet(libs);
-            _prototypes = new PrototypeCache(_engine, _libs);
-            _references = new ReferenceCache();
-            _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
+        }
+
+        private void InitializeDomBindings(Engine engine, IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
+        {
+            _engine = engine;
+            _prototypes = new PrototypeCache(engine, _libs);
 
             foreach (var assignment in assignments)
             {

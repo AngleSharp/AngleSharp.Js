@@ -19,7 +19,7 @@ namespace AngleSharp.Js
 
         /// <summary>
         /// Gets or sets the callback used to configure each window's Jint engine
-        /// before any script runs. Use this to install execution constraints or
+        /// before any page script runs. Use this to install execution constraints or
         /// other host options. The DOM module loader, object wrapper, and call
         /// stack guard are installed after this callback.
         /// </summary>
@@ -27,6 +27,10 @@ namespace AngleSharp.Js
         /// The callback is retained when the scripting service copies these
         /// options. Captured state remains owned by the caller. The callback can
         /// run more than once when the service is used for multiple windows.
+        /// Native Jint initialization callbacks registered with Options.Configure
+        /// run after DOM proxies and global properties are installed. Jint's
+        /// construction-time callbacks are for host/global setup; evaluate scripts
+        /// through the document after engine construction has completed.
         /// </remarks>
         public Action<Jint.Options> ConfigureEngine { get; set; }
 

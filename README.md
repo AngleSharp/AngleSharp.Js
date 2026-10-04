@@ -63,6 +63,10 @@ var config = Configuration.Default
 
 The callback runs once for each window's engine, before the DOM module loader, object wrapper,
 and call stack guard are installed. Jint controls the scope and reset behavior of its constraints.
+Native initialization callbacks registered through `options.Configure(engine => ...)` run after
+DOM proxies and global properties are installed, so they can add host globals containing DOM
+values. Use these callbacks for host/global setup, and evaluate scripts through the document
+after engine construction has completed.
 The scripting service copies the callback when `WithJs` is called; any state captured by that
 callback remains owned by the host. Hosts sharing one configuration across windows must make
 their captured state safe for that use.
