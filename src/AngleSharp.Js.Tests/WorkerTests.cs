@@ -1,9 +1,11 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
     using NUnit.Framework;
     using System;
+    using System.Diagnostics;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -88,6 +90,34 @@ namespace AngleSharp.Js.Tests
             var document = await context.OpenAsync(request => request.Content(html)).ConfigureAwait(false);
             var result = document.QuerySelector("#result")?.TextContent;
             Assert.AreEqual("true", result);
+        }
+
+        [Test]
+        [NonParallelizable]
+        public async Task RejectedWorkersShouldNotLeaveRunningThreads()
+        {
+            using (var context = BrowsingContext.New(Configuration.Default.WithJs()))
+            {
+                var document = await context.OpenAsync(request => request.Content("<!doctype html>")).ConfigureAwait(false);
+                Assert.Throws<DomException>(() => new AngleSharp.Js.Dom.Worker(document.DefaultView, "/worker.js"));
+                var before = CountProcessThreads();
+
+                for (var i = 0; i < 32; i++)
+                {
+                    Assert.Throws<DomException>(() => new AngleSharp.Js.Dom.Worker(document.DefaultView, "/worker.js"));
+                }
+
+                // Allow unrelated runtime threads without hiding one surviving loop per failure.
+                Assert.Less(CountProcessThreads() - before, 16);
+            }
+        }
+
+        private static Int32 CountProcessThreads()
+        {
+            using (var process = Process.GetCurrentProcess())
+            {
+                return process.Threads.Count;
+            }
         }
 
         [Test]
