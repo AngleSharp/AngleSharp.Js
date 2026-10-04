@@ -1,6 +1,7 @@
 # 1.1.1
 
 - Fixed canonical DOM node identity and concrete prototypes through `DomSameObject` getters (#140)
+- Added `JsScriptingOptions.ConfigureEngine` to configure Jint before any page script runs
 
 # 1.1.0
 

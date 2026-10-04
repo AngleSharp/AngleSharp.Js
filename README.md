@@ -46,6 +46,27 @@ var config = Configuration.Default
     });
 ```
 
+Use `ConfigureEngine` to install Jint execution constraints before inline page scripts run:
+
+```cs
+using Jint;
+
+var config = Configuration.Default
+    .WithJs(new JsScriptingOptions
+    {
+        ConfigureEngine = options => options
+            .MaxStatements(100_000)
+            .TimeoutInterval(TimeSpan.FromSeconds(5))
+            .LimitMemory(16 * 1024 * 1024),
+    });
+```
+
+The callback runs once for each window's engine, before the DOM module loader, object wrapper,
+and call stack guard are installed. Jint controls the scope and reset behavior of its constraints.
+The scripting service copies the callback when `WithJs` is called; any state captured by that
+callback remains owned by the host. Hosts sharing one configuration across windows must make
+their captured state safe for that use.
+
 You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,
 
 ```cs

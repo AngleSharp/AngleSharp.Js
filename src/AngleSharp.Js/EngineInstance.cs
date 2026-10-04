@@ -40,6 +40,7 @@ namespace AngleSharp.Js
 
             _engine = new Engine((o) =>
             {
+                options.ConfigureEngine?.Invoke(o);
                 o.EnableModules(new JsModuleLoader(this, window.Document, false));
                 //  The handler answers out of the caches assigned right below, which only exist
                 //  once this constructor returns. Jint wraps nothing while it is configuring
