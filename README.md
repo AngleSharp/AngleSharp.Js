@@ -46,19 +46,18 @@ var config = Configuration.Default
     });
 ```
 
-Use `EngineCreator` to create a Jint engine with execution constraints before inline page scripts run:
+Register an `EngineCreator` service to configure Jint before inline page scripts run:
 
 ```cs
 using Jint;
+using AngleSharp.Js;
 
 var config = Configuration.Default
-    .WithJs(new JsScriptingOptions
-    {
-        EngineCreator = options => new Engine(options
-            .MaxStatements(100_000)
-            .TimeoutInterval(TimeSpan.FromSeconds(5))
-            .LimitMemory(16 * 1024 * 1024)),
-    });
+    .With(new EngineCreator(options => new Engine(options
+        .MaxStatements(100_000)
+        .TimeoutInterval(TimeSpan.FromSeconds(5))
+        .LimitMemory(16 * 1024 * 1024))))
+    .WithJs();
 ```
 
 The factory runs once for each window and must return a fresh engine using the supplied options.
@@ -66,8 +65,8 @@ Those options contain AngleSharp's DOM module loader, object wrapper, and call s
 DOM bindings are installed after the factory returns. Configure the engine and host globals
 in the factory, then access DOM objects and evaluate page scripts through the document.
 Jint controls the scope and reset behavior of its constraints.
-The scripting service copies the factory when `WithJs` is called; any state captured by that
-factory remains owned by the host. Hosts sharing one configuration across windows must make
+Any state captured by the service remains owned by the host.
+Hosts sharing one configuration across windows must make
 their captured state safe for that use.
 
 You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,

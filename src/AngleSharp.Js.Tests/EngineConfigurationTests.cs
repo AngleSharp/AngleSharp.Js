@@ -14,7 +14,8 @@ namespace AngleSharp.Js.Tests
         public async Task ConstraintsAreInstalledBeforeInlineScriptsRun()
         {
             var config = Configuration.Default
-                .WithJs(new JsScriptingOptions { EngineCreator = options => new Engine(options.MaxStatements(64)) })
+                .With(new EngineCreator(options => new Engine(options.MaxStatements(64))))
+                .WithJs()
                 .WithEventLoop();
 
             using (var context = BrowsingContext.New(config))
@@ -31,17 +32,26 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
-        public async Task EngineCreatorIsCopiedBeforeAnEngineIsCreated()
+        public async Task CreatorServiceCanBeCreatedForEachBrowsingContext()
         {
-            var options = new JsScriptingOptions { EngineCreator = engineOptions => new Engine(engineOptions.MaxStatements(64)) };
-            var config = Configuration.Default.WithJs(options).WithEventLoop();
-            options.EngineCreator = engineOptions => new Engine(engineOptions);
-
-            using (var context = BrowsingContext.New(config))
+            var services = 0;
+            Func<IBrowsingContext, EngineCreator> createService = _ =>
             {
-                var document = await context.OpenNewAsync().ConfigureAwait(false);
-                Assert.Throws<StatementsCountOverflowException>(() => document.ExecuteScript(
+                services++;
+                var limit = services == 1 ? 64 : 2000;
+                return options => new Engine(options.MaxStatements(limit));
+            };
+            var config = Configuration.Default.With(createService).WithJs().WithEventLoop();
+
+            using (var first = BrowsingContext.New(config))
+            using (var second = BrowsingContext.New(config))
+            {
+                var firstDocument = await first.OpenNewAsync().ConfigureAwait(false);
+                var secondDocument = await second.OpenNewAsync().ConfigureAwait(false);
+                Assert.Throws<StatementsCountOverflowException>(() => firstDocument.ExecuteScript(
                     "for (var i = 0; i < 1000; i++) {}"));
+                Assert.AreEqual(100, secondDocument.ExecuteScript("var i = 0; for (; i < 100; i++) {} i;"));
+                Assert.AreEqual(2, services);
             }
         }
 
@@ -49,14 +59,11 @@ namespace AngleSharp.Js.Tests
         public async Task CreatorRunsOncePerWindowAndRetainsDomWrapping()
         {
             var calls = 0;
-            var config = Configuration.Default.WithJs(new JsScriptingOptions
+            var config = Configuration.Default.With(new EngineCreator(options =>
             {
-                EngineCreator = options =>
-                {
-                    calls++;
-                    return new Engine(options.MaxStatements(1000));
-                },
-            }).WithEventLoop();
+                calls++;
+                return new Engine(options.MaxStatements(1000));
+            })).WithJs().WithEventLoop();
 
             using (var firstContext = BrowsingContext.New(config))
             using (var secondContext = BrowsingContext.New(config))
@@ -75,14 +82,11 @@ namespace AngleSharp.Js.Tests
         public async Task CreatorReturnsTheEngineUsedForInlineScriptsAndDomBindings()
         {
             Engine created = null;
-            var config = Configuration.Default.WithJs(new JsScriptingOptions
+            var config = Configuration.Default.With(new EngineCreator(options =>
             {
-                EngineCreator = options =>
-                {
-                    created = new Engine(options.Configure(engine => engine.SetValue("hostValue", "configured")));
-                    return created;
-                },
-            }).WithEventLoop();
+                created = new Engine(options.Configure(engine => engine.SetValue("hostValue", "configured")));
+                return created;
+            })).WithJs().WithEventLoop();
 
             using (var context = BrowsingContext.New(config))
             {
