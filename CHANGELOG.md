@@ -2,6 +2,7 @@
 
 - Fixed background thread leaks when worker construction is rejected
 - Fixed canonical DOM node identity and concrete prototypes through `DomSameObject` getters (#140)
+- Added `JsScriptingOptions.EngineCreator` to create a configured Jint engine before any page script runs
 
 # 1.1.0
 

@@ -72,6 +72,15 @@ namespace AngleSharp.Js.Dom
                 var workerConfig = Configuration.Default
                     .With(_scripting)
                     .WithOnly(_workerLoop);
+
+                foreach (var service in parentContext.OriginalServices)
+                {
+                    if (service is EngineCreator || service is Func<IBrowsingContext, EngineCreator>)
+                    {
+                        workerConfig = workerConfig.With(service);
+                    }
+                }
+
                 _workerContext = BrowsingContext.New(workerConfig);
 
                 Enqueue(_workerLoop, TaskPriority.Critical, () =>

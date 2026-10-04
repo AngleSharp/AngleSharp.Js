@@ -37,21 +37,17 @@ namespace AngleSharp.Js
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
         {
             _importMap = new JsImportMap();
-
-            _engine = new Engine((o) =>
-            {
-                o.EnableModules(new JsModuleLoader(this, window.Document, false));
-                //  The handler answers out of the caches assigned right below, which only exist
-                //  once this constructor returns. Jint wraps nothing while it is configuring
-                //  itself, so that is safe - and Engine.Options is internal, so registering the
-                //  handler afterwards is not an option.
-                o.SetWrapObjectHandler(WrapObject);
-                //  Left alone, the JS call stack is the native one, and a script recursing
-                //  deeper than it holds takes the whole process down - a StackOverflowException
-                //  cannot be caught. Guarded, the engine continues on a fresh stack and finally
-                //  reports an ordinary "Maximum call stack size exceeded" error instead.
-                o.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
-            });
+            var engineOptions = new Options();
+            engineOptions.EnableModules(new JsModuleLoader(this, window.Document, false));
+            // The handler uses the caches initialized below. The creator must return the
+            // engine before DOM objects are wrapped or page scripts are evaluated.
+            engineOptions.SetWrapObjectHandler(WrapObject);
+            // Left alone, the JS call stack is the native one, and a runaway recursion
+            // takes the process down with an uncatchable StackOverflowException.
+            engineOptions.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
+            var creator = window.Document.Context.GetService<EngineCreator>();
+            _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(window, engineOptions))
+                ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
             _libs = new LibrarySet(libs);
             _prototypes = new PrototypeCache(_engine, _libs);
             _references = new ReferenceCache();
