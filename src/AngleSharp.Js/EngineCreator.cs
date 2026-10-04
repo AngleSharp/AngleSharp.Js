@@ -1,14 +1,17 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Dom;
+
     /// <summary>
     /// Creates a window's Jint engine. Register this service with the configuration
     /// to customize engine creation before page scripts run.
     /// </summary>
+    /// <param name="window">The window whose engine is being created.</param>
     /// <param name="options">Options containing the DOM wrapper, module loader, and stack guard.</param>
     /// <returns>A fresh engine constructed with the supplied options.</returns>
     /// <remarks>
     /// DOM bindings are installed after this delegate returns. Configure the engine
     /// and host globals here; access DOM objects and run page scripts afterwards.
     /// </remarks>
-    public delegate Jint.Engine EngineCreator(Jint.Options options);
+    public delegate Jint.Engine EngineCreator(IWindow window, Jint.Options options);
 }

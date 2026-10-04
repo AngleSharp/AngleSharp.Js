@@ -46,7 +46,7 @@ namespace AngleSharp.Js
             // takes the process down with an uncatchable StackOverflowException.
             engineOptions.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
             var creator = window.Document.Context.GetService<EngineCreator>();
-            _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(engineOptions))
+            _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(window, engineOptions))
                 ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
             _libs = new LibrarySet(libs);
             _prototypes = new PrototypeCache(_engine, _libs);

@@ -8,6 +8,7 @@ namespace AngleSharp.Js.Tests
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
+    using System.Collections.Concurrent;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -17,7 +18,7 @@ namespace AngleSharp.Js.Tests
         public async Task ConstraintsAreInstalledBeforeInlineScriptsRun()
         {
             var config = Configuration.Default
-                .With(new EngineCreator(options => new Engine(options.MaxStatements(64))))
+                .With(new EngineCreator((window, options) => new Engine(options.MaxStatements(64))))
                 .WithJs()
                 .WithEventLoop();
 
@@ -42,7 +43,7 @@ namespace AngleSharp.Js.Tests
             {
                 services++;
                 var limit = services == 1 ? 64 : 2000;
-                return options => new Engine(options.MaxStatements(limit));
+                return (window, options) => new Engine(options.MaxStatements(limit));
             };
             var config = Configuration.Default.With(createService).WithJs().WithEventLoop();
 
@@ -62,9 +63,11 @@ namespace AngleSharp.Js.Tests
         public async Task CreatorRunsOncePerWindowAndRetainsDomWrapping()
         {
             var calls = 0;
-            var config = Configuration.Default.With(new EngineCreator(options =>
+            var windows = new ConcurrentQueue<IWindow>();
+            var config = Configuration.Default.With(new EngineCreator((window, options) =>
             {
                 calls++;
+                windows.Enqueue(window);
                 return new Engine(options.MaxStatements(1000));
             })).WithJs().WithEventLoop();
 
@@ -78,6 +81,7 @@ namespace AngleSharp.Js.Tests
                 Assert.AreEqual("first", first.ExecuteScript("document.querySelector('p').textContent"));
                 Assert.AreEqual("second", second.ExecuteScript("document.querySelector('p').textContent"));
                 Assert.AreEqual(2, calls);
+                CollectionAssert.AreEqual(new[] { first.DefaultView, second.DefaultView }, windows.ToArray());
             }
         }
 
@@ -85,7 +89,7 @@ namespace AngleSharp.Js.Tests
         public async Task CreatorReturnsTheEngineUsedForInlineScriptsAndDomBindings()
         {
             Engine created = null;
-            var config = Configuration.Default.With(new EngineCreator(options =>
+            var config = Configuration.Default.With(new EngineCreator((window, options) =>
             {
                 created = new Engine(options.Configure(engine => engine.SetValue("hostValue", "configured")));
                 return created;
@@ -107,8 +111,13 @@ namespace AngleSharp.Js.Tests
         public async Task WorkersInheritTheEngineCreatorService(Boolean contextFactory)
         {
             var services = 0;
-            EngineCreator CreateEngine(String hostValue) => options => new Engine(options.MaxStatements(256)
-                .Configure(engine => engine.SetValue("hostValue", hostValue)));
+            var windows = new ConcurrentQueue<IWindow>();
+            EngineCreator CreateEngine(String hostValue) => (window, options) =>
+            {
+                windows.Enqueue(window);
+                return new Engine(options.MaxStatements(256)
+                    .Configure(engine => engine.SetValue("hostValue", hostValue)));
+            };
             Object registration = contextFactory
                 ? (Object)new Func<IBrowsingContext, EngineCreator>(_ => CreateEngine("context-" + Interlocked.Increment(ref services)))
                 : CreateEngine("configured");
@@ -135,6 +144,12 @@ namespace AngleSharp.Js.Tests
                     Assert.IsInstanceOf<StatementsCountOverflowException>(worker.StartupError);
                     Assert.AreEqual(contextFactory ? "context-2" : "configured", worker.EvaluateInWorker("self.__host"));
                     Assert.AreEqual("undefined", worker.EvaluateInWorker("typeof self.__after"));
+                    var createdWindows = windows.ToArray();
+                    Assert.AreEqual(2, createdWindows.Length);
+                    Assert.AreSame(document.DefaultView, createdWindows[0]);
+                    Assert.AreNotSame(document.DefaultView, createdWindows[1]);
+                    Assert.AreNotSame(context, createdWindows[1].Document.Context);
+                    Assert.AreSame(createdWindows[1], createdWindows[1].Document.DefaultView);
                     if (contextFactory)
                     {
                         Assert.AreEqual(2, services);

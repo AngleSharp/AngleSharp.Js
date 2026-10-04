@@ -53,7 +53,7 @@ using Jint;
 using AngleSharp.Js;
 
 var config = Configuration.Default
-    .With(new EngineCreator(options => new Engine(options
+    .With(new EngineCreator((window, options) => new Engine(options
         .MaxStatements(100_000)
         .TimeoutInterval(TimeSpan.FromSeconds(5))
         .LimitMemory(16 * 1024 * 1024))))
