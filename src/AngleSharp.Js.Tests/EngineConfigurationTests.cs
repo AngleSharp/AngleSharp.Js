@@ -1,6 +1,7 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
+    using AngleSharp.Scripting;
     using Jint;
     using Jint.Runtime;
     using NUnit.Framework;
@@ -13,7 +14,7 @@ namespace AngleSharp.Js.Tests
         public async Task ConstraintsAreInstalledBeforeInlineScriptsRun()
         {
             var config = Configuration.Default
-                .WithJs(new JsScriptingOptions { ConfigureEngine = options => options.MaxStatements(64) })
+                .WithJs(new JsScriptingOptions { EngineCreator = options => new Engine(options.MaxStatements(64)) })
                 .WithEventLoop();
 
             using (var context = BrowsingContext.New(config))
@@ -30,11 +31,11 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
-        public async Task ConfigurationCallbackIsCopiedBeforeAnEngineIsCreated()
+        public async Task EngineCreatorIsCopiedBeforeAnEngineIsCreated()
         {
-            var options = new JsScriptingOptions { ConfigureEngine = engine => engine.MaxStatements(64) };
+            var options = new JsScriptingOptions { EngineCreator = engineOptions => new Engine(engineOptions.MaxStatements(64)) };
             var config = Configuration.Default.WithJs(options).WithEventLoop();
-            options.ConfigureEngine = null;
+            options.EngineCreator = engineOptions => new Engine(engineOptions);
 
             using (var context = BrowsingContext.New(config))
             {
@@ -45,15 +46,15 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
-        public async Task CallbackRunsOncePerWindowAndRetainsDomWrapping()
+        public async Task CreatorRunsOncePerWindowAndRetainsDomWrapping()
         {
             var calls = 0;
             var config = Configuration.Default.WithJs(new JsScriptingOptions
             {
-                ConfigureEngine = options =>
+                EngineCreator = options =>
                 {
                     calls++;
-                    options.MaxStatements(1000);
+                    return new Engine(options.MaxStatements(1000));
                 },
             }).WithEventLoop();
 
@@ -71,27 +72,26 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
-        public async Task NativeEngineInitializationCanUseDomBindings()
+        public async Task CreatorReturnsTheEngineUsedForInlineScriptsAndDomBindings()
         {
-            using (var sourceContext = BrowsingContext.New(Configuration.Default))
+            Engine created = null;
+            var config = Configuration.Default.WithJs(new JsScriptingOptions
             {
-                var source = await sourceContext.OpenAsync(request => request.Content("<p>captured</p>")).ConfigureAwait(false);
-                var element = source.QuerySelector("p");
-                var config = Configuration.Default.WithJs(new JsScriptingOptions
+                EngineCreator = options =>
                 {
-                    ConfigureEngine = options => options.Configure(engine =>
-                    {
-                        engine.SetValue("hostNode", element);
-                        Assert.IsTrue(engine.Global.HasOwnProperty("document"));
-                    }),
-                }).WithEventLoop();
+                    created = new Engine(options.Configure(engine => engine.SetValue("hostValue", "configured")));
+                    return created;
+                },
+            }).WithEventLoop();
 
-                using (var context = BrowsingContext.New(config))
-                {
-                    var document = await context.OpenNewAsync().ConfigureAwait(false);
-                    Assert.AreEqual("captured", document.ExecuteScript("document.body.textContent = hostNode.textContent; hostNode.textContent"));
-                    Assert.AreEqual("captured", document.Body.TextContent);
-                }
+            using (var context = BrowsingContext.New(config))
+            {
+                var document = await context.OpenAsync(request => request.Content(
+                    "<p>before</p><script>document.querySelector('p').textContent = hostValue;</script>")).ConfigureAwait(false);
+                Assert.AreEqual("configured", document.QuerySelector("p").TextContent);
+                Assert.AreSame(created, context.GetService<JsScriptingService>().GetOrCreateJint(document));
+                created.SetValue("hostNode", document.QuerySelector("p"));
+                Assert.AreEqual(true, document.ExecuteScript("hostNode === document.querySelector('p')"));
             }
         }
     }

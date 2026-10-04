@@ -22,13 +22,12 @@ namespace AngleSharp.Js
         //  Jint's StackGuard.Disabled, which is internal.
         private const Int32 StackGuardDisabled = -1;
 
-        // Assigned by the first Jint initialization callback, before host callbacks can use the DOM.
-        private Engine _engine;
-        private PrototypeCache _prototypes;
+        private readonly Engine _engine;
+        private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
-        private DomNodeInstance _window;
+        private readonly DomNodeInstance _window;
         private readonly JsImportMap _importMap;
 
         #endregion
@@ -38,30 +37,20 @@ namespace AngleSharp.Js
         public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
         {
             _importMap = new JsImportMap();
+            var engineOptions = new Options();
+            engineOptions.EnableModules(new JsModuleLoader(this, window.Document, false));
+            // The handler uses the caches initialized below. The creator must return the
+            // engine before DOM objects are wrapped or page scripts are evaluated.
+            engineOptions.SetWrapObjectHandler(WrapObject);
+            // Left alone, the JS call stack is the native one, and a runaway recursion
+            // takes the process down with an uncatchable StackOverflowException.
+            engineOptions.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
+            _engine = options.EngineCreator.Invoke(engineOptions)
+                ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
             _libs = new LibrarySet(libs);
+            _prototypes = new PrototypeCache(_engine, _libs);
             _references = new ReferenceCache();
             _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
-
-            _engine = new Engine((o) =>
-            {
-                o.Configure(engine => InitializeDomBindings(engine, window, assignments, libs));
-                options.ConfigureEngine?.Invoke(o);
-                o.EnableModules(new JsModuleLoader(this, window.Document, false));
-                // Jint installs the wrapper before running initialization callbacks. Our first
-                // callback prepares the caches and globals before a host callback can wrap a DOM value.
-                o.SetWrapObjectHandler(WrapObject);
-                //  Left alone, the JS call stack is the native one, and a script recursing
-                //  deeper than it holds takes the whole process down - a StackOverflowException
-                //  cannot be caught. Guarded, the engine continues on a fresh stack and finally
-                //  reports an ordinary "Maximum call stack size exceeded" error instead.
-                o.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
-            });
-        }
-
-        private void InitializeDomBindings(Engine engine, IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs)
-        {
-            _engine = engine;
-            _prototypes = new PrototypeCache(engine, _libs);
 
             foreach (var assignment in assignments)
             {

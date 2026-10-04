@@ -46,7 +46,7 @@ var config = Configuration.Default
     });
 ```
 
-Use `ConfigureEngine` to install Jint execution constraints before inline page scripts run:
+Use `EngineCreator` to create a Jint engine with execution constraints before inline page scripts run:
 
 ```cs
 using Jint;
@@ -54,21 +54,20 @@ using Jint;
 var config = Configuration.Default
     .WithJs(new JsScriptingOptions
     {
-        ConfigureEngine = options => options
+        EngineCreator = options => new Engine(options
             .MaxStatements(100_000)
             .TimeoutInterval(TimeSpan.FromSeconds(5))
-            .LimitMemory(16 * 1024 * 1024),
+            .LimitMemory(16 * 1024 * 1024)),
     });
 ```
 
-The callback runs once for each window's engine, before the DOM module loader, object wrapper,
-and call stack guard are installed. Jint controls the scope and reset behavior of its constraints.
-Native initialization callbacks registered through `options.Configure(engine => ...)` run after
-DOM proxies and global properties are installed, so they can add host globals containing DOM
-values. Use these callbacks for host/global setup, and evaluate scripts through the document
-after engine construction has completed.
-The scripting service copies the callback when `WithJs` is called; any state captured by that
-callback remains owned by the host. Hosts sharing one configuration across windows must make
+The factory runs once for each window and must return a fresh engine using the supplied options.
+Those options contain AngleSharp's DOM module loader, object wrapper, and call stack guard.
+DOM bindings are installed after the factory returns. Configure the engine and host globals
+in the factory, then access DOM objects and evaluate page scripts through the document.
+Jint controls the scope and reset behavior of its constraints.
+The scripting service copies the factory when `WithJs` is called; any state captured by that
+factory remains owned by the host. Hosts sharing one configuration across windows must make
 their captured state safe for that use.
 
 You can also use this part with a console for logging. The call for this is `WithConsoleLogger`, e.g.,

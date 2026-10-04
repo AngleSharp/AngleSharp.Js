@@ -18,21 +18,21 @@ namespace AngleSharp.Js
         public Int32 MaxCallStackDepth { get; set; } = 10000;
 
         /// <summary>
-        /// Gets or sets the callback used to configure each window's Jint engine
-        /// before any page script runs. Use this to install execution constraints or
-        /// other host options. The DOM module loader, object wrapper, and call
-        /// stack guard are installed after this callback.
+        /// Gets or sets the factory used to create each window's Jint engine
+        /// before any page script runs. The default creates a new engine with
+        /// the supplied options.
         /// </summary>
         /// <remarks>
-        /// The callback is retained when the scripting service copies these
-        /// options. Captured state remains owned by the caller. The callback can
+        /// The factory must construct a fresh engine using the supplied options,
+        /// which contain the DOM module loader, object wrapper, and stack guard.
+        /// It may configure additional Jint options before constructing the engine.
+        /// DOM bindings are installed after the factory returns; do not access
+        /// DOM objects or evaluate page scripts while creating the engine.
+        /// The factory is retained when the scripting service copies these
+        /// options. Captured state remains owned by the caller. The factory can
         /// run more than once when the service is used for multiple windows.
-        /// Native Jint initialization callbacks registered with Options.Configure
-        /// run after DOM proxies and global properties are installed. Jint's
-        /// construction-time callbacks are for host/global setup; evaluate scripts
-        /// through the document after engine construction has completed.
         /// </remarks>
-        public Action<Jint.Options> ConfigureEngine { get; set; }
+        public Func<Jint.Options, Jint.Engine> EngineCreator { get; set; } = options => new Jint.Engine(options);
 
         //  An engine is built per window, long after the options were handed over, so
         //  reading them then would let a later edit of the caller's object decide how
@@ -40,7 +40,7 @@ namespace AngleSharp.Js
         internal JsScriptingOptions Clone() => new JsScriptingOptions
         {
             MaxCallStackDepth = MaxCallStackDepth,
-            ConfigureEngine = ConfigureEngine,
+            EngineCreator = EngineCreator ?? throw new ArgumentException("The engine creator cannot be null.", nameof(EngineCreator)),
         };
     }
 }
