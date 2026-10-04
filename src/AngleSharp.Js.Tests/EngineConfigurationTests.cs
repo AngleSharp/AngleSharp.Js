@@ -1,11 +1,14 @@
 namespace AngleSharp.Js.Tests
 {
     using AngleSharp.Dom;
+    using AngleSharp.Io;
+    using AngleSharp.Js.Tests.Mocks;
     using AngleSharp.Scripting;
     using Jint;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class EngineConfigurationTests
@@ -96,6 +99,51 @@ namespace AngleSharp.Js.Tests
                 Assert.AreSame(created, context.GetService<JsScriptingService>().GetOrCreateJint(document));
                 created.SetValue("hostNode", document.QuerySelector("p"));
                 Assert.AreEqual(true, document.ExecuteScript("hostNode === document.querySelector('p')"));
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task WorkersInheritTheEngineCreatorService(Boolean contextFactory)
+        {
+            var services = 0;
+            EngineCreator CreateEngine(String hostValue) => options => new Engine(options.MaxStatements(256)
+                .Configure(engine => engine.SetValue("hostValue", hostValue)));
+            Object registration = contextFactory
+                ? (Object)new Func<IBrowsingContext, EngineCreator>(_ => CreateEngine("context-" + Interlocked.Increment(ref services)))
+                : CreateEngine("configured");
+            var config = Configuration.Default
+                .With(registration)
+                .WithJs()
+                .WithEventLoop()
+                .With(new DelayedRequester(0, "self.__host = hostValue; for (var i = 0; i < 10000; i++) {} self.__after = true;"))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+
+            using (var context = BrowsingContext.New(config))
+            {
+                var document = await context.OpenNewAsync().ConfigureAwait(false);
+                Assert.AreEqual(contextFactory ? "context-1" : "configured", document.ExecuteScript("hostValue"));
+                var worker = new Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+
+                try
+                {
+                    for (var retries = 200; retries > 0 && !worker.IsInitialized && worker.StartupError is null; retries--)
+                    {
+                        await Task.Delay(10).ConfigureAwait(false);
+                    }
+
+                    Assert.IsInstanceOf<StatementsCountOverflowException>(worker.StartupError);
+                    Assert.AreEqual(contextFactory ? "context-2" : "configured", worker.EvaluateInWorker("self.__host"));
+                    Assert.AreEqual("undefined", worker.EvaluateInWorker("typeof self.__after"));
+                    if (contextFactory)
+                    {
+                        Assert.AreEqual(2, services);
+                    }
+                }
+                finally
+                {
+                    worker.Terminate();
+                }
             }
         }
     }
