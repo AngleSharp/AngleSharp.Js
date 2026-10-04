@@ -1,5 +1,6 @@
 # 1.1.1
 
+- Fixed background thread leaks when worker construction is rejected
 - Fixed canonical DOM node identity and concrete prototypes through `DomSameObject` getters (#140)
 
 # 1.1.0
