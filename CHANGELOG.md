@@ -1,3 +1,11 @@
+# 1.1.1
+
+Released on Wednesday, October 7 2026.
+
+- Fixed background thread leaks when worker construction is rejected (#143) @PrzemyslawKlys
+- Fixed canonical DOM node identity and concrete prototypes through `DomSameObject` getters (#141) @PrzemyslawKlys
+- Added `JsScriptingOptions.EngineCreator` to create a configured Jint engine before any page script runs (#142) @PrzemyslawKlys
+
 # 1.1.0
 
 Released on Saturday, September 5 2026.

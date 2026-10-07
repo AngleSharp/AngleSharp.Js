@@ -60,28 +60,54 @@ namespace AngleSharp.Js.Dom
 
             var parentContext = _window.Document.Context;
             _scripting = parentContext.GetService<JsScriptingService>() ?? throw new DomException(DomError.NotSupported);
-            _workerLoop = new JsEventLoop();
-            var workerConfig = Configuration.Default
-                .With(_scripting)
-                .WithOnly(_workerLoop);
-            _workerContext = BrowsingContext.New(workerConfig);
-
+            EnsureLoaderAvailable();
+            var workerUrl = ResolveUrl(source);
             _pendingMessages = new Queue<Object>();
 
-            EnsureLoaderAvailable();
+            // Check the parent's capabilities before starting a thread that a failed constructor
+            // would leave unreachable. Release it if context creation or scheduling fails too.
+            _workerLoop = new JsEventLoop();
+            try
+            {
+                var workerConfig = Configuration.Default
+                    .With(_scripting)
+                    .WithOnly(_workerLoop);
 
-            var workerUrl = ResolveUrl(source);
-            Enqueue(_workerLoop, TaskPriority.Critical, () =>
+                foreach (var service in parentContext.OriginalServices)
+                {
+                    if (service is EngineCreator || service is Func<IBrowsingContext, EngineCreator>)
+                    {
+                        workerConfig = workerConfig.With(service);
+                    }
+                }
+
+                _workerContext = BrowsingContext.New(workerConfig);
+
+                Enqueue(_workerLoop, TaskPriority.Critical, () =>
+                {
+                    try
+                    {
+                        InitializeWorker(workerUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        _startupError = ex;
+                    }
+                });
+            }
+            catch
             {
                 try
                 {
-                    InitializeWorker(workerUrl);
+                    _workerContext?.Dispose();
                 }
-                catch (Exception ex)
+                finally
                 {
-                    _startupError = ex;
+                    ((IDisposable)_workerLoop).Dispose();
                 }
-            });
+
+                throw;
+            }
         }
 
         #endregion
