@@ -9,6 +9,7 @@ namespace AngleSharp.Js
     using Jint.Native.Json;
     using Jint.Native.Object;
     using Jint.Runtime;
+    using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
@@ -69,12 +70,12 @@ namespace AngleSharp.Js
 
             foreach (var property in _window.GetOwnProperties())
             {
-                _engine.Global.FastSetProperty(property.Key.ToString(), property.Value);
+                _engine.Global.FastSetProperty(property.Key.ToString(), AsGlobalProperty(property.Value));
             }
 
             foreach (var prototypeProperty in Window.Prototype.GetOwnProperties())
             {
-                _engine.Global.FastSetProperty(prototypeProperty.Key.ToString(), prototypeProperty.Value);
+                _engine.Global.FastSetProperty(prototypeProperty.Key.ToString(), AsGlobalProperty(prototypeProperty.Value));
             }
 
             _engine.Global.Prototype = _window.Prototype;
@@ -248,6 +249,14 @@ namespace AngleSharp.Js
         #endregion
 
         #region Helpers
+
+        //  The members of the window are configurable (and its operations and interface objects
+        //  writable) per WebIDL, so that a page's own global replaces them as in a browser, e.g.
+        //  var item = ..., var open = ... or var Node = ...; an accessor like name keeps its setter.
+        private static PropertyDescriptor AsGlobalProperty(PropertyDescriptor descriptor) =>
+            descriptor.IsAccessorDescriptor()
+                ? new GetSetPropertyDescriptor(descriptor.Get, descriptor.Set, descriptor.Enumerable, true)
+                : new PropertyDescriptor(descriptor.Value, true, descriptor.Enumerable, true);
 
         //  A collection is projected by the array-like proxy, which lets the engine read its
         //  indices and length directly; everything else by the ordinary one. The decision is a
