@@ -1,3 +1,9 @@
+# 1.1.2
+
+Released on Sunday, October 25 2026.
+
+- Fixed globals named like a member of the window (e.g. `var item`, `var open`, `function close() {}`) keeping that member, as the members were copied to the global scope as read-only
+
 # 1.1.1
 
 Released on Wednesday, October 7 2026.
