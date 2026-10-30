@@ -20,6 +20,11 @@ namespace AngleSharp.Js.Dom
             new ConditionalWeakTable<IWindow, Console>();
         private static readonly ConditionalWeakTable<IWindow, Worker> WorkerOwners =
             new ConditionalWeakTable<IWindow, Worker>();
+        private static readonly ConditionalWeakTable<IWindow, Performance> Performances =
+            new ConditionalWeakTable<IWindow, Performance>();
+
+        //  The interval between two animation frames of a 60 Hz display.
+        private const Int32 FrameInterval = 16;
 
         /// <summary>
         /// Posts a message.
@@ -90,6 +95,55 @@ namespace AngleSharp.Js.Dom
         public static Console Console(this IWindow window)
         {
             return Consoles.GetValue(window, w => new Console(w));
+        }
+
+        /// <summary>
+        /// Gets the high resolution time of the window. The same instance is returned
+        /// for the same window, so its time origin stays.
+        /// </summary>
+        [DomName("performance")]
+        [DomAccessor(Accessors.Getter)]
+        public static Performance Performance(this IWindow window)
+        {
+            return Performances.GetValue(window, _ => new Performance());
+        }
+
+        /// <summary>
+        /// Requests to call the given callback before the next frame. Without a display to
+        /// synchronize with, the frames follow the rate of a 60 Hz display.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="callback">The callback receiving the time of the frame.</param>
+        /// <returns>The handle to cancel the request with.</returns>
+        [DomName("requestAnimationFrame")]
+        public static Int32 RequestAnimationFrame(this IWindow window, FrameRequestCallback callback)
+        {
+            var performance = window.Performance();
+            return window.SetTimeout(w => callback?.Invoke(w, performance.Now()), FrameInterval);
+        }
+
+        /// <summary>
+        /// Cancels a request made with requestAnimationFrame.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="handle">The handle of the request.</param>
+        [DomName("cancelAnimationFrame")]
+        public static void CancelAnimationFrame(this IWindow window, Int32 handle)
+        {
+            window.ClearTimeout(handle);
+        }
+
+        /// <summary>
+        /// Queues the given callback to run after the current script. It is queued as a task
+        /// (like setTimeout with no delay), not as a microtask, which is close enough for scripts
+        /// deferring work.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="callback">The callback to run.</param>
+        [DomName("queueMicrotask")]
+        public static void QueueMicrotask(this IWindow window, Action callback)
+        {
+            window.SetTimeout(_ => callback?.Invoke(), 0);
         }
 
         /// <summary>

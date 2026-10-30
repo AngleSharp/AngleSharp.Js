@@ -6,6 +6,17 @@ namespace AngleSharp.Js.Tests
     [TestFixture]
     public class DomTests
     {
+        [TestCase("(function () { var e = document.createElement('div'); e.setAttribute('data-side-nav-visible', 'true'); return e.dataset.sideNavVisible; })()", "true")]
+        [TestCase("(function () { var e = document.createElement('div'); e.dataset.sideNavVisible = 'false'; return e.getAttribute('data-side-nav-visible'); })()", "false")]
+        [TestCase("(function () { var e = document.createElement('div'); e.dataset.level = '2'; return e.getAttribute('data-level'); })()", "2")]
+        [TestCase("(function () { var e = document.createElement('div'); e.setAttribute('data-foo-bar', 'x'); return String(e.dataset['foo-bar']); })()", "undefined")]
+        public async Task DatasetMapsCamelCasedNamesToAttributes(string source, string expected)
+        {
+            // dev.to sets document.body.dataset.sideNavVisible, which used to throw a syntax error
+            var result = await source.EvalScriptAsync();
+            Assert.AreEqual(expected, result);
+        }
+
         [Test]
         public async Task NodeHasChildNodesIsAFunction()
         {

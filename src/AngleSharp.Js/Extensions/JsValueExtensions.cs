@@ -4,6 +4,7 @@ namespace AngleSharp.Js
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Native.Object;
     using Jint.Runtime;
     using Jint.Runtime.Interop;
     using System.Linq;
@@ -38,10 +39,57 @@ namespace AngleSharp.Js
                 }
             }
 
+            if (obj is ObjectInstance dictionary && TryCreateDictionary(dictionary, targetType, engine, out var created))
+            {
+                return created;
+            }
+
             var method = sourceType.PrepareConvert(targetType) ??
                 throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
 
             return method.Invoke(obj, null);
+        }
+
+        /// <summary>
+        /// Converts a plain object into a WebIDL dictionary, i.e. a class whose members carry a
+        /// [DomName] (e.g. { top: 100, behavior: 'smooth' } into ScrollToOptions). Members the
+        /// object lacks keep their default.
+        /// </summary>
+        private static Boolean TryCreateDictionary(ObjectInstance source, Type targetType, EngineInstance engine, out Object result)
+        {
+            var typeInfo = targetType.GetTypeInfo();
+            result = null;
+
+            if (!typeInfo.IsClass || typeInfo.IsAbstract || targetType == typeof(String) || targetType.GetConstructor(Type.EmptyTypes) == null)
+            {
+                return false;
+            }
+
+            var members = targetType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.SetMethod != null && m.SetMethod.IsPublic && m.GetIndexParameters().Length == 0)
+                .Select(m => new { Property = m, Name = m.GetCustomAttribute<DomNameAttribute>()?.OfficialName })
+                .Where(m => m.Name != null)
+                .ToArray();
+
+            if (members.Length == 0)
+            {
+                return false;
+            }
+
+            result = Activator.CreateInstance(targetType);
+
+            foreach (var member in members)
+            {
+                var value = source.Get(member.Name);
+
+                if (!value.IsUndefined())
+                {
+                    member.Property.SetValue(result, value.As(member.Property.PropertyType, engine));
+                }
+            }
+
+            return true;
         }
 
         public static Object FromJsValue(this JsValue val)

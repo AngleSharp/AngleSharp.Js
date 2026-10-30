@@ -1,3 +1,19 @@
+# 1.1.3
+
+Released on Friday, October 30 2026.
+
+- Fixed prepared regular-expression literals ignoring the timeout configured during engine creation
+- Fixed the console only having `log`; it now has all methods of the console standard (e.g. `error`, `warn`, `info`, `debug`, `assert`, `count`, `time`), as scripts calling or wrapping one of them failed
+- Fixed reading the globals of scripts (e.g. `var x`, `x = 1`) and the built-ins (e.g. `Promise`, `JSON`) through `window`, which gave `undefined`
+- Fixed named indexers (e.g. `item` of `NodeList` and `HTMLCollection`, `namedItem`) being exposed as properties instead of methods
+- Fixed functions passed for delegates with value-type or no parameters failing to convert
+- Fixed errors thrown by DOM members losing their message
+- Fixed only the last of several extension methods of the same name (e.g. `scrollTo(x, y)` and `scrollTo(options)`) being callable; the one fitting the arguments is called
+- Fixed the geometry stubs of this library (e.g. `offsetHeight` always 0) hiding the implementation of another library (e.g. AngleSharp.Renderer)
+- Fixed plain objects not converting to dictionaries (classes with `DomName` members, e.g. `{ top: 100 }` to `ScrollToOptions`)
+- Fixed `dataset` rejecting camel-cased names (e.g. `dataset.sideNavVisible` for `data-side-nav-visible`) with a syntax error
+- Added `requestAnimationFrame`, `cancelAnimationFrame`, `queueMicrotask`, and `performance` (`now()`, `timeOrigin`) to the window
+
 # 1.1.2
 
 Released on Sunday, October 25 2026.

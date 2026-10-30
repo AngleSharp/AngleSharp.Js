@@ -5,6 +5,7 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Js.Tests.Mocks;
     using AngleSharp.Scripting;
     using Jint;
+    using Jint.Native;
     using Jint.Runtime;
     using NUnit.Framework;
     using System;
@@ -14,6 +15,51 @@ namespace AngleSharp.Js.Tests
 
     public class EngineConfigurationTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task RegexTimeoutAppliesToInlineAndExplicitScripts(Boolean inline)
+        {
+            var timeout = TimeSpan.FromMilliseconds(37);
+            var config = Configuration.Default
+                .With(new EngineCreator((window, options) => new Engine(options.RegexTimeoutInterval(timeout))))
+                .WithJs()
+                .WithEventLoop();
+
+            using (var context = BrowsingContext.New(config))
+            {
+                var document = await context.OpenAsync(request => request.Content(inline
+                    ? "<script>var configuredRegex = /inlineEngineTimeout/;</script>"
+                    : "")).ConfigureAwait(false);
+                var expression = (JsRegExp)document.ExecuteScript(inline ? "configuredRegex" : "/explicitEngineTimeout/");
+
+                Assert.AreEqual(timeout, expression.Value.MatchTimeout);
+            }
+        }
+
+        [TestCase(23, 71)]
+        [TestCase(71, 23)]
+        public async Task CachedScriptsKeepEachEngineRegexTimeout(Int32 firstMilliseconds, Int32 secondMilliseconds)
+        {
+            var source = "/cachedEngineTimeout" + firstMilliseconds + "/";
+
+            foreach (var milliseconds in new[] { firstMilliseconds, secondMilliseconds, firstMilliseconds })
+            {
+                var timeout = TimeSpan.FromMilliseconds(milliseconds);
+                var config = Configuration.Default
+                    .With(new EngineCreator((window, options) => new Engine(options.RegexTimeoutInterval(timeout))))
+                    .WithJs()
+                    .WithEventLoop();
+
+                using (var context = BrowsingContext.New(config))
+                {
+                    var document = await context.OpenNewAsync().ConfigureAwait(false);
+                    var expression = (JsRegExp)document.ExecuteScript(source);
+
+                    Assert.AreEqual(timeout, expression.Value.MatchTimeout);
+                }
+            }
+        }
+
         [Test]
         public async Task ConstraintsAreInstalledBeforeInlineScriptsRun()
         {

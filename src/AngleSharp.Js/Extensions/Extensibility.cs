@@ -50,13 +50,13 @@ namespace AngleSharp.Js
                                 entry.Adder = method;
                                 break;
                             case Accessors.Method:
-                                entry.Other = method;
+                                entry.AddOther(method);
                                 break;
                         }
                     }
                     else
                     {
-                        entry.Other = method;
+                        entry.AddOther(method);
                     }
                 }
             }
@@ -72,6 +72,18 @@ namespace AngleSharp.Js
             public MethodInfo Remover;
             public MethodInfo Other;
             public DomPutForwardsAttribute Forward;
+
+            /// <summary>
+            /// Gets the overloads of the method, e.g. scrollTo(x, y) and scrollTo(options), in
+            /// the order of their declaration. Other is the first one.
+            /// </summary>
+            public List<MethodInfo> Overloads = new List<MethodInfo>();
+
+            public void AddOther(MethodInfo method)
+            {
+                Other = Other ?? method;
+                Overloads.Add(method);
+            }
         }
     }
 }
