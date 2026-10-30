@@ -11,6 +11,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -433,6 +434,49 @@ namespace AngleSharp.Js
             return instance.GetSameObject(target, method);
         }
 
+        /// <summary>
+        /// Gets the method to invoke on the given target. An interface may name a member it
+        /// re-declares explicitly - IHtmlCollection gives IReadOnlyList's indexer the name "item"
+        /// - and that slot has no implementation to invoke; the member of the interface it stands
+        /// for has. Likewise, objects sharing a prototype need not implement the same interfaces,
+        /// and invoking the member of an interface the target lacks fails. Either way the public
+        /// interface method of the same name and signature is taken from the target instead.
+        /// </summary>
+        private static MethodInfo BindToTarget(MethodInfo method, Object target)
+        {
+            var declaringType = method.DeclaringType;
+
+            if (target == null || declaringType == null || !declaringType.GetTypeInfo().IsInterface ||
+                (method.IsPublic && declaringType.IsInstanceOfType(target)))
+            {
+                return method;
+            }
+
+            return _boundMethods.GetOrAdd((method, target.GetType()), key =>
+            {
+                var name = key.Item1.Name;
+                var parameters = Array.ConvertAll(key.Item1.GetParameters(), m => m.ParameterType);
+
+                //  An explicit member is named after the interface it implements, e.g.
+                //  System.Collections.Generic.IReadOnlyList<T>.get_Item.
+                name = name.Substring(name.LastIndexOf('.') + 1);
+
+                foreach (var type in key.Item2.GetInterfaces())
+                {
+                    var candidate = type.GetMethod(name, parameters);
+
+                    if (candidate != null && key.Item1.ReturnType.IsAssignableFrom(candidate.ReturnType))
+                    {
+                        return candidate;
+                    }
+                }
+
+                return key.Item1;
+            });
+        }
+
+        private static readonly ConcurrentDictionary<(MethodInfo, Type), MethodInfo> _boundMethods = new ConcurrentDictionary<(MethodInfo, Type), MethodInfo>();
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)
@@ -462,13 +506,17 @@ namespace AngleSharp.Js
                     }
                     else
                     {
-                        var parameters = instance.BuildArgs(method, arguments);
-                        return method.Invoke(nodeInstance.Value, parameters).ToJsValue(instance, description.ReturnType);
+                        var target = nodeInstance.Value;
+                        var bound = BindToTarget(method, target);
+                        var parameters = instance.BuildArgs(bound, arguments);
+                        return bound.Invoke(target, parameters).ToJsValue(instance, description.ReturnType);
                     }
                 }
-                catch (TargetInvocationException)
+                catch (TargetInvocationException ex)
                 {
-                    throw new JavaScriptException(instance.Jint.Intrinsics.Error);
+                    //  The message is all a script (or whoever reads its errors) gets to see of
+                    //  what went wrong, e.g. the DOMException of an invalid selector.
+                    throw new JavaScriptException(instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
                 }
             }
 

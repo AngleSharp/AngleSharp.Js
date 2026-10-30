@@ -172,7 +172,8 @@ namespace AngleSharp.Js.Cache
             }
 
             var indexers = _numericIndexer != null || _stringIndexerGetter != null || _stringIndexerSetter != null
-                ? new DomIndexers(_numericIndexer, _stringIndexerGetter, _stringIndexerSetter)
+                ? new DomIndexers(_numericIndexer, _stringIndexerGetter, _stringIndexerSetter,
+                    typeof(IStringMap).IsAssignableFrom(_type) ? DomIndexers.ToDatasetName : null)
                 : null;
 
             return new DomShape(_type, _baseType, _name, builder.Build(), indexers, constructor);
@@ -196,7 +197,12 @@ namespace AngleSharp.Js.Cache
                 return;
             }
 
-            foreach (var type in _libs.Assemblies.GetExtensionTypes(_name))
+            var own = typeof(DomShapeBuilder).GetTypeInfo().Assembly;
+            var types = _libs.Assemblies.GetExtensionTypes(_name).ToList();
+
+            //  The members this library brings itself are partly stubs standing in for a missing
+            //  layout (offsetHeight is 0, ...), so a library implementing them (the renderer) wins.
+            foreach (var type in types.Where(m => m.GetTypeInfo().Assembly != own).Concat(types.Where(m => m.GetTypeInfo().Assembly == own)))
             {
                 var typeInfo = type.GetTypeInfo();
                 SetExtensionMethods(typeInfo.DeclaredMethods);
@@ -246,7 +252,10 @@ namespace AngleSharp.Js.Cache
                 }
                 else if (value.Other != null)
                 {
-                    SetMethod(name, value.Other);
+                    if (!IsDeclared(name))
+                    {
+                        Define(name, new MethodMember(value.Overloads.ToArray()));
+                    }
                 }
             }
         }
@@ -287,6 +296,21 @@ namespace AngleSharp.Js.Cache
                 if (isIndexedAccessor || Array.Exists(names, m => m.Is("item")))
                 {
                     SetIndexer(property, indexParameters);
+                }
+
+                if (indexParameters.Length > 0)
+                {
+                    //  A named indexer is a getter operation in WebIDL (getter Node? item(index)),
+                    //  so its name is a method taking the index - an accessor could never receive it.
+                    if (property.GetMethod != null)
+                    {
+                        foreach (var name in names)
+                        {
+                            SetMethod(name, property.GetMethod);
+                        }
+                    }
+
+                    continue;
                 }
 
                 foreach (var name in names)
@@ -382,16 +406,22 @@ namespace AngleSharp.Js.Cache
 
         private sealed class MethodMember : Member
         {
-            private readonly MethodInfo _method;
+            private readonly MethodInfo[] _overloads;
 
-            public MethodMember(MethodInfo method)
+            public MethodMember(params MethodInfo[] overloads)
             {
-                _method = method;
+                _overloads = overloads;
             }
 
             public override void Declare(JsObjectShape.Builder builder, String name, Boolean perRealm)
             {
-                var method = _method;
+                if (_overloads.Length > 1)
+                {
+                    DeclareOverloads(builder, name, perRealm);
+                    return;
+                }
+
+                var method = _overloads[0];
 
                 if (perRealm)
                 {
@@ -421,6 +451,38 @@ namespace AngleSharp.Js.Cache
                 var instance = DomPrototypeState.Of(prototype).Instance;
                 return new ClrFunction(instance.Jint, name, (thisObject, arguments) =>
                     instance.Call(method, thisObject, arguments));
+            }
+
+            //  The overload is picked per call from the arguments, as WebIDL's overload
+            //  resolution does.
+            private void DeclareOverloads(JsObjectShape.Builder builder, String name, Boolean perRealm)
+            {
+                var overloads = _overloads;
+
+                if (perRealm)
+                {
+                    builder.PerRealmSlot(
+                        name,
+                        prototype =>
+                        {
+                            var instance = DomPrototypeState.Of(prototype).Instance;
+                            return new ClrFunction(instance.Jint, name, (thisObject, arguments) =>
+                                instance.Call(overloads.SelectOverload(arguments), thisObject, arguments));
+                        },
+                        enumerable: false,
+                        writable: false,
+                        configurable: false);
+                }
+                else
+                {
+                    builder.Method(
+                        name,
+                        (thisObject, arguments) => EngineExtensions.CallShared(overloads.SelectOverload(arguments), thisObject, arguments),
+                        length: 0,
+                        enumerable: false,
+                        writable: false,
+                        configurable: false);
+                }
             }
         }
 

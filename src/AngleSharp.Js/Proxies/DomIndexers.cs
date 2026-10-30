@@ -24,13 +24,73 @@ namespace AngleSharp.Js
         private readonly Indexer _numeric;
         private readonly Indexer _namedGetter;
         private readonly Indexer _namedSetter;
+        private readonly Func<String, String> _mapName;
 
-        public DomIndexers(Indexer numeric, Indexer namedGetter, Indexer namedSetter)
+        /// <param name="numeric">The numeric indexer, if any.</param>
+        /// <param name="namedGetter">The getter of the string indexer, if any.</param>
+        /// <param name="namedSetter">The setter of the string indexer, if any.</param>
+        /// <param name="mapName">
+        /// Turns a property name into the name the string indexer takes, or null for a name it
+        /// does not support, e.g. the camel-cased names of a dataset.
+        /// </param>
+        public DomIndexers(Indexer numeric, Indexer namedGetter, Indexer namedSetter, Func<String, String> mapName = null)
         {
             _numeric = numeric;
             _namedGetter = namedGetter;
             _namedSetter = namedSetter;
+            _mapName = mapName;
         }
+
+        /// <summary>
+        /// The name of a dataset entry (HTML §3.2.6.6): every ASCII upper alpha of the
+        /// property name becomes a dash followed by its lowercase letter, e.g. sideNavVisible
+        /// is the attribute data-side-nav-visible. A dash followed by a lowercase letter has
+        /// no property name mapping to it.
+        /// </summary>
+        public static String ToDatasetName(String name)
+        {
+            var upper = 0;
+
+            for (var i = 0; i < name.Length; i++)
+            {
+                var c = name[i];
+
+                if (c == '-' && i + 1 < name.Length && name[i + 1] >= 'a' && name[i + 1] <= 'z')
+                {
+                    return null;
+                }
+
+                if (c >= 'A' && c <= 'Z')
+                {
+                    upper++;
+                }
+            }
+
+            if (upper == 0)
+            {
+                return name;
+            }
+
+            var chars = new Char[name.Length + upper];
+            var j = 0;
+
+            foreach (var c in name)
+            {
+                if (c >= 'A' && c <= 'Z')
+                {
+                    chars[j++] = '-';
+                    chars[j++] = (Char)(c + 32);
+                }
+                else
+                {
+                    chars[j++] = c;
+                }
+            }
+
+            return new String(chars);
+        }
+
+        private String MapName(String name) => _mapName != null ? _mapName(name) : name;
 
         /// <summary>
         /// Asks the indexers about one property name, against the object being indexed rather
@@ -119,7 +179,14 @@ namespace AngleSharp.Js
                 return false;
             }
 
-            var valueAtIndex = _namedGetter.Invoke(value, new Object[] { index });
+            var name = MapName(index);
+
+            if (name == null)
+            {
+                return false;
+            }
+
+            var valueAtIndex = _namedGetter.Invoke(value, new Object[] { name });
 
             if (valueAtIndex == null && _namedSetter == null)
             {
@@ -142,13 +209,14 @@ namespace AngleSharp.Js
         /// <see cref="DomPrototypeState.CreateNamedDescriptor"/> hands out, which keeps its
         /// getter live rather than freezing the value it read.
         /// </summary>
-        public Object ReadNamed(Object value, Object[] args) => _namedGetter.Invoke(value, args);
+        public Object ReadNamed(Object value, Object[] args) =>
+            _namedGetter.Invoke(value, _mapName != null ? new Object[] { MapName((String)args[0]) } : args);
 
         /// <summary>
         /// Writes one name through the string indexer.
         /// </summary>
         public void WriteNamed(Object value, Object[] args, EngineInstance engine) =>
-            _namedSetter.Invoke(value, args, engine);
+            _namedSetter.Invoke(value, _mapName != null ? new Object[] { MapName((String)args[0]), args[1] } : args, engine);
 
         public Boolean TrySetToIndex(ObjectInstance prototype, EngineInstance engine, Object value, JsValue property, JsValue newValue)
         {
@@ -164,7 +232,14 @@ namespace AngleSharp.Js
                 return false;
             }
 
-            _namedSetter.Invoke(value, new Object[] { index, newValue }, engine);
+            var name = MapName(index);
+
+            if (name == null)
+            {
+                return false;
+            }
+
+            _namedSetter.Invoke(value, new Object[] { name, newValue }, engine);
             return true;
         }
 

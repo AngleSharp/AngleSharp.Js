@@ -3,6 +3,7 @@ namespace AngleSharp.Js
     using AngleSharp.Dom;
     using Jint.Native;
     using Jint.Native.Object;
+    using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using System;
     using System.Collections.Generic;
@@ -119,7 +120,14 @@ namespace AngleSharp.Js
                     return State.CreateNamedDescriptor(_value, property.ToString());
             }
 
-            return base.GetOwnProperty(property);
+            var descriptor = base.GetOwnProperty(property);
+
+            if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
+            {
+                return GetGlobalProperty(property);
+            }
+
+            return descriptor;
         }
 
         /// <summary>
@@ -159,8 +167,18 @@ namespace AngleSharp.Js
 
             if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
             {
-                value = JsValue.Undefined;
-                return false;
+                var global = GetGlobalProperty(property);
+
+                if (ReferenceEquals(global, PropertyDescriptor.Undefined))
+                {
+                    value = JsValue.Undefined;
+                    return false;
+                }
+
+                value = global.Get == null
+                    ? global.Value ?? JsValue.Undefined
+                    : _instance.Jint.Call(global.Get, receiver, Arguments.Empty);
+                return true;
             }
 
             if (descriptor.Get == null)
@@ -203,10 +221,54 @@ namespace AngleSharp.Js
 
             if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
             {
+                descriptor = GetGlobalProperty(property);
+            }
+
+            if (ReferenceEquals(descriptor, PropertyDescriptor.Undefined))
+            {
                 return OwnPropertyProbe.Missing;
             }
 
             return descriptor.Enumerable ? OwnPropertyProbe.Enumerable : OwnPropertyProbe.NonEnumerable;
+        }
+
+        /// <summary>
+        /// Gets the property of the global object a read of the window arrives at.
+        /// </summary>
+        /// <remarks>
+        /// The window and the global object are two objects here, while in a browser they are
+        /// one. Whatever the window holds is mirrored onto the global object, but not the other
+        /// way around: a global a script declares (var x, or an assignment without declaration)
+        /// and the built-ins (Promise, JSON, ...) live on the global object only, so a read of
+        /// window.InstantClick or window.Promise has to be answered from there. It is asked
+        /// when the window itself has no such property, which also lets a global replacing a
+        /// member of the window's prototype (var item) win, as in a browser.
+        /// </remarks>
+        private PropertyDescriptor GetGlobalProperty(JsValue property)
+        {
+            if (_value is IWindow)
+            {
+                var global = _instance.Jint.Global;
+
+                if (!ReferenceEquals(global, this))
+                {
+                    return global.GetOwnProperty(property);
+                }
+            }
+
+            return PropertyDescriptor.Undefined;
+        }
+
+        public override Boolean Delete(JsValue property)
+        {
+            var deleted = base.Delete(property);
+
+            if (deleted && _value is IWindow)
+            {
+                return _instance.Jint.Global.Delete(property);
+            }
+
+            return deleted;
         }
 
         private DomIndexers.IndexerResult LookupIndex(JsValue property, out Object indexed)
