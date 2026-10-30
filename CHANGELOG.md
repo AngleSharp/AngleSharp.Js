@@ -1,3 +1,9 @@
+# 1.1.3
+
+Released on Friday, October 30 2026.
+
+- Fixed prepared regular-expression literals ignoring the timeout configured during engine creation
+
 # 1.1.2
 
 Released on Sunday, October 25 2026.
