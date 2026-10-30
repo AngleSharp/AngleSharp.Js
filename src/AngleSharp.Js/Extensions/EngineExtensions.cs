@@ -452,30 +452,49 @@ namespace AngleSharp.Js
                 return method;
             }
 
-            return _boundMethods.GetOrAdd((method, target.GetType()), key =>
+            return _boundMethods.GetOrAdd(new BoundMethodKey(method, target.GetType()), static key =>
             {
-                var name = key.Item1.Name;
-                var parameters = Array.ConvertAll(key.Item1.GetParameters(), m => m.ParameterType);
+                var name = key.Method.Name;
+                var parameters = Array.ConvertAll(key.Method.GetParameters(), m => m.ParameterType);
 
                 //  An explicit member is named after the interface it implements, e.g.
                 //  System.Collections.Generic.IReadOnlyList<T>.get_Item.
                 name = name.Substring(name.LastIndexOf('.') + 1);
 
-                foreach (var type in key.Item2.GetInterfaces())
+                foreach (var type in key.TargetType.GetInterfaces())
                 {
                     var candidate = type.GetMethod(name, parameters);
 
-                    if (candidate != null && key.Item1.ReturnType.IsAssignableFrom(candidate.ReturnType))
+                    if (candidate != null && key.Method.ReturnType.IsAssignableFrom(candidate.ReturnType))
                     {
                         return candidate;
                     }
                 }
 
-                return key.Item1;
+                return key.Method;
             });
         }
 
-        private static readonly ConcurrentDictionary<(MethodInfo, Type), MethodInfo> _boundMethods = new ConcurrentDictionary<(MethodInfo, Type), MethodInfo>();
+        private static readonly ConcurrentDictionary<BoundMethodKey, MethodInfo> _boundMethods = new ConcurrentDictionary<BoundMethodKey, MethodInfo>();
+
+        private readonly struct BoundMethodKey : IEquatable<BoundMethodKey>
+        {
+            public BoundMethodKey(MethodInfo method, Type targetType)
+            {
+                Method = method;
+                TargetType = targetType;
+            }
+
+            public MethodInfo Method { get; }
+
+            public Type TargetType { get; }
+
+            public Boolean Equals(BoundMethodKey other) => Method == other.Method && TargetType == other.TargetType;
+
+            public override Boolean Equals(Object obj) => obj is BoundMethodKey other && Equals(other);
+
+            public override Int32 GetHashCode() => (Method.GetHashCode() * 397) ^ TargetType.GetHashCode();
+        }
 
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
