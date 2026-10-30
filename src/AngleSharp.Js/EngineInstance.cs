@@ -24,6 +24,7 @@ namespace AngleSharp.Js
         private const Int32 StackGuardDisabled = -1;
 
         private readonly Engine _engine;
+        private readonly TimeSpan _regexTimeout;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
@@ -49,6 +50,7 @@ namespace AngleSharp.Js
             var creator = window.Document.Context.GetService<EngineCreator>();
             _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(window, engineOptions))
                 ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
+            _regexTimeout = engineOptions.Constraints.RegexTimeout;
             _libs = new LibrarySet(libs);
             _prototypes = new PrototypeCache(_engine, _libs);
             _references = new ReferenceCache();
@@ -159,7 +161,7 @@ namespace AngleSharp.Js
             {
                 if (MimeTypeNames.IsJavaScript(type))
                 {
-                    var prepared = ScriptCache.GetOrCreate(source);
+                    var prepared = ScriptCache.GetOrCreate(source, _regexTimeout);
                     //  An invalid result means the source did not parse; hand it to the
                     //  engine as text so the syntax error is reported as usual.
                     return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source);
