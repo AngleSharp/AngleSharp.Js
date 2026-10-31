@@ -4,7 +4,9 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Dom;
     using NUnit.Framework;
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
     using System.Threading.Tasks;
 
     [DomName("ProbeMode")]
@@ -21,6 +23,9 @@ namespace AngleSharp.Js.Tests
     {
         [DomName("left")]
         public Double? Left { get; set; }
+
+        [DomName("headers")]
+        public Dictionary<String, String> Headers { get; set; }
 
         [DomName("mode")]
         public ProbeMode Mode { get; set; } = ProbeMode.Near;
@@ -45,7 +50,12 @@ namespace AngleSharp.Js.Tests
 
         [DomName("probe")]
         public static String Probe(this IElement element, ProbeOptions options) =>
-            String.Format(CultureInfo.InvariantCulture, "options:{0},{1}", options.Left?.ToString(CultureInfo.InvariantCulture) ?? "-", options.Mode);
+            String.Format(CultureInfo.InvariantCulture, "options:{0},{1}", options.Left?.ToString(CultureInfo.InvariantCulture) ?? "-", options.Mode) +
+            (options.Headers is null ? "" : ",headers:" + String.Join("|", options.Headers.Select(header => header.Key + "=" + header.Value)));
+
+        [DomName("probeRecord")]
+        public static String ProbeRecord(this IElement element, IDictionary<String, Double> record) =>
+            String.Join("|", record.Select(entry => entry.Key + "=" + entry.Value.ToString(CultureInfo.InvariantCulture)));
     }
 
     /// <summary>
@@ -67,6 +77,8 @@ namespace AngleSharp.Js.Tests
         [TestCase("probe(true)", "flag:True")]
         [TestCase("probe({ left: 5, mode: 'far' })", "options:5,Far")]
         [TestCase("probe({})", "options:-,Near")]
+        [TestCase("probe({ headers: { Accept: 'application/json', 'X-Count': 2 } })", "options:-,Near,headers:Accept=application/json|X-Count=2")]
+        [TestCase("probeRecord({ a: 1, b: '2.5' })", "a=1|b=2.5")]
         [TestCase("probe(undefined)", "none")]
         public async Task OverloadFittingTheArgumentsIsCalled(String call, String expected)
         {

@@ -1,13 +1,17 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Cache;
+    using AngleSharp.Js.Dom;
     using AngleSharp.Text;
     using Jint;
     using Jint.Native;
+    using Jint.Native.Function;
     using Jint.Native.Json;
     using Jint.Native.Object;
+    using Jint.Native.Promise;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
@@ -15,6 +19,7 @@ namespace AngleSharp.Js
     using System.Collections.Generic;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using System.Threading.Tasks;
 
     sealed class EngineInstance
     {
@@ -31,6 +36,7 @@ namespace AngleSharp.Js
         private readonly LibrarySet _libs;
         private readonly DomNodeInstance _window;
         private readonly JsImportMap _importMap;
+        private readonly List<KeyValuePair<JsValue, JsValue>> _unhandledRejections = new List<KeyValuePair<JsValue, JsValue>>();
 
         #endregion
 
@@ -81,6 +87,7 @@ namespace AngleSharp.Js
             }
 
             _engine.Global.Prototype = _window.Prototype;
+            _engine.Advanced.PromiseRejectionTracker += OnPromiseRejection;
         }
 
         #endregion
@@ -98,6 +105,152 @@ namespace AngleSharp.Js
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Gives script a promise for the task (e.g. of fetch), settled with the outcome of the
+        /// task on the event loop of the window - Jint is not thread-safe, and its promise jobs
+        /// only run when asked to.
+        /// </summary>
+        public JsValue CreatePromise(Task task)
+        {
+            var (promise, resolve, reject) = _engine.Advanced.RegisterPromise();
+            var hasResult = GetResultType(task.GetType()) != null;
+
+            task.ContinueWith(completed => Settle(() =>
+            {
+                if (completed.IsFaulted)
+                {
+                    var error = completed.Exception.GetBaseException();
+                    reject(_engine.Intrinsics.Error.Construct(error.Message));
+                }
+                else if (completed.IsCanceled)
+                {
+                    reject(_engine.Intrinsics.Error.Construct("The operation was aborted."));
+                }
+                else if (hasResult)
+                {
+                    var result = completed.GetType().GetProperty(nameof(Task<Object>.Result)).GetValue(completed);
+                    //  untyped, so a node is the same object as the one the DOM gives otherwise
+                    resolve(result.ToJsValue(this));
+                }
+                else
+                {
+                    resolve(JsValue.Undefined);
+                }
+            }), TaskContinuationOptions.ExecuteSynchronously);
+
+            return promise;
+        }
+
+        //  A promise rejected without a handler is reported once the task rejecting it is done,
+        //  which gives the script the rest of it to add one (HTML 8.1.7.3); without an event loop
+        //  there is no end of a task to wait for.
+        private void OnPromiseRejection(Object sender, PromiseRejectionTrackerEventArgs e)
+        {
+            var loop = GetEventLoop();
+
+            if (loop == null)
+            {
+                return;
+            }
+
+            var index = _unhandledRejections.FindIndex(rejection => ReferenceEquals(rejection.Key, e.Promise));
+
+            if (e.Operation == PromiseRejectionOperation.Handle)
+            {
+                if (index >= 0)
+                {
+                    _unhandledRejections.RemoveAt(index);
+                }
+            }
+            else if (index < 0)
+            {
+                _unhandledRejections.Add(new KeyValuePair<JsValue, JsValue>(e.Promise, e.Value));
+
+                if (_unhandledRejections.Count == 1)
+                {
+                    loop.Enqueue(_ => NotifyUnhandledRejections(), TaskPriority.Normal);
+                }
+            }
+        }
+
+        private void NotifyUnhandledRejections()
+        {
+            lock (_engine)
+            {
+                var rejections = _unhandledRejections.ToArray();
+                _unhandledRejections.Clear();
+
+                foreach (var rejection in rejections)
+                {
+                    NotifyUnhandledRejection(rejection.Key, rejection.Value);
+                }
+            }
+        }
+
+        private void NotifyUnhandledRejection(JsValue promise, JsValue reason)
+        {
+            var window = (IWindow)_window.Value;
+            var ev = new PromiseRejectionEvent("unhandledrejection", promise, reason);
+            window.Dispatch(ev);
+
+            //  the handler a script assigned to the window, which is no member of the DOM
+            if (!ev.IsDefaultPrevented && _window.Get("onunhandledrejection") is Function handler)
+            {
+                var result = handler.Call(_window, new JsValue[] { GetDomNode(ev) });
+
+                if (result.IsBoolean() && !result.AsBoolean())
+                {
+                    ev.Cancel();
+                }
+            }
+
+            if (!ev.IsDefaultPrevented)
+            {
+                window.Document?.Context?.TrackError(new JavaScriptException(reason));
+            }
+        }
+
+        private void Settle(Action settle)
+        {
+            void Run()
+            {
+                lock (_engine)
+                {
+                    settle();
+                    _engine.Advanced.ProcessTasks();
+                }
+            }
+
+            var loop = GetEventLoop();
+
+            if (loop != null)
+            {
+                loop.Enqueue(_ => Run(), TaskPriority.Normal);
+            }
+            else
+            {
+                Run();
+            }
+        }
+
+        private IEventLoop GetEventLoop() => (_window.Value as IWindow)?.Document?.Context?.GetService<IEventLoop>();
+
+        //  The result of a Task<T> (an async method gives a subclass of it); none for a Task, and
+        //  none for the internal VoidTaskResult of a Task completed without a value.
+        private static Type GetResultType(Type type)
+        {
+            for (; type != null && type != typeof(Task); type = type.GetTypeInfo().BaseType)
+            {
+                if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+                {
+                    var result = type.GetTypeInfo().GenericTypeArguments[0];
+                    return result.Name == "VoidTaskResult" ? null : result;
+                }
+            }
+
+            return null;
+        }
 
         public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 

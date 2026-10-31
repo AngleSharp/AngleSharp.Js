@@ -14,6 +14,7 @@ namespace AngleSharp.Js
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     static class EngineExtensions
     {
@@ -21,7 +22,11 @@ namespace AngleSharp.Js
         {
             if (obj != null)
             {
-                if (obj is String)
+                if (obj is JsValue value)
+                {
+                    return value;
+                }
+                else if (obj is String)
                 {
                     return JsValue.FromObjectWithType(engine.Jint, obj, typeof(String));
                 }
@@ -58,6 +63,35 @@ namespace AngleSharp.Js
                             break;
                     }
                     return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Enum));
+                }
+                else if (obj is Task task)
+                {
+                    return engine.CreatePromise(task);
+                }
+                else if (obj is IDictionary<String, Object> record)
+                {
+                    //  A WebIDL record (e.g., the object of a JSON response) arrives as a plain object
+                    var result = new JsObject(engine.Jint);
+
+                    foreach (var entry in record)
+                    {
+                        result.FastSetDataProperty(entry.Key, entry.Value.ToJsValue(engine));
+                    }
+
+                    return result;
+                }
+                else if (obj is Array array)
+                {
+                    //  A WebIDL sequence (e.g., the records given to a MutationObserver callback)
+                    //  arrives as a new JS array, so for...of, spread and the array methods work
+                    var items = new JsValue[array.Length];
+
+                    for (var i = 0; i < items.Length; i++)
+                    {
+                        items[i] = array.GetValue(i).ToJsValue(engine);
+                    }
+
+                    return new JsArray(engine.Jint, items);
                 }
 
                 return engine.GetDomNode(obj);
