@@ -134,5 +134,19 @@ namespace AngleSharp.Js.Tests
 
             Assert.AreEqual("abc", document.Title);
         }
+
+        [Test]
+        public async Task MutationObserverCallbackGetsTheRecordsAndTheObserver()
+        {
+            var context = BrowsingContext.New(Configuration.Default.WithJs().WithEventLoop());
+            var document = await context.OpenAsync(m => m.Content("<!doctype html><div id=target></div><script>new MutationObserver(function (records, observer) { var types = []; for (var record of records) { types.push(record.type); } document.title = Array.isArray(records) + ',' + types.join() + ',' + (observer instanceof MutationObserver); }).observe(document.getElementById('target'), { childList: true, attributes: true }); document.getElementById('target').appendChild(document.createElement('p'));</script>"));
+
+            for (var i = 0; i < 100 && document.Title.Length == 0; i++)
+            {
+                await Task.Delay(20);
+            }
+
+            Assert.AreEqual("true,childList,true", document.Title);
+        }
     }
 }

@@ -1,3 +1,13 @@
+# 1.1.4
+
+Released on Sunday, November 1 2026.
+
+- Fixed callbacks getting their first parameter as `this` instead of as an argument (e.g. a `MutationObserver` callback got the observer instead of the records); only a leading window (timers, animation frames) is the receiver
+- Fixed arrays (e.g. the records of a `MutationObserver`) not being JS arrays, so `for...of` failed with "The value is not iterable"
+- Fixed members returning a task (e.g. `fetch`) giving an object without `then`; they return a promise settled on the event loop
+- Fixed dictionaries (e.g. the parsed body of a JSON response) not being plain JS objects
+- Added `unhandledrejection` (`PromiseRejectionEvent`, `window.onunhandledrejection`); a rejection nobody handles is reported as an error of the browsing context
+
 # 1.1.3
 
 Released on Friday, October 30 2026.

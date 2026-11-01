@@ -9,6 +9,8 @@ namespace AngleSharp.Js
     using Jint.Runtime.Interop;
     using System.Linq;
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Reflection;
 
     static class JsValueExtensions
@@ -39,6 +41,11 @@ namespace AngleSharp.Js
                 }
             }
 
+            if (obj is ObjectInstance record && TryCreateRecord(record, targetType, engine, out var entries))
+            {
+                return entries;
+            }
+
             if (obj is ObjectInstance dictionary && TryCreateDictionary(dictionary, targetType, engine, out var created))
             {
                 return created;
@@ -55,6 +62,53 @@ namespace AngleSharp.Js
         /// [DomName] (e.g. { top: 100, behavior: 'smooth' } into ScrollToOptions). Members the
         /// object lacks keep their default.
         /// </summary>
+        /// <summary>
+        /// A WebIDL record (e.g. the headers of fetch) is given as a plain object, whose own
+        /// enumerable properties become the entries.
+        /// </summary>
+        private static Boolean TryCreateRecord(ObjectInstance source, Type targetType, EngineInstance engine, out Object result)
+        {
+            var valueType = GetRecordValueType(targetType);
+            result = null;
+
+            if (valueType == null)
+            {
+                return false;
+            }
+
+            var entries = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(typeof(String), valueType));
+
+            foreach (var property in source.GetOwnProperties())
+            {
+                if (property.Key.IsString() && property.Value.Enumerable)
+                {
+                    var value = source.Get(property.Key);
+                    entries[property.Key.AsString()] = valueType == typeof(String) ? TypeConverter.ToString(value) : value.As(valueType, engine);
+                }
+            }
+
+            result = entries;
+            return true;
+        }
+
+        //  Dictionary<String, T> and the interfaces it implements with String keys.
+        private static Type GetRecordValueType(Type targetType)
+        {
+            var typeInfo = targetType.GetTypeInfo();
+
+            if (typeInfo.IsGenericType && typeInfo.GenericTypeArguments.Length == 2 && typeInfo.GenericTypeArguments[0] == typeof(String))
+            {
+                var dictionary = typeof(Dictionary<,>).MakeGenericType(typeInfo.GenericTypeArguments);
+
+                if (targetType.GetTypeInfo().IsAssignableFrom(dictionary.GetTypeInfo()))
+                {
+                    return typeInfo.GenericTypeArguments[1];
+                }
+            }
+
+            return null;
+        }
+
         private static Boolean TryCreateDictionary(ObjectInstance source, Type targetType, EngineInstance engine, out Object result)
         {
             var typeInfo = targetType.GetTypeInfo();

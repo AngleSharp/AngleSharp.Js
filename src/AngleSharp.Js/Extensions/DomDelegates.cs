@@ -76,15 +76,17 @@ namespace AngleSharp.Js
 
             var objExpr = Expression.Parameter(typeof(Function), "function");
             var engineExpr = Expression.Parameter(typeof(EngineInstance), "engine");
-            //  The first parameter is the receiver of the call, the others are its arguments; a
-            //  delegate without parameters calls with no receiver. Value types (e.g., the time of
+            //  A leading window (e.g., of a timer or an animation frame) is the receiver of the
+            //  call, all other parameters are its arguments (e.g., the records and the observer
+            //  of a MutationCallback, the node of a NodeFilter). Value types (e.g., the time of
             //  an animation frame) have to be boxed for the conversion.
             Expression ToJsValue(ParameterExpression m) =>
                 Expression.Call(convert, Expression.Convert(m, typeof(Object)), engineExpr);
+            var hasReceiver = parameters.Length > 0 && typeof(IWindow).IsAssignableFrom(parameters[0].Type);
             var call = Expression.Call(objExpr, "Call", new Type[0], new Expression[]
             {
-                parameters.Length > 0 ? ToJsValue(parameters[0]) : Expression.Constant(JsValue.Undefined, typeof(JsValue)),
-                Expression.NewArrayInit(typeof(JsValue), parameters.Skip(1).Select(ToJsValue).ToArray())
+                hasReceiver ? ToJsValue(parameters[0]) : Expression.Constant(JsValue.Undefined, typeof(JsValue)),
+                Expression.NewArrayInit(typeof(JsValue), parameters.Skip(hasReceiver ? 1 : 0).Select(ToJsValue).ToArray())
             });
 
             var callback = Expression.Lambda<T>(call, parameters);
