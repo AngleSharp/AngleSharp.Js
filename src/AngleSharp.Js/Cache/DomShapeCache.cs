@@ -106,6 +106,8 @@ namespace AngleSharp.Js.Cache
     sealed class DomShapeBuilder
     {
         private const String ConstructorName = "constructor";
+        private const String ToStringName = "toString";
+        private const String ClrToStringName = "ToString";
 
         private readonly Type _type;
         private readonly Type _baseType;
@@ -115,6 +117,7 @@ namespace AngleSharp.Js.Cache
         private readonly Boolean _perRealmMethods;
         private readonly List<String> _order;
         private readonly Dictionary<String, Member> _members;
+        private readonly Dictionary<String, Type> _methodOwners;
 
         private Indexer _numericIndexer;
         private Indexer _stringIndexerGetter;
@@ -129,6 +132,7 @@ namespace AngleSharp.Js.Cache
             _reserved = reserved;
             _order = new List<String>();
             _members = new Dictionary<String, Member>(StringComparer.Ordinal);
+            _methodOwners = new Dictionary<String, Type>(StringComparer.Ordinal);
 
             //  The window's members are the one set a script reaches without naming a receiver:
             //  they are copied onto the global object, and a bare "alert('hi')" calls with no
@@ -141,6 +145,7 @@ namespace AngleSharp.Js.Cache
         {
             SetAllMembers(_type);
             SetExtensionMembers();
+            SetStringifier();
 
             var constructor = _type.GetConstructorDefinition(_libs.Assemblies);
             var builder = new JsObjectShape.Builder();
@@ -209,6 +214,24 @@ namespace AngleSharp.Js.Cache
             }
         }
 
+        /// <summary>
+        /// A WebIDL stringifier (URL, Location, DOMTokenList, ...) has no attribute to find it by,
+        /// because its C# counterpart is overriding ToString - which only such types do. Without
+        /// it the type would answer with its tag, as in String(new URLSearchParams('a=1')).
+        /// </summary>
+        private void SetStringifier()
+        {
+            if (_name != null && !_members.ContainsKey(ToStringName) && _type.GetTypeInfo().IsClass)
+            {
+                var method = _type.GetMethod(ClrToStringName, Type.EmptyTypes);
+
+                if (method != null && method.DeclaringType != typeof(Object))
+                {
+                    Define(ToStringName, new MethodMember(method));
+                }
+            }
+        }
+
         private void SetAllMembers(Type parentType)
         {
             foreach (var type in parentType.GetTypeTree())
@@ -264,6 +287,12 @@ namespace AngleSharp.Js.Cache
         {
             foreach (var property in properties)
             {
+                //  A static member belongs to the constructor, see DomConstructorInstance.
+                if ((property.GetMethod ?? property.SetMethod).IsStatic)
+                {
+                    continue;
+                }
+
                 var indexParameters = property.GetIndexParameters();
                 var accessor = property.GetCustomAttribute<DomAccessorAttribute>()?.Type;
                 var putsForward = property.GetCustomAttribute<DomPutForwardsAttribute>();
@@ -324,6 +353,12 @@ namespace AngleSharp.Js.Cache
         {
             foreach (var method in methods)
             {
+                //  A static member belongs to the constructor, see DomConstructorInstance.
+                if (method.IsStatic)
+                {
+                    continue;
+                }
+
                 foreach (var m in method.GetCustomAttributes<DomNameAttribute>())
                 {
                     SetMethod(m.OfficialName, method);
@@ -370,13 +405,17 @@ namespace AngleSharp.Js.Cache
 
         private void SetMethod(String name, MethodInfo method)
         {
-            //TODO Jint
-            // If it already has a property with the given name (usually another method),
-            // then convert that method to a two-layer method, which decides which one
-            // to pick depending on the number (and probably types) of arguments.
             if (!IsDeclared(name))
             {
                 Define(name, new MethodMember(method));
+                _methodOwners[name] = method.DeclaringType;
+            }
+            else if (_members.TryGetValue(name, out var member) && member is MethodMember existing &&
+                _methodOwners.TryGetValue(name, out var owner) && owner == method.DeclaringType)
+            {
+                //  Only within one type: a method of the same name further up the tree is hidden
+                //  by the one found first, it does not become an overload of it.
+                existing.Add(method);
             }
         }
 
@@ -406,12 +445,14 @@ namespace AngleSharp.Js.Cache
 
         private sealed class MethodMember : Member
         {
-            private readonly MethodInfo[] _overloads;
+            private MethodInfo[] _overloads;
 
             public MethodMember(params MethodInfo[] overloads)
             {
                 _overloads = overloads;
             }
+
+            public void Add(MethodInfo method) => _overloads = _overloads.Concat(new[] { method }).ToArray();
 
             public override void Declare(JsObjectShape.Builder builder, String name, Boolean perRealm)
             {

@@ -96,6 +96,13 @@ namespace AngleSharp.Js.Dom
                 if (sender is TElement element)
                 {
                     var document = element.Owner;
+
+                    // a sandboxed frame runs nothing of its document, handlers included
+                    if (OriginPolicy.IsScriptingBlocked(document))
+                    {
+                        return;
+                    }
+
                     var engine = _service.GetOrCreateInstance(document);
                     var jint = engine.Jint;
                     var instance = jint.Intrinsics.Function.Construct(new JsValue[] { "event", value }, JsValue.Undefined);

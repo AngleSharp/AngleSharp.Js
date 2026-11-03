@@ -1,3 +1,23 @@
+# 1.2.0
+
+Released on Friday, November 6 2026.
+
+- Fixed only the first of several methods or constructors of the same name being callable (e.g. `new URLSearchParams('a=1')`, `register(url, options)`); the one fitting the arguments is called
+- Fixed static members not being reachable (e.g. `DOMRect.fromRect`); they are on the constructor and may take the window as first parameter
+- Fixed members of classes marked with `DomExposed` ending up on what they are exposed to (e.g. the members of a constructor on `window`); only extension methods do
+- Fixed arrays and other iterables not converting to sequences (arrays and the interfaces they implement)
+- Fixed `ArrayBuffer`, typed arrays, and `DataView` not converting to `Byte[]`, `ArraySegment<Byte>`, and `Object` (e.g. a request body being sent as `[object Uint8Array]`)
+- Fixed numbers not converting from and to `Int64`, `UInt64`, `Int16`, `Byte`, `SByte`, `Single` (only from), and `Decimal`, as well as nullable forms of all value types
+- Fixed values of `DomLiterals` enums being numbers instead of strings (e.g. `shadowRoot.mode`), and such enums being exposed as objects
+- Fixed `Byte[]` being given as an array of numbers instead of an `ArrayBuffer`
+- Fixed errors thrown by constructors losing their message
+- Fixed WebIDL stringifiers (`URL`, `URLSearchParams`, `Location`, `Range`, `DOMTokenList`, `DOMMatrix`) answering `String(x)` with `[object X]`; a type overriding `ToString` has a `toString`
+- Fixed sandboxed browsing contexts without `allow-scripts` running scripts and event handler attributes
+- Fixed `postMessage` ignoring `targetOrigin`, giving it as the origin of the event, turning objects into strings, and not having a `source`; messages are copied by the structured clone algorithm, and the options form is supported
+- Added `ArraySegment<Byte>` being given as a `Uint8Array`
+- Added classes with implicit conversions standing for a WebIDL union, e.g. of a string and a sequence of strings, which fixes such conversions failing; an implicit conversion from such a class is what a script receives for it
+- Added the same-origin policy: script gets `null` for a node of another origin, and for its window a `CrossOriginWindow` with only `window`, `self`, `frames`, `parent`, `top`, `closed`, `length`, `location` (only to be set, and only for frames inside the own document), `postMessage`, `focus`, `blur` and `close`
+
 # 1.1.4
 
 Released on Sunday, November 1 2026.

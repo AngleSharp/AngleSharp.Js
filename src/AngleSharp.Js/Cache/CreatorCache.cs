@@ -8,6 +8,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using AngleSharp.Dom;
 
 namespace AngleSharp.Js.Cache
 {
@@ -16,6 +18,119 @@ namespace AngleSharp.Js.Cache
         private static readonly ConcurrentDictionary<Type, ConstructorDefinition> _constructorDefinitions = new();
         private static readonly ConcurrentDictionary<Type, EnumLiteralDefinition> _enumLiteralDefinitions = new();
         private static readonly ConcurrentDictionary<Assembly, ISet<String>> _nonEnumTypeNames = new();
+        private static readonly ConcurrentDictionary<Type, StaticMember[]> _staticMembers = new();
+        private static readonly ConcurrentDictionary<Enum, String> _literalNames = new();
+        private static readonly ConcurrentDictionary<Type, MethodInfo[]> _implicitConversions = new();
+
+        /// <summary>
+        /// Gets the implicit conversion back from a union, i.e. from a type that also converts
+        /// from other types, as an object without DOM members would be of no use to a script.
+        /// A type only converting away (Url to Uri) is no union and remains what it is.
+        /// </summary>
+        public static MethodInfo GetGivenConversion(this Type type)
+        {
+            if (type == typeof(void) || type == typeof(String) || !type.GetTypeInfo().IsClass || type.GetImplicitConversions().Length == 0)
+            {
+                return null;
+            }
+
+            return type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                .FirstOrDefault(m => m.IsSpecialName && m.Name == "op_Implicit" && m.ReturnType != type && m.GetParameters()[0].ParameterType == type);
+        }
+
+        /// <summary>
+        /// Gets the implicit conversions a type declares to itself, in the order of declaration.
+        /// </summary>
+        public static MethodInfo[] GetImplicitConversions(this Type type) => _implicitConversions.GetOrAdd(type, static target =>
+            target.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                .Where(m => m.IsSpecialName && m.Name == "op_Implicit" && m.ReturnType == target)
+                .ToArray());
+
+        /// <summary>
+        /// Gets the string script sees for a value of a WebIDL enumeration, or null if the enum
+        /// is a set of constants, which stay numbers.
+        /// </summary>
+        public static String GetLiteralName(this Enum value) => _literalNames.GetOrAdd(value, static member =>
+        {
+            var type = member.GetType();
+            var isLiteral = type == typeof(DocumentReadyState) || type.GetTypeInfo().GetCustomAttribute<DomLiteralsAttribute>() != null;
+
+            return isLiteral
+                ? type.GetTypeInfo().GetDeclaredField(member.ToString())?.GetCustomAttribute<DomNameAttribute>()?.OfficialName
+                : null;
+        });
+
+        /// <summary>
+        /// Gets the static members a type exposes on its constructor, the ones of base classes
+        /// included. A derived class hides a member of the same name, as a shadowing property
+        /// of a constructor would.
+        /// </summary>
+        public static StaticMember[] GetStaticMembers(this Type type) => _staticMembers.GetOrAdd(type, static target =>
+        {
+            var members = new Dictionary<String, StaticMember>(StringComparer.Ordinal);
+            var flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+            for (var current = target; current != null; current = current.GetTypeInfo().BaseType)
+            {
+                var found = new Dictionary<String, StaticMember>(StringComparer.Ordinal);
+
+                foreach (var method in current.GetMethods(flags))
+                {
+                    //  Extending the window is how a namespace such as CSS gets its window in C#;
+                    //  anything else extended is no member of this type.
+                    if (method.IsSpecialName || (method.IsDefined(typeof(ExtensionAttribute), false) && !MethodDescription.Of(method).TakesWindow))
+                    {
+                        continue;
+                    }
+
+                    var accessor = method.GetCustomAttribute<DomAccessorAttribute>()?.Type;
+
+                    foreach (var attribute in method.GetCustomAttributes<DomNameAttribute>())
+                    {
+                        if (!found.TryGetValue(attribute.OfficialName, out var member))
+                        {
+                            member = new StaticMember(attribute.OfficialName);
+                            found.Add(attribute.OfficialName, member);
+                        }
+
+                        if (accessor == Accessors.Getter)
+                        {
+                            member.Getter = method;
+                        }
+                        else if (accessor == Accessors.Setter)
+                        {
+                            member.Setter = method;
+                        }
+                        else
+                        {
+                            member.Add(method);
+                        }
+                    }
+                }
+
+                foreach (var property in current.GetProperties(flags))
+                {
+                    foreach (var attribute in property.GetCustomAttributes<DomNameAttribute>())
+                    {
+                        found[attribute.OfficialName] = new StaticMember(attribute.OfficialName)
+                        {
+                            Getter = property.GetMethod,
+                            Setter = property.SetMethod,
+                        };
+                    }
+                }
+
+                foreach (var entry in found)
+                {
+                    if (!members.ContainsKey(entry.Key))
+                    {
+                        members.Add(entry.Key, entry.Value);
+                    }
+                }
+            }
+
+            return members.Values.ToArray();
+        });
 
         /// <summary>
         /// Gets what is needed to build the constructor object for a type, or null if the
@@ -35,8 +150,8 @@ namespace AngleSharp.Js.Cache
 
                 if (names.Length > 0 && !ti.IsEnum)
                 {
-                    var info = ti.DeclaredConstructors.FirstOrDefault(m => m.GetCustomAttributes<DomConstructorAttribute>().Any());
-                    definition = new ConstructorDefinition(type, names, info);
+                    var overloads = ti.DeclaredConstructors.Where(m => m.GetCustomAttributes<DomConstructorAttribute>().Any()).ToArray();
+                    definition = new ConstructorDefinition(type, names, overloads);
                 }
 
                 _constructorDefinitions.TryAdd(type, definition);
@@ -55,7 +170,8 @@ namespace AngleSharp.Js.Cache
             {
                 var ti = type.GetTypeInfo();
 
-                if (ti.IsEnum)
+                //  A WebIDL enumeration is a set of strings without an object of its own.
+                if (ti.IsEnum && ti.GetCustomAttribute<DomLiteralsAttribute>() == null)
                 {
                     var name = ti.GetCustomAttributes<DomNameAttribute>(true).FirstOrDefault()?.OfficialName;
 
@@ -219,11 +335,11 @@ namespace AngleSharp.Js.Cache
     /// </summary>
     sealed class ConstructorDefinition
     {
-        public ConstructorDefinition(Type type, String[] names, ConstructorInfo info)
+        public ConstructorDefinition(Type type, String[] names, ConstructorInfo[] overloads)
         {
             Type = type;
             Names = names;
-            Info = info;
+            Overloads = overloads;
         }
 
         /// <summary>
@@ -242,9 +358,34 @@ namespace AngleSharp.Js.Cache
         public String Name => Names[0];
 
         /// <summary>
-        /// Gets the constructor to invoke, or null if the type cannot be constructed from
-        /// script - naming it is still legal, calling it is not.
+        /// Gets the constructors to pick from, which are none if the type cannot be constructed
+        /// from script - naming it is still legal, calling it is not.
         /// </summary>
-        public ConstructorInfo Info { get; }
+        public ConstructorInfo[] Overloads { get; }
+    }
+
+    /// <summary>
+    /// Describes a static member of a DOM type, which belongs on the constructor object.
+    /// </summary>
+    sealed class StaticMember
+    {
+        private readonly List<MethodInfo> _overloads = new List<MethodInfo>();
+
+        public StaticMember(String name)
+        {
+            Name = name;
+        }
+
+        public String Name { get; }
+
+        public MethodInfo Getter { get; set; }
+
+        public MethodInfo Setter { get; set; }
+
+        public Boolean IsAccessor => Getter != null || Setter != null;
+
+        public MethodInfo[] Overloads => _overloads.ToArray();
+
+        public void Add(MethodInfo method) => _overloads.Add(method);
     }
 }

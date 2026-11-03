@@ -5,6 +5,7 @@ namespace AngleSharp.Js
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     static class Extensibility
     {
@@ -14,6 +15,13 @@ namespace AngleSharp.Js
 
             foreach (var method in methods)
             {
+                //  [DomExposed] is also found on classes with members of their own (a constructor
+                //  exposed to the window), which must not end up on what they are exposed to.
+                if (!method.IsDefined(typeof(ExtensionAttribute), false))
+                {
+                    continue;
+                }
+
                 var names = method.GetCustomAttributes<DomNameAttribute>()
                     .Select(m => m.OfficialName);
                 var accessors = method.GetCustomAttributes<DomAccessorAttribute>()

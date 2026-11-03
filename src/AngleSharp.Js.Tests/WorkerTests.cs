@@ -19,6 +19,36 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task WorkerReceivesBytesAsArrayBuffer()
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new DelayedRequester(0, "self.onmessage = function (event) { self.__kind = event.data instanceof ArrayBuffer ? new Uint8Array(event.data)[0] : 'other'; };"))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+
+            var context = BrowsingContext.New(config);
+            var document = await context.OpenAsync(request => request.Content("<!doctype html><div></div>")).ConfigureAwait(false);
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+            var retries = 200;
+
+            while (retries-- > 0 && !worker.IsInitialized && worker.StartupError == null)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            worker.PostMessage(new Byte[] { 42 });
+            retries = 200;
+
+            while (retries-- > 0 && worker.EvaluateInWorker("String(self.__kind)")?.ToString() == "undefined")
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            Assert.AreEqual("42", worker.EvaluateInWorker("String(self.__kind)")?.ToString());
+        }
+
+        [Test]
         public async Task WorkerCanBeConstructedFromClr()
         {
             var config = Configuration.Default

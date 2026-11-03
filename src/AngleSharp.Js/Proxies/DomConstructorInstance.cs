@@ -12,7 +12,7 @@ namespace AngleSharp.Js
 
     sealed class DomConstructorInstance : Constructor
     {
-        private readonly ConstructorInfo _constructor;
+        private readonly ConstructorInfo[] _constructors;
         private readonly EngineInstance _instance;
         private readonly ObjectInstance _objectPrototype;
         private readonly Type _type;
@@ -23,7 +23,7 @@ namespace AngleSharp.Js
             var toString = new ClrFunction(Engine, "toString", ToString);
             _objectPrototype = engine.GetDomPrototype(definition.Type);
             _instance = engine;
-            _constructor = definition.Info;
+            _constructors = definition.Overloads;
             _type = definition.Type;
 
             //  Jint's Constructor leaves the prototype at Object.prototype, which would make a
@@ -36,6 +36,31 @@ namespace AngleSharp.Js
             //  "constructor" as a slot resolved on first read, and that read arrives here, so the
             //  two directions still meet at one object without this end having to reach over.
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
+
+            AddStaticMembers(definition.Type.GetStaticMembers());
+        }
+
+        private void AddStaticMembers(StaticMember[] members)
+        {
+            foreach (var member in members)
+            {
+                var name = member.Name;
+
+                if (member.IsAccessor)
+                {
+                    var getter = member.Getter;
+                    var setter = member.Setter;
+                    var get = getter == null ? null : new ClrFunction(Engine, "get " + name, (_, arguments) => _instance.CallStatic(getter, arguments));
+                    var set = setter == null ? null : new ClrFunction(Engine, "set " + name, (_, arguments) => _instance.CallStatic(setter, arguments));
+                    SetOwnProperty(name, new GetSetPropertyDescriptor(get, set, true, true));
+                }
+                else
+                {
+                    var overloads = member.Overloads;
+                    var function = new ClrFunction(Engine, name, (_, arguments) => _instance.CallStatic(overloads.SelectOverload(arguments), arguments));
+                    SetOwnProperty(name, new PropertyDescriptor(function, true, true, true));
+                }
+            }
         }
 
         /// <summary>
@@ -117,16 +142,22 @@ namespace AngleSharp.Js
 
         public override ObjectInstance Construct(JsValue[] arguments, JsValue newTarget)
         {
-            if (_constructor == null)
+            if (_constructors.Length == 0)
             {
                 throw new JavaScriptException("Illegal constructor.");
             }
 
             try
             {
-                var parameters = _instance.BuildArgs(_constructor, arguments);
-                var obj = _constructor.Invoke(parameters);
+                var constructor = _constructors.Length == 1 ? _constructors[0] : _constructors.SelectOverload(arguments);
+                var parameters = _instance.BuildArgs(constructor, arguments);
+                var obj = constructor.Invoke(parameters);
                 return _instance.GetDomNode(obj);
+            }
+            catch (TargetInvocationException ex)
+            {
+                //  The message is all a script gets to see of what went wrong.
+                throw new JavaScriptException(_instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
             }
             catch
             {
@@ -136,7 +167,7 @@ namespace AngleSharp.Js
 
         protected override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
-            if (_constructor != null)
+            if (_constructors.Length > 0)
             {
                 throw new JavaScriptException("Only call the constructor with the new keyword.");
             }

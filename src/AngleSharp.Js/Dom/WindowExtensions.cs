@@ -7,6 +7,7 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Dom.Events;
     using AngleSharp.Html.Dom;
     using AngleSharp.Js.Attributes;
+    using Jint;
     using System;
     using System.Runtime.CompilerServices;
 
@@ -27,9 +28,69 @@ namespace AngleSharp.Js.Dom
         private const Int32 FrameInterval = 16;
 
         /// <summary>
-        /// Posts a message.
+        /// Posts a message to the window (HTML 9.4.3), from the document of the script calling.
         /// </summary>
         [DomName("postMessage")]
+        public static void PostMessage(this IWindow window, Object message, Object targetOrigin = null, Object transfer = null)
+        {
+            if (WorkerOwners.TryGetValue(window, out var owner))
+            {
+                owner.PostMessageToOwner(message);
+                return;
+            }
+
+            PostMessageFrom(EngineInstance.Current?.Window.Value is IWindow sender ? sender.Document : window.Document, window, message, targetOrigin);
+        }
+
+        internal static void PostMessageFrom(IDocument sender, IWindow target, Object message, Object targetOrigin)
+        {
+            var origin = ResolveTargetOrigin(sender, targetOrigin);
+            var data = StructuredClone.Clone(message);
+
+            // who it is for may have moved on; then it isn't delivered
+            if (origin != "*" && origin != OriginPolicy.Serialize(target.Document))
+            {
+                return;
+            }
+
+            var ev = new MessageEvent("message", false, false, data, OriginPolicy.Serialize(sender), String.Empty, sender.DefaultView);
+            target.Document.Context.GetService<IEventLoop>().EnqueueAsync(_ => target.Fire(ev));
+        }
+
+        // given as a string, or in the options
+        private static String ResolveTargetOrigin(IDocument sender, Object targetOrigin)
+        {
+            if (targetOrigin is Jint.Native.Object.ObjectInstance options)
+            {
+                var value = options.Get("targetOrigin");
+                targetOrigin = value.IsString() ? value.AsString() : null;
+            }
+
+            var origin = targetOrigin as String ?? "/";
+
+            if (origin == "*")
+            {
+                return origin;
+            }
+
+            if (origin == "/")
+            {
+                return OriginPolicy.Serialize(sender);
+            }
+
+            var url = new Url(origin);
+
+            if (url.IsInvalid || String.IsNullOrEmpty(url.Scheme))
+            {
+                throw new DomException(DomError.Syntax);
+            }
+
+            return url.Origin ?? "null";
+        }
+
+        /// <summary>
+        /// Posts a text message.
+        /// </summary>
         public static void PostMessage(this IWindow window, String message, String targetOrigin = "*", Object transfer = null)
         {
             if (WorkerOwners.TryGetValue(window, out var owner))

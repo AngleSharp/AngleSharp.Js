@@ -4,6 +4,7 @@ namespace AngleSharp.Scripting
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js;
+    using AngleSharp.Js.Dom;
     using AngleSharp.Text;
     using Jint;
     using System;
@@ -111,6 +112,13 @@ namespace AngleSharp.Scripting
         public Object EvaluateScript(IDocument document, String source, String type, String sourceUrl)
         {
             document = document ?? throw new ArgumentNullException(nameof(document));
+
+            // a sandboxed frame shows its document, and runs nothing of it
+            if (OriginPolicy.IsScriptingBlocked(document))
+            {
+                return null;
+            }
+
             return GetOrCreateInstance(document).RunScript(source, type, sourceUrl).FromJsValue();
         }
 

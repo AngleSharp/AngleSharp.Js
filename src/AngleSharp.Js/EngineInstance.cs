@@ -35,6 +35,7 @@ namespace AngleSharp.Js
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
         private readonly DomNodeInstance _window;
+        private readonly IDocument _document;
         private readonly JsImportMap _importMap;
         private readonly List<KeyValuePair<JsValue, JsValue>> _unhandledRejections = new List<KeyValuePair<JsValue, JsValue>>();
 
@@ -67,6 +68,8 @@ namespace AngleSharp.Js
                 _engine.SetValue(assignment.Key, assignment.Value);
             }
 
+            _self = new WeakReference<EngineInstance>(this);
+            _document = window.Document;
             _window = (DomNodeInstance)GetDomNode(window);
 
             foreach (var lib in libs)
@@ -97,6 +100,26 @@ namespace AngleSharp.Js
         public IEnumerable<Assembly> Libs => _libs.Assemblies;
 
         public DomNodeInstance Window => _window;
+
+        /// <summary>
+        /// The engine of the script that called into the DOM last on this thread.
+        /// </summary>
+        public static EngineInstance Current
+        {
+            get => s_current != null && s_current.TryGetTarget(out var engine) ? engine : null;
+            set => s_current = value?._self;
+        }
+
+        // weak, as an idle thread must not keep the engine of a closed page alive
+        [ThreadStatic]
+        private static WeakReference<EngineInstance> s_current;
+        private readonly WeakReference<EngineInstance> _self;
+
+        /// <summary>
+        /// Whether the node is of a document of another origin, which script here must not get.
+        /// </summary>
+        public Boolean IsOutOfReach(Object obj) =>
+            obj is INode node && OriginPolicy.IsCrossOrigin(_document, node as IDocument ?? node.Owner);
 
         public Engine Jint => _engine;
 
@@ -254,7 +277,8 @@ namespace AngleSharp.Js
 
         public ObjectInstance GetDomNode(Object obj) => _references.GetOrCreate(obj, CreateInstance);
 
-        public ObjectInstance GetDomNode(Object obj, Type type) => CreateInstance(obj, type);
+        public ObjectInstance GetDomNode(Object obj, Type type) =>
+            obj is IWindow || IsOutOfReach(obj) ? GetDomNode(obj) : CreateInstance(obj, type);
 
         public ObjectInstance GetDomPrototype(Type type) => _prototypes.GetOrCreate(type, CreatePrototype);
 
@@ -276,6 +300,11 @@ namespace AngleSharp.Js
 
                 // Nodes and windows already have a canonical proxy. Preserve its identity,
                 // concrete prototype and script-owned properties across SameObject getters.
+                if (IsOutOfReach(current))
+                {
+                    return JsValue.Null;
+                }
+
                 if (current is INode || current is IWindow)
                 {
                     return GetDomNode(current);
@@ -416,7 +445,16 @@ namespace AngleSharp.Js
         //  A collection is projected by the array-like proxy, which lets the engine read its
         //  indices and length directly; everything else by the ordinary one. The decision is a
         //  property of the type, so it is resolved once per type for the whole process.
-        private ObjectInstance CreateInstance(Object obj) => CreateInstance(obj, obj.GetType());
+        private ObjectInstance CreateInstance(Object obj)
+        {
+            // what got here from another origin is all the same denied, whoever asked for it
+            if (obj is IWindow window && OriginPolicy.IsCrossOrigin(_document, window.Document))
+            {
+                return CreateInstance(new CrossOriginWindow(window, _document), typeof(CrossOriginWindow));
+            }
+
+            return IsOutOfReach(obj) ? new Jint.Native.JsObject(_engine) : CreateInstance(obj, obj.GetType());
+        }
 
         private ObjectInstance CreateInstance(Object obj, Type type)
         {

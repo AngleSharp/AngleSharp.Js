@@ -227,7 +227,17 @@ namespace AngleSharp.Js.Dom
         private void DeliverToWorker(Object message)
         {
             var engine = _scripting.GetOrCreateJint(_workerDocument);
-            engine.SetValue(WorkerIncomingMessageName, message);
+
+            //  An array would reach the other engine as a wrapper of the CLR object.
+            if (message is Byte[] bytes)
+            {
+                engine.SetValue(WorkerIncomingMessageName, engine.Intrinsics.ArrayBuffer.Construct(bytes));
+            }
+            else
+            {
+                engine.SetValue(WorkerIncomingMessageName, message);
+            }
+
             _scripting.EvaluateScript(_workerDocument, WorkerDispatchScript, MimeTypeNames.DefaultJavaScript, _workerDocument.Url);
         }
 

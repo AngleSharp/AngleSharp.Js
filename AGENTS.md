@@ -113,6 +113,24 @@ values. `EngineExtensions.BuildArgs` maps JS arguments onto a CLR signature and 
 DOM-specific cases: an implicit leading `IWindow` parameter, optional parameters, `params`
 arrays, and `[DomInitDict]` option objects expanded into positional arguments.
 
+What a type's members become, as libraries rely on it:
+
+- Instance members marked with `[DomName]` go on the prototype. Several methods or
+  `[DomConstructor]`s of the same name within one type are overloads, picked per call by
+  `OverloadResolution`; a method further up the type tree is hidden instead.
+- Static members go on the constructor object (`DomConstructorInstance`, cached per type by
+  `CreatorCache.GetStaticMembers`). Only `[DomExposed]` *extension methods* are added to the type
+  they extend, so a class can be exposed to the window without spilling members onto it.
+- A class overriding `ToString` gets a `toString` on its prototype, as such classes are exactly the
+  WebIDL stringifiers. A new override on a DOM type is hence visible to scripts.
+- Into the CLR: `Object` receives bytes for a BufferSource and the raw Jint value for other objects.
+  Sequences are arrays and the generic interfaces arrays implement, filled from any JS iterable. A
+  class with `implicit operator`s from several types is a WebIDL union, picked like overloads; going
+  back out, its `implicit operator` to another type gives what a script receives for it.
+- Out of the CLR: `[DomLiterals]` enums are strings (other enums are numbers, and exposed as an object
+  of constants), `Byte[]` is a new `ArrayBuffer`, `ArraySegment<Byte>` a new `Uint8Array`, other arrays are JS arrays, every numeric type is a
+  number, `IDictionary<String, Object>` is a plain object, and a `Task` is a promise.
+
 ## Performance
 
 **Performance is a primary concern in this repository, not an afterthought.** Jint is an
