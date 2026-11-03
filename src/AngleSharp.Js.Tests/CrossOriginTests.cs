@@ -171,7 +171,7 @@ namespace AngleSharp.Js.Tests
 
             Eval(page, "document.getElementById('f').contentWindow.postMessage({ a: 1, b: [2, 'x'], c: { d: true } }, 'https://b.test')");
 
-            await Until(() => Eval(frame, "window.seen") != "undefined" && Eval(page, "window.reply") == "back");
+            await Until(() => Eval(frame, "window.seen") != "undefined" && Eval(page, "window.reply") == "back" && Eval(page, "window.replyOrigin") != "undefined");
             Assert.AreEqual("{\"a\":1,\"b\":[2,\"x\"],\"c\":{\"d\":true}}", Eval(frame, "window.seen"));
             Assert.AreEqual("https://a.test", Eval(frame, "window.seenOrigin"));
             Assert.AreEqual("https://b.test", Eval(page, "window.replyOrigin"));
