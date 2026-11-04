@@ -153,7 +153,7 @@ namespace AngleSharp.Js
             }
             else if (targetType.GetTypeInfo().IsSubclassOf(typeof(Delegate)))
             {
-                var f = obj as Function;
+                var f = value.AsFunction(engine);
 
                 if (f == null && obj is String b)
                 {

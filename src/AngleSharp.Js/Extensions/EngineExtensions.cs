@@ -26,6 +26,11 @@ namespace AngleSharp.Js
                 {
                     return value;
                 }
+                else if (obj is JavaScriptException thrown)
+                {
+                    //  what script threw, e.g. for the error of an ErrorEvent
+                    return thrown.Error;
+                }
                 else if (engine.IsOutOfReach(obj))
                 {
                     return JsValue.Null;
@@ -605,6 +610,11 @@ namespace AngleSharp.Js
                         var parameters = instance.BuildArgs(bound, arguments);
                         return description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
                     }
+                }
+                catch (TargetInvocationException ex) when (ex.InnerException is JavaScriptException inner)
+                {
+                    //  a member throwing for script, e.g. a TypeError
+                    throw inner;
                 }
                 catch (TargetInvocationException ex)
                 {

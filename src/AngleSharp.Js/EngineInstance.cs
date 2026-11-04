@@ -1,7 +1,9 @@
 namespace AngleSharp.Js
 {
+    using Acornima;
     using AngleSharp.Browser;
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
     using AngleSharp.Io;
     using AngleSharp.Js.Cache;
     using AngleSharp.Js.Dom;
@@ -114,6 +116,7 @@ namespace AngleSharp.Js
         [ThreadStatic]
         private static WeakReference<EngineInstance> s_current;
         private readonly WeakReference<EngineInstance> _self;
+        private Boolean _isReportingError;
 
         /// <summary>
         /// Whether the node is of a document of another origin, which script here must not get.
@@ -218,7 +221,7 @@ namespace AngleSharp.Js
             window.Dispatch(ev);
 
             //  the handler a script assigned to the window, which is no member of the DOM
-            if (!ev.IsDefaultPrevented && _window.Get("onunhandledrejection") is Function handler)
+            if (!ev.IsDefaultPrevented && _window.Get("onunhandledrejection").AsFunction(this) is Function handler)
             {
                 var result = handler.Call(_window, new JsValue[] { GetDomNode(ev) });
 
@@ -332,7 +335,49 @@ namespace AngleSharp.Js
             return DomPrototypeState.Of(prototype).GetConstructor(definition);
         }
 
-        public JsValue RunScript(String source, String type, String sourceUrl)
+        /// <summary>
+        /// Reports an error nobody caught (HTML 8.1.4.7): the window gets to handle it, otherwise the
+        /// browsing context gets to know of it. An error thrown while the window handles one isn't
+        /// reported to the window as well, as that would never end.
+        /// </summary>
+        public void ReportError(JavaScriptException error)
+        {
+            var window = (IWindow)_window.Value;
+
+            if (!_isReportingError)
+            {
+                var location = error.Location;
+                var ev = new ErrorEvent();
+                //  the versions of AngleSharp before 1.10 don't set the type below
+                ev.Init(EventNames.Error, false, true);
+                ev.Init(location.SourceFile, location.Start.Line, location.Start.Column, error);
+                _isReportingError = true;
+
+                try
+                {
+                    window.Dispatch(ev);
+                }
+                finally
+                {
+                    _isReportingError = false;
+                }
+
+                if (ev.IsDefaultPrevented)
+                {
+                    return;
+                }
+            }
+
+            window.Document?.Context?.TrackError(error);
+        }
+
+        public JsValue RunScript(String source, String type, String sourceUrl) =>
+            RunScript(source, type, sourceUrl, default);
+
+        /// <summary>
+        /// Runs the script, of which the position in what it is written in is given, if any.
+        /// </summary>
+        public JsValue RunScript(String source, String type, String sourceUrl, Position position)
         {
             if (string.IsNullOrEmpty(type))
             {
@@ -343,10 +388,10 @@ namespace AngleSharp.Js
             {
                 if (MimeTypeNames.IsJavaScript(type))
                 {
-                    var prepared = ScriptCache.GetOrCreate(source, _regexTimeout);
+                    var prepared = ScriptCache.GetOrCreate(source, sourceUrl, position, _regexTimeout);
                     //  An invalid result means the source did not parse; hand it to the
                     //  engine as text so the syntax error is reported as usual.
-                    return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source);
+                    return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source, sourceUrl, new ScriptParsingOptions { SourceOffset = position, RegexTimeout = _regexTimeout });
                 }
                 else if (type.Isi("importmap"))
                 {

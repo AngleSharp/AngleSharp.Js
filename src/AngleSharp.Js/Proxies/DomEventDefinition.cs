@@ -1,9 +1,11 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
+    using AngleSharp.Dom.Events;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Runtime;
     using System;
     using System.Reflection;
 
@@ -50,18 +52,35 @@ namespace AngleSharp.Js
                     _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
                 }
 
-                if (value is Function function)
+                var engine = node.Instance;
+
+                if (value.AsFunction(engine) is Function function)
                 {
-                    var engine = node.Instance;
+
+                    var isWindow = node.Value is IWindow;
 
                     DomEventHandler handler = (s, ev) =>
                     {
                         var sender = s.ToJsValue(engine);
-                        var args = ev.ToJsValue(engine);
-                        function.Call(sender, new[] { args });
+
+                        try
+                        {
+                            if (isWindow && ev is ErrorEvent error)
+                            {
+                                CallErrorHandler(function, sender, error, engine);
+                            }
+                            else
+                            {
+                                function.Call(sender, new[] { ev.ToJsValue(engine) });
+                            }
+                        }
+                        catch (JavaScriptException thrown)
+                        {
+                            engine.ReportError(thrown);
+                        }
                     };
 
-                    node.SetEventHandler(this, new Registration(function, handler));
+                    node.SetEventHandler(this, new Registration(value, handler));
                     _addHandler?.Invoke(node.Value, new Object[] { handler });
                 }
             }
@@ -70,11 +89,32 @@ namespace AngleSharp.Js
         }
 
         /// <summary>
+        /// The onerror of a window is the one handler not getting the event (HTML 8.1.8.1), and
+        /// returning true from it means that the error has been handled.
+        /// </summary>
+        private static void CallErrorHandler(Function function, JsValue sender, ErrorEvent error, EngineInstance engine)
+        {
+            var result = function.Call(sender, new[]
+            {
+                (error.Message ?? String.Empty).ToJsValue(engine),
+                (error.FileName ?? String.Empty).ToJsValue(engine),
+                error.Line.ToJsValue(engine),
+                error.Column.ToJsValue(engine),
+                error.Error.ToJsValue(engine),
+            });
+
+            if (result.IsBoolean() && result.AsBoolean())
+            {
+                error.Cancel();
+            }
+        }
+
+        /// <summary>
         /// The handler currently assigned to a single node for a single event.
         /// </summary>
         public sealed class Registration
         {
-            public Registration(Function function, DomEventHandler handler)
+            public Registration(JsValue function, DomEventHandler handler)
             {
                 Function = function;
                 Handler = handler;
@@ -83,7 +123,7 @@ namespace AngleSharp.Js
             /// <summary>
             /// The function that was assigned, as it has to be handed back on read.
             /// </summary>
-            public Function Function { get; }
+            public JsValue Function { get; }
 
             /// <summary>
             /// The listener that was subscribed, as it has to be handed back on removal.

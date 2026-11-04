@@ -41,6 +41,22 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SeveralInlineModuleScriptsOfADocumentShouldAllRun()
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithNavigator()
+                .WithDefaultLoader(new LoaderOptions() { IsResourceLoadingEnabled = true });
+            var context = BrowsingContext.New(config);
+            var html = "<!doctype html><div id=first></div><div id=second></div>" +
+                "<script type=module>document.getElementById('first').remove();</script>" +
+                "<script type=module>document.getElementById('second').remove();</script>";
+            var document = await context.OpenAsync(r => r.Address("https://example.com/page").Content(html));
+            Assert.IsNull(document.GetElementById("first"));
+            Assert.IsNull(document.GetElementById("second"));
+        }
+
+        [Test]
         public async Task InlineModuleScriptShouldRun()
         {
             var config = Configuration.Default

@@ -1,16 +1,17 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
-    using AngleSharp.Dom.Events;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
     using Jint.Runtime;
+    using Jint.Runtime.Interop;
     using System;
     using System.Collections.Concurrent;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     static class DomDelegates
     {
@@ -26,6 +27,36 @@ namespace AngleSharp.Js
         private static readonly ConcurrentDictionary<Type, Delegate> _factories =
             new ConcurrentDictionary<Type, Delegate>();
 
+        //  What a function was turned into lives as long as the function, and doesn't keep it alive.
+        private static readonly ConditionalWeakTable<JsValue, Function> _callables =
+            new ConditionalWeakTable<JsValue, Function>();
+
+        private static readonly ConditionalWeakTable<Function, DomEventHandler> _listeners =
+            new ConditionalWeakTable<Function, DomEventHandler>();
+
+        /// <summary>
+        /// Gets the function to call for what script gave as a callback, which can be anything
+        /// callable: bound functions and proxies are no Function for Jint. Null if it's not callable.
+        /// </summary>
+        public static Function AsFunction(this JsValue value, EngineInstance engine)
+        {
+            if (value is Function function)
+            {
+                return function;
+            }
+
+            if (!value.IsCallable())
+            {
+                return null;
+            }
+
+            return _callables.GetValue(value, callable =>
+            {
+                var jint = engine.Jint;
+                return new ClrFunction(jint, "callable", (self, arguments) => jint.Call(callable, self, arguments));
+            });
+        }
+
         public static Delegate ToDelegate(this Type type, Function function, EngineInstance engine)
         {
             if (type != typeof(DomEventHandler))
@@ -37,7 +68,14 @@ namespace AngleSharp.Js
             return function.ToListener(engine);
         }
 
-        public static DomEventHandler ToListener(this Function function, EngineInstance engine) => (obj, ev) =>
+        /// <summary>
+        /// Gets the listener of the function, which is the same one each time: this is how the
+        /// listener added for a function is found again when script removes that function.
+        /// </summary>
+        public static DomEventHandler ToListener(this Function function, EngineInstance engine) =>
+            _listeners.GetValue(function, key => key.CreateListener(engine));
+
+        private static DomEventHandler CreateListener(this Function function, EngineInstance engine) => (obj, ev) =>
         {
             var objAsJs = obj.ToJsValue(engine);
             var evAsJs = ev.ToJsValue(engine);
@@ -48,8 +86,7 @@ namespace AngleSharp.Js
             }
             catch (JavaScriptException jsException)
             {
-                var window = (IWindow)engine.Window.Value;
-                window.Fire<ErrorEvent>(e => e.Init(null, jsException.Location.Start.Line, jsException.Location.Start.Column, jsException));
+                engine.ReportError(jsException);
             }
         };
 
@@ -89,7 +126,15 @@ namespace AngleSharp.Js
                 Expression.NewArrayInit(typeof(JsValue), parameters.Skip(hasReceiver ? 1 : 0).Select(ToJsValue).ToArray())
             });
 
-            var callback = Expression.Lambda<T>(call, parameters);
+            //  Nobody waits for what a callback without a result does, e.g. a timer, so an error
+            //  ends here. A callback with a result (a NodeFilter) throws to whoever called for it.
+            var error = Expression.Parameter(typeof(JavaScriptException), "error");
+            var body = methodInfo.ReturnType == typeof(void)
+                ? Expression.TryCatch(
+                    Expression.Block(typeof(void), call),
+                    Expression.Catch(error, Expression.Call(engineExpr, nameof(EngineInstance.ReportError), Type.EmptyTypes, error)))
+                : (Expression)call;
+            var callback = Expression.Lambda<T>(body, parameters);
             return Expression.Lambda<Func<Function, EngineInstance, T>>(callback, objExpr, engineExpr).Compile();
         }
     }

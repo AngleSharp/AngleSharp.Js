@@ -2,6 +2,16 @@
 
 Released on Friday, November 6 2026.
 
+- Fixed bound functions and callable proxies not being accepted as callbacks (e.g. `setTimeout(f.bind(x))`, `addEventListener('click', f.bind(x))`, `requestAnimationFrame(f.bind(x))`, `onclick`), failing with `Could not find corresponding cast target`
+- Fixed `removeEventListener` not removing listeners, as a function was turned into another listener each time
+- Fixed errors of event listeners not reaching the `error` listeners of the window; an error thrown by such a listener goes to the browsing context
+- Fixed the address of a script getting lost, so errors and stack traces named `<anonymous>`: they tell the resolved address of the script, or of the document for one written into it
+- Fixed scripts written into a document telling lines and columns of their own in errors and stack traces instead of the ones in the document
+- Fixed errors of scripts and of callbacks (e.g. timers, animation frames) not reaching the `error` listeners of the window; what they don't handle by `preventDefault` goes to the browsing context
+- Fixed `onerror` of the window getting the event instead of the message, source, line, column and error, and returning `true` not handling the error
+- Fixed `error` of an `ErrorEvent` being a .NET exception instead of what script threw
+- Fixed an `onclick` and the like throwing taking down the process and skipping the other listeners, as it was not reported like a listener
+- Fixed a `TypeError` or the like thrown for script by a member of the DOM becoming a plain `Error`
 - Fixed only the first of several methods or constructors of the same name being callable (e.g. `new URLSearchParams('a=1')`, `register(url, options)`); the one fitting the arguments is called
 - Fixed static members not being reachable (e.g. `DOMRect.fromRect`); they are on the constructor and may take the window as first parameter
 - Fixed members of classes marked with `DomExposed` ending up on what they are exposed to (e.g. the members of a constructor on `window`); only extension methods do
@@ -17,6 +27,7 @@ Released on Friday, November 6 2026.
 - Added `ArraySegment<Byte>` being given as a `Uint8Array`
 - Added classes with implicit conversions standing for a WebIDL union, e.g. of a string and a sequence of strings, which fixes such conversions failing; an implicit conversion from such a class is what a script receives for it
 - Added the same-origin policy: script gets `null` for a node of another origin, and for its window a `CrossOriginWindow` with only `window`, `self`, `frames`, `parent`, `top`, `closed`, `length`, `location` (only to be set, and only for frames inside the own document), `postMessage`, `focus`, `blur` and `close`
+- Added `performance.mark`, `measure`, `getEntries`, `getEntriesByName`, `getEntriesByType`, `clearMarks`, `clearMeasures`, along with `PerformanceEntry`, `PerformanceMark` and `PerformanceMeasure`
 
 # 1.1.4
 

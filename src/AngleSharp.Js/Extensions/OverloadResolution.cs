@@ -99,7 +99,7 @@ namespace AngleSharp.Js
                 return !info.IsValueType || type != target ? 1 : 0;
             }
 
-            if (value is Function)
+            if (value.IsCallable())
             {
                 return info.IsSubclassOf(typeof(Delegate)) ? 2 : target == typeof(Object) ? 1 : 0;
             }
