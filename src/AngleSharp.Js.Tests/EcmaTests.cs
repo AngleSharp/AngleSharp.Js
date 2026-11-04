@@ -6,6 +6,7 @@ namespace AngleSharp.Js.Tests
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -492,6 +493,50 @@ namespace AngleSharp.Js.Tests
             var html = "<!doctype html><div id=test></div><script type=module>const order = []; Promise.resolve().then(() => order.push('m1')); order.push('sync'); Promise.resolve().then(() => { order.push('m2'); document.getElementById('test').textContent = order.join(','); });</script>";
             var document = await context.OpenAsync(r => r.Content(html)).WhenStable().ConfigureAwait(false);
             Assert.AreEqual("sync,m1,m2", document.GetElementById("test")?.TextContent);
+        }
+
+        [TestCase("direct")]
+        [TestCase("importmap")]
+        [TestCase("dynamic")]
+        [TestCase("script")]
+        [TestCase("bytes")]
+        public async Task ModuleIsNotReadFromTheLocalDisk(String way)
+        {
+            var json = Path.GetTempFileName();
+            var script = Path.GetTempFileName();
+
+            try
+            {
+                File.WriteAllText(json, "{ \"secret\": \"from disk\" }");
+                File.WriteAllText(script, "document.getElementById('test').textContent = 'from disk';");
+                var jsonUrl = new Uri(json).AbsoluteUri;
+                var scriptUrl = new Uri(script).AbsoluteUri;
+                var show = "document.getElementById('test').textContent = ";
+                var page = way switch
+                {
+                    "direct" => $"<script type=module>import data from '{jsonUrl}' with {{ type: 'json' }}; {show}data.secret;</script>",
+                    "importmap" => $"<script type=importmap>{{ \"imports\": {{ \"secret\": \"{jsonUrl}\" }} }}</script><script type=module>import data from 'secret' with {{ type: 'json' }}; {show}data.secret;</script>",
+                    "dynamic" => $"<script>import('{jsonUrl}', {{ with: {{ type: 'json' }} }}).then(m => {{ {show}m.default.secret; }});</script>",
+                    "script" => $"<script type=module>import '{scriptUrl}';</script>",
+                    _ => $"<script type=module>import data from '{jsonUrl}' with {{ type: 'bytes' }}; {show}String(data.length);</script>",
+                };
+                var config = Configuration.Default
+                    .WithJs()
+                    .WithEventLoop()
+                    .With(new MockHttpClientRequester(new Dictionary<String, String>()))
+                    .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+                var html = "<!doctype html><div id=test>pending</div>" + page;
+                var document = await BrowsingContext.New(config)
+                    .OpenAsync(r => r.Content(html).Address("https://example.com/"))
+                    .WhenStable()
+                    .ConfigureAwait(false);
+                Assert.AreEqual("pending", document.GetElementById("test").TextContent);
+            }
+            finally
+            {
+                File.Delete(json);
+                File.Delete(script);
+            }
         }
     }
 }

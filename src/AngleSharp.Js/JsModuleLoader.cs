@@ -80,16 +80,27 @@ namespace AngleSharp.Js
             return base.Resolve(referencingModuleLocation, moduleRequest);
         }
 
+        //  Every module comes through AngleSharp's resource loader, whatever its scheme, so the
+        //  requesters the host registered decide what a page can reach. The base implementations
+        //  of both methods would read file: URLs straight from the local disk, for any page.
         protected override string LoadModuleContents(Engine engine, ResolvedSpecifier resolved)
         {
-            if (resolved.Uri?.Scheme.IsOneOf(ProtocolNames.Http, ProtocolNames.Https) == true)
+            return FetchModule(GetModuleUrl(resolved));
+        }
+
+        protected override Byte[] LoadModuleContentsAsBytes(Engine engine, ResolvedSpecifier resolved)
+        {
+            return FetchModuleBytes(GetModuleUrl(resolved));
+        }
+
+        private static Uri GetModuleUrl(ResolvedSpecifier resolved)
+        {
+            if (resolved.Uri == null)
             {
-                return FetchModule(resolved.Uri);
+                throw new NotSupportedException($"The module '{resolved.ModuleRequest.Specifier}' could not be resolved to a URL.");
             }
-            else
-            {
-                return base.LoadModuleContents(engine, resolved);
-            }
+
+            return resolved.Uri;
         }
 
         private string FetchModule(Uri moduleUrl)
@@ -99,11 +110,7 @@ namespace AngleSharp.Js
                 return string.Empty;
             }
 
-            var importUrl = Url.Convert(moduleUrl);
-
-            var request = new ResourceRequest(_scriptElement, importUrl);
-
-            var response = _resourceLoader.FetchAsync(request).Task.Result;
+            var response = Fetch(moduleUrl);
 
             string content;
 
@@ -113,6 +120,30 @@ namespace AngleSharp.Js
             }
 
             return content;
+        }
+
+        private Byte[] FetchModuleBytes(Uri moduleUrl)
+        {
+            if (_resourceLoader == null)
+            {
+                return Array.Empty<Byte>();
+            }
+
+            var response = Fetch(moduleUrl);
+
+            using (var content = new MemoryStream())
+            {
+                response.Content.CopyTo(content);
+                return content.ToArray();
+            }
+        }
+
+        private IResponse Fetch(Uri moduleUrl)
+        {
+            var importUrl = Url.Convert(moduleUrl);
+            var request = new ResourceRequest(_scriptElement, importUrl);
+            var response = _resourceLoader.FetchAsync(request).Task.Result;
+            return response ?? throw new InvalidOperationException($"No requester could load the module '{importUrl.Href}'.");
         }
     }
 }
