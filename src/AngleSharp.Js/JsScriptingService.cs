@@ -102,8 +102,9 @@ namespace AngleSharp.Scripting
                 //  A module is imported by this, so it has to tell it apart from other modules:
                 //  one written into the document would have the address of the document.
                 var isModule = type.Isi("module");
-                var sourceUrl = isModule ? options.Element?.Source : response.Address?.Href ?? options.Element?.Source;
-                var position = isModule || !String.IsNullOrEmpty(options.Element?.Source) ? default : FindInDocument(options.Document, content);
+                var isInline = String.IsNullOrEmpty(options.Element?.Source);
+                var sourceUrl = GetSourceUrl(response, options, isModule, isInline);
+                var position = isInline ? FindInDocument(options.Document, content) : default;
                 await options.EventLoop.EnqueueAsync(_ =>
                 {
                     var document = options.Document ?? throw new ArgumentNullException(nameof(options));
@@ -128,6 +129,23 @@ namespace AngleSharp.Scripting
                     }
                 }, TaskPriority.Critical).ConfigureAwait(false);
             }
+        }
+
+        /// <summary>
+        /// The address a script tells in errors. A module is imported by this, too, so it has to tell
+        /// it apart from other modules: one written into the document gets its own, and the address
+        /// of something not on the web isn't one to find others from.
+        /// </summary>
+        private static String GetSourceUrl(IResponse response, ScriptOptions options, Boolean isModule, Boolean isInline)
+        {
+            var address = response.Address;
+
+            if (!isModule)
+            {
+                return address?.Href ?? options.Element?.Source;
+            }
+
+            return isInline ? null : address != null && address.Scheme.IsOneOf(ProtocolNames.Http, ProtocolNames.Https) ? address.Href : options.Element?.Source;
         }
 
         /// <summary>

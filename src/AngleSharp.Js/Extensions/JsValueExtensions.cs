@@ -1,6 +1,7 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Dom;
     using AngleSharp.Js.Cache;
     using Jint;
     using Jint.Native;
@@ -50,7 +51,7 @@ namespace AngleSharp.Js
 
         //  Copied rather than shared: the view may only cover a part of its buffer, and the CLR
         //  side keeps what it was given while the script is free to change the buffer afterwards.
-        private static Byte[] GetBytes(ObjectInstance source)
+        internal static Byte[] GetBytes(this ObjectInstance source)
         {
             if (source is JsArrayBuffer buffer)
             {
@@ -162,6 +163,11 @@ namespace AngleSharp.Js
                     f = new ClrFunction(e, "AsComplex", (_this, args) => e.Intrinsics.Eval.Call(_this, p));
                 }
 
+                if (f == null && obj != null && value is ObjectInstance callbackObject)
+                {
+                    f = callbackObject.AsCallbackObject(targetType, engine);
+                }
+
                 if (f != null)
                 {
                     return targetType.ToDelegate(f, engine);
@@ -194,7 +200,7 @@ namespace AngleSharp.Js
             }
 
             var method = sourceType.PrepareConvert(targetType) ??
-                throw new JavaScriptException("[Internal] Could not find corresponding cast target.");
+                throw new JavaScriptException($"[Internal] Could not find corresponding cast target from {sourceType.Name} to {targetType.Name}.");
 
             return method.IsStatic ? method.Invoke(null, new[] { obj }) : method.Invoke(obj, null);
         }

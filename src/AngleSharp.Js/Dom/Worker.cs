@@ -42,8 +42,20 @@ namespace AngleSharp.Js.Dom
         /// <summary>
         /// Creates a new worker and starts the worker script in a separate context.
         /// </summary>
-        [DomConstructor]
         public Worker(IWindow window, String source)
+            : this(window, source, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new worker and starts the worker script in a separate context. If that fails
+        /// it is told by an error event, as it happens later.
+        /// </summary>
+        /// <param name="window">The window creating the worker.</param>
+        /// <param name="source">The address of the script.</param>
+        /// <param name="options">The options, e.g. that the script is a module.</param>
+        [DomConstructor]
+        public Worker(IWindow window, String source, WorkerOptions options)
         {
             if (window == null)
             {
@@ -53,6 +65,13 @@ namespace AngleSharp.Js.Dom
             if (String.IsNullOrEmpty(source))
             {
                 throw new ArgumentException("The worker source URL cannot be empty.", nameof(source));
+            }
+
+            var isModule = options?.Type == "module";
+
+            if (!isModule && options?.Type != null && options.Type != "classic")
+            {
+                throw new ArgumentException($"The type '{options.Type}' is not known.", nameof(options));
             }
 
             _window = window;
@@ -71,7 +90,9 @@ namespace AngleSharp.Js.Dom
             {
                 var workerConfig = Configuration.Default
                     .With(_scripting)
-                    .WithOnly(_workerLoop);
+                    .WithOnly(_workerLoop)
+                    .With<IResourceLoader>(_ => parentContext.GetService<IResourceLoader>())
+                    .With<IDocumentLoader>(_ => parentContext.GetService<IDocumentLoader>());
 
                 foreach (var service in parentContext.OriginalServices)
                 {
@@ -87,11 +108,12 @@ namespace AngleSharp.Js.Dom
                 {
                     try
                     {
-                        InitializeWorker(workerUrl);
+                        InitializeWorker(workerUrl, isModule);
                     }
                     catch (Exception ex)
                     {
                         _startupError = ex;
+                        Enqueue(_windowLoop, TaskPriority.Normal, () => ReportStartupError(workerUrl, ex));
                     }
                 });
             }
@@ -115,6 +137,16 @@ namespace AngleSharp.Js.Dom
         #region Properties
 
         internal Exception StartupError => _startupError;
+
+        /// <summary>
+        /// Raised when the script of the worker could not be started.
+        /// </summary>
+        [DomName("onerror")]
+        public event DomEventHandler Failed
+        {
+            add { AddEventListener(EventNames.Error, value); }
+            remove { RemoveEventListener(EventNames.Error, value); }
+        }
 
         internal Boolean IsInitialized => _initialized;
 
@@ -157,9 +189,10 @@ namespace AngleSharp.Js.Dom
                 return;
             }
 
+            //  it had its error event, and what is sent to it goes nowhere
             if (_startupError != null)
             {
-                throw _startupError;
+                return;
             }
 
             if (!_initialized)
@@ -205,13 +238,23 @@ namespace AngleSharp.Js.Dom
             Enqueue(_windowLoop, TaskPriority.Normal, () => Dispatch(ev));
         }
 
-        private void InitializeWorker(Url sourceUrl)
+        private void ReportStartupError(Url source, Exception error)
         {
-            _workerDocument = _workerContext.OpenAsync(request => request.Content("<!doctype html>")).GetAwaiter().GetResult();
+            if (!_terminated)
+            {
+                var ev = new ErrorEvent();
+                ev.Init(source.Href, 0, 0, error);
+                Dispatch(ev);
+            }
+        }
+
+        private void InitializeWorker(Url sourceUrl, Boolean isModule)
+        {
+            _workerDocument = _workerContext.OpenAsync(request => request.Address(sourceUrl).Content("<!doctype html>")).GetAwaiter().GetResult();
             WindowExtensions.RegisterWorkerWindow(_workerDocument.DefaultView, this);
             var source = FetchWorkerScript(sourceUrl);
             _scripting.EvaluateScript(_workerDocument, WorkerBootstrap, MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
-            _scripting.EvaluateScript(_workerDocument, source, MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
+            _scripting.EvaluateScript(_workerDocument, source, isModule ? "module" : MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
 
             _initialized = true;
 
@@ -324,5 +367,24 @@ if (self && typeof self.onmessage === 'function') {
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Represents the options of creating a worker.
+    /// </summary>
+    [DomName("WorkerOptions")]
+    public sealed class WorkerOptions
+    {
+        /// <summary>
+        /// Gets or sets the type of the script, i.e. classic (the default) or module.
+        /// </summary>
+        [DomName("type")]
+        public String Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the worker, for debugging.
+        /// </summary>
+        [DomName("name")]
+        public String Name { get; set; }
     }
 }

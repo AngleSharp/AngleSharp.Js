@@ -23,6 +23,8 @@ namespace AngleSharp.Js.Dom
             new ConditionalWeakTable<IWindow, Worker>();
         private static readonly ConditionalWeakTable<IWindow, Performance> Performances =
             new ConditionalWeakTable<IWindow, Performance>();
+        private static readonly ConditionalWeakTable<IWindow, Crypto> Cryptos =
+            new ConditionalWeakTable<IWindow, Crypto>();
 
         //  The interval between two animation frames of a 60 Hz display.
         private const Int32 FrameInterval = 16;
@@ -117,6 +119,57 @@ namespace AngleSharp.Js.Dom
         }
 
         /// <summary>
+        /// Gets a copy of a value that shares nothing with it (HTML 2.7), which fails with a
+        /// DataCloneError for what can't be copied, e.g. a function.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <param name="value">The value to copy.</param>
+        /// <param name="options">The options, of which transfer has no meaning here.</param>
+        /// <returns>The copy.</returns>
+        [DomName("structuredClone")]
+        public static Object StructuredCloneOf(this IWindow window, Object value = null, Object options = null) =>
+            StructuredClone.Clone(value);
+
+        /// <summary>
+        /// Gets the origin of the window.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>The serialized origin.</returns>
+        [DomName("origin")]
+        [DomAccessor(Accessors.Getter)]
+        public static String GetOrigin(this IWindow window) => window.Document?.Origin ?? "null";
+
+        /// <summary>
+        /// Gets if the window is a secure context, which an https address and the local machine are.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>True if it is one.</returns>
+        [DomName("isSecureContext")]
+        [DomAccessor(Accessors.Getter)]
+        public static Boolean GetIsSecureContext(this IWindow window)
+        {
+            var address = window.Document?.DocumentUri;
+
+            if (String.IsNullOrEmpty(address))
+            {
+                return false;
+            }
+
+            var url = new Url(address);
+            return url.Scheme == "https" || url.Scheme == "file" || url.HostName == "localhost" || url.HostName == "127.0.0.1" || url.HostName == "[::1]";
+        }
+
+        /// <summary>
+        /// Gets the number of frames in the window.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>The number of iframes and frames of its document.</returns>
+        [DomName("length")]
+        [DomAccessor(Accessors.Getter)]
+        public static Int32 GetLength(this IWindow window) =>
+            window.Document?.QuerySelectorAll("iframe,frame").Length ?? 0;
+
+        /// <summary>
         /// Gets the parent window context.
         /// </summary>
         [DomName("parent")]
@@ -190,6 +243,41 @@ namespace AngleSharp.Js.Dom
         /// <param name="handle">The handle of the request.</param>
         [DomName("cancelAnimationFrame")]
         public static void CancelAnimationFrame(this IWindow window, Int32 handle)
+        {
+            window.ClearTimeout(handle);
+        }
+
+        /// <summary>
+        /// Gets the crypto object of the window.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <returns>The crypto object.</returns>
+        [DomName("crypto")]
+        [DomAccessor(Accessors.Getter)]
+        public static Crypto Crypto(this IWindow window) => Cryptos.GetValue(window, _ => new Crypto());
+
+        /// <summary>
+        /// Requests the callback to be called when there is time for it, which is as soon as what is
+        /// waiting on the event loop right now is done.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="callback">The callback receiving how much time it has.</param>
+        /// <param name="options">The options, whose timeout isn't needed by running that soon.</param>
+        /// <returns>The handle to cancel the request with.</returns>
+        [DomName("requestIdleCallback")]
+        public static Int32 RequestIdleCallback(this IWindow window, IdleRequestCallback callback, Object options = null)
+        {
+            var performance = window.Performance();
+            return window.SetTimeout(w => callback?.Invoke(w, new IdleDeadline(performance)), 1);
+        }
+
+        /// <summary>
+        /// Cancels a request made with requestIdleCallback.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="handle">The handle of the request.</param>
+        [DomName("cancelIdleCallback")]
+        public static void CancelIdleCallback(this IWindow window, Int32 handle)
         {
             window.ClearTimeout(handle);
         }

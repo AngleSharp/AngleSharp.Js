@@ -1,11 +1,9 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
-    using AngleSharp.Dom.Events;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
-    using Jint.Runtime;
     using System;
     using System.Reflection;
 
@@ -30,6 +28,9 @@ namespace AngleSharp.Js
             _addHandler = addHandler;
             _removeHandler = removeHandler;
         }
+
+        public Boolean IsSameAs(DomEventDefinition other) =>
+            _addHandler == other._addHandler && _removeHandler == other._removeHandler;
 
         public JsValue GetHandler(JsValue thisObject, JsValue[] arguments)
         {
@@ -57,28 +58,7 @@ namespace AngleSharp.Js
                 if (value.AsFunction(engine) is Function function)
                 {
 
-                    var isWindow = node.Value is IWindow;
-
-                    DomEventHandler handler = (s, ev) =>
-                    {
-                        var sender = s.ToJsValue(engine);
-
-                        try
-                        {
-                            if (isWindow && ev is ErrorEvent error)
-                            {
-                                CallErrorHandler(function, sender, error, engine);
-                            }
-                            else
-                            {
-                                function.Call(sender, new[] { ev.ToJsValue(engine) });
-                            }
-                        }
-                        catch (JavaScriptException thrown)
-                        {
-                            engine.ReportError(thrown);
-                        }
-                    };
+                    var handler = function.ToEventHandler(engine);
 
                     node.SetEventHandler(this, new Registration(value, handler));
                     _addHandler?.Invoke(node.Value, new Object[] { handler });
@@ -86,27 +66,6 @@ namespace AngleSharp.Js
             }
 
             return value;
-        }
-
-        /// <summary>
-        /// The onerror of a window is the one handler not getting the event (HTML 8.1.8.1), and
-        /// returning true from it means that the error has been handled.
-        /// </summary>
-        private static void CallErrorHandler(Function function, JsValue sender, ErrorEvent error, EngineInstance engine)
-        {
-            var result = function.Call(sender, new[]
-            {
-                (error.Message ?? String.Empty).ToJsValue(engine),
-                (error.FileName ?? String.Empty).ToJsValue(engine),
-                error.Line.ToJsValue(engine),
-                error.Column.ToJsValue(engine),
-                error.Error.ToJsValue(engine),
-            });
-
-            if (result.IsBoolean() && result.AsBoolean())
-            {
-                error.Cancel();
-            }
         }
 
         /// <summary>

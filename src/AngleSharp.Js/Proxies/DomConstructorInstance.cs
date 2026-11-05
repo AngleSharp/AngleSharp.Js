@@ -1,6 +1,8 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Dom;
     using AngleSharp.Js.Cache;
+    using Jint;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Native.Symbol;
@@ -92,6 +94,13 @@ namespace AngleSharp.Js
         {
             var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
 
+            //  A class deriving from this one inherits this as a static member, while being of the
+            //  type of a DOM object says nothing about being of that class.
+            if (!ReferenceEquals(thisObject, this))
+            {
+                return IsInChainOf(value as ObjectInstance, thisObject.Get("prototype") as ObjectInstance) ? JsBoolean.True : JsBoolean.False;
+            }
+
             if (value is IDomProxy node && IsInstance(node.DomType))
             {
                 return JsBoolean.True;
@@ -125,6 +134,21 @@ namespace AngleSharp.Js
             return false;
         }
 
+        private static Boolean IsInChainOf(ObjectInstance obj, ObjectInstance prototype)
+        {
+            while (obj != null && prototype != null)
+            {
+                obj = obj.Prototype;
+
+                if (ReferenceEquals(obj, prototype))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private Boolean InheritsFromPrototype(ObjectInstance obj)
         {
             while (obj != null)
@@ -142,9 +166,15 @@ namespace AngleSharp.Js
 
         public override ObjectInstance Construct(JsValue[] arguments, JsValue newTarget)
         {
+            //  a class deriving from an element is about the element of that class
+            if (newTarget != null && !ReferenceEquals(newTarget, this) && !newTarget.IsUndefined() && typeof(IElement).IsAssignableFrom(_type))
+            {
+                return _instance.ConstructCustomElement(newTarget);
+            }
+
             if (_constructors.Length == 0)
             {
-                throw new JavaScriptException("Illegal constructor.");
+                throw new JavaScriptException(_instance.Jint.Intrinsics.TypeError, "Illegal constructor.");
             }
 
             try
@@ -152,12 +182,19 @@ namespace AngleSharp.Js
                 var constructor = _constructors.Length == 1 ? _constructors[0] : _constructors.SelectOverload(arguments);
                 var parameters = _instance.BuildArgs(constructor, arguments);
                 var obj = constructor.Invoke(parameters);
-                return _instance.GetDomNode(obj);
+                var node = _instance.GetDomNode(obj);
+
+                //  A class deriving from it has the instance on its prototype chain.
+                if (newTarget is ObjectInstance derived && !ReferenceEquals(derived, this) && derived.Get("prototype") is ObjectInstance prototype)
+                {
+                    node.Prototype = prototype;
+                }
+
+                return node;
             }
             catch (TargetInvocationException ex)
             {
-                //  The message is all a script gets to see of what went wrong.
-                throw new JavaScriptException(_instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
+                throw _instance.ToScriptError(ex);
             }
             catch
             {

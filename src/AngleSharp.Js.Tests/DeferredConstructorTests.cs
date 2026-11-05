@@ -39,24 +39,24 @@
         }
 
         [Test]
-        public async Task UnreadConstructorIsStillEnumerable()
+        public async Task UnreadConstructorIsStillListed()
         {
-            var result = await "String(Object.keys(window).indexOf('HTMLTableColElement') !== -1)".EvalScriptAsync();
+            var result = await "String(Object.getOwnPropertyNames(window).indexOf('HTMLTableColElement') !== -1)".EvalScriptAsync();
             Assert.AreEqual("true", result);
         }
 
         [Test]
-        public async Task UnreadConstructorIsStillFoundByForIn()
+        public async Task UnreadConstructorIsNotEnumerable()
         {
             var result = await "String((function () { for (var k in window) { if (k === 'HTMLTableColElement') { return true; } } return false; })())".EvalScriptAsync();
-            Assert.AreEqual("true", result);
+            Assert.AreEqual("false", result);
         }
 
         [Test]
         public async Task ConstructorKeepsItsAttributes()
         {
             var result = await "(function () { var d = Object.getOwnPropertyDescriptor(window, 'HTMLDivElement'); return d.writable + ',' + d.enumerable + ',' + d.configurable; })()".EvalScriptAsync();
-            Assert.AreEqual("false,true,false", result);
+            Assert.AreEqual("true,false,true", result);
         }
 
         [Test]
@@ -111,16 +111,16 @@
         }
 
         [Test]
-        public async Task ConstructorIsNotWritable()
+        public async Task ConstructorIsWritable()
         {
-            var result = await "String((function () { var before = HTMLDivElement; window.HTMLDivElement = 5; return window.HTMLDivElement === before; })())".EvalScriptAsync();
+            var result = await "String((function () { window.HTMLDivElement = 5; return window.HTMLDivElement === 5 && HTMLDivElement === 5; })())".EvalScriptAsync();
             Assert.AreEqual("true", result);
         }
 
         [Test]
-        public async Task ConstructorIsNotConfigurable()
+        public async Task ConstructorIsConfigurable()
         {
-            var result = await "String((delete window.HTMLDivElement) === false && typeof HTMLDivElement === 'function')".EvalScriptAsync();
+            var result = await "String((delete window.HTMLDivElement) === true && typeof HTMLDivElement === 'undefined')".EvalScriptAsync();
             Assert.AreEqual("true", result);
         }
 

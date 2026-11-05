@@ -31,6 +31,10 @@ namespace AngleSharp.Js
                     //  what script threw, e.g. for the error of an ErrorEvent
                     return thrown.Error;
                 }
+                else if (obj is DomException exception)
+                {
+                    return engine.GetDomException(exception);
+                }
                 else if (engine.IsOutOfReach(obj))
                 {
                     return JsValue.Null;
@@ -73,6 +77,10 @@ namespace AngleSharp.Js
                 else if (obj is Int64 || obj is UInt64 || obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte || obj is Decimal)
                 {
                     return JsNumber.Create(Convert.ToDouble(obj, System.Globalization.CultureInfo.InvariantCulture));
+                }
+                else if (obj is DateTime date)
+                {
+                    return JsValue.FromObject(engine.Jint, date);
                 }
                 else if (obj is Byte[] bytes)
                 {
@@ -204,7 +212,15 @@ namespace AngleSharp.Js
 
                 for (var i = max; i < arguments.Length; i++)
                 {
-                    array.SetValue(arguments[i].FromJsValue(), i - max);
+                    //  A WebIDL (Node or DOMString)... such as of append takes text as a text node.
+                    var item = arguments[i].FromJsValue();
+
+                    if (item is not null and not INode && array.GetType().GetElementType() == typeof(INode))
+                    {
+                        item = ((IWindow)context.Window.Value).Document.CreateTextNode(TypeConverter.ToString(arguments[i]));
+                    }
+
+                    array.SetValue(item, i - max);
                 }
 
                 args[max] = array;
@@ -235,7 +251,8 @@ namespace AngleSharp.Js
                 }
                 else
                 {
-                    newArgs[i - offset] = JsValue.Undefined;
+                    //  what has no default isn't to become the text "undefined" or the like
+                    newArgs[i - offset] = p.IsOptional ? JsValue.Undefined : JsValue.Null;
                 }
             }
 
@@ -392,7 +409,7 @@ namespace AngleSharp.Js
             PropertyDescriptor.CreateLazy(
                 new ConstructorRequest(engine, definition),
                 static request => request.Instance.GetDomConstructor(request.Definition),
-                PropertyFlag.OnlyEnumerable);
+                PropertyFlag.NonEnumerable);
 
         //  Handed to the factory instead of captured by it, so that the delegate above is the same
         //  one for every type rather than a closure allocated per registered name.
@@ -571,7 +588,7 @@ namespace AngleSharp.Js
             }
             catch (TargetInvocationException ex)
             {
-                throw new JavaScriptException(instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
+                throw instance.ToScriptError(ex);
             }
         }
 
@@ -589,6 +606,14 @@ namespace AngleSharp.Js
                 else
                 {
                     nodeInstance = instance.Window;
+                }
+
+                //  what a script did is complete before custom elements get to react to it
+                var holdsReactions = CustomElementRegistry.IsInUse;
+
+                if (holdsReactions)
+                {
+                    CustomElementRegistry.PushReactions();
                 }
 
                 try
@@ -611,16 +636,16 @@ namespace AngleSharp.Js
                         return description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
                     }
                 }
-                catch (TargetInvocationException ex) when (ex.InnerException is JavaScriptException inner)
-                {
-                    //  a member throwing for script, e.g. a TypeError
-                    throw inner;
-                }
                 catch (TargetInvocationException ex)
                 {
-                    //  The message is all a script (or whoever reads its errors) gets to see of
-                    //  what went wrong, e.g. the DOMException of an invalid selector.
-                    throw new JavaScriptException(instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
+                    throw instance.ToScriptError(ex);
+                }
+                finally
+                {
+                    if (holdsReactions)
+                    {
+                        CustomElementRegistry.PopReactions();
+                    }
                 }
             }
 

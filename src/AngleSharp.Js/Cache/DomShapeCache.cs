@@ -40,7 +40,7 @@ namespace AngleSharp.Js.Cache
 
             //  Built outside GetOrAdd: the factory overload taking state is not available on
             //  netstandard2.0, and a closure per call would be paid by every lookup, hit or not.
-            return _shapes.GetOrAdd(key, new DomShapeBuilder(type, libs, GetReservedNames(engine)).Build());
+            return _shapes.GetOrAdd(key, new DomShapeBuilder(type, libs, GetReservedNames(engine)).Build(engine));
         }
 
         /// <summary>
@@ -141,14 +141,16 @@ namespace AngleSharp.Js.Cache
             _perRealmMethods = typeof(IWindow).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
         }
 
-        public DomShape Build()
+        public DomShape Build(Engine engine)
         {
             SetAllMembers(_type);
+            SetAddedOverloads();
             SetExtensionMembers();
             SetStringifier();
 
             var constructor = _type.GetConstructorDefinition(_libs.Assemblies);
             var builder = new JsObjectShape.Builder();
+            var inherited = GetInheritedMembers(engine);
 
             if (_name != null)
             {
@@ -166,7 +168,18 @@ namespace AngleSharp.Js.Cache
                     continue;
                 }
 
-                _members[name].Declare(builder, name, _perRealmMethods);
+                var member = _members[name];
+
+                //  What the prototype above holds is found there, so that patching a member of
+                //  Element.prototype reaches a div, as pages (polyfills in particular) expect.
+                if (inherited == null || !inherited.TryGetValue(name, out var other) || !member.IsSameAs(other))
+                {
+                    member.Declare(builder, name, _perRealmMethods);
+                }
+                else if (_perRealmMethods)
+                {
+                    member.DeclareInherited(builder, name);
+                }
             }
 
             if (constructor != null)
@@ -181,7 +194,13 @@ namespace AngleSharp.Js.Cache
                     typeof(IStringMap).IsAssignableFrom(_type) ? DomIndexers.ToDatasetName : null)
                 : null;
 
-            return new DomShape(_type, _baseType, _name, builder.Build(), indexers, constructor);
+            return new DomShape(_type, _baseType, _name, builder.Build(), indexers, constructor, _members);
+        }
+
+        private IReadOnlyDictionary<String, Member> GetInheritedMembers(Engine engine)
+        {
+            var type = _baseType.GetDomPrototypeType(_libs.Assemblies);
+            return type != typeof(Object) && type != _type ? DomShapeCache.GetOrCreate(type, _libs, engine).Members : null;
         }
 
         /// <summary>
@@ -193,6 +212,37 @@ namespace AngleSharp.Js.Cache
         {
             var state = DomPrototypeState.Of(prototype);
             return state != null ? state.GetConstructor(state.Shape.Constructor) : JsValue.Undefined;
+        }
+
+        /// <summary>
+        /// A library can add overloads to a method of the DOM (e.g. addEventListener with options),
+        /// as an interface can't get them without breaking who implements it. The members found for a
+        /// type include the inherited ones, so that is about the names of everything it is derived from.
+        /// </summary>
+        private void SetAddedOverloads()
+        {
+            var names = new HashSet<String>(_type.GetTypeTree()
+                .SelectMany(m => m.GetTypeInfo().GetCustomAttributes<DomNameAttribute>())
+                .Select(m => m.OfficialName), StringComparer.Ordinal);
+
+            foreach (var type in _libs.Assemblies.SelectMany(m => m.ExportedTypes))
+            {
+                var typeInfo = type.GetTypeInfo();
+
+                if (typeInfo.IsAbstract && typeInfo.IsSealed && typeInfo.GetCustomAttributes<DomExposedAttribute>().Any(m => names.Contains(m.Target)))
+                {
+                    foreach (var entry in typeInfo.DeclaredMethods.GetExtensions())
+                    {
+                        if (entry.Value.Other != null && _members.TryGetValue(entry.Key, out var declared) && declared is MethodMember member && member.IsOfInstance)
+                        {
+                            foreach (var overload in entry.Value.Overloads)
+                            {
+                                member.Add(overload);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void SetExtensionMembers()
@@ -438,9 +488,15 @@ namespace AngleSharp.Js.Cache
         /// <summary>
         /// One member of a DOM type, as much of it as is the same for every engine.
         /// </summary>
-        private abstract class Member
+        internal abstract class Member
         {
             public abstract void Declare(JsObjectShape.Builder builder, String name, Boolean perRealm);
+
+            public abstract Boolean IsSameAs(Member other);
+
+            //  What the window inherits has to be there for the global object all the same.
+            public virtual void DeclareInherited(JsObjectShape.Builder builder, String name) =>
+                Declare(builder, name, true);
         }
 
         private sealed class MethodMember : Member
@@ -452,7 +508,29 @@ namespace AngleSharp.Js.Cache
                 _overloads = overloads;
             }
 
+            //  What was added doesn't count, so that adding goes on from there.
+            public Boolean IsOfInstance => _overloads.Any(m => !m.IsStatic);
+
             public void Add(MethodInfo method) => _overloads = _overloads.Concat(new[] { method }).ToArray();
+
+            public override Boolean IsSameAs(Member other) =>
+                other is MethodMember method && _overloads.SequenceEqual(method._overloads);
+
+            //  A bare addEventListener(...) has no receiver to find its engine by, so the window
+            //  needs a function of its own, which still asks EventTarget.prototype for the method:
+            //  it may have been patched there.
+            public override void DeclareInherited(JsObjectShape.Builder builder, String name) =>
+                builder.PerRealmSlot(
+                    name,
+                    prototype =>
+                    {
+                        var instance = DomPrototypeState.Of(prototype).Instance;
+                        return new ClrFunction(instance.Jint, name, (thisObject, arguments) =>
+                            instance.Jint.Call(prototype.Prototype.Get(name), thisObject.IsObject() ? thisObject : instance.Window, arguments));
+                    },
+                    enumerable: true,
+                    writable: true,
+                    configurable: true);
 
             public override void Declare(JsObjectShape.Builder builder, String name, Boolean perRealm)
             {
@@ -471,9 +549,9 @@ namespace AngleSharp.Js.Cache
                     builder.PerRealmSlot(
                         name,
                         prototype => Bind(prototype, name, method),
-                        enumerable: false,
-                        writable: false,
-                        configurable: false);
+                        enumerable: true,
+                        writable: true,
+                        configurable: true);
                 }
                 else
                 {
@@ -481,9 +559,9 @@ namespace AngleSharp.Js.Cache
                         name,
                         (thisObject, arguments) => EngineExtensions.CallShared(method, thisObject, arguments),
                         length: 0,
-                        enumerable: false,
-                        writable: false,
-                        configurable: false);
+                        enumerable: true,
+                        writable: true,
+                        configurable: true);
                 }
             }
 
@@ -510,9 +588,9 @@ namespace AngleSharp.Js.Cache
                             return new ClrFunction(instance.Jint, name, (thisObject, arguments) =>
                                 instance.Call(overloads.SelectOverload(arguments), thisObject, arguments));
                         },
-                        enumerable: false,
-                        writable: false,
-                        configurable: false);
+                        enumerable: true,
+                        writable: true,
+                        configurable: true);
                 }
                 else
                 {
@@ -520,9 +598,9 @@ namespace AngleSharp.Js.Cache
                         name,
                         (thisObject, arguments) => EngineExtensions.CallShared(overloads.SelectOverload(arguments), thisObject, arguments),
                         length: 0,
-                        enumerable: false,
-                        writable: false,
-                        configurable: false);
+                        enumerable: true,
+                        writable: true,
+                        configurable: true);
                 }
             }
         }
@@ -541,6 +619,10 @@ namespace AngleSharp.Js.Cache
                 _putsForward = putsForward;
                 _sameObject = sameObject;
             }
+
+            public override Boolean IsSameAs(Member other) =>
+                other is PropertyMember property && _getter == property._getter && _setter == property._setter &&
+                _putsForward == property._putsForward && _sameObject == property._sameObject;
 
             //  Both halves are declared even when only one accessor exists, because that is what
             //  a pair of ClrFunctions over a null MethodInfo used to be: present, and answering
@@ -566,8 +648,8 @@ namespace AngleSharp.Js.Cache
                     name,
                     read,
                     write,
-                    enumerable: false,
-                    configurable: false);
+                    enumerable: true,
+                    configurable: true);
             }
 
             private static JsValue Forward(MethodInfo getter, DomPutForwardsAttribute putsForward, JsValue thisObject, JsValue[] arguments)
@@ -595,8 +677,11 @@ namespace AngleSharp.Js.Cache
                 _definition = definition;
             }
 
+            public override Boolean IsSameAs(Member other) =>
+                other is EventMember member && _definition.IsSameAs(member._definition);
+
             public override void Declare(JsObjectShape.Builder builder, String name, Boolean perRealm) =>
-                builder.Accessor(name, _definition.GetHandler, _definition.SetHandler, enumerable: false, configurable: false);
+                builder.Accessor(name, _definition.GetHandler, _definition.SetHandler, enumerable: true, configurable: true);
         }
     }
 }

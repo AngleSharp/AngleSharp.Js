@@ -185,6 +185,22 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SyntaxErrorOfAScriptReachesTheWindowWithItsPosition()
+        {
+            var context = BrowsingContext.New(Configuration.Default.WithJs().WithEventLoop());
+            var errors = context.CollectErrors();
+            var document = await context.OpenAsync(r => r.Address("https://example.com/page").Content(@"<!doctype html><script>
+                window.onerror = function (message, source, line, column, error) {
+                    document.title = [source, line, error instanceof SyntaxError].join();
+                };
+                </script>
+<script>function (</script>"));
+
+            Assert.AreEqual("https://example.com/page,6,true", document.Title);
+            Assert.AreEqual(1, errors.Count);
+        }
+
+        [Test]
         public async Task InlineScriptReportsItsPositionInTheDocument()
         {
             var context = BrowsingContext.New(Configuration.Default.WithJs().WithEventLoop());

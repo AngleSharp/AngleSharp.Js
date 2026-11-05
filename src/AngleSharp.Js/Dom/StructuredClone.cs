@@ -29,6 +29,8 @@ namespace AngleSharp.Js.Dom
                 case Boolean:
                 case Double:
                 case Int32:
+                case DateTime:
+                case Byte[]:
                     return value;
                 case JsValue js when js is not ObjectInstance:
                     return js.IsUndefined() || js.IsNull() ? null : Clone(js.ToObject(), path, depth);
@@ -46,6 +48,11 @@ namespace AngleSharp.Js.Dom
             if (source is JsDate date)
             {
                 return date.ToObject();
+            }
+
+            if (source.IsBufferSource())
+            {
+                return source.GetBytes();
             }
 
             if (source is ArrayInstance array)

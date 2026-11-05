@@ -1,6 +1,7 @@
 namespace AngleSharp.Js.Dom
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Dom;
     using Jint;
     using Jint.Native;
     using Jint.Native.Object;
@@ -19,6 +20,7 @@ namespace AngleSharp.Js.Dom
     {
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private readonly List<PerformanceEntry> _entries = new List<PerformanceEntry>();
+        private readonly List<PerformanceObserver> _observers = new List<PerformanceObserver>();
         private readonly Double _timeOrigin = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
 
         /// <summary>
@@ -50,7 +52,7 @@ namespace AngleSharp.Js.Dom
             }
 
             var mark = new PerformanceMark(name, start, detail);
-            _entries.Add(mark);
+            Add(mark);
             return mark;
         }
 
@@ -95,7 +97,7 @@ namespace AngleSharp.Js.Dom
 
             var from = start ?? 0.0;
             var measure = new PerformanceMeasure(name, from, (end ?? Now()) - from, detail);
-            _entries.Add(measure);
+            Add(measure);
             return measure;
         }
 
@@ -130,6 +132,43 @@ namespace AngleSharp.Js.Dom
         [DomName("clearMeasures")]
         public void ClearMeasures(String name = null) => Clear(PerformanceMeasure.Type, name);
 
+        /// <summary>
+        /// Removes the entries of the loaded resources, of which none are kept here.
+        /// </summary>
+        [DomName("clearResourceTimings")]
+        public void ClearResourceTimings()
+        {
+        }
+
+        /// <summary>
+        /// Sets how many entries of loaded resources are kept, which is none here.
+        /// </summary>
+        /// <param name="maxSize">The number of entries.</param>
+        [DomName("setResourceTimingBufferSize")]
+        public void SetResourceTimingBufferSize(Int32 maxSize = 0)
+        {
+        }
+
+        internal void AddObserver(PerformanceObserver observer)
+        {
+            if (!_observers.Contains(observer))
+            {
+                _observers.Add(observer);
+            }
+        }
+
+        internal void RemoveObserver(PerformanceObserver observer) => _observers.Remove(observer);
+
+        private void Add(PerformanceEntry entry)
+        {
+            _entries.Add(entry);
+
+            foreach (var observer in _observers.ToArray())
+            {
+                observer.Notify(entry);
+            }
+        }
+
         private void Clear(String type, String name) =>
             _entries.RemoveAll(m => m.EntryType == type && (name == null || m.Name == name));
 
@@ -140,7 +179,7 @@ namespace AngleSharp.Js.Dom
         private Double FindMark(String name)
         {
             var mark = _entries.LastOrDefault(m => m.EntryType == PerformanceMark.Type && m.Name == name);
-            return mark?.StartTime ?? throw new JavaScriptException(EngineInstance.Current.Jint.Construct("SyntaxError", $"There is no mark named '{name}'."));
+            return mark?.StartTime ?? throw new DomException(DomError.Syntax);
         }
 
         private static void RequireName(String name)

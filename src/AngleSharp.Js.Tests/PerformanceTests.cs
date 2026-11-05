@@ -164,6 +164,87 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual("b+d,0", result);
         }
 
+        private static async Task<String> Observed(String script)
+        {
+            var config = Configuration.Default.WithJs().WithEventLoop();
+            var document = await BrowsingContext.New(config).OpenAsync(m => m.Content($"<!doctype html><script>{script}</script>"));
+
+            for (var i = 0; i < 200 && document.Title.Length == 0; i++)
+            {
+                await Task.Delay(10);
+            }
+
+            return document.Title;
+        }
+
+        [Test]
+        public async Task ObserverGetsNewEntriesOfItsTypesLater()
+        {
+            var result = await Observed(@"
+                var sync = true;
+                new PerformanceObserver(function (list, observer) {
+                    document.title = [sync, list.getEntries().map(function (e) { return e.name; }).join('+'), list.getEntriesByType('measure').length, list.getEntriesByName('a').length].join();
+                }).observe({ entryTypes: ['mark'] });
+                performance.mark('a');
+                performance.measure('ignored');
+                performance.mark('b');
+                sync = false;");
+
+            Assert.AreEqual("false,a+b,0,1", result);
+        }
+
+        [Test]
+        public async Task ObserverWithBufferedGetsWhatIsThereAlready()
+        {
+            var result = await Observed(@"
+                performance.mark('before');
+                new PerformanceObserver(function (list) {
+                    document.title = list.getEntries().map(function (e) { return e.name; }).join('+');
+                }).observe({ type: 'mark', buffered: true });");
+
+            Assert.AreEqual("before", result);
+        }
+
+        [Test]
+        public async Task ObserverOfAnUnknownTypeIsFine()
+        {
+            var result = await Observed(@"
+                var observer = new PerformanceObserver(function () { document.title = 'wrong'; });
+                observer.observe({ type: 'longtask' });
+                observer.observe({ entryTypes: ['paint', 'navigation'] });
+                performance.mark('a');
+                setTimeout(function () { document.title = 'fine'; }, 20);");
+
+            Assert.AreEqual("fine", result);
+        }
+
+        [Test]
+        public async Task DisconnectedObserverGetsNothing()
+        {
+            var result = await Observed(@"
+                var observer = new PerformanceObserver(function () { document.title = 'wrong'; });
+                observer.observe({ entryTypes: ['mark'] });
+                performance.mark('a');
+                observer.disconnect();
+                performance.mark('b');
+                setTimeout(function () { document.title = 'fine'; }, 20);");
+
+            Assert.AreEqual("fine", result);
+        }
+
+        [Test]
+        public async Task TakeRecordsTakesWhatTheCallbackWouldGet()
+        {
+            var result = await Observed(@"
+                var observer = new PerformanceObserver(function () { document.title = 'wrong'; });
+                observer.observe({ entryTypes: ['mark'] });
+                performance.mark('a');
+                var taken = observer.takeRecords().length;
+                setTimeout(function () { document.title = String(taken); }, 20);");
+
+            Assert.AreEqual("1", result);
+        }
+
         [Test]
         public async Task EntryConvertsToJson()
         {
