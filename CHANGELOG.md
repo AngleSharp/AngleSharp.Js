@@ -26,6 +26,8 @@ Released on Friday, November 6 2026.
 - Fixed `error` of an `ErrorEvent` being a .NET exception instead of what script threw
 - Fixed an `onclick` and the like throwing taking down the process and skipping the other listeners, as it was not reported like a listener
 - Fixed a `TypeError` or the like thrown for script by a member of the DOM becoming a plain `Error`
+- Fixed modules being read from the local disk; every module is loaded through the configured requesters (#153) @michaelthyregod
+- Fixed modules imported by a relative address being requested from the wrong address (e.g. `./a.js` of `/dir/page.html` from `/dir/page.html/a.js`, and the imports of a module of another origin from the own origin); they are resolved against what imports them (#153) @michaelthyregod
 - Fixed modules being known by the path of their address, so errors didn't tell the whole address, and imports of an imported module were looked for from the wrong place
 - Fixed a module written into a document telling lines and columns of its own, and importing from somewhere other than the base address of the document
 - Fixed an error of a module being reported twice

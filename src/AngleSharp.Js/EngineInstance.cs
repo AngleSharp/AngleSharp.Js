@@ -77,7 +77,7 @@ namespace AngleSharp.Js
         {
             _importMap = new JsImportMap();
             var engineOptions = new Options();
-            engineOptions.EnableModules(new JsModuleLoader(this, window.Document, false));
+            engineOptions.EnableModules(new JsModuleLoader(this, window.Document));
             engineOptions.UseHostFactory(_ => new JsHost(window.Document));
             // The handler uses the caches initialized below. The creator must return the
             // engine before DOM objects are wrapped or page scripts are evaluated.

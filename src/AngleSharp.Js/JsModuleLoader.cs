@@ -9,25 +9,28 @@ namespace AngleSharp.Js
     using System;
     using System.Linq;
 
-    internal class JsModuleLoader : DefaultModuleLoader, IModuleLoader
+    internal class JsModuleLoader : ModuleLoader
     {
         private readonly EngineInstance _instance;
         private readonly IResourceLoader _resourceLoader;
         private readonly IElement _scriptElement;
-        private readonly string _documentUrl;
         private readonly IDocument _document;
 
-        public JsModuleLoader(EngineInstance instance, IDocument document, bool restrictToBasePath = true) : base (document.Url, restrictToBasePath)
+        public JsModuleLoader(EngineInstance instance, IDocument document)
         {
             _instance = instance;
             _resourceLoader = document.Context.GetService<IResourceLoader>();
             _scriptElement = document.CreateElement(TagNames.Script);
-            _documentUrl = document.Url;
             _document = document;
         }
 
+        //  The key of a resolved module is its address, and its Uri stays null: Jint gives a module
+        //  loaded with a Uri only the path of it as location, so the modules it imports would lose
+        //  the origin. With the key as location, they are resolved against the full address.
         public override ResolvedSpecifier Resolve(string referencingModuleLocation, ModuleRequest moduleRequest)
         {
+            var specifier = moduleRequest.Specifier;
+
             if (referencingModuleLocation != null && _instance.ImportMap.Scopes.Count > 0)
             {
                 foreach (var scopePath in _instance.ImportMap.Scopes.Keys.OrderByDescending(k => k.Length))
@@ -36,120 +39,93 @@ namespace AngleSharp.Js
                     {
                         var scopeImports = _instance.ImportMap.Scopes[scopePath];
 
-                        if (scopeImports.TryGetValue(moduleRequest.Specifier, out var scopeModuleUrl))
+                        if (scopeImports.TryGetValue(specifier, out var scopeModuleUrl))
                         {
-                            if (!scopeModuleUrl.IsAbsoluteUri)
-                            {
-                                scopeModuleUrl = new Uri(new Uri(_documentUrl), scopeModuleUrl);
-                            }
-
-                            return new ResolvedSpecifier(
-                                    moduleRequest,
-                                    scopeModuleUrl.AbsoluteUri,
-                                    scopeModuleUrl,
-                                    SpecifierType.RelativeOrAbsolute);
+                            return Resolved(moduleRequest, new Url(GetDocumentBaseUrl(), scopeModuleUrl.OriginalString));
                         }
                     }
                 }
             }
 
-            if (_instance.ImportMap.Imports.TryGetValue(moduleRequest.Specifier, out var moduleUrl))
+            if (_instance.ImportMap.Imports.TryGetValue(specifier, out var moduleUrl))
             {
-                if (!moduleUrl.IsAbsoluteUri)
-                {
-                    moduleUrl = new Uri(new Uri(_documentUrl), moduleUrl);
-                }
-
-                return new ResolvedSpecifier(
-                        moduleRequest,
-                        moduleUrl.AbsoluteUri,
-                        moduleUrl,
-                        SpecifierType.RelativeOrAbsolute);
+                return Resolved(moduleRequest, new Url(GetDocumentBaseUrl(), moduleUrl.OriginalString));
             }
 
-            // On the web a specifier is an address, found from the module asking for it
-            if (TryResolveAddress(referencingModuleLocation, moduleRequest.Specifier, out var address))
+            if (specifier.StartsWith("/") || specifier.StartsWith("./") || specifier.StartsWith("../"))
             {
-                return new ResolvedSpecifier(moduleRequest, address.AbsoluteUri, address, SpecifierType.RelativeOrAbsolute);
+                return Resolved(moduleRequest, new Url(GetBaseUrl(referencingModuleLocation), specifier));
             }
 
-            // Before passing to the base default module loader, make sure any relative paths are prepended with a dot
-            // as Jint will otherwise resolve them as absolute file paths when running on Linux
-            if (moduleRequest.Specifier.StartsWith("/"))
+            var url = new Url(specifier);
+
+            if (!url.IsInvalid && url.IsAbsolute)
             {
-                moduleRequest = new ModuleRequest($".{moduleRequest.Specifier}", moduleRequest.Attributes);
+                return Resolved(moduleRequest, url);
             }
 
-            if (referencingModuleLocation?.StartsWith("/") == true)
-            {
-                referencingModuleLocation = $".{referencingModuleLocation}";
-            }
-            
-            return base.Resolve(referencingModuleLocation, moduleRequest);
+            //  A bare name, which no address belongs to. The module scripts of the document are
+            //  added to the engine under such a name, so it must stay what it is to find them.
+            return new ResolvedSpecifier(moduleRequest, specifier, null, SpecifierType.Bare);
         }
 
-        private bool TryResolveAddress(string referencingModuleLocation, string specifier, out Uri address)
-        {
-            address = null;
-            var isRelative = specifier.StartsWith("/") || specifier.StartsWith("./") || specifier.StartsWith("../");
-
-            if (!isRelative && !IsWebAddress(specifier))
-            {
-                return false;
-            }
-
-            var from = IsWebAddress(referencingModuleLocation) ? referencingModuleLocation : _document.BaseUri;
-            return IsWebAddress(from) && Uri.TryCreate(new Uri(from), specifier, out address);
-        }
-
-        private static bool IsWebAddress(string value) =>
-            value != null && Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme.IsOneOf(ProtocolNames.Http, ProtocolNames.Https);
-
-        Module IModuleLoader.LoadModule(Engine engine, ResolvedSpecifier resolved)
-        {
-            var request = resolved.ModuleRequest;
-            var isSource = !request.IsJsonModule() && !request.IsTextModule() && !request.IsBytesModule();
-
-            if (isSource && resolved.Uri?.Scheme.IsOneOf(ProtocolNames.Http, ProtocolNames.Https) == true)
-            {
-                //  Jint names a module with an address by the path alone, while it is the address that
-                //  errors and import.meta tell, and that other modules are found from
-                var named = new ResolvedSpecifier(request, resolved.Uri.AbsoluteUri, null, resolved.Type);
-                return ModuleFactory.BuildSourceTextModule(engine, named, FetchModule(resolved.Uri));
-            }
-
-            return base.LoadModule(engine, resolved);
-        }
-
+        //  Every module comes through AngleSharp's resource loader, whatever its scheme, so the
+        //  requesters the host registered decide what a page can reach.
         protected override string LoadModuleContents(Engine engine, ResolvedSpecifier resolved)
         {
-            if (resolved.Uri?.Scheme.IsOneOf(ProtocolNames.Http, ProtocolNames.Https) == true)
-            {
-                return FetchModule(resolved.Uri);
-            }
-            else
-            {
-                return base.LoadModuleContents(engine, resolved);
-            }
+            return FetchModule(GetModuleUrl(resolved));
         }
 
-        private string FetchModule(Uri moduleUrl)
+        protected override Byte[] LoadModuleContentsAsBytes(Engine engine, ResolvedSpecifier resolved)
+        {
+            return FetchModuleBytes(GetModuleUrl(resolved));
+        }
+
+        private static ResolvedSpecifier Resolved(ModuleRequest moduleRequest, Url url)
+        {
+            return new ResolvedSpecifier(moduleRequest, url.Href, null, SpecifierType.RelativeOrAbsolute);
+        }
+
+        //  A module resolves against the address of what imports it, which is a module or a script
+        //  that was loaded; one written into the document resolves against the base URL of it.
+        private Url GetBaseUrl(string referencingModuleLocation)
+        {
+            if (referencingModuleLocation != null)
+            {
+                var url = new Url(referencingModuleLocation);
+
+                if (!url.IsInvalid && url.IsAbsolute)
+                {
+                    return url;
+                }
+            }
+
+            return GetDocumentBaseUrl();
+        }
+
+        private Url GetDocumentBaseUrl()
+        {
+            return _document.BaseUrl ?? new Url(_document.Url);
+        }
+
+        private static Url GetModuleUrl(ResolvedSpecifier resolved)
+        {
+            if (resolved.Type != SpecifierType.RelativeOrAbsolute)
+            {
+                throw new NotSupportedException($"The module '{resolved.ModuleRequest.Specifier}' could not be resolved to a URL.");
+            }
+
+            return new Url(resolved.Key);
+        }
+
+        private string FetchModule(Url moduleUrl)
         {
             if (_resourceLoader == null)
             {
                 return string.Empty;
             }
 
-            var importUrl = Url.Convert(moduleUrl);
-
-            var request = new ResourceRequest(_scriptElement, importUrl);
-
-            var response = _resourceLoader.FetchAsync(request).Task.GetAwaiter().GetResult();
-
-            if (response == null)
-            {
-                throw new InvalidOperationException($"The module {moduleUrl} could not be loaded.");
-            }
+            var response = Fetch(moduleUrl);
 
             string content;
 
@@ -159,6 +135,29 @@ namespace AngleSharp.Js
             }
 
             return content;
+        }
+
+        private Byte[] FetchModuleBytes(Url moduleUrl)
+        {
+            if (_resourceLoader == null)
+            {
+                return Array.Empty<Byte>();
+            }
+
+            var response = Fetch(moduleUrl);
+
+            using (var content = new MemoryStream())
+            {
+                response.Content.CopyTo(content);
+                return content.ToArray();
+            }
+        }
+
+        private IResponse Fetch(Url moduleUrl)
+        {
+            var request = new ResourceRequest(_scriptElement, moduleUrl);
+            var response = _resourceLoader.FetchAsync(request).Task.Result;
+            return response ?? throw new InvalidOperationException($"No requester could load the module '{moduleUrl.Href}'.");
         }
     }
 }
