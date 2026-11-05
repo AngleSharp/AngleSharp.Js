@@ -538,5 +538,31 @@ namespace AngleSharp.Js.Tests
                 File.Delete(script);
             }
         }
+
+        [TestCase("<script type=module>import x from './a.js'; show(x);</script>", "/dir/a.js")]
+        [TestCase("<script type=module>import x from '/a.js'; show(x);</script>", "/a.js")]
+        [TestCase("<script type=module>import x from '../a.js'; show(x);</script>", "/a.js")]
+        [TestCase("<script type=module src=mod.js></script>", "/dir/a.js")]
+        [TestCase("<base href=/other/><script type=module>import x from './a.js'; show(x);</script>", "/other/a.js")]
+        [TestCase("<script>import('./a.js').then(m => show(m.default));</script>", "/dir/a.js")]
+        public async Task RelativeModuleIsLoadedFromTheAddressOfWhatImportsIt(String page, String path)
+        {
+            //  Only the expected address serves the module; any other one answers with nothing.
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new MockHttpClientRequester(new Dictionary<String, String>
+                {
+                    { "/dir/mod.js", "import x from './a.js'; show(x);" },
+                    { path, "export default 'ok';" },
+                }))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var html = "<!doctype html><div id=test>pending</div><script>function show(x) { document.getElementById('test').textContent = x; }</script>" + page;
+            var document = await BrowsingContext.New(config)
+                .OpenAsync(r => r.Content(html).Address("https://example.com/dir/page.html"))
+                .WhenStable()
+                .ConfigureAwait(false);
+            Assert.AreEqual("ok", document.GetElementById("test").TextContent);
+        }
     }
 }
