@@ -28,6 +28,8 @@ Released on Friday, November 6 2026.
 - Added classes with implicit conversions standing for a WebIDL union, e.g. of a string and a sequence of strings, which fixes such conversions failing; an implicit conversion from such a class is what a script receives for it
 - Added the same-origin policy: script gets `null` for a node of another origin, and for its window a `CrossOriginWindow` with only `window`, `self`, `frames`, `parent`, `top`, `closed`, `length`, `location` (only to be set, and only for frames inside the own document), `postMessage`, `focus`, `blur` and `close`
 - Added `performance.mark`, `measure`, `getEntries`, `getEntriesByName`, `getEntriesByType`, `clearMarks`, `clearMeasures`, along with `PerformanceEntry`, `PerformanceMark` and `PerformanceMeasure`
+- Fixed modules being read from the local disk; every module is loaded through the configured requesters (#153) @michaelthyregod
+- Fixed modules imported by a relative address being requested from the wrong address (e.g. `./a.js` of `/dir/page.html` from `/dir/page.html/a.js`, and the imports of a module of another origin from the own origin); they are resolved against what imports them (#153) @michaelthyregod
 
 # 1.1.4
 

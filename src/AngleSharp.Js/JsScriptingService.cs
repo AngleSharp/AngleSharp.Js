@@ -100,10 +100,12 @@ namespace AngleSharp.Scripting
                 var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 var type = options.Element?.Type;
                 //  A module is imported by this, so it has to tell it apart from other modules:
-                //  one written into the document would have the address of the document.
+                //  one written into the document would have the address of the document. One that
+                //  was loaded has its address, which is what the modules it imports resolve against.
                 var isModule = type.Isi("module");
-                var sourceUrl = isModule ? options.Element?.Source : response.Address?.Href ?? options.Element?.Source;
-                var position = isModule || !String.IsNullOrEmpty(options.Element?.Source) ? default : FindInDocument(options.Document, content);
+                var isInline = String.IsNullOrEmpty(options.Element?.Source);
+                var sourceUrl = isModule && isInline ? null : response.Address?.Href ?? options.Element?.Source;
+                var position = isModule || !isInline ? default : FindInDocument(options.Document, content);
                 await options.EventLoop.EnqueueAsync(_ =>
                 {
                     var document = options.Document ?? throw new ArgumentNullException(nameof(options));
