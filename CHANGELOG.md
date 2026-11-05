@@ -2,6 +2,7 @@
 
 Released on Friday, November 6 2026.
 
+- Fixed `window.origin` being `null` for a frame without an address of its own instead of the origin of its creator
 - Fixed text given to `append`, `prepend` and the like failing instead of becoming a text node
 - Fixed a class deriving from a type of the DOM not having its instances on its prototype chain
 - Fixed an object with `handleEvent` not being accepted as an event listener, or one with `acceptNode` as a filter of a `TreeWalker` or `NodeIterator`

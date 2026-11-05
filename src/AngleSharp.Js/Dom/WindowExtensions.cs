@@ -137,7 +137,7 @@ namespace AngleSharp.Js.Dom
         /// <returns>The serialized origin.</returns>
         [DomName("origin")]
         [DomAccessor(Accessors.Getter)]
-        public static String GetOrigin(this IWindow window) => window.Document?.Origin ?? "null";
+        public static String GetOrigin(this IWindow window) => OriginPolicy.Serialize(window.Document);
 
         /// <summary>
         /// Gets if the window is a secure context, which an https address and the local machine are.

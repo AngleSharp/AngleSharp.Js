@@ -4,6 +4,7 @@ namespace AngleSharp.Js.Tests
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
     using Jint.Runtime;
+    using Jint.Runtime.Modules;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace AngleSharp.Js.Tests
     public class ModuleTests
     {
         private const String Page = "https://example.com/dir/page";
+        private const String FilePage = "file:///dir/page.html";
 
         private static IBrowsingContext CreateContext(Dictionary<String, String> modules)
         {
@@ -202,6 +204,101 @@ namespace AngleSharp.Js.Tests
             var document = await OpenAsync("<!doctype html><script>window.onerror = function (message) { document.title = 'caught'; };</script><script type=module>function (</script>");
 
             Assert.AreEqual("caught", document.Title);
+        }
+
+        [Test]
+        public async Task ImportsOfAModuleWithAFileAddressAreFoundFromThatModule()
+        {
+            var document = await OpenFileAsync("<!doctype html><script type=module src=sub/mod.js></script>", new Dictionary<String, String>
+            {
+                { "/dir/sub/mod.js", "import './dep.js';" },
+                { "/dir/sub/dep.js", "document.title = 'found';" },
+            });
+
+            Assert.AreEqual("found", document.Title);
+        }
+
+        [Test]
+        public async Task ModuleWithAFileAddressKnowsItsAddress()
+        {
+            var document = await OpenFileAsync("<!doctype html><script type=module src=sub/mod.js></script>", new Dictionary<String, String>
+            {
+                { "/dir/sub/mod.js", "document.title = import.meta.url;" },
+            });
+
+            Assert.AreEqual("file:///dir/sub/mod.js", document.Title);
+        }
+
+        [Test]
+        public async Task InlineModuleOfAFileDocumentKnowsTheAddressOfItsDocument()
+        {
+            var document = await OpenFileAsync("<!doctype html><script type=module>document.title = import.meta.url;</script>", new Dictionary<String, String>());
+
+            Assert.AreEqual(FilePage, document.Title);
+        }
+
+        [Test]
+        public async Task FailedFetchOfAnImportReachesTheWindow()
+        {
+            var document = await OpenFaultyAsync("<script>window.onerror = function () { document.title = 'caught'; };</script><script type=module>import './a.js'; document.title = 'ran';</script>");
+
+            Assert.AreEqual("caught", document.Title);
+        }
+
+        [Test]
+        public async Task FailedFetchOfADynamicImportRejects()
+        {
+            var document = await OpenFaultyAsync("<script>import('./a.js').then(function () { document.title = 'loaded'; }, function () { document.title = 'rejected'; });</script>");
+
+            Assert.AreEqual("rejected", document.Title);
+        }
+
+        //  Jint reports any failure of a loader as its own error, so script can't tell this: only
+        //  the loader itself shows that the exception of the fetch isn't wrapped in another one.
+        [Test]
+        public async Task FailedFetchKeepsItsException()
+        {
+            var document = await OpenFaultyAsync(String.Empty);
+            var loader = new ExposedModuleLoader(document);
+
+            Assert.Throws<InvalidOperationException>(() => loader.Load("https://example.com/a.js"));
+        }
+
+        private sealed class ExposedModuleLoader : JsModuleLoader
+        {
+            public ExposedModuleLoader(IDocument document) : base(null, document)
+            {
+            }
+
+            public String Load(String address)
+            {
+                var request = new ModuleRequest(address, Array.Empty<ModuleImportAttribute>());
+                return LoadModuleContents(null, new ResolvedSpecifier(request, address, null, SpecifierType.RelativeOrAbsolute));
+            }
+        }
+
+        private static async Task<IDocument> OpenFaultyAsync(String html)
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new FaultyHttpClientRequester())
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var document = await BrowsingContext.New(config).OpenAsync(r => r.Address(Page).Content("<!doctype html>" + html));
+            await document.WhenStable();
+            return document;
+        }
+
+        private static async Task<IDocument> OpenFileAsync(String html, Dictionary<String, String> files)
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new MockFileRequester(files))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var document = await BrowsingContext.New(config).OpenAsync(r => r.Address(FilePage).Content(html));
+            await document.WhenStable();
+            return document;
         }
     }
 }

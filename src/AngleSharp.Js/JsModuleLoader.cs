@@ -156,7 +156,7 @@ namespace AngleSharp.Js
         private IResponse Fetch(Url moduleUrl)
         {
             var request = new ResourceRequest(_scriptElement, moduleUrl);
-            var response = _resourceLoader.FetchAsync(request).Task.Result;
+            var response = _resourceLoader.FetchAsync(request).Task.GetAwaiter().GetResult();
             return response ?? throw new InvalidOperationException($"No requester could load the module '{moduleUrl.Href}'.");
         }
     }
