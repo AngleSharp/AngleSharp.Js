@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Cache
 {
+    using Acornima;
     using Acornima.Ast;
     using Jint;
     using Jint.Runtime;
@@ -27,9 +28,9 @@ namespace AngleSharp.Js.Cache
         /// source could not be prepared and should be handed to the engine as text,
         /// so that the engine reports the syntax error itself.
         /// </summary>
-        public static Prepared<Script> GetOrCreate(String source, TimeSpan regexTimeout)
+        public static Prepared<Script> GetOrCreate(String source, String sourceUrl, Position position, TimeSpan regexTimeout)
         {
-            var key = new ScriptKey(source, regexTimeout);
+            var key = new ScriptKey(source, sourceUrl, position, regexTimeout);
 
             if (_scripts.TryGetValue(key, out var prepared))
             {
@@ -38,9 +39,9 @@ namespace AngleSharp.Js.Cache
 
             try
             {
-                prepared = Engine.PrepareScript(source, options: new ScriptPreparationOptions
+                prepared = Engine.PrepareScript(source, sourceUrl, options: new ScriptPreparationOptions
                 {
-                    ParsingOptions = new ScriptParsingOptions { RegexTimeout = regexTimeout },
+                    ParsingOptions = new ScriptParsingOptions { RegexTimeout = regexTimeout, SourceOffset = position },
                 });
             }
             catch (ScriptPreparationException)
@@ -59,16 +60,23 @@ namespace AngleSharp.Js.Cache
         private readonly struct ScriptKey : IEquatable<ScriptKey>
         {
             private readonly String _source;
+            private readonly String _sourceUrl;
+            private readonly Position _position;
             private readonly TimeSpan _regexTimeout;
 
-            public ScriptKey(String source, TimeSpan regexTimeout)
+            public ScriptKey(String source, String sourceUrl, Position position, TimeSpan regexTimeout)
             {
                 _source = source ?? throw new ArgumentNullException(nameof(source));
+                _sourceUrl = sourceUrl;
+                _position = position;
                 _regexTimeout = regexTimeout;
             }
 
             public Boolean Equals(ScriptKey other) =>
-                String.Equals(_source, other._source, StringComparison.Ordinal) && _regexTimeout == other._regexTimeout;
+                String.Equals(_source, other._source, StringComparison.Ordinal) &&
+                String.Equals(_sourceUrl, other._sourceUrl, StringComparison.Ordinal) &&
+                _position.Equals(other._position) &&
+                _regexTimeout == other._regexTimeout;
 
             public override Boolean Equals(Object obj) => obj is ScriptKey other && Equals(other);
 

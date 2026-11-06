@@ -55,7 +55,9 @@ namespace AngleSharp.Js.Dom
 
                 try
                 {
-                    var task = factory.CreateAsync(ctx, new CreateDocumentOptions(response), default);
+                    //  What is parsed is just data: it doesn't replace the page, and doesn't run anything.
+                    var options = new CreateDocumentOptions(response) { IsNavigationDisabled = true, IsScriptingDisabled = true };
+                    var task = factory.CreateAsync(ctx, options, default);
                     var document = task.Result;
                     return document;
                 }

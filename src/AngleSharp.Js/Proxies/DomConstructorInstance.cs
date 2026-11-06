@@ -1,6 +1,8 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Dom;
     using AngleSharp.Js.Cache;
+    using Jint;
     using Jint.Native;
     using Jint.Native.Object;
     using Jint.Native.Symbol;
@@ -12,7 +14,7 @@ namespace AngleSharp.Js
 
     sealed class DomConstructorInstance : Constructor
     {
-        private readonly ConstructorInfo _constructor;
+        private readonly ConstructorInfo[] _constructors;
         private readonly EngineInstance _instance;
         private readonly ObjectInstance _objectPrototype;
         private readonly Type _type;
@@ -23,7 +25,7 @@ namespace AngleSharp.Js
             var toString = new ClrFunction(Engine, "toString", ToString);
             _objectPrototype = engine.GetDomPrototype(definition.Type);
             _instance = engine;
-            _constructor = definition.Info;
+            _constructors = definition.Overloads;
             _type = definition.Type;
 
             //  Jint's Constructor leaves the prototype at Object.prototype, which would make a
@@ -36,6 +38,31 @@ namespace AngleSharp.Js
             //  "constructor" as a slot resolved on first read, and that read arrives here, so the
             //  two directions still meet at one object without this end having to reach over.
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
+
+            AddStaticMembers(definition.Type.GetStaticMembers());
+        }
+
+        private void AddStaticMembers(StaticMember[] members)
+        {
+            foreach (var member in members)
+            {
+                var name = member.Name;
+
+                if (member.IsAccessor)
+                {
+                    var getter = member.Getter;
+                    var setter = member.Setter;
+                    var get = getter == null ? null : new ClrFunction(Engine, "get " + name, (_, arguments) => _instance.CallStatic(getter, arguments));
+                    var set = setter == null ? null : new ClrFunction(Engine, "set " + name, (_, arguments) => _instance.CallStatic(setter, arguments));
+                    SetOwnProperty(name, new GetSetPropertyDescriptor(get, set, true, true));
+                }
+                else
+                {
+                    var overloads = member.Overloads;
+                    var function = new ClrFunction(Engine, name, (_, arguments) => _instance.CallStatic(overloads.SelectOverload(arguments), arguments));
+                    SetOwnProperty(name, new PropertyDescriptor(function, true, true, true));
+                }
+            }
         }
 
         /// <summary>
@@ -66,6 +93,13 @@ namespace AngleSharp.Js
         private JsValue HasInstance(JsValue thisObject, JsValue[] arguments)
         {
             var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
+
+            //  A class deriving from this one inherits this as a static member, while being of the
+            //  type of a DOM object says nothing about being of that class.
+            if (!ReferenceEquals(thisObject, this))
+            {
+                return IsInChainOf(value as ObjectInstance, thisObject.Get("prototype") as ObjectInstance) ? JsBoolean.True : JsBoolean.False;
+            }
 
             if (value is IDomProxy node && IsInstance(node.DomType))
             {
@@ -100,6 +134,21 @@ namespace AngleSharp.Js
             return false;
         }
 
+        private static Boolean IsInChainOf(ObjectInstance obj, ObjectInstance prototype)
+        {
+            while (obj != null && prototype != null)
+            {
+                obj = obj.Prototype;
+
+                if (ReferenceEquals(obj, prototype))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private Boolean InheritsFromPrototype(ObjectInstance obj)
         {
             while (obj != null)
@@ -117,16 +166,35 @@ namespace AngleSharp.Js
 
         public override ObjectInstance Construct(JsValue[] arguments, JsValue newTarget)
         {
-            if (_constructor == null)
+            //  a class deriving from an element is about the element of that class
+            if (newTarget != null && !ReferenceEquals(newTarget, this) && !newTarget.IsUndefined() && typeof(IElement).IsAssignableFrom(_type))
             {
-                throw new JavaScriptException("Illegal constructor.");
+                return _instance.ConstructCustomElement(newTarget);
+            }
+
+            if (_constructors.Length == 0)
+            {
+                throw new JavaScriptException(_instance.Jint.Intrinsics.TypeError, "Illegal constructor.");
             }
 
             try
             {
-                var parameters = _instance.BuildArgs(_constructor, arguments);
-                var obj = _constructor.Invoke(parameters);
-                return _instance.GetDomNode(obj);
+                var constructor = _constructors.Length == 1 ? _constructors[0] : _constructors.SelectOverload(arguments);
+                var parameters = _instance.BuildArgs(constructor, arguments);
+                var obj = constructor.Invoke(parameters);
+                var node = _instance.GetDomNode(obj);
+
+                //  A class deriving from it has the instance on its prototype chain.
+                if (newTarget is ObjectInstance derived && !ReferenceEquals(derived, this) && derived.Get("prototype") is ObjectInstance prototype)
+                {
+                    node.Prototype = prototype;
+                }
+
+                return node;
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw _instance.ToScriptError(ex);
             }
             catch
             {
@@ -136,7 +204,7 @@ namespace AngleSharp.Js
 
         protected override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
-            if (_constructor != null)
+            if (_constructors.Length > 0)
             {
                 throw new JavaScriptException("Only call the constructor with the new keyword.");
             }

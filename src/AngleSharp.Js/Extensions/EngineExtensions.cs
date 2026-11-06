@@ -26,6 +26,19 @@ namespace AngleSharp.Js
                 {
                     return value;
                 }
+                else if (obj is JavaScriptException thrown)
+                {
+                    //  what script threw, e.g. for the error of an ErrorEvent
+                    return thrown.Error;
+                }
+                else if (obj is DomException exception)
+                {
+                    return engine.GetDomException(exception);
+                }
+                else if (engine.IsOutOfReach(obj))
+                {
+                    return JsValue.Null;
+                }
                 else if (obj is String)
                 {
                     return JsValue.FromObjectWithType(engine.Jint, obj, typeof(String));
@@ -50,19 +63,41 @@ namespace AngleSharp.Js
                 {
                     return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Boolean));
                 }
-                else if (obj is Enum)
+                else if (obj is Enum literal)
                 {
-                    switch (obj)
+                    var name = literal.GetLiteralName();
+
+                    if (name != null)
                     {
-                        case DocumentReadyState _:
-                            var name = ((Enum)obj).GetOfficialName();
-                            if (name != null)
-                            {
-                                return JsValue.FromObjectWithType(engine.Jint, name, typeof(String));
-                            }
-                            break;
+                        return JsValue.FromObjectWithType(engine.Jint, name, typeof(String));
                     }
+
                     return JsValue.FromObjectWithType(engine.Jint, obj, typeof(Enum));
+                }
+                else if (obj is Int64 || obj is UInt64 || obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte || obj is Decimal)
+                {
+                    return JsNumber.Create(Convert.ToDouble(obj, System.Globalization.CultureInfo.InvariantCulture));
+                }
+                else if (obj is DateTime date)
+                {
+                    return JsValue.FromObject(engine.Jint, date);
+                }
+                else if (obj is Byte[] bytes)
+                {
+                    //  What WebIDL calls an ArrayBuffer; a copy as the object owning the array keeps it.
+                    return engine.Jint.Intrinsics.ArrayBuffer.Construct((Byte[])bytes.Clone());
+                }
+                else if (obj is ArraySegment<Byte> segment)
+                {
+                    //  What WebIDL calls a Uint8Array, i.e. a view rather than the buffer itself.
+                    var view = new Byte[segment.Count];
+
+                    if (segment.Count > 0)
+                    {
+                        Buffer.BlockCopy(segment.Array, segment.Offset, view, 0, segment.Count);
+                    }
+
+                    return engine.Jint.Intrinsics.Uint8Array.Construct(engine.Jint.Intrinsics.ArrayBuffer.Construct(view), null, null);
                 }
                 else if (obj is Task task)
                 {
@@ -104,7 +139,7 @@ namespace AngleSharp.Js
         {
             if (obj != null && type != null && type.IsDomType())
             {
-                return engine.GetDomNode(obj, type);
+                return engine.IsOutOfReach(obj) ? JsValue.Null : engine.GetDomNode(obj, type);
             }
 
             return obj.ToJsValue(engine);
@@ -177,7 +212,15 @@ namespace AngleSharp.Js
 
                 for (var i = max; i < arguments.Length; i++)
                 {
-                    array.SetValue(arguments[i].FromJsValue(), i - max);
+                    //  A WebIDL (Node or DOMString)... such as of append takes text as a text node.
+                    var item = arguments[i].FromJsValue();
+
+                    if (item is not null and not INode && array.GetType().GetElementType() == typeof(INode))
+                    {
+                        item = ((IWindow)context.Window.Value).Document.CreateTextNode(TypeConverter.ToString(arguments[i]));
+                    }
+
+                    array.SetValue(item, i - max);
                 }
 
                 args[max] = array;
@@ -208,7 +251,8 @@ namespace AngleSharp.Js
                 }
                 else
                 {
-                    newArgs[i - offset] = JsValue.Undefined;
+                    //  what has no default isn't to become the text "undefined" or the like
+                    newArgs[i - offset] = p.IsOptional ? JsValue.Undefined : JsValue.Null;
                 }
             }
 
@@ -365,7 +409,7 @@ namespace AngleSharp.Js
             PropertyDescriptor.CreateLazy(
                 new ConstructorRequest(engine, definition),
                 static request => request.Instance.GetDomConstructor(request.Definition),
-                PropertyFlag.OnlyEnumerable);
+                PropertyFlag.NonEnumerable);
 
         //  Handed to the factory instead of captured by it, so that the delegate above is the same
         //  one for every type rather than a closure allocated per registered name.
@@ -530,10 +574,29 @@ namespace AngleSharp.Js
             public override Int32 GetHashCode() => (Method.GetHashCode() * 397) ^ TargetType.GetHashCode();
         }
 
+        /// <summary>
+        /// Calls a static member of a DOM type on behalf of its constructor object. There is no
+        /// receiver to pass on, unlike for the extension methods handled by Call.
+        /// </summary>
+        public static JsValue CallStatic(this EngineInstance instance, MethodInfo method, JsValue[] arguments)
+        {
+            try
+            {
+                var parameters = instance.BuildArgs(method, arguments);
+                var description = MethodDescription.Of(method);
+                return description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw instance.ToScriptError(ex);
+            }
+        }
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)
             {
+                EngineInstance.Current = instance;
                 IDomProxy nodeInstance;
 
                 if (thisObject.Type == Types.Object && thisObject.AsObject() is IDomProxy node)
@@ -543,6 +606,14 @@ namespace AngleSharp.Js
                 else
                 {
                     nodeInstance = instance.Window;
+                }
+
+                //  what a script did is complete before custom elements get to react to it
+                var holdsReactions = CustomElementRegistry.IsInUse;
+
+                if (holdsReactions)
+                {
+                    CustomElementRegistry.PushReactions();
                 }
 
                 try
@@ -555,21 +626,26 @@ namespace AngleSharp.Js
                         newArgs[0] = (JsValue)nodeInstance;
                         Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
                         var parameters = instance.BuildArgs(method, newArgs);
-                        return method.Invoke(null, parameters).ToJsValue(instance, description.ReturnType);
+                        return description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
                     }
                     else
                     {
                         var target = nodeInstance.Value;
                         var bound = BindToTarget(method, target);
                         var parameters = instance.BuildArgs(bound, arguments);
-                        return bound.Invoke(target, parameters).ToJsValue(instance, description.ReturnType);
+                        return description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
                     }
                 }
                 catch (TargetInvocationException ex)
                 {
-                    //  The message is all a script (or whoever reads its errors) gets to see of
-                    //  what went wrong, e.g. the DOMException of an invalid selector.
-                    throw new JavaScriptException(instance.Jint.Intrinsics.Error, ex.InnerException?.Message);
+                    throw instance.ToScriptError(ex);
+                }
+                finally
+                {
+                    if (holdsReactions)
+                    {
+                        CustomElementRegistry.PopReactions();
+                    }
                 }
             }
 

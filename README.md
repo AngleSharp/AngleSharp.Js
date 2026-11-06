@@ -108,7 +108,7 @@ The library comes with a service that exposes `WithJs` to `IConfiguration`. This
 - Support of modern JavaScript (ES2015 through ES2025) through Jint
 - Connection to the DOM
 - ES modules and import maps (`<script type="module">`, `<script type="importmap">`)
-- Web Workers
+- Web Workers and transferable `MessageChannel` ports
 - Evaluation of real-world libraries (the test suite runs jQuery 1 through 4, React 16 and Bootstrap 5)
 
 ## Participating

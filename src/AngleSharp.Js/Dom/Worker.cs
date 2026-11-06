@@ -5,6 +5,7 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Io;
+    using AngleSharp.Js;
     using AngleSharp.Text;
     using AngleSharp.Scripting;
     using System;
@@ -28,7 +29,7 @@ namespace AngleSharp.Js.Dom
         private readonly JsScriptingService _scripting;
         private readonly IEventLoop _windowLoop;
         private readonly IEventLoop _workerLoop;
-        private readonly Queue<Object> _pendingMessages;
+        private readonly Queue<SerializedMessage> _pendingMessages;
 
         private IDocument _workerDocument;
         private Boolean _initialized;
@@ -42,8 +43,20 @@ namespace AngleSharp.Js.Dom
         /// <summary>
         /// Creates a new worker and starts the worker script in a separate context.
         /// </summary>
-        [DomConstructor]
         public Worker(IWindow window, String source)
+            : this(window, source, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new worker and starts the worker script in a separate context. If that fails
+        /// it is told by an error event, as it happens later.
+        /// </summary>
+        /// <param name="window">The window creating the worker.</param>
+        /// <param name="source">The address of the script.</param>
+        /// <param name="options">The options, e.g. that the script is a module.</param>
+        [DomConstructor]
+        public Worker(IWindow window, String source, WorkerOptions options)
         {
             if (window == null)
             {
@@ -55,6 +68,13 @@ namespace AngleSharp.Js.Dom
                 throw new ArgumentException("The worker source URL cannot be empty.", nameof(source));
             }
 
+            var isModule = options?.Type == "module";
+
+            if (!isModule && options?.Type != null && options.Type != "classic")
+            {
+                throw new ArgumentException($"The type '{options.Type}' is not known.", nameof(options));
+            }
+
             _window = window;
             _windowLoop = _window.Document.Context.GetService<IEventLoop>();
 
@@ -62,7 +82,7 @@ namespace AngleSharp.Js.Dom
             _scripting = parentContext.GetService<JsScriptingService>() ?? throw new DomException(DomError.NotSupported);
             EnsureLoaderAvailable();
             var workerUrl = ResolveUrl(source);
-            _pendingMessages = new Queue<Object>();
+            _pendingMessages = new Queue<SerializedMessage>();
 
             // Check the parent's capabilities before starting a thread that a failed constructor
             // would leave unreachable. Release it if context creation or scheduling fails too.
@@ -71,7 +91,9 @@ namespace AngleSharp.Js.Dom
             {
                 var workerConfig = Configuration.Default
                     .With(_scripting)
-                    .WithOnly(_workerLoop);
+                    .WithOnly(_workerLoop)
+                    .With<IResourceLoader>(_ => parentContext.GetService<IResourceLoader>())
+                    .With<IDocumentLoader>(_ => parentContext.GetService<IDocumentLoader>());
 
                 foreach (var service in parentContext.OriginalServices)
                 {
@@ -87,11 +109,12 @@ namespace AngleSharp.Js.Dom
                 {
                     try
                     {
-                        InitializeWorker(workerUrl);
+                        InitializeWorker(workerUrl, isModule);
                     }
                     catch (Exception ex)
                     {
                         _startupError = ex;
+                        Enqueue(_windowLoop, TaskPriority.Normal, () => ReportStartupError(workerUrl, ex));
                     }
                 });
             }
@@ -115,6 +138,16 @@ namespace AngleSharp.Js.Dom
         #region Properties
 
         internal Exception StartupError => _startupError;
+
+        /// <summary>
+        /// Raised when the script of the worker could not be started.
+        /// </summary>
+        [DomName("onerror")]
+        public event DomEventHandler Failed
+        {
+            add { AddEventListener(EventNames.Error, value); }
+            remove { RemoveEventListener(EventNames.Error, value); }
+        }
 
         internal Boolean IsInitialized => _initialized;
 
@@ -142,6 +175,16 @@ namespace AngleSharp.Js.Dom
             remove { RemoveEventListener(MessageEventName, value, false); }
         }
 
+        /// <summary>
+        /// Adds or removes the handler for a message that could not be deserialized.
+        /// </summary>
+        [DomName("onmessageerror")]
+        public event DomEventHandler MessageError
+        {
+            add { AddEventListener("messageerror", value, false); }
+            remove { RemoveEventListener("messageerror", value, false); }
+        }
+
         #endregion
 
         #region Methods
@@ -150,29 +193,32 @@ namespace AngleSharp.Js.Dom
         /// Posts a message to the running worker script.
         /// </summary>
         [DomName("postMessage")]
-        public void PostMessage(Object message)
+        public void PostMessage(Object message, Object transfer = null)
         {
             if (_terminated)
             {
                 return;
             }
 
+            //  it had its error event, and what is sent to it goes nowhere
             if (_startupError != null)
             {
-                throw _startupError;
+                return;
             }
+
+            var serialized = MessageTransfer.Clone(message, transfer, _initialized ? _workerDocument : null);
 
             if (!_initialized)
             {
                 lock (_pendingMessages)
                 {
-                    _pendingMessages.Enqueue(message);
+                    _pendingMessages.Enqueue(serialized);
                 }
 
                 return;
             }
 
-            Enqueue(_workerLoop, TaskPriority.Normal, () => DeliverToWorker(message));
+            Enqueue(_workerLoop, TaskPriority.Normal, () => DeliverToWorker(serialized));
         }
 
         /// <summary>
@@ -193,7 +239,7 @@ namespace AngleSharp.Js.Dom
 
         #region Helpers
 
-        internal void PostMessageToOwner(Object message)
+        internal void PostMessageToOwner(Object message, Object transfer = null)
         {
             if (_terminated)
             {
@@ -201,17 +247,32 @@ namespace AngleSharp.Js.Dom
             }
 
             var origin = _workerDocument?.Origin ?? String.Empty;
-            var ev = new MessageEvent(MessageEventName, false, false, message, origin, String.Empty, null, null);
-            Enqueue(_windowLoop, TaskPriority.Normal, () => Dispatch(ev));
+            var serialized = MessageTransfer.Clone(message, transfer, _window.Document);
+            MessageTaskQueue.Enqueue(_window.Document, () => WindowExtensions.DeliverMessage(
+                _window.Document,
+                serialized,
+                origin,
+                null,
+                ev => Dispatch(ev)));
         }
 
-        private void InitializeWorker(Url sourceUrl)
+        private void ReportStartupError(Url source, Exception error)
         {
-            _workerDocument = _workerContext.OpenAsync(request => request.Content("<!doctype html>")).GetAwaiter().GetResult();
+            if (!_terminated)
+            {
+                var ev = new ErrorEvent();
+                ev.Init(source.Href, 0, 0, error);
+                Dispatch(ev);
+            }
+        }
+
+        private void InitializeWorker(Url sourceUrl, Boolean isModule)
+        {
+            _workerDocument = _workerContext.OpenAsync(request => request.Address(sourceUrl).Content("<!doctype html>")).GetAwaiter().GetResult();
             WindowExtensions.RegisterWorkerWindow(_workerDocument.DefaultView, this);
             var source = FetchWorkerScript(sourceUrl);
             _scripting.EvaluateScript(_workerDocument, WorkerBootstrap, MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
-            _scripting.EvaluateScript(_workerDocument, source, MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
+            _scripting.EvaluateScript(_workerDocument, source, isModule ? "module" : MimeTypeNames.DefaultJavaScript, sourceUrl.Href);
 
             _initialized = true;
 
@@ -224,10 +285,29 @@ namespace AngleSharp.Js.Dom
             }
         }
 
-        private void DeliverToWorker(Object message)
+        private void DeliverToWorker(SerializedMessage message)
         {
-            var engine = _scripting.GetOrCreateJint(_workerDocument);
-            engine.SetValue(WorkerIncomingMessageName, message);
+            message.SetDocument(_workerDocument);
+            var instance = _scripting.GetOrCreateInstance(_workerDocument);
+            var engine = instance.Jint;
+            Object data;
+
+            try
+            {
+                data = message.Data.ToJsValue(instance);
+            }
+            catch (Exception)
+            {
+                Enqueue(_workerLoop, TaskPriority.Normal, () => _scripting.EvaluateScript(
+                    _workerDocument,
+                    "if (self && typeof self.onmessageerror === 'function') self.onmessageerror({ type: 'messageerror' });",
+                    MimeTypeNames.DefaultJavaScript,
+                    _workerDocument.Url));
+                return;
+            }
+
+            engine.SetValue(WorkerIncomingMessageName, data);
+            engine.SetValue(WorkerIncomingPortsName, message.Ports.ToJsValue(instance));
             _scripting.EvaluateScript(_workerDocument, WorkerDispatchScript, MimeTypeNames.DefaultJavaScript, _workerDocument.Url);
         }
 
@@ -306,13 +386,34 @@ if (typeof self === 'undefined') {
 }
 })();";
 
+        private const String WorkerIncomingPortsName = "__anglesharpIncomingPorts";
+
         private const String WorkerDispatchScript = @"(function () {
 if (self && typeof self.onmessage === 'function') {
-    self.onmessage({ data: __anglesharpIncomingMessage });
+    self.onmessage({ data: __anglesharpIncomingMessage, ports: __anglesharpIncomingPorts });
 }
     })();";
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Represents the options of creating a worker.
+    /// </summary>
+    [DomName("WorkerOptions")]
+    public sealed class WorkerOptions
+    {
+        /// <summary>
+        /// Gets or sets the type of the script, i.e. classic (the default) or module.
+        /// </summary>
+        [DomName("type")]
+        public String Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the worker, for debugging.
+        /// </summary>
+        [DomName("name")]
+        public String Name { get; set; }
     }
 }

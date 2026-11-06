@@ -2,11 +2,13 @@ namespace AngleSharp.Js.Dom
 {
     using AngleSharp;
     using AngleSharp.Attributes;
-    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Js;
     using AngleSharp.Js.Attributes;
+    using AngleSharp.Scripting;
+    using Jint;
     using System;
     using System.Runtime.CompilerServices;
 
@@ -22,26 +24,124 @@ namespace AngleSharp.Js.Dom
             new ConditionalWeakTable<IWindow, Worker>();
         private static readonly ConditionalWeakTable<IWindow, Performance> Performances =
             new ConditionalWeakTable<IWindow, Performance>();
+        private static readonly ConditionalWeakTable<IWindow, Crypto> Cryptos =
+            new ConditionalWeakTable<IWindow, Crypto>();
 
         //  The interval between two animation frames of a 60 Hz display.
         private const Int32 FrameInterval = 16;
 
         /// <summary>
-        /// Posts a message.
+        /// Posts a message to the window (HTML 9.4.3), from the document of the script calling.
         /// </summary>
         [DomName("postMessage")]
+        public static void PostMessage(this IWindow window, Object message, Object targetOrigin = null, Object transfer = null)
+        {
+            if (WorkerOwners.TryGetValue(window, out var owner))
+            {
+                owner.PostMessageToOwner(message, transfer ?? (targetOrigin is String ? null : targetOrigin));
+                return;
+            }
+
+            PostMessageFrom(
+                EngineInstance.Current?.Window.Value is IWindow sender ? sender.Document : window.Document,
+                window,
+                message,
+                targetOrigin,
+                transfer ?? (targetOrigin is String ? null : targetOrigin));
+        }
+
+        internal static void PostMessageFrom(IDocument sender, IWindow target, Object message, Object targetOrigin, Object transfer = null)
+        {
+            var origin = ResolveTargetOrigin(sender, targetOrigin);
+            transfer = transfer ?? (targetOrigin is String ? null : targetOrigin);
+
+            // who it is for may have moved on; then it isn't delivered
+            if (origin != "*" && origin != OriginPolicy.Serialize(target.Document))
+            {
+                return;
+            }
+
+            var data = MessageTransfer.Clone(message, transfer, target.Document);
+            MessageTaskQueue.Enqueue(
+                target.Document,
+                () => DeliverMessage(target.Document, data, OriginPolicy.Serialize(sender), sender.DefaultView, ev => target.Fire(ev)));
+        }
+
+        // given as a string, or in the options
+        private static String ResolveTargetOrigin(IDocument sender, Object targetOrigin)
+        {
+            if (targetOrigin is Jint.Native.Object.ObjectInstance options)
+            {
+                var value = options.Get("targetOrigin");
+                targetOrigin = value.IsString() ? value.AsString() : null;
+            }
+
+            var origin = targetOrigin as String ?? "/";
+
+            if (origin == "*")
+            {
+                return origin;
+            }
+
+            if (origin == "/")
+            {
+                return OriginPolicy.Serialize(sender);
+            }
+
+            var url = new Url(origin);
+
+            if (url.IsInvalid || String.IsNullOrEmpty(url.Scheme))
+            {
+                throw new DomException(DomError.Syntax);
+            }
+
+            return url.Origin ?? "null";
+        }
+
+        /// <summary>
+        /// Posts a text message.
+        /// </summary>
         public static void PostMessage(this IWindow window, String message, String targetOrigin = "*", Object transfer = null)
         {
             if (WorkerOwners.TryGetValue(window, out var owner))
             {
-                owner.PostMessageToOwner(message);
+                owner.PostMessageToOwner(message, transfer);
                 return;
             }
 
-            var ev = new MessageEvent("message", false, false, message, targetOrigin);
             var document = window.Document;
-            var loop = document.Context.GetService<IEventLoop>();
-            loop.EnqueueAsync(_ => window.Fire(ev));
+            var origin = ResolveTargetOrigin(document, targetOrigin);
+
+            if (origin != "*" && origin != OriginPolicy.Serialize(document))
+            {
+                return;
+            }
+
+            var data = MessageTransfer.Clone(message, transfer, document);
+            MessageTaskQueue.Enqueue(document, () => DeliverMessage(document, data, OriginPolicy.Serialize(document), document.DefaultView, ev => window.Fire(ev)));
+        }
+
+        internal static void DeliverMessage(IDocument document, SerializedMessage message, String origin, IWindow source, Action<Event> dispatch)
+        {
+            message.SetDocument(document);
+            Object data = message.Data;
+
+            try
+            {
+                var scripting = document.Context?.GetService<JsScriptingService>();
+
+                if (scripting != null)
+                {
+                    data = data.ToJsValue(scripting.GetOrCreateInstance(document));
+                }
+            }
+            catch (Exception)
+            {
+                dispatch(new Event("messageerror"));
+                return;
+            }
+
+            dispatch(new MessageEvent("message", false, false, data, origin, String.Empty, source, message.Ports));
         }
 
         internal static void RegisterWorkerWindow(IWindow workerWindow, Worker owner)
@@ -54,6 +154,57 @@ namespace AngleSharp.Js.Dom
             WorkerOwners.Remove(workerWindow);
             WorkerOwners.Add(workerWindow, owner);
         }
+
+        /// <summary>
+        /// Gets a copy of a value that shares nothing with it (HTML 2.7), which fails with a
+        /// DataCloneError for what can't be copied, e.g. a function.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <param name="value">The value to copy.</param>
+        /// <param name="options">The options, of which transfer has no meaning here.</param>
+        /// <returns>The copy.</returns>
+        [DomName("structuredClone")]
+        public static Object StructuredCloneOf(this IWindow window, Object value = null, Object options = null) =>
+            StructuredClone.Clone(value);
+
+        /// <summary>
+        /// Gets the origin of the window.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>The serialized origin.</returns>
+        [DomName("origin")]
+        [DomAccessor(Accessors.Getter)]
+        public static String GetOrigin(this IWindow window) => OriginPolicy.Serialize(window.Document);
+
+        /// <summary>
+        /// Gets if the window is a secure context, which an https address and the local machine are.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>True if it is one.</returns>
+        [DomName("isSecureContext")]
+        [DomAccessor(Accessors.Getter)]
+        public static Boolean GetIsSecureContext(this IWindow window)
+        {
+            var address = window.Document?.DocumentUri;
+
+            if (String.IsNullOrEmpty(address))
+            {
+                return false;
+            }
+
+            var url = new Url(address);
+            return url.Scheme == "https" || url.Scheme == "file" || url.HostName == "localhost" || url.HostName == "127.0.0.1" || url.HostName == "[::1]";
+        }
+
+        /// <summary>
+        /// Gets the number of frames in the window.
+        /// </summary>
+        /// <param name="window">The window.</param>
+        /// <returns>The number of iframes and frames of its document.</returns>
+        [DomName("length")]
+        [DomAccessor(Accessors.Getter)]
+        public static Int32 GetLength(this IWindow window) =>
+            window.Document?.QuerySelectorAll("iframe,frame").Length ?? 0;
 
         /// <summary>
         /// Gets the parent window context.
@@ -129,6 +280,41 @@ namespace AngleSharp.Js.Dom
         /// <param name="handle">The handle of the request.</param>
         [DomName("cancelAnimationFrame")]
         public static void CancelAnimationFrame(this IWindow window, Int32 handle)
+        {
+            window.ClearTimeout(handle);
+        }
+
+        /// <summary>
+        /// Gets the crypto object of the window.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <returns>The crypto object.</returns>
+        [DomName("crypto")]
+        [DomAccessor(Accessors.Getter)]
+        public static Crypto Crypto(this IWindow window) => Cryptos.GetValue(window, _ => new Crypto());
+
+        /// <summary>
+        /// Requests the callback to be called when there is time for it, which is as soon as what is
+        /// waiting on the event loop right now is done.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="callback">The callback receiving how much time it has.</param>
+        /// <param name="options">The options, whose timeout isn't needed by running that soon.</param>
+        /// <returns>The handle to cancel the request with.</returns>
+        [DomName("requestIdleCallback")]
+        public static Int32 RequestIdleCallback(this IWindow window, IdleRequestCallback callback, Object options = null)
+        {
+            var performance = window.Performance();
+            return window.SetTimeout(w => callback?.Invoke(w, new IdleDeadline(performance)), 1);
+        }
+
+        /// <summary>
+        /// Cancels a request made with requestIdleCallback.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="handle">The handle of the request.</param>
+        [DomName("cancelIdleCallback")]
+        public static void CancelIdleCallback(this IWindow window, Int32 handle)
         {
             window.ClearTimeout(handle);
         }

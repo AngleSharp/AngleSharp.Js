@@ -3,6 +3,9 @@ namespace AngleSharp.Js
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Native.Object;
+    using Jint.Native.Symbol;
+    using AngleSharp.Js.Cache;
     using System;
     using System.Reflection;
 
@@ -13,7 +16,8 @@ namespace AngleSharp.Js
     /// </summary>
     static class OverloadResolution
     {
-        public static MethodInfo SelectOverload(this MethodInfo[] overloads, JsValue[] arguments)
+        public static T SelectOverload<T>(this T[] overloads, JsValue[] arguments)
+            where T : MethodBase
         {
             var count = arguments.Length;
 
@@ -40,11 +44,10 @@ namespace AngleSharp.Js
             return best;
         }
 
-        private static Int32 Score(MethodInfo method, JsValue[] arguments, Int32 count)
+        private static Int32 Score(MethodBase method, JsValue[] arguments, Int32 count)
         {
             var parameters = method.GetParameters();
-            //  The receiver of an extension method is not an argument.
-            var offset = method.IsStatic && parameters.Length > 0 ? 1 : 0;
+            var offset = MethodDescription.Of(method).HasReceiver ? 1 : 0;
             var available = parameters.Length - offset;
             var required = 0;
 
@@ -96,7 +99,7 @@ namespace AngleSharp.Js
                 return !info.IsValueType || type != target ? 1 : 0;
             }
 
-            if (value is Function)
+            if (value.IsCallable())
             {
                 return info.IsSubclassOf(typeof(Delegate)) ? 2 : target == typeof(Object) ? 1 : 0;
             }
@@ -106,12 +109,30 @@ namespace AngleSharp.Js
                 return info.IsAssignableFrom(proxy.Value.GetType().GetTypeInfo()) ? 3 : 0;
             }
 
-            //  A plain object fits a dictionary (e.g. ScrollToOptions), not a primitive.
-            return info.IsClass && target != typeof(String) ? 2 : 0;
+            if (value.IsBufferSource())
+            {
+                return target == typeof(Byte[]) || target == typeof(ArraySegment<Byte>) ? 3 : target == typeof(Object) ? 1 : 0;
+            }
+
+            if (value.IsArray())
+            {
+                //  Bytes also take an array of numbers, but that is rarely what such an overload is for.
+                return target == typeof(Byte[]) ? 2 : target.GetSequenceElementType() != null ? 3 : info.IsClass && target != typeof(String) ? 1 : 0;
+            }
+
+            if (target.GetSequenceElementType() != null)
+            {
+                //  Other iterables also make a sequence, e.g. a Set.
+                return value is ObjectInstance iterable && iterable.Get(GlobalSymbolRegistry.Iterator).IsCallable() ? 3 : 0;
+            }
+
+            //  A plain object fits a dictionary (e.g. ScrollToOptions), not a primitive or sequence.
+            return info.IsClass && target != typeof(String) && !target.IsArray ? 2 : 0;
         }
 
         private static Boolean IsNumeric(Type type) =>
             type == typeof(Double) || type == typeof(Single) || type == typeof(Int32) || type == typeof(Int64) ||
-            type == typeof(UInt32) || type == typeof(UInt16) || type == typeof(Int16) || type == typeof(Byte);
+            type == typeof(UInt32) || type == typeof(UInt16) || type == typeof(Int16) || type == typeof(Byte) ||
+            type == typeof(UInt64) || type == typeof(SByte) || type == typeof(Decimal);
     }
 }

@@ -2,6 +2,7 @@ namespace AngleSharp
 {
     using AngleSharp.Browser;
     using AngleSharp.Browser.Dom;
+    using AngleSharp.Dom;
     using AngleSharp.Js;
     using AngleSharp.Js.Dom;
     using AngleSharp.Scripting;
@@ -81,7 +82,9 @@ namespace AngleSharp
             return configuration
                 .WithOnly(observer)
                 .With(handler)
-                .With(service);
+                .With(service)
+                .With<IScriptValueCloner>(_ => new ScriptValueCloner())
+                .With<ICustomElementHost>(_ => new CustomElementHost(service));
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace AngleSharp.Js.Cache
 {
     using AngleSharp.Attributes;
+    using AngleSharp.Dom;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -44,7 +45,9 @@ namespace AngleSharp.Js.Cache
             _domTypes.GetOrAdd(type, static current =>
             {
                 var name = GetCanonicalName(current);
-                return name != null && !String.Equals(name, EventTargetName, StringComparison.Ordinal);
+
+                //  What script creates by new EventTarget() is all that the name stands for.
+                return name != null && (current == typeof(EventTarget) || !String.Equals(name, EventTargetName, StringComparison.Ordinal));
             });
 
         /// <summary>

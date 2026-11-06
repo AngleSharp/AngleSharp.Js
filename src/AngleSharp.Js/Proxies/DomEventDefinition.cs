@@ -29,6 +29,9 @@ namespace AngleSharp.Js
             _removeHandler = removeHandler;
         }
 
+        public Boolean IsSameAs(DomEventDefinition other) =>
+            _addHandler == other._addHandler && _removeHandler == other._removeHandler;
+
         public JsValue GetHandler(JsValue thisObject, JsValue[] arguments)
         {
             var node = thisObject.As<DomNodeInstance>();
@@ -50,18 +53,14 @@ namespace AngleSharp.Js
                     _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
                 }
 
-                if (value is Function function)
+                var engine = node.Instance;
+
+                if (value.AsFunction(engine) is Function function)
                 {
-                    var engine = node.Instance;
 
-                    DomEventHandler handler = (s, ev) =>
-                    {
-                        var sender = s.ToJsValue(engine);
-                        var args = ev.ToJsValue(engine);
-                        function.Call(sender, new[] { args });
-                    };
+                    var handler = function.ToEventHandler(engine);
 
-                    node.SetEventHandler(this, new Registration(function, handler));
+                    node.SetEventHandler(this, new Registration(value, handler));
                     _addHandler?.Invoke(node.Value, new Object[] { handler });
                 }
             }
@@ -74,7 +73,7 @@ namespace AngleSharp.Js
         /// </summary>
         public sealed class Registration
         {
-            public Registration(Function function, DomEventHandler handler)
+            public Registration(JsValue function, DomEventHandler handler)
             {
                 Function = function;
                 Handler = handler;
@@ -83,7 +82,7 @@ namespace AngleSharp.Js
             /// <summary>
             /// The function that was assigned, as it has to be handed back on read.
             /// </summary>
-            public Function Function { get; }
+            public JsValue Function { get; }
 
             /// <summary>
             /// The listener that was subscribed, as it has to be handed back on removal.

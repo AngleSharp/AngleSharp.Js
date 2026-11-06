@@ -6,6 +6,7 @@ namespace AngleSharp.Js.Tests
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -38,6 +39,22 @@ namespace AngleSharp.Js.Tests
             var html = "<!doctype html><div id=test>Test</div><script type=module src=/example-module.js></script>";
             var document = await context.OpenAsync(r => r.Content(html));
             Assert.IsNull(document.GetElementById("test"));
+        }
+
+        [Test]
+        public async Task SeveralInlineModuleScriptsOfADocumentShouldAllRun()
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithNavigator()
+                .WithDefaultLoader(new LoaderOptions() { IsResourceLoadingEnabled = true });
+            var context = BrowsingContext.New(config);
+            var html = "<!doctype html><div id=first></div><div id=second></div>" +
+                "<script type=module>document.getElementById('first').remove();</script>" +
+                "<script type=module>document.getElementById('second').remove();</script>";
+            var document = await context.OpenAsync(r => r.Address("https://example.com/page").Content(html));
+            Assert.IsNull(document.GetElementById("first"));
+            Assert.IsNull(document.GetElementById("second"));
         }
 
         [Test]
@@ -476,6 +493,76 @@ namespace AngleSharp.Js.Tests
             var html = "<!doctype html><div id=test></div><script type=module>const order = []; Promise.resolve().then(() => order.push('m1')); order.push('sync'); Promise.resolve().then(() => { order.push('m2'); document.getElementById('test').textContent = order.join(','); });</script>";
             var document = await context.OpenAsync(r => r.Content(html)).WhenStable().ConfigureAwait(false);
             Assert.AreEqual("sync,m1,m2", document.GetElementById("test")?.TextContent);
+        }
+
+        [TestCase("direct")]
+        [TestCase("importmap")]
+        [TestCase("dynamic")]
+        [TestCase("script")]
+        [TestCase("bytes")]
+        public async Task ModuleIsNotReadFromTheLocalDisk(String way)
+        {
+            var json = Path.GetTempFileName();
+            var script = Path.GetTempFileName();
+
+            try
+            {
+                File.WriteAllText(json, "{ \"secret\": \"from disk\" }");
+                File.WriteAllText(script, "document.getElementById('test').textContent = 'from disk';");
+                var jsonUrl = new Uri(json).AbsoluteUri;
+                var scriptUrl = new Uri(script).AbsoluteUri;
+                var show = "document.getElementById('test').textContent = ";
+                var page = way switch
+                {
+                    "direct" => $"<script type=module>import data from '{jsonUrl}' with {{ type: 'json' }}; {show}data.secret;</script>",
+                    "importmap" => $"<script type=importmap>{{ \"imports\": {{ \"secret\": \"{jsonUrl}\" }} }}</script><script type=module>import data from 'secret' with {{ type: 'json' }}; {show}data.secret;</script>",
+                    "dynamic" => $"<script>import('{jsonUrl}', {{ with: {{ type: 'json' }} }}).then(m => {{ {show}m.default.secret; }});</script>",
+                    "script" => $"<script type=module>import '{scriptUrl}';</script>",
+                    _ => $"<script type=module>import data from '{jsonUrl}' with {{ type: 'bytes' }}; {show}String(data.length);</script>",
+                };
+                var config = Configuration.Default
+                    .WithJs()
+                    .WithEventLoop()
+                    .With(new MockHttpClientRequester(new Dictionary<String, String>()))
+                    .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+                var html = "<!doctype html><div id=test>pending</div>" + page;
+                var document = await BrowsingContext.New(config)
+                    .OpenAsync(r => r.Content(html).Address("https://example.com/"))
+                    .WhenStable()
+                    .ConfigureAwait(false);
+                Assert.AreEqual("pending", document.GetElementById("test").TextContent);
+            }
+            finally
+            {
+                File.Delete(json);
+                File.Delete(script);
+            }
+        }
+
+        [TestCase("<script type=module>import x from './a.js'; show(x);</script>", "/dir/a.js")]
+        [TestCase("<script type=module>import x from '/a.js'; show(x);</script>", "/a.js")]
+        [TestCase("<script type=module>import x from '../a.js'; show(x);</script>", "/a.js")]
+        [TestCase("<script type=module src=mod.js></script>", "/dir/a.js")]
+        [TestCase("<base href=/other/><script type=module>import x from './a.js'; show(x);</script>", "/other/a.js")]
+        [TestCase("<script>import('./a.js').then(m => show(m.default));</script>", "/dir/a.js")]
+        public async Task RelativeModuleIsLoadedFromTheAddressOfWhatImportsIt(String page, String path)
+        {
+            //  Only the expected address serves the module; any other one answers with nothing.
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new MockHttpClientRequester(new Dictionary<String, String>
+                {
+                    { "/dir/mod.js", "import x from './a.js'; show(x);" },
+                    { path, "export default 'ok';" },
+                }))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var html = "<!doctype html><div id=test>pending</div><script>function show(x) { document.getElementById('test').textContent = x; }</script>" + page;
+            var document = await BrowsingContext.New(config)
+                .OpenAsync(r => r.Content(html).Address("https://example.com/dir/page.html"))
+                .WhenStable()
+                .ConfigureAwait(false);
+            Assert.AreEqual("ok", document.GetElementById("test").TextContent);
         }
     }
 }

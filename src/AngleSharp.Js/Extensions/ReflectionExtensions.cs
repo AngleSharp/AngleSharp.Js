@@ -23,6 +23,19 @@ namespace AngleSharp.Js
             .Where(m => m.GetTypeInfo().GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
             .ToArray();
 
+        public static Type GetGenericInterface(this Type type, Type definition)
+        {
+            foreach (var candidate in type.GetTypeInfo().ImplementedInterfaces)
+            {
+                if (candidate.GetTypeInfo().IsGenericType && candidate.GetGenericTypeDefinition() == definition)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
         public static IEnumerable<Type> GetTypeTree(this Type root)
         {
             var type = root;

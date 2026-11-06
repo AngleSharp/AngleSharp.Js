@@ -5,11 +5,15 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Scripting;
     using Jint.Native;
     using Jint.Native.Function;
+    using Jint.Runtime;
     using System;
     using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
 
     sealed class EventAttributeObserver : IAttributeObserver
     {
+        private readonly ConditionalWeakTable<IElement, Dictionary<String, DomEventHandler>> _handlers =
+            new ConditionalWeakTable<IElement, Dictionary<String, DomEventHandler>>();
         private readonly Dictionary<String, Action<IElement, String>> _observers;
         private readonly JsScriptingService _service;
 
@@ -96,13 +100,45 @@ namespace AngleSharp.Js.Dom
                 if (sender is TElement element)
                 {
                     var document = element.Owner;
+
+                    // a sandboxed frame runs nothing of its document, handlers included
+                    if (OriginPolicy.IsScriptingBlocked(document))
+                    {
+                        return;
+                    }
+
+                    // the attribute is the one handler of the event, as long as it is there
+                    var handlers = _handlers.GetOrCreateValue(element);
+
+                    if (handlers.TryGetValue(eventName, out var previous))
+                    {
+                        element.RemoveEventListener(eventName, previous);
+                        handlers.Remove(eventName);
+                    }
+
+                    if (value is null)
+                    {
+                        return;
+                    }
+
                     var engine = _service.GetOrCreateInstance(document);
                     var jint = engine.Jint;
-                    var instance = jint.Intrinsics.Function.Construct(new JsValue[] { "event", value }, JsValue.Undefined);
 
-                    if (instance is Function functor)
+                    try
                     {
-                        element.AddEventListener(eventName, functor.ToListener(engine));
+                        var instance = jint.Intrinsics.Function.Construct(new JsValue[] { "event", value }, JsValue.Undefined);
+
+                        if (instance is Function functor)
+                        {
+                            var handler = functor.ToEventHandler(engine);
+                            handlers[eventName] = handler;
+                            element.AddEventListener(eventName, handler);
+                        }
+                    }
+                    catch (JavaScriptException error)
+                    {
+                        // this is about the handler, not about what set the attribute
+                        engine.ReportError(error);
                     }
                 }
             });

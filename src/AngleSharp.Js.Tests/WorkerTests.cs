@@ -11,11 +11,150 @@ namespace AngleSharp.Js.Tests
     [TestFixture]
     public class WorkerTests
     {
+        private sealed class SourcesRequester : BaseRequester
+        {
+            private readonly System.Collections.Generic.Dictionary<String, String> _sources;
+
+            public SourcesRequester(System.Collections.Generic.Dictionary<String, String> sources)
+            {
+                _sources = sources;
+            }
+
+            public override Boolean SupportsProtocol(String protocol) => true;
+
+            protected override Task<AngleSharp.Io.IResponse> PerformRequestAsync(AngleSharp.Io.Request request, System.Threading.CancellationToken cancel)
+            {
+                var found = _sources.TryGetValue(request.Address.Href, out var source);
+                return Task.FromResult<AngleSharp.Io.IResponse>(new AngleSharp.Io.DefaultResponse
+                {
+                    Address = request.Address,
+                    StatusCode = found ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.NotFound,
+                    Content = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(source ?? String.Empty)),
+                });
+            }
+        }
+
+        private static async Task<AngleSharp.Dom.IDocument> OpenWithSourcesAsync(params (String Address, String Source)[] sources)
+        {
+            var map = new System.Collections.Generic.Dictionary<String, String>();
+
+            foreach (var (address, source) in sources)
+            {
+                map[address] = source;
+            }
+
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new SourcesRequester(map))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            return await BrowsingContext.New(config).OpenAsync(m => m.Address("https://example.com/").Content("<!doctype html>"));
+        }
+
+        private static async Task<Boolean> WaitFor(Func<Boolean> condition)
+        {
+            for (var i = 0; i < 300 && !condition(); i++)
+            {
+                await Task.Delay(10);
+            }
+
+            return condition();
+        }
+
+        [Test]
+        public async Task WorkerRunsAModuleWithItsImports()
+        {
+            var document = await OpenWithSourcesAsync(
+                ("https://example.com/worker.js", "import { v } from './dep.js'; self.__v = v + 1;"),
+                ("https://example.com/dep.js", "export const v = 41;"));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js", new AngleSharp.Js.Dom.WorkerOptions { Type = "module" });
+
+            Assert.IsTrue(await WaitFor(() => worker.IsInitialized || worker.StartupError != null));
+            Assert.IsNull(worker.StartupError, worker.StartupError?.ToString());
+            Assert.AreEqual("42", worker.EvaluateInWorker("String(self.__v)")?.ToString());
+            worker.Terminate();
+        }
+
+        [Test]
+        public async Task WorkerKnowsItsAddress()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/a/worker.js", ""));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/a/worker.js");
+
+            Assert.IsTrue(await WaitFor(() => worker.IsInitialized || worker.StartupError != null));
+            Assert.AreEqual("https://example.com/a/worker.js", worker.EvaluateInWorker("location.href")?.ToString());
+            worker.Terminate();
+        }
+
+        [Test]
+        public async Task ModuleSyntaxInAClassicWorkerGivesAnErrorEventAndPostingStaysQuiet()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/worker.js", "import 'https://example.com/dep.js';"));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+            var failed = false;
+            worker.Failed += (_, _) => failed = true;
+
+            Assert.IsTrue(await WaitFor(() => failed));
+            Assert.IsNotNull(worker.StartupError);
+            Assert.DoesNotThrow(() => worker.PostMessage("x"));
+            worker.Terminate();
+        }
+
+        [Test]
+        public async Task ScriptGetsAnErrorEventOfAWorkerAndCanPostToIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/worker.js", "not valid javascript ("));
+            document.ExecuteScript(@"
+                var w = new Worker('https://example.com/worker.js', { type: 'classic' });
+                w.onerror = function (e) { document.title = 'error:' + e.type; };
+                w.postMessage('sent right away');");
+
+            Assert.IsTrue(await WaitFor(() => document.Title == "error:error"), document.Title);
+        }
+
+        [Test]
+        public async Task UnknownWorkerTypeIsRefused()
+        {
+            var document = await OpenWithSourcesAsync();
+
+            Assert.Throws<ArgumentException>(() => new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/w.js", new AngleSharp.Js.Dom.WorkerOptions { Type = "other" }));
+        }
+
         [Test]
         public async Task WorkerConstructorShouldExistOnWindow()
         {
             var result = await "typeof Worker".EvalScriptAsync().ConfigureAwait(false);
             Assert.AreEqual("function", result);
+        }
+
+        [Test]
+        public async Task WorkerReceivesBytesAsArrayBuffer()
+        {
+            var config = Configuration.Default
+                .WithJs()
+                .WithEventLoop()
+                .With(new DelayedRequester(0, "self.onmessage = function (event) { self.__kind = event.data instanceof ArrayBuffer ? new Uint8Array(event.data)[0] : 'other'; };"))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+
+            var context = BrowsingContext.New(config);
+            var document = await context.OpenAsync(request => request.Content("<!doctype html><div></div>")).ConfigureAwait(false);
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+            var retries = 200;
+
+            while (retries-- > 0 && !worker.IsInitialized && worker.StartupError == null)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            worker.PostMessage(new Byte[] { 42 });
+            retries = 200;
+
+            while (retries-- > 0 && worker.EvaluateInWorker("String(self.__kind)")?.ToString() == "undefined")
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            Assert.AreEqual("42", worker.EvaluateInWorker("String(self.__kind)")?.ToString());
         }
 
         [Test]

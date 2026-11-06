@@ -5,6 +5,7 @@ namespace AngleSharp.Js.Cache
     using System;
     using System.Collections.Concurrent;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Describes what building the arguments of a method needs to know about it.
@@ -30,9 +31,17 @@ namespace AngleSharp.Js.Cache
             InitDict = method.GetCustomAttribute<DomInitDictAttribute>();
             ReturnType = method.GetCustomAttribute<DomReturnTypeAttribute>()?.ReturnType;
             TakesWindow = parameters.Length > 0 && parameters[0].ParameterType == typeof(IWindow);
+            GivenConversion = (method as MethodInfo)?.ReturnType.GetGivenConversion();
+            HasReceiver = TakesWindow || (method.IsStatic && method.IsDefined(typeof(ExtensionAttribute), false));
             TakesParamArray = parameters.Length > 0 &&
                 parameters[parameters.Length - 1].GetCustomAttribute<ParamArrayAttribute>() != null;
         }
+
+        /// <summary>
+        /// Gets the value a script should receive for what the method returned.
+        /// </summary>
+        public Object ToGiven(Object value) =>
+            GivenConversion == null || value == null ? value : GivenConversion.Invoke(null, new[] { value });
 
         public static MethodDescription Of(MethodBase method) =>
             _descriptions.GetOrAdd(method, m => new MethodDescription(m));
@@ -44,6 +53,18 @@ namespace AngleSharp.Js.Cache
         public Type ReturnType { get; }
 
         public Boolean TakesWindow { get; }
+
+        /// <summary>
+        /// Gets if the first parameter is not an argument of the call, i.e., it is the object
+        /// an extension method extends or the window that is provided implicitly.
+        /// </summary>
+        public Boolean HasReceiver { get; }
+
+        /// <summary>
+        /// Gets how the value of a WebIDL union is given to a script, if the method returns one.
+        /// Resolved here so that all other members only pay for looking at a null.
+        /// </summary>
+        public MethodInfo GivenConversion { get; }
 
         public Boolean TakesParamArray { get; }
     }

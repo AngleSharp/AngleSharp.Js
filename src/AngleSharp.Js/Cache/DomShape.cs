@@ -2,6 +2,7 @@ namespace AngleSharp.Js.Cache
 {
     using Jint.Native;
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Everything the prototype of one DOM type is built from: the member layout the engine
@@ -15,7 +16,7 @@ namespace AngleSharp.Js.Cache
     /// </remarks>
     sealed class DomShape
     {
-        public DomShape(Type type, Type baseType, String name, JsObjectShape shape, DomIndexers indexers, ConstructorDefinition constructor)
+        public DomShape(Type type, Type baseType, String name, JsObjectShape shape, DomIndexers indexers, ConstructorDefinition constructor, IReadOnlyDictionary<String, DomShapeBuilder.Member> members)
         {
             Type = type;
             BaseType = baseType;
@@ -23,6 +24,7 @@ namespace AngleSharp.Js.Cache
             Shape = shape;
             Indexers = indexers;
             Constructor = constructor;
+            Members = members;
         }
 
         /// <summary>
@@ -57,5 +59,11 @@ namespace AngleSharp.Js.Cache
         /// not exposed as one under any name the engine's libraries define.
         /// </summary>
         public ConstructorDefinition Constructor { get; }
+
+        /// <summary>
+        /// Gets the members of the type, including the inherited ones, which are not declared by
+        /// the layout if the prototype above has them.
+        /// </summary>
+        public IReadOnlyDictionary<String, DomShapeBuilder.Member> Members { get; }
     }
 }
