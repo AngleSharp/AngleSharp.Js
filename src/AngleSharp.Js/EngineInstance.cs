@@ -354,6 +354,33 @@ namespace AngleSharp.Js
             _scriptDepth--;
         }
 
+        internal void RunTask(Action action)
+        {
+            var previous = Current;
+
+            try
+            {
+                lock (_engine)
+                {
+                    Current = this;
+                    EnterScript();
+
+                    try
+                    {
+                        action();
+                    }
+                    finally
+                    {
+                        LeaveScript();
+                    }
+                }
+            }
+            finally
+            {
+                Current = previous;
+            }
+        }
+
         private void Settle(Action settle)
         {
             void Run()
@@ -604,15 +631,18 @@ namespace AngleSharp.Js
         /// </summary>
         public JsValue RunScript(String source, String type, String sourceUrl, Position position)
         {
-            EnterScript();
+            lock (_engine)
+            {
+                EnterScript();
 
-            try
-            {
-                return RunScriptCore(source, type, sourceUrl, position);
-            }
-            finally
-            {
-                LeaveScript();
+                try
+                {
+                    return RunScriptCore(source, type, sourceUrl, position);
+                }
+                finally
+                {
+                    LeaveScript();
+                }
             }
         }
 

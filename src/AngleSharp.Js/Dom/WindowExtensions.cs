@@ -2,11 +2,12 @@ namespace AngleSharp.Js.Dom
 {
     using AngleSharp;
     using AngleSharp.Attributes;
-    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Js;
     using AngleSharp.Js.Attributes;
+    using AngleSharp.Scripting;
     using Jint;
     using System;
     using System.Runtime.CompilerServices;
@@ -37,17 +38,22 @@ namespace AngleSharp.Js.Dom
         {
             if (WorkerOwners.TryGetValue(window, out var owner))
             {
-                owner.PostMessageToOwner(message);
+                owner.PostMessageToOwner(message, transfer ?? (targetOrigin is String ? null : targetOrigin));
                 return;
             }
 
-            PostMessageFrom(EngineInstance.Current?.Window.Value is IWindow sender ? sender.Document : window.Document, window, message, targetOrigin);
+            PostMessageFrom(
+                EngineInstance.Current?.Window.Value is IWindow sender ? sender.Document : window.Document,
+                window,
+                message,
+                targetOrigin,
+                transfer ?? (targetOrigin is String ? null : targetOrigin));
         }
 
-        internal static void PostMessageFrom(IDocument sender, IWindow target, Object message, Object targetOrigin)
+        internal static void PostMessageFrom(IDocument sender, IWindow target, Object message, Object targetOrigin, Object transfer = null)
         {
             var origin = ResolveTargetOrigin(sender, targetOrigin);
-            var data = StructuredClone.Clone(message);
+            transfer = transfer ?? (targetOrigin is String ? null : targetOrigin);
 
             // who it is for may have moved on; then it isn't delivered
             if (origin != "*" && origin != OriginPolicy.Serialize(target.Document))
@@ -55,8 +61,10 @@ namespace AngleSharp.Js.Dom
                 return;
             }
 
-            var ev = new MessageEvent("message", false, false, data, OriginPolicy.Serialize(sender), String.Empty, sender.DefaultView);
-            target.Document.Context.GetService<IEventLoop>().EnqueueAsync(_ => target.Fire(ev));
+            var data = MessageTransfer.Clone(message, transfer, target.Document);
+            MessageTaskQueue.Enqueue(
+                target.Document,
+                () => DeliverMessage(target.Document, data, OriginPolicy.Serialize(sender), sender.DefaultView, ev => target.Fire(ev)));
         }
 
         // given as a string, or in the options
@@ -97,14 +105,43 @@ namespace AngleSharp.Js.Dom
         {
             if (WorkerOwners.TryGetValue(window, out var owner))
             {
-                owner.PostMessageToOwner(message);
+                owner.PostMessageToOwner(message, transfer);
                 return;
             }
 
-            var ev = new MessageEvent("message", false, false, message, targetOrigin);
             var document = window.Document;
-            var loop = document.Context.GetService<IEventLoop>();
-            loop.EnqueueAsync(_ => window.Fire(ev));
+            var origin = ResolveTargetOrigin(document, targetOrigin);
+
+            if (origin != "*" && origin != OriginPolicy.Serialize(document))
+            {
+                return;
+            }
+
+            var data = MessageTransfer.Clone(message, transfer, document);
+            MessageTaskQueue.Enqueue(document, () => DeliverMessage(document, data, OriginPolicy.Serialize(document), document.DefaultView, ev => window.Fire(ev)));
+        }
+
+        internal static void DeliverMessage(IDocument document, SerializedMessage message, String origin, IWindow source, Action<Event> dispatch)
+        {
+            message.SetDocument(document);
+            Object data = message.Data;
+
+            try
+            {
+                var scripting = document.Context?.GetService<JsScriptingService>();
+
+                if (scripting != null)
+                {
+                    data = data.ToJsValue(scripting.GetOrCreateInstance(document));
+                }
+            }
+            catch (Exception)
+            {
+                dispatch(new Event("messageerror"));
+                return;
+            }
+
+            dispatch(new MessageEvent("message", false, false, data, origin, String.Empty, source, message.Ports));
         }
 
         internal static void RegisterWorkerWindow(IWindow workerWindow, Worker owner)

@@ -18,9 +18,12 @@ namespace AngleSharp.Js.Dom
     {
         private const Int32 MaxDepth = 256;
 
-        public static Object Clone(Object value) => Clone(value, new HashSet<Object>(), 0);
+        public static Object Clone(Object value) => Clone(value, new HashSet<Object>(), null, 0);
 
-        private static Object Clone(Object value, HashSet<Object> path, Int32 depth)
+        public static Object Clone(Object value, IDictionary<MessagePort, MessagePort> ports) =>
+            Clone(value, new HashSet<Object>(), ports, 0);
+
+        private static Object Clone(Object value, HashSet<Object> path, IDictionary<MessagePort, MessagePort> ports, Int32 depth)
         {
             switch (value)
             {
@@ -32,18 +35,24 @@ namespace AngleSharp.Js.Dom
                 case DateTime:
                 case Byte[]:
                     return value;
+                case MessagePort port when ports != null && ports.TryGetValue(port, out var transferredPort):
+                    return transferredPort;
+                case MessagePort:
+                    throw new DomException(DomError.DataClone);
                 case JsValue js when js is not ObjectInstance:
-                    return js.IsUndefined() || js.IsNull() ? null : Clone(js.ToObject(), path, depth);
+                    return js.IsUndefined() ? JsValue.Undefined : js.IsNull() ? null : Clone(js.ToObject(), path, ports, depth);
                 case ObjectInstance source when source is not IDomProxy && source is not Function && depth < MaxDepth && path.Add(source):
-                    var result = CloneObject(source, path, depth);
+                    var result = CloneObject(source, path, ports, depth);
                     path.Remove(source);
                     return result;
+                case ObjectInstance source when source is IDomProxy proxy && proxy.Value is MessagePort port:
+                    return ports != null && ports.TryGetValue(port, out var transferredProxy) ? transferredProxy : throw new DomException(DomError.DataClone);
                 default:
                     throw new DomException(DomError.DataClone);
             }
         }
 
-        private static Object CloneObject(ObjectInstance source, HashSet<Object> path, Int32 depth)
+        private static Object CloneObject(ObjectInstance source, HashSet<Object> path, IDictionary<MessagePort, MessagePort> ports, Int32 depth)
         {
             if (source is JsDate date)
             {
@@ -61,7 +70,7 @@ namespace AngleSharp.Js.Dom
 
                 for (var i = 0; i < items.Length; i++)
                 {
-                    items[i] = Clone(array.Get(i), path, depth + 1);
+                    items[i] = Clone(array.Get(i), path, ports, depth + 1);
                 }
 
                 return items;
@@ -73,7 +82,7 @@ namespace AngleSharp.Js.Dom
             {
                 if (key.IsString() && source.GetOwnProperty(key).Enumerable)
                 {
-                    record[key.AsString()] = Clone(source.Get(key), path, depth + 1);
+                    record[key.AsString()] = Clone(source.Get(key), path, ports, depth + 1);
                 }
             }
 

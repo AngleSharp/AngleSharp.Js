@@ -48,6 +48,7 @@ Released on Friday, November 6 2026.
 - Fixed `postMessage` ignoring `targetOrigin`, giving it as the origin of the event, turning objects into strings, and not having a `source`; messages are copied by the structured clone algorithm, and the options form is supported
 - Added `clearResourceTimings` and `setResourceTimingBufferSize` to `performance`
 - Added `{ type: 'module' }` and `onerror` to `Worker`, with imports being loaded by the worker
+- Added `MessageChannel` with queued message delivery, structured cloning, and transferable ports for windows and workers
 - Added `IScriptValueCloner`, so that values of script can be kept, e.g. by IndexedDB
 - Added `structuredClone`, `origin`, `isSecureContext` and `length` to the window
 - Added `DOMException`, which is what the DOM now throws for scripts: an `Error` with the `name` and `code` of the standard, also available as a constructor and with its constants

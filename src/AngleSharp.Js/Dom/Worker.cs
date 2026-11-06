@@ -5,6 +5,7 @@ namespace AngleSharp.Js.Dom
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Io;
+    using AngleSharp.Js;
     using AngleSharp.Text;
     using AngleSharp.Scripting;
     using System;
@@ -28,7 +29,7 @@ namespace AngleSharp.Js.Dom
         private readonly JsScriptingService _scripting;
         private readonly IEventLoop _windowLoop;
         private readonly IEventLoop _workerLoop;
-        private readonly Queue<Object> _pendingMessages;
+        private readonly Queue<SerializedMessage> _pendingMessages;
 
         private IDocument _workerDocument;
         private Boolean _initialized;
@@ -81,7 +82,7 @@ namespace AngleSharp.Js.Dom
             _scripting = parentContext.GetService<JsScriptingService>() ?? throw new DomException(DomError.NotSupported);
             EnsureLoaderAvailable();
             var workerUrl = ResolveUrl(source);
-            _pendingMessages = new Queue<Object>();
+            _pendingMessages = new Queue<SerializedMessage>();
 
             // Check the parent's capabilities before starting a thread that a failed constructor
             // would leave unreachable. Release it if context creation or scheduling fails too.
@@ -174,6 +175,16 @@ namespace AngleSharp.Js.Dom
             remove { RemoveEventListener(MessageEventName, value, false); }
         }
 
+        /// <summary>
+        /// Adds or removes the handler for a message that could not be deserialized.
+        /// </summary>
+        [DomName("onmessageerror")]
+        public event DomEventHandler MessageError
+        {
+            add { AddEventListener("messageerror", value, false); }
+            remove { RemoveEventListener("messageerror", value, false); }
+        }
+
         #endregion
 
         #region Methods
@@ -182,7 +193,7 @@ namespace AngleSharp.Js.Dom
         /// Posts a message to the running worker script.
         /// </summary>
         [DomName("postMessage")]
-        public void PostMessage(Object message)
+        public void PostMessage(Object message, Object transfer = null)
         {
             if (_terminated)
             {
@@ -195,17 +206,19 @@ namespace AngleSharp.Js.Dom
                 return;
             }
 
+            var serialized = MessageTransfer.Clone(message, transfer, _initialized ? _workerDocument : null);
+
             if (!_initialized)
             {
                 lock (_pendingMessages)
                 {
-                    _pendingMessages.Enqueue(message);
+                    _pendingMessages.Enqueue(serialized);
                 }
 
                 return;
             }
 
-            Enqueue(_workerLoop, TaskPriority.Normal, () => DeliverToWorker(message));
+            Enqueue(_workerLoop, TaskPriority.Normal, () => DeliverToWorker(serialized));
         }
 
         /// <summary>
@@ -226,7 +239,7 @@ namespace AngleSharp.Js.Dom
 
         #region Helpers
 
-        internal void PostMessageToOwner(Object message)
+        internal void PostMessageToOwner(Object message, Object transfer = null)
         {
             if (_terminated)
             {
@@ -234,8 +247,13 @@ namespace AngleSharp.Js.Dom
             }
 
             var origin = _workerDocument?.Origin ?? String.Empty;
-            var ev = new MessageEvent(MessageEventName, false, false, message, origin, String.Empty, null, null);
-            Enqueue(_windowLoop, TaskPriority.Normal, () => Dispatch(ev));
+            var serialized = MessageTransfer.Clone(message, transfer, _window.Document);
+            MessageTaskQueue.Enqueue(_window.Document, () => WindowExtensions.DeliverMessage(
+                _window.Document,
+                serialized,
+                origin,
+                null,
+                ev => Dispatch(ev)));
         }
 
         private void ReportStartupError(Url source, Exception error)
@@ -267,20 +285,29 @@ namespace AngleSharp.Js.Dom
             }
         }
 
-        private void DeliverToWorker(Object message)
+        private void DeliverToWorker(SerializedMessage message)
         {
-            var engine = _scripting.GetOrCreateJint(_workerDocument);
+            message.SetDocument(_workerDocument);
+            var instance = _scripting.GetOrCreateInstance(_workerDocument);
+            var engine = instance.Jint;
+            Object data;
 
-            //  An array would reach the other engine as a wrapper of the CLR object.
-            if (message is Byte[] bytes)
+            try
             {
-                engine.SetValue(WorkerIncomingMessageName, engine.Intrinsics.ArrayBuffer.Construct(bytes));
+                data = message.Data.ToJsValue(instance);
             }
-            else
+            catch (Exception)
             {
-                engine.SetValue(WorkerIncomingMessageName, message);
+                Enqueue(_workerLoop, TaskPriority.Normal, () => _scripting.EvaluateScript(
+                    _workerDocument,
+                    "if (self && typeof self.onmessageerror === 'function') self.onmessageerror({ type: 'messageerror' });",
+                    MimeTypeNames.DefaultJavaScript,
+                    _workerDocument.Url));
+                return;
             }
 
+            engine.SetValue(WorkerIncomingMessageName, data);
+            engine.SetValue(WorkerIncomingPortsName, message.Ports.ToJsValue(instance));
             _scripting.EvaluateScript(_workerDocument, WorkerDispatchScript, MimeTypeNames.DefaultJavaScript, _workerDocument.Url);
         }
 
@@ -359,9 +386,11 @@ if (typeof self === 'undefined') {
 }
 })();";
 
+        private const String WorkerIncomingPortsName = "__anglesharpIncomingPorts";
+
         private const String WorkerDispatchScript = @"(function () {
 if (self && typeof self.onmessage === 'function') {
-    self.onmessage({ data: __anglesharpIncomingMessage });
+    self.onmessage({ data: __anglesharpIncomingMessage, ports: __anglesharpIncomingPorts });
 }
     })();";
 

@@ -69,7 +69,7 @@ namespace AngleSharp.Js.Dom
         /// </summary>
         [DomName("postMessage")]
         public void PostMessage(Object message, Object targetOrigin = null, Object transfer = null) =>
-            WindowExtensions.PostMessageFrom(_viewer, _target, message, targetOrigin);
+            WindowExtensions.PostMessageFrom(_viewer, _target, message, targetOrigin, transfer);
 
         /// <summary>
         /// Focuses the window.
