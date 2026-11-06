@@ -62,9 +62,9 @@ namespace AngleSharp.Js.Tests
 
         private static async Task Until(Func<Boolean> condition)
         {
-            for (var i = 0; i < 500 && !condition(); i++)
+            for (var i = 0; i < 200 && !condition(); i++)
             {
-                await Task.Delay(20).ConfigureAwait(false);
+                await Task.Delay(20);
             }
 
             Assert.IsTrue(condition(), "The condition never held.");
