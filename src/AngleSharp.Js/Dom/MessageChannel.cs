@@ -557,11 +557,25 @@ namespace AngleSharp.Js.Dom
 
             if (loop != null)
             {
-                loop.Enqueue(action, TaskPriority.Normal);
+                loop.Enqueue(_ => Execute(document, action), TaskPriority.Normal);
                 return;
             }
 
             Queues.GetValue(document, static _ => new TaskQueue()).Enqueue(document, action);
+        }
+
+        private static void Execute(IDocument document, Action action)
+        {
+            var scripting = document.Context?.GetService<JsScriptingService>();
+
+            if (scripting != null)
+            {
+                scripting.GetOrCreateInstance(document).RunTask(action);
+            }
+            else
+            {
+                action();
+            }
         }
 
         private sealed class TaskQueue
@@ -620,16 +634,7 @@ namespace AngleSharp.Js.Dom
 
                 try
                 {
-                    var scripting = document.Context?.GetService<JsScriptingService>();
-
-                    if (scripting != null)
-                    {
-                        scripting.GetOrCreateInstance(document).RunTask(action);
-                    }
-                    else
-                    {
-                        action();
-                    }
+                    Execute(document, action);
                 }
                 catch (Exception error)
                 {
