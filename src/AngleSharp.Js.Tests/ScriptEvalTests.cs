@@ -324,6 +324,47 @@ s.src='//api.whichbrowser.net/rel/detect.js?' + p.join('&');d.getElementsByTagNa
         }
 
         [Test]
+        public async Task InsertedScriptRunsBeforeAppendChildReturns()
+        {
+            // MediaWiki runs the modules cached in localStorage like this (domEval), and asks for
+            // the ones still missing right after
+            var result = await EvaluateComplexScriptAsync(
+                "var order = []; var s = document.createElement('script'); s.text = 'order.push(1)'; document.head.appendChild(s); order.push(2); s.remove(); document.body.appendChild(s); order.push(3);",
+                SetResult("order.join()"));
+            Assert.AreEqual("1,2,3", result);
+        }
+
+        [Test]
+        public async Task ScriptInsertedByAListenerRunsBeforeAppendChildReturns()
+        {
+            var result = await EvaluateComplexScriptAsync(
+                "var order = []; document.addEventListener('x', function () { var s = document.createElement('script'); s.text = 'order.push(1)'; document.head.appendChild(s); order.push(2); }); document.dispatchEvent(new Event('x'));",
+                SetResult("order.join()"));
+            Assert.AreEqual("1,2", result);
+        }
+
+        [Test]
+        public async Task InsertedScriptRunsOnlyOnce()
+        {
+            // AngleSharp evaluates the script later as well, which is skipped
+            var cfg = Configuration.Default.WithJs().WithEventLoop();
+            var html = "<!doctype html><script>window.count = 0; var s = document.createElement('script'); s.text = 'count++'; document.head.appendChild(s); document.body.appendChild(s);</script>";
+            var document = await BrowsingContext.New(cfg).OpenAsync(m => m.Content(html));
+            await Task.Delay(300);
+
+            Assert.AreEqual(1.0, document.ExecuteScript("count"));
+        }
+
+        [Test]
+        public async Task ErrorOfAnInsertedScriptDoesNotStopTheOneInsertingIt()
+        {
+            var result = await EvaluateComplexScriptAsync(
+                "var order = []; var s = document.createElement('script'); s.text = 'order.push(1); throw new Error(\"inner\")'; document.head.appendChild(s); order.push(2);",
+                SetResult("order.join()"));
+            Assert.AreEqual("1,2", result);
+        }
+
+        [Test]
         public async Task QueryUserAgentShouldMatchAgent()
         {
             var userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36 OPR/32.0.1948.19 (Edition beta)";

@@ -55,6 +55,7 @@ namespace AngleSharp.Js
 
         private readonly Engine _engine;
         private readonly TimeSpan _regexTimeout;
+        private readonly Boolean _retainFunctionSourceText;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
@@ -85,6 +86,9 @@ namespace AngleSharp.Js
             // Left alone, the JS call stack is the native one, and a runaway recursion
             // takes the process down with an uncatchable StackOverflowException.
             engineOptions.Constraints.MaxExecutionStackCount = options.MaxCallStackDepth > 0 ? options.MaxCallStackDepth : StackGuardDisabled;
+            // for what the engine parses itself (eval, new Function, modules)
+            engineOptions.RetainFunctionSourceText = options.RetainFunctionSourceText;
+            _retainFunctionSourceText = options.RetainFunctionSourceText;
             var creator = window.Document.Context.GetService<EngineCreator>();
             _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(window, engineOptions))
                 ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
@@ -133,6 +137,11 @@ namespace AngleSharp.Js
         public IEnumerable<Assembly> Libs => _libs.Assemblies;
 
         public DomNodeInstance Window => _window;
+
+        /// <summary>
+        /// Gets the document the engine runs the scripts of.
+        /// </summary>
+        public IDocument Document => _document;
 
         /// <summary>
         /// The engine of the script that called into the DOM last on this thread.
@@ -657,10 +666,10 @@ namespace AngleSharp.Js
             {
                 if (MimeTypeNames.IsJavaScript(type))
                 {
-                    var prepared = ScriptCache.GetOrCreate(source, sourceUrl, position, _regexTimeout);
+                    var prepared = ScriptCache.GetOrCreate(source, sourceUrl, position, _regexTimeout, _retainFunctionSourceText);
                     //  An invalid result means the source did not parse; hand it to the
                     //  engine as text so the syntax error is reported as usual.
-                    return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source, sourceUrl, new ScriptParsingOptions { SourceOffset = position, RegexTimeout = _regexTimeout });
+                    return prepared.IsValid ? _engine.Evaluate(prepared) : _engine.Evaluate(source, sourceUrl, new ScriptParsingOptions { SourceOffset = position, RegexTimeout = _regexTimeout, RetainFunctionSourceText = _retainFunctionSourceText });
                 }
                 else if (type.Isi("importmap"))
                 {

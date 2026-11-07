@@ -1,3 +1,10 @@
+# 1.2.1
+
+Released on Saturday, November 7 2026.
+
+- Fixed a script inserted by script (e.g. `head.appendChild(script)` with its text) running after the script inserting it instead of before the insertion returns (MediaWiki ran the modules cached in `localStorage` twice: "module already implemented")
+- Fixed `Function.prototype.toString()` giving `function name() { [native code] }` for the functions of scripts instead of their source (MediaWiki stores its modules as the source of their functions); `JsScriptingOptions.RetainFunctionSourceText` turns keeping the source off
+
 # 1.2.0
 
 Released on Friday, November 6 2026.
