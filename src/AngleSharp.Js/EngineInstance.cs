@@ -392,22 +392,7 @@ namespace AngleSharp.Js
 
         private void Settle(Action settle)
         {
-            void Run()
-            {
-                lock (_engine)
-                {
-                    EnterScript();
-
-                    try
-                    {
-                        settle();
-                    }
-                    finally
-                    {
-                        LeaveScript();
-                    }
-                }
-            }
+            void Run() => RunTask(settle);
 
             var loop = GetEventLoop();
 
