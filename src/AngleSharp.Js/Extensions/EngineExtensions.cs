@@ -2,6 +2,7 @@ namespace AngleSharp.Js
 {
     using AngleSharp.Attributes;
     using AngleSharp.Dom;
+    using AngleSharp.Html.Dom;
     using AngleSharp.Js.Cache;
     using Jint;
     using Jint.Native;
@@ -592,6 +593,15 @@ namespace AngleSharp.Js
             }
         }
 
+        //  a script inserted by the call runs before it returns, like in browsers
+        private static void RunInsertedScripts(EngineInstance instance, List<IHtmlScriptElement> inserted)
+        {
+            if (inserted != null)
+            {
+                InsertedScripts.RunPrepared(instance, instance.Document, inserted);
+            }
+        }
+
         public static JsValue Call(this EngineInstance instance, MethodInfo method, JsValue thisObject, JsValue[] arguments)
         {
             if (method != null)
@@ -626,14 +636,20 @@ namespace AngleSharp.Js
                         newArgs[0] = (JsValue)nodeInstance;
                         Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
                         var parameters = instance.BuildArgs(method, newArgs);
-                        return description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
+                        var inserted = InsertedScripts.FindUnstarted(null, parameters);
+                        var result = description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
+                        RunInsertedScripts(instance, inserted);
+                        return result;
                     }
                     else
                     {
                         var target = nodeInstance.Value;
                         var bound = BindToTarget(method, target);
                         var parameters = instance.BuildArgs(bound, arguments);
-                        return description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
+                        var inserted = InsertedScripts.FindUnstarted(target, parameters);
+                        var result = description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
+                        RunInsertedScripts(instance, inserted);
+                        return result;
                     }
                 }
                 catch (TargetInvocationException ex)

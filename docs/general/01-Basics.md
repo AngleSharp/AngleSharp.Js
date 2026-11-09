@@ -77,6 +77,22 @@ var configuration = Configuration.Default
     });
 ```
 
+### Keep the source of functions
+
+Like in browsers, `Function.prototype.toString()` gives the source of a function written in a
+script, which some pages rely on (e.g. MediaWiki stores the code of its modules this way). This
+keeps the source of the scripts in memory as long as their functions live; setting
+`JsScriptingOptions.RetainFunctionSourceText` to `false` turns it off, and `toString()` then gives
+`function name() { [native code] }`.
+
+```cs
+var configuration = Configuration.Default
+    .WithJs(new JsScriptingOptions
+    {
+        RetainFunctionSourceText = false,
+    });
+```
+
 ## Execute JavaScript
 
 HTML `<script>` elements execute while AngleSharp processes the document. For a script you

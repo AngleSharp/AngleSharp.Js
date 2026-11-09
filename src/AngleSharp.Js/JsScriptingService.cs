@@ -93,6 +93,12 @@ namespace AngleSharp.Scripting
         /// <param name="cancel">The cancellation token to transport.</param>
         public async Task EvaluateScriptAsync(IResponse response, ScriptOptions options, CancellationToken cancel)
         {
+            //  a script inserted by script ran then already (see InsertedScripts)
+            if (InsertedScripts.TakeRan(options.Element))
+            {
+                return;
+            }
+
             var encoding = options.Encoding ?? Encoding.UTF8;
 
             using (var reader = new StreamReader(response.Content, encoding, true))

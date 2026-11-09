@@ -10,7 +10,8 @@ namespace AngleSharp.Js.Cache
     /// <summary>
     /// Caches the parsed and analyzed form of scripts. A prepared script is
     /// documented by Jint as reusable and thread-safe, so the same one can serve
-    /// every document that runs the same source with the same regex timeout - a
+    /// every document that runs the same source with the same parsing options (the regex
+    /// timeout, and if the source of functions is kept) - a
     /// page loading a library ends up parsing it once instead of once per document.
     /// </summary>
     static class ScriptCache
@@ -28,9 +29,9 @@ namespace AngleSharp.Js.Cache
         /// source could not be prepared and should be handed to the engine as text,
         /// so that the engine reports the syntax error itself.
         /// </summary>
-        public static Prepared<Script> GetOrCreate(String source, String sourceUrl, Position position, TimeSpan regexTimeout)
+        public static Prepared<Script> GetOrCreate(String source, String sourceUrl, Position position, TimeSpan regexTimeout, Boolean retainFunctionSourceText = false)
         {
-            var key = new ScriptKey(source, sourceUrl, position, regexTimeout);
+            var key = new ScriptKey(source, sourceUrl, position, regexTimeout, retainFunctionSourceText);
 
             if (_scripts.TryGetValue(key, out var prepared))
             {
@@ -41,7 +42,7 @@ namespace AngleSharp.Js.Cache
             {
                 prepared = Engine.PrepareScript(source, sourceUrl, options: new ScriptPreparationOptions
                 {
-                    ParsingOptions = new ScriptParsingOptions { RegexTimeout = regexTimeout, SourceOffset = position },
+                    ParsingOptions = new ScriptParsingOptions { RegexTimeout = regexTimeout, SourceOffset = position, RetainFunctionSourceText = retainFunctionSourceText },
                 });
             }
             catch (ScriptPreparationException)
@@ -63,9 +64,11 @@ namespace AngleSharp.Js.Cache
             private readonly String _sourceUrl;
             private readonly Position _position;
             private readonly TimeSpan _regexTimeout;
+            private readonly Boolean _retainFunctionSourceText;
 
-            public ScriptKey(String source, String sourceUrl, Position position, TimeSpan regexTimeout)
+            public ScriptKey(String source, String sourceUrl, Position position, TimeSpan regexTimeout, Boolean retainFunctionSourceText)
             {
+                _retainFunctionSourceText = retainFunctionSourceText;
                 _source = source ?? throw new ArgumentNullException(nameof(source));
                 _sourceUrl = sourceUrl;
                 _position = position;
@@ -76,7 +79,8 @@ namespace AngleSharp.Js.Cache
                 String.Equals(_source, other._source, StringComparison.Ordinal) &&
                 String.Equals(_sourceUrl, other._sourceUrl, StringComparison.Ordinal) &&
                 _position.Equals(other._position) &&
-                _regexTimeout == other._regexTimeout;
+                _regexTimeout == other._regexTimeout &&
+                _retainFunctionSourceText == other._retainFunctionSourceText;
 
             public override Boolean Equals(Object obj) => obj is ScriptKey other && Equals(other);
 
