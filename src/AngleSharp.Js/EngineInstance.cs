@@ -68,6 +68,7 @@ namespace AngleSharp.Js
         private JsValue _domException;
         private JsValue _lastReportedError;
         private Int32 _inlineModules;
+        private JsValue _currentEvent = JsValue.Undefined;
         private readonly List<KeyValuePair<JsValue, JsValue>> _unhandledRejections = new List<KeyValuePair<JsValue, JsValue>>();
 
         #endregion
@@ -128,6 +129,12 @@ namespace AngleSharp.Js
 
             _engine.Global.Prototype = _window.Prototype;
             _engine.Advanced.PromiseRejectionTracker += OnPromiseRejection;
+
+            //  window.event is the event a listener runs for, undefined otherwise (HTML 7.2.2.3);
+            //  scripts read it as a global, so a missing one throws (e.g. Elementor's carousels)
+            var currentEvent = CreateCurrentEventProperty();
+            _window.FastSetProperty("event", currentEvent);
+            _engine.Global.FastSetProperty("event", currentEvent);
         }
 
         #endregion
@@ -332,6 +339,33 @@ namespace AngleSharp.Js
 
             return completion.Task;
         }
+
+        /// <summary>
+        /// Gets or sets the event the listener running now was called for (window.event), which
+        /// is undefined outside of listeners.
+        /// </summary>
+        public JsValue CurrentEvent
+        {
+            get => _currentEvent;
+            set => _currentEvent = value ?? JsValue.Undefined;
+        }
+
+        //  [Replaceable]: script assigning the property replaces it with its value
+        private PropertyDescriptor CreateCurrentEventProperty() => new GetSetPropertyDescriptor(
+            new ClrFunction(_engine, "get event", (_, _) => _currentEvent),
+            new ClrFunction(_engine, "set event", (self, arguments) =>
+            {
+                var value = arguments.Length > 0 ? arguments[0] : JsValue.Undefined;
+
+                if (self is ObjectInstance target)
+                {
+                    target.FastSetProperty("event", new PropertyDescriptor(value, true, true, true));
+                }
+
+                return JsValue.Undefined;
+            }),
+            false,
+            true);
 
         /// <summary>
         /// Tells that the host is about to run script, e.g. a timer or a listener.

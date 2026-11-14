@@ -1,3 +1,9 @@
+# 1.2.2
+
+Released on Saturday, November 14 2026.
+
+- Added `window.event`, the event a listener or an event handler runs for, undefined otherwise
+
 # 1.2.1
 
 Released on Saturday, November 7 2026.

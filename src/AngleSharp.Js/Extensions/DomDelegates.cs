@@ -124,8 +124,10 @@ namespace AngleSharp.Js
         {
             var objAsJs = obj.ToJsValue(engine);
             var evAsJs = ev.ToJsValue(engine);
+            var previous = engine.CurrentEvent;
 
             engine.EnterScript();
+            engine.CurrentEvent = evAsJs;
 
             try
             {
@@ -137,6 +139,7 @@ namespace AngleSharp.Js
             }
             finally
             {
+                engine.CurrentEvent = previous;
                 engine.LeaveScript();
             }
         };
@@ -148,7 +151,9 @@ namespace AngleSharp.Js
         public static DomEventHandler ToEventHandler(this Function function, EngineInstance engine) => (obj, ev) =>
         {
             var sender = obj.ToJsValue(engine);
+            var previous = engine.CurrentEvent;
             engine.EnterScript();
+            engine.CurrentEvent = ev.ToJsValue(engine);
 
             try
             {
@@ -185,6 +190,7 @@ namespace AngleSharp.Js
             }
             finally
             {
+                engine.CurrentEvent = previous;
                 engine.LeaveScript();
             }
         };
