@@ -1,7 +1,8 @@
 # 1.2.2
 
-Released on Saturday, November 14 2026.
+Released on Sunday, November 15 2026.
 
+- Added the `Audio` constructor (`new Audio(src)`)
 - Added `window.event`, the event a listener or an event handler runs for, undefined otherwise
 
 # 1.2.1

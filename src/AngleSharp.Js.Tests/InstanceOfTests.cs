@@ -170,6 +170,20 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual("True", result);
         }
 
+        [Test]
+        public async Task AudioIsAnInstanceOfHtmlAudioElement()
+        {
+            var result = await "new Audio() instanceof HTMLAudioElement".EvalScriptAsync();
+            Assert.AreEqual("True", result);
+        }
+
+        [Test]
+        public async Task AudioGetsItsSourceAndPreloads()
+        {
+            var result = await "(function (a) { return a.getAttribute('src') + ' ' + a.preload; })(new Audio('sound.mp3'))".EvalScriptAsync();
+            Assert.AreEqual("sound.mp3 auto", result);
+        }
+
         //  A DOM constructor is a function, so it inherits from Function.prototype.
 
         [Test]
