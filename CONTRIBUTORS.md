@@ -14,6 +14,7 @@ AngleSharp.Js contains code written by (in order of first pull request / commit)
 * [Bogdan Maltcev](https://github.com/badnickname)
 * [arekdygas](https://github.com/arekdygas)
 * [Przemysław Kłys](https://github.com/PrzemyslawKlys)
+* [Michael Thyregod](https://github.com/michaelthyregod)
 
 Without these awesome people AngleSharp.Js could not exist. Thanks to everyone for your contributions! :beers:
 

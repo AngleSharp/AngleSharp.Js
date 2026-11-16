@@ -357,6 +357,26 @@ namespace AngleSharp.Js.Dom
             return imageElement;
         }
 
+        /// <summary>
+        /// Creates a new IHtmlAudioElement instance, which preloads its source.
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="src">The source of the audio, if any.</param>
+        /// <returns></returns>
+        [DomConstructorFunction("Audio")]
+        public static IHtmlAudioElement Audio(this IWindow window, String src = null)
+        {
+            var audioElement = window.Document.CreateElement(TagNames.Audio) as IHtmlAudioElement;
+            audioElement.Preload = "auto";
+
+            if (src != null)
+            {
+                audioElement.Source = src;
+            }
+
+            return audioElement;
+        }
+
         private static IWindow GetWindow(IBrowsingContext context) => context?.Active?.DefaultView;
     }
 }
