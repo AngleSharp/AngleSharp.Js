@@ -15,6 +15,7 @@ namespace AngleSharp.Js
     sealed class DomConstructorInstance : Constructor
     {
         private readonly ConstructorInfo[] _constructors;
+        private readonly RegisteredInterface _registered;
         private readonly EngineInstance _instance;
         private readonly ObjectInstance _objectPrototype;
         private readonly Type _type;
@@ -26,6 +27,7 @@ namespace AngleSharp.Js
             _objectPrototype = engine.GetDomPrototype(definition.Type);
             _instance = engine;
             _constructors = definition.Overloads;
+            _registered = definition.Registered;
             _type = definition.Type;
 
             //  Jint's Constructor leaves the prototype at Object.prototype, which would make a
@@ -39,8 +41,17 @@ namespace AngleSharp.Js
             //  two directions still meet at one object without this end having to reach over.
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
 
-            AddStaticMembers(definition.Type.GetStaticMembers());
+            if (_registered != null)
+            {
+                _registered.AddStaticMembers(engine, this);
+            }
+            else
+            {
+                AddStaticMembers(definition.Type.GetStaticMembers());
+            }
         }
+
+        private Boolean IsConstructible => _constructors.Length > 0 || (_registered != null && _registered.IsConstructible);
 
         private void AddStaticMembers(StaticMember[] members)
         {
@@ -172,9 +183,15 @@ namespace AngleSharp.Js
                 return _instance.ConstructCustomElement(newTarget);
             }
 
-            if (_constructors.Length == 0)
+            if (!IsConstructible)
             {
                 throw new JavaScriptException(_instance.Jint.Intrinsics.TypeError, "Illegal constructor.");
+            }
+
+            if (_registered != null)
+            {
+                //  outside the try below, which would turn the error a script sees into a bare one
+                return WithPrototypeOf(_instance.GetDomNode(_registered.Construct(_instance, arguments)), newTarget);
             }
 
             try
@@ -182,15 +199,7 @@ namespace AngleSharp.Js
                 var constructor = _constructors.Length == 1 ? _constructors[0] : _constructors.SelectOverload(arguments);
                 var parameters = _instance.BuildArgs(constructor, arguments);
                 var obj = constructor.Invoke(parameters);
-                var node = _instance.GetDomNode(obj);
-
-                //  A class deriving from it has the instance on its prototype chain.
-                if (newTarget is ObjectInstance derived && !ReferenceEquals(derived, this) && derived.Get("prototype") is ObjectInstance prototype)
-                {
-                    node.Prototype = prototype;
-                }
-
-                return node;
+                return WithPrototypeOf(_instance.GetDomNode(obj), newTarget);
             }
             catch (TargetInvocationException ex)
             {
@@ -202,9 +211,20 @@ namespace AngleSharp.Js
             }
         }
 
+        //  A class deriving from it has the instance on its prototype chain.
+        private ObjectInstance WithPrototypeOf(ObjectInstance node, JsValue newTarget)
+        {
+            if (newTarget is ObjectInstance derived && !ReferenceEquals(derived, this) && derived.Get("prototype") is ObjectInstance prototype)
+            {
+                node.Prototype = prototype;
+            }
+
+            return node;
+        }
+
         protected override JsValue Call(JsValue thisObject, JsValue[] arguments)
         {
-            if (_constructors.Length > 0)
+            if (IsConstructible)
             {
                 throw new JavaScriptException("Only call the constructor with the new keyword.");
             }

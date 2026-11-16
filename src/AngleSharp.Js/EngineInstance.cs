@@ -60,6 +60,7 @@ namespace AngleSharp.Js
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
+        private readonly JsDomSurface _surface;
         private readonly DomNodeInstance _window;
         private readonly IDocument _document;
         private readonly JsImportMap _importMap;
@@ -75,7 +76,7 @@ namespace AngleSharp.Js
 
         #region ctor
 
-        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
+        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options, JsDomSurface surface = null)
         {
             _importMap = new JsImportMap();
             var engineOptions = new Options();
@@ -95,7 +96,8 @@ namespace AngleSharp.Js
                 ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
             _regexTimeout = engineOptions.Constraints.RegexTimeout;
             _libs = new LibrarySet(libs);
-            _prototypes = new PrototypeCache(_engine, _libs);
+            _surface = surface;
+            _prototypes = new PrototypeCache(_engine, _libs, surface);
             _references = new ReferenceCache();
             _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
 
@@ -115,6 +117,7 @@ namespace AngleSharp.Js
                 this.AddInstances(_window, lib);
             }
 
+            _surface?.Publish(this, _window);
             _window.FastSetProperty("DOMException", CreateDomExceptionProperty());
 
             foreach (var property in _window.GetOwnProperties())
@@ -144,6 +147,11 @@ namespace AngleSharp.Js
         public IEnumerable<Assembly> Libs => _libs.Assemblies;
 
         public DomNodeInstance Window => _window;
+
+        /// <summary>
+        /// Gets the registered DOM surface, or null if the surface is found by reflection.
+        /// </summary>
+        public JsDomSurface Surface => _surface;
 
         /// <summary>
         /// Gets the document the engine runs the scripts of.
@@ -476,34 +484,42 @@ namespace AngleSharp.Js
             {
                 var current = getter.Invoke(owner, Array.Empty<Object>());
 
-                if (current == null)
-                {
-                    return JsValue.Null;
-                }
-
-                // Nodes and windows already have a canonical proxy. Preserve its identity,
-                // concrete prototype and script-owned properties across SameObject getters.
-                if (IsOutOfReach(current))
-                {
-                    return JsValue.Null;
-                }
-
-                if (current is INode || current is IWindow)
-                {
-                    return GetDomNode(current);
-                }
-
-                var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
-
                 //  The interface of a collection doesn't tell that it is one, the class does: script
                 //  iterates over document.links or element.children like any other.
-                var type = current is ITokenList || current.GetType().GetGenericInterface(typeof(IHtmlCollection<>)) != null ? current.GetType() : getter.ReturnType;
-                return cache.GetOrUpdate(getter, current, () => CreateInstance(current, type));
+                var type = current != null && (current is ITokenList || current.GetType().GetGenericInterface(typeof(IHtmlCollection<>)) != null) ? current.GetType() : getter.ReturnType;
+                return GetSameObject(owner, getter, current, type);
             }
             catch (TargetInvocationException ex)
             {
                 throw ToScriptError(ex);
             }
+        }
+
+        /// <summary>
+        /// Gets the object script sees for what a [SameObject] attribute read, which is the one it
+        /// saw before - kept per owner and per attribute, the key standing for the latter.
+        /// </summary>
+        public JsValue GetSameObject(Object owner, Object key, Object current, Type type)
+        {
+            if (current == null)
+            {
+                return JsValue.Null;
+            }
+
+            // Nodes and windows already have a canonical proxy. Preserve its identity,
+            // concrete prototype and script-owned properties across SameObject getters.
+            if (IsOutOfReach(current))
+            {
+                return JsValue.Null;
+            }
+
+            if (current is INode || current is IWindow)
+            {
+                return GetDomNode(current);
+            }
+
+            var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
+            return cache.GetOrUpdate(key, current, () => CreateInstance(current, type));
         }
 
         /// <summary>
@@ -859,7 +875,7 @@ namespace AngleSharp.Js
 
         private ObjectInstance CreateInstance(Object obj, Type type)
         {
-            var collection = type.GetIndexedCollection();
+            var collection = _surface != null ? _surface.GetCollection(_prototypes.Canonicalize(type)) : type.GetIndexedCollection();
 
             if (collection != null)
             {
@@ -876,7 +892,7 @@ namespace AngleSharp.Js
         /// </summary>
         private ObjectInstance CreatePrototype(Type type)
         {
-            var shape = DomShapeCache.GetOrCreate(type, _libs, _engine);
+            var shape = _surface != null ? _surface.GetShape(type) : DomShapeCache.GetOrCreate(type, _libs, _engine);
             var prototype = shape.Shape.Instantiate(_engine, GetParentPrototype(type, shape.BaseType));
             JsObjectShape.SetHostState(prototype, new DomPrototypeState(this, prototype, shape));
             SetIterator(prototype, shape);
@@ -907,9 +923,9 @@ namespace AngleSharp.Js
 
         private sealed class SameObjectCache
         {
-            private readonly Dictionary<MethodInfo, ObjectInstance> _entries = new Dictionary<MethodInfo, ObjectInstance>();
+            private readonly Dictionary<Object, ObjectInstance> _entries = new Dictionary<Object, ObjectInstance>();
 
-            public ObjectInstance GetOrUpdate(MethodInfo getter, Object value, Func<ObjectInstance> create)
+            public ObjectInstance GetOrUpdate(Object getter, Object value, Func<ObjectInstance> create)
             {
                 lock (_entries)
                 {

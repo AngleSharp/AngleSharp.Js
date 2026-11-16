@@ -358,7 +358,14 @@ namespace AngleSharp.Js
                 }
                 else if (targetType.GetTypeInfo().IsEnum)
                 {
-                    if (value.IsString())
+                    if (value.IsString() && engine?.Surface != null)
+                    {
+                        if (engine.Surface.TryParseLiteral(targetType, TypeConverter.ToString(value), out var parsed))
+                        {
+                            return parsed;
+                        }
+                    }
+                    else if (value.IsString())
                     {
                         var literal = TypeConverter.ToString(value);
                         var member = targetType

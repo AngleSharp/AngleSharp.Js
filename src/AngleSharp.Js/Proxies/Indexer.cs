@@ -19,6 +19,7 @@ namespace AngleSharp.Js
     {
         private readonly MethodInfo _declared;
         private readonly ConcurrentDictionary<Type, MethodInfo> _resolved;
+        private readonly Func<Object, Object[], EngineInstance, Object> _invoke;
 
         public Indexer(MethodInfo declared)
         {
@@ -29,8 +30,23 @@ namespace AngleSharp.Js
             _resolved = declared.IsPublic ? null : new ConcurrentDictionary<Type, MethodInfo>();
         }
 
+        /// <summary>
+        /// Creates an indexer from a registered accessor, see <see cref="JsDomRegistration"/>. It
+        /// has to fail the way a reflected one does - with a TargetInvocationException - as that
+        /// is what the callers tell an index out of range by.
+        /// </summary>
+        public Indexer(Func<Object, Object[], EngineInstance, Object> invoke)
+        {
+            _invoke = invoke;
+        }
+
         public Object Invoke(Object target, Object[] arguments, EngineInstance engine = null)
         {
+            if (_invoke != null)
+            {
+                return _invoke.Invoke(target, arguments, engine);
+            }
+
             var method = Resolve(target.GetType());
 
             if (engine != null)

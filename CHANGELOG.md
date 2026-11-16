@@ -1,3 +1,9 @@
+# 1.3.0
+
+(tbd)
+
+- Added `WithJs(JsDomRegistration)` (and `JsScriptingOptions.DomRegistration`) to declare the DOM surface exposed to script with typed delegates instead of discovering it by reflection, which makes it usable for trimmed and native AoT applications
+
 # 1.2.2
 
 Released on Sunday, November 15 2026.

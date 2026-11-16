@@ -5,6 +5,7 @@ namespace AngleSharp.Scripting
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js;
+    using AngleSharp.Js.Cache;
     using AngleSharp.Js.Dom;
     using AngleSharp.Text;
     using Jint;
@@ -29,6 +30,7 @@ namespace AngleSharp.Scripting
         private readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
         private readonly Dictionary<String, Object> _external;
         private readonly JsScriptingOptions _options;
+        private readonly Lazy<JsDomSurface> _surface;
 
         #endregion
 
@@ -52,6 +54,13 @@ namespace AngleSharp.Scripting
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
             _options = (options ?? throw new ArgumentNullException(nameof(options))).Clone();
+
+            //  Built on the first document that runs a script, once for every one after it: what a
+            //  registration declares does not depend on the document, and it may declare a lot.
+            var registration = _options.DomRegistration;
+            _surface = registration != null
+                ? new Lazy<JsDomSurface>(() => JsDomSurface.Create(registration), LazyThreadSafetyMode.ExecutionAndPublication)
+                : null;
         }
 
         #endregion
@@ -219,8 +228,9 @@ namespace AngleSharp.Scripting
 
             if (!_contexts.TryGetValue(objectContext, out var instance))
             {
-                var libs = GetAssemblies(document.Context).ToArray();
-                instance = new EngineInstance(objectContext, _external, libs, _options);
+                var surface = _surface?.Value;
+                var libs = surface != null ? Array.Empty<Assembly>() : GetAssemblies(document.Context).ToArray();
+                instance = new EngineInstance(objectContext, _external, libs, _options, surface);
                 _contexts.Add(objectContext, instance);
             }
 

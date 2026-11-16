@@ -66,7 +66,8 @@ namespace AngleSharp.Js
                 }
                 else if (obj is Enum literal)
                 {
-                    var name = literal.GetLiteralName();
+                    //  a registration is all there is, see JsDomRegistration
+                    var name = engine.Surface != null ? engine.Surface.GetLiteral(literal) : literal.GetLiteralName();
 
                     if (name != null)
                     {
@@ -281,7 +282,7 @@ namespace AngleSharp.Js
             }
         }
 
-        private static void SetEnumLiteral(EngineInstance engine, ObjectInstance obj, EnumLiteralDefinition enumDefinition)
+        internal static void SetEnumLiteral(EngineInstance engine, ObjectInstance obj, EnumLiteralDefinition enumDefinition)
         {
             var target = obj.Get(enumDefinition.Name) as ObjectInstance;
 
@@ -406,7 +407,7 @@ namespace AngleSharp.Js
         /// learn that a custom value became a constant. A type name is exactly the sort of global a
         /// script reads over and over.
         /// </remarks>
-        private static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
+        internal static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
             PropertyDescriptor.CreateLazy(
                 new ConstructorRequest(engine, definition),
                 static request => request.Instance.GetDomConstructor(request.Definition),

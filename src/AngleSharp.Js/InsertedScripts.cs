@@ -3,6 +3,7 @@ namespace AngleSharp.Js
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
     using AngleSharp.Io;
+    using Jint.Native;
     using Jint.Runtime;
     using System;
     using System.Collections.Generic;
@@ -59,7 +60,33 @@ namespace AngleSharp.Js
         }
 
         /// <summary>
-        /// Runs the scripts AngleSharp prepared during the call (see <see cref="FindUnstarted"/>),
+        /// Finds the scripts a call of a registered member may insert, from the arguments as
+        /// script passed them: what is inserted is a node, so it arrives as its proxy and needs
+        /// no conversion to be found.
+        /// </summary>
+        public static List<IHtmlScriptElement> FindUnstarted(Object target, JsValue[] arguments)
+        {
+            if (StartedField is null)
+            {
+                return null;
+            }
+
+            var found = default(List<IHtmlScriptElement>);
+            Add(target, ref found);
+
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                if (arguments[i] is IDomProxy proxy)
+                {
+                    Add(proxy.Value, ref found);
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// Runs the scripts AngleSharp prepared during the call (see <see cref="FindUnstarted(Object, Object[])"/>),
         /// which are of the document of the engine and have their text. AngleSharp's evaluation of
         /// them later is skipped (see <see cref="TakeRan"/>).
         /// </summary>
