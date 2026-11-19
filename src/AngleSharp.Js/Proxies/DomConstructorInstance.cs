@@ -10,6 +10,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
 
     sealed class DomConstructorInstance : Constructor
@@ -40,6 +41,18 @@ namespace AngleSharp.Js
             SetOwnProperty("prototype", new PropertyDescriptor(_objectPrototype, false, false, false));
 
             AddStaticMembers(definition.Type.GetStaticMembers());
+            AddConstants(engine.Libs.GetConstants(definition.Name));
+        }
+
+        private void AddConstants(IEnumerable<KeyValuePair<String, Double>> constants)
+        {
+            foreach (var constant in constants)
+            {
+                if (GetOwnProperty(constant.Key) == PropertyDescriptor.Undefined)
+                {
+                    SetOwnProperty(constant.Key, new PropertyDescriptor(JsNumber.Create(constant.Value), false, true, false));
+                }
+            }
         }
 
         private void AddStaticMembers(StaticMember[] members)

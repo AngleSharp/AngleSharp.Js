@@ -859,7 +859,9 @@ namespace AngleSharp.Js
 
         private ObjectInstance CreateInstance(Object obj, Type type)
         {
-            var collection = type.GetIndexedCollection();
+            //  A node indexed like a collection (a form, a select) is a node still: only the node's
+            //  proxy holds its event handler attributes (form.onsubmit), and it asks the indexers too.
+            var collection = obj is INode ? null : type.GetIndexedCollection();
 
             if (collection != null)
             {
