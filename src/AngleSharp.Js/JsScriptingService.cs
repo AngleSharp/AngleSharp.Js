@@ -213,6 +213,14 @@ namespace AngleSharp.Scripting
 
         #region Helpers
 
+        /// <summary>
+        /// Gets the engine of the given window, if its document ran scripts already.
+        /// </summary>
+        internal static EngineInstance TryGetInstance(IWindow window) =>
+            window?.Document?.Context?.GetService<JsScriptingService>() is { } service && service._contexts.TryGetValue(window, out var instance)
+                ? instance
+                : null;
+
         internal EngineInstance GetOrCreateInstance(IDocument document)
         {
             var objectContext = document.DefaultView;

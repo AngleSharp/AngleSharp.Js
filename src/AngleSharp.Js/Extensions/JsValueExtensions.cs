@@ -373,8 +373,13 @@ namespace AngleSharp.Js
                         }
                     }
 
+                    //  a WebIDL integer (e.g. the "how" of compareBoundaryPoints): undefined or NaN is 0
                     var underlyingType = Enum.GetUnderlyingType(targetType);
-                    var raw = Convert.ChangeType(TypeConverter.ToNumber(value), underlyingType);
+                    var integer = TypeConverter.ToNumber(value);
+                    var raw = underlyingType == typeof(Int32) ? TypeConverter.ToInt32(value) :
+                        underlyingType == typeof(UInt32) ? TypeConverter.ToUint32(value) :
+                        underlyingType == typeof(UInt16) ? TypeConverter.ToUint16(value) :
+                        Convert.ChangeType(ToNumeric(integer, Type.GetTypeCode(underlyingType)), underlyingType);
                     return Enum.ToObject(targetType, raw);
                 }
                 else if (Nullable.GetUnderlyingType(targetType) is Type nullableType)
