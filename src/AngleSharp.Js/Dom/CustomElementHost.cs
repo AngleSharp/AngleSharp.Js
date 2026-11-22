@@ -36,7 +36,7 @@ namespace AngleSharp.Js.Dom
     /// </summary>
     sealed class CustomElementHost : ICustomElementHost
     {
-        private static readonly String[] CallbackNames = { "connectedCallback", "disconnectedCallback", "adoptedCallback", "attributeChangedCallback" };
+        private static readonly String[] CallbackNames = { "connectedCallback", "disconnectedCallback", "adoptedCallback", "attributeChangedCallback", "formAssociatedCallback", "formResetCallback", "formDisabledCallback", "formStateRestoreCallback" };
 
         private readonly JsScriptingService _service;
 

@@ -12,6 +12,7 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Reflection;
@@ -145,6 +146,15 @@ namespace AngleSharp.Js
 
             return obj.ToJsValue(engine);
         }
+
+        /// <summary>
+        /// Converts what a DOM member returned, which a mutable list of the DOM (a WebIDL
+        /// ObservableArray) is an array for.
+        /// </summary>
+        public static JsValue ToJsValue(this Object obj, EngineInstance engine, MethodDescription description) =>
+            description.ObservableElementType is Type elementType && obj is IEnumerable && !engine.IsOutOfReach(obj)
+                ? engine.GetObservableArray(obj, elementType)
+                : obj.ToJsValue(engine, description.ReturnType);
 
         public static ClrFunction AsValue(this Engine engine, string name, Func<JsValue, JsValue[], JsValue> func) =>
             new ClrFunction(engine, name, func);
@@ -585,7 +595,7 @@ namespace AngleSharp.Js
             {
                 var parameters = instance.BuildArgs(method, arguments);
                 var description = MethodDescription.Of(method);
-                return description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
+                return description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description);
             }
             catch (TargetInvocationException ex)
             {
@@ -637,7 +647,7 @@ namespace AngleSharp.Js
                         Array.Copy(arguments, 0, newArgs, 1, arguments.Length);
                         var parameters = instance.BuildArgs(method, newArgs);
                         var inserted = InsertedScripts.FindUnstarted(null, parameters);
-                        var result = description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description.ReturnType);
+                        var result = description.ToGiven(method.Invoke(null, parameters)).ToJsValue(instance, description);
                         RunInsertedScripts(instance, inserted);
                         return result;
                     }
@@ -647,7 +657,7 @@ namespace AngleSharp.Js
                         var bound = BindToTarget(method, target);
                         var parameters = instance.BuildArgs(bound, arguments);
                         var inserted = InsertedScripts.FindUnstarted(target, parameters);
-                        var result = description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description.ReturnType);
+                        var result = description.ToGiven(bound.Invoke(target, parameters)).ToJsValue(instance, description);
                         RunInsertedScripts(instance, inserted);
                         return result;
                     }

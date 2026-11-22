@@ -1,3 +1,14 @@
+# 1.2.3
+
+Released on Sunday, November 22 2026.
+
+- Fixed `undefined` for an argument of an enumeration (e.g. the `how` of `compareBoundaryPoints`) throwing an error scripts could not catch
+- Fixed event handler attributes of forms and selects (e.g. `form.onsubmit`) not being set
+- Fixed a frame not finding the functions and variables of a script of another window, e.g. `parent.notify()`
+- Fixed `adoptedStyleSheets` not being an array
+- Added the constants of the interfaces, e.g. `Node.ELEMENT_NODE`, `Range.START_TO_END` or `NodeFilter.SHOW_ELEMENT`
+- Added the callbacks of form-associated custom elements, e.g. `formResetCallback`
+
 # 1.2.2
 
 Released on Sunday, November 15 2026.
