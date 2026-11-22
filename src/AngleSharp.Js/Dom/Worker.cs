@@ -89,21 +89,7 @@ namespace AngleSharp.Js.Dom
             _workerLoop = new JsEventLoop();
             try
             {
-                var workerConfig = Configuration.Default
-                    .With(_scripting)
-                    .WithOnly(_workerLoop)
-                    .With<IResourceLoader>(_ => parentContext.GetService<IResourceLoader>())
-                    .With<IDocumentLoader>(_ => parentContext.GetService<IDocumentLoader>());
-
-                foreach (var service in parentContext.OriginalServices)
-                {
-                    if (service is EngineCreator || service is Func<IBrowsingContext, EngineCreator>)
-                    {
-                        workerConfig = workerConfig.With(service);
-                    }
-                }
-
-                _workerContext = BrowsingContext.New(workerConfig);
+                _workerContext = CreateContext(parentContext, _scripting, _workerLoop);
 
                 Enqueue(_workerLoop, TaskPriority.Critical, () =>
                 {
@@ -311,9 +297,37 @@ namespace AngleSharp.Js.Dom
             _scripting.EvaluateScript(_workerDocument, WorkerDispatchScript, MimeTypeNames.DefaultJavaScript, _workerDocument.Url);
         }
 
-        private String FetchWorkerScript(Url source)
+        private String FetchWorkerScript(Url source) => FetchScript(_window.Document, source);
+
+        /// <summary>
+        /// Creates the context of a worker, running scripts on its own loop and loading
+        /// with the loaders of the context creating it.
+        /// </summary>
+        internal static IBrowsingContext CreateContext(IBrowsingContext parentContext, JsScriptingService scripting, IEventLoop loop)
         {
-            var loader = _window.Document.Context.GetService<IDocumentLoader>();
+            var workerConfig = Configuration.Default
+                .With(scripting)
+                .WithOnly(loop)
+                .With<IResourceLoader>(_ => parentContext.GetService<IResourceLoader>())
+                .With<IDocumentLoader>(_ => parentContext.GetService<IDocumentLoader>());
+
+            foreach (var service in parentContext.OriginalServices)
+            {
+                if (service is EngineCreator || service is Func<IBrowsingContext, EngineCreator>)
+                {
+                    workerConfig = workerConfig.With(service);
+                }
+            }
+
+            return BrowsingContext.New(workerConfig);
+        }
+
+        /// <summary>
+        /// Fetches the script of a worker for the given document.
+        /// </summary>
+        internal static String FetchScript(IDocument owner, Url source)
+        {
+            var loader = owner.Context.GetService<IDocumentLoader>();
 
             if (loader == null)
             {
@@ -322,7 +336,7 @@ namespace AngleSharp.Js.Dom
 
             var request = new DocumentRequest(source)
             {
-                Referer = _window.Document.DocumentUri,
+                Referer = owner.DocumentUri,
             };
 
             using (var response = loader.FetchAsync(request).Task.GetAwaiter().GetResult())
@@ -349,7 +363,9 @@ namespace AngleSharp.Js.Dom
             }
         }
 
-        private Url ResolveUrl(String source)
+        private Url ResolveUrl(String source) => ResolveUrl(_window.Document, source);
+
+        internal static Url ResolveUrl(IDocument document, String source)
         {
             if (source.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
@@ -358,7 +374,7 @@ namespace AngleSharp.Js.Dom
                 return Url.Create(source);
             }
 
-            var documentUrl = _window.Document.Url;
+            var documentUrl = document.Url;
 
             if (String.IsNullOrEmpty(documentUrl) || documentUrl.Is("about:blank"))
             {
@@ -368,7 +384,7 @@ namespace AngleSharp.Js.Dom
             return new Url(new Url(documentUrl), source);
         }
 
-        private static void Enqueue(IEventLoop loop, TaskPriority priority, Action action)
+        internal static void Enqueue(IEventLoop loop, TaskPriority priority, Action action)
         {
             if (loop != null)
             {
@@ -380,7 +396,7 @@ namespace AngleSharp.Js.Dom
             }
         }
 
-        private const String WorkerBootstrap = @"(function () {
+        internal const String WorkerBootstrap = @"(function () {
 if (typeof self === 'undefined') {
     this.self = this;
 }

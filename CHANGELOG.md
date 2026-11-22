@@ -1,3 +1,9 @@
+# 1.3.0
+
+Released on tbd.
+
+- Added `SharedWorker`, which the scripts of an origin creating it for the same address
+
 # 1.2.3
 
 Released on Sunday, November 22 2026.
