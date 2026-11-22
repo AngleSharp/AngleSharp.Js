@@ -1,6 +1,6 @@
 # 1.2.3
 
-Released on tbd.
+Released on Sunday, November 22 2026.
 
 - Fixed `undefined` for an argument of an enumeration (e.g. the `how` of `compareBoundaryPoints`) throwing an error scripts could not catch
 - Fixed event handler attributes of forms and selects (e.g. `form.onsubmit`) not being set
