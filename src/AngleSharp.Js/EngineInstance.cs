@@ -65,11 +65,12 @@ namespace AngleSharp.Js
         private readonly JsImportMap _importMap;
         private readonly ConditionalWeakTable<DomException, JsValue> _domExceptions = new ConditionalWeakTable<DomException, JsValue>();
         private readonly Stack<CustomElementConstruction> _customElementConstructions = new Stack<CustomElementConstruction>();
+        private readonly List<KeyValuePair<JsValue, JsValue>> _unhandledRejections = new List<KeyValuePair<JsValue, JsValue>>();
+        private ObservableArrays _observableArrays;
         private JsValue _domException;
         private JsValue _lastReportedError;
         private Int32 _inlineModules;
         private JsValue _currentEvent = JsValue.Undefined;
-        private readonly List<KeyValuePair<JsValue, JsValue>> _unhandledRejections = new List<KeyValuePair<JsValue, JsValue>>();
 
         #endregion
 
@@ -607,6 +608,12 @@ namespace AngleSharp.Js
                 ? GetDomException(exception)
                 : _engine.Intrinsics.Error.Construct(error?.Message ?? String.Empty);
         }
+
+        /// <summary>
+        /// Gets the array of a script for a mutable list of the DOM (a WebIDL ObservableArray).
+        /// </summary>
+        public JsValue GetObservableArray(Object list, Type elementType) =>
+            (_observableArrays ??= new ObservableArrays(this)).Get(list, elementType);
 
         /// <summary>
         /// Gets the DOMException of a script for the exception, which is the same object each time.
