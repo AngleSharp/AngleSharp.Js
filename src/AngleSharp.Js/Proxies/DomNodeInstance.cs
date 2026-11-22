@@ -246,11 +246,16 @@ namespace AngleSharp.Js
         /// </remarks>
         private PropertyDescriptor GetGlobalProperty(JsValue property)
         {
-            if (_value is IWindow)
+            if (_value is IWindow window)
             {
-                var global = _instance.Jint.Global;
+                //  Another window (of the same origin, the others are wrapped) has its globals in the
+                //  engine of its own document: a frame calling parent.notify() finds the function
+                //  the parent declared.
+                var global = ReferenceEquals(_instance.Window?.Value, window)
+                    ? _instance.Jint.Global
+                    : AngleSharp.Scripting.JsScriptingService.TryGetInstance(window)?.Jint.Global;
 
-                if (!ReferenceEquals(global, this))
+                if (global != null && !ReferenceEquals(global, this))
                 {
                     return global.GetOwnProperty(property);
                 }

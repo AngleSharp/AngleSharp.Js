@@ -113,6 +113,39 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SharedWorkerIsSharedByTheScriptsCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { var port = e.ports[0]; count++; port.onmessage = function (m) { port.postMessage(m.data + ':' + count); }; };"));
+            document.ExecuteScript(@"
+                window.log = [];
+                var a = new SharedWorker('shared.js');
+                a.port.onmessage = function (e) { log.push('a=' + e.data); };
+                a.port.postMessage('ping');
+                var b = new SharedWorker('shared.js');
+                b.port.onmessage = function (e) { log.push('b=' + e.data); };
+                b.port.postMessage('pong');");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            var log = document.ExecuteScript("log.sort().join(',')")?.ToString();
+            Assert.AreEqual("a=ping:2,b=pong:2", log);
+        }
+
+        [Test]
+        public async Task SharedWorkerOfAnotherNameIsAnother()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { count++; e.ports[0].postMessage(count); };"));
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('shared.js', 'one').port.onmessage = function (e) { log.push(e.data); };
+                new SharedWorker('shared.js', { name: 'two' }).port.onmessage = function (e) { log.push(e.data); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            Assert.AreEqual("1,1", document.ExecuteScript("log.join(',')")?.ToString());
+        }
+
+        [Test]
         public async Task UnknownWorkerTypeIsRefused()
         {
             var document = await OpenWithSourcesAsync();

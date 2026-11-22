@@ -182,6 +182,15 @@ namespace AngleSharp.Js.Cache
                 }
             }
 
+            //  The constants are on the prototype as well, so that a node knows them (node.ELEMENT_NODE).
+            foreach (var constant in _libs.Assemblies.GetConstants(_name))
+            {
+                if (!_members.ContainsKey(constant.Key) && !String.Equals(constant.Key, ConstructorName, StringComparison.Ordinal))
+                {
+                    builder.Constant(constant.Key, JsNumber.Create(constant.Value), true);
+                }
+            }
+
             if (constructor != null)
             {
                 //  The attributes an eagerly written constructor had, and still resolved on first

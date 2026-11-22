@@ -5,6 +5,7 @@ namespace AngleSharp.Js
     using AngleSharp.Text;
     using Jint;
     using Jint.Runtime.Modules;
+    using System.Collections.Generic;
     using System.IO;
     using System;
     using System.Linq;
@@ -39,17 +40,17 @@ namespace AngleSharp.Js
                     {
                         var scopeImports = _instance.ImportMap.Scopes[scopePath];
 
-                        if (scopeImports.TryGetValue(specifier, out var scopeModuleUrl))
+                        if (TryMap(scopeImports, specifier, out var scopeModuleUrl))
                         {
-                            return Resolved(moduleRequest, new Url(GetDocumentBaseUrl(), scopeModuleUrl.OriginalString));
+                            return Resolved(moduleRequest, scopeModuleUrl);
                         }
                     }
                 }
             }
 
-            if (_instance.ImportMap.Imports.TryGetValue(specifier, out var moduleUrl))
+            if (TryMap(_instance.ImportMap.Imports, specifier, out var moduleUrl))
             {
-                return Resolved(moduleRequest, new Url(GetDocumentBaseUrl(), moduleUrl.OriginalString));
+                return Resolved(moduleRequest, moduleUrl);
             }
 
             if (specifier.StartsWith("/") || specifier.StartsWith("./") || specifier.StartsWith("../"))
@@ -79,6 +80,36 @@ namespace AngleSharp.Js
         protected override Byte[] LoadModuleContentsAsBytes(Engine engine, ResolvedSpecifier resolved)
         {
             return FetchModuleBytes(GetModuleUrl(resolved));
+        }
+
+        //  A key of the map is either the whole specifier, or, ending with a slash, a prefix of it,
+        //  whose address the rest of the specifier is appended to (the longest prefix wins).
+        private Boolean TryMap(Dictionary<String, Uri> imports, String specifier, out Url url)
+        {
+            if (imports.TryGetValue(specifier, out var address))
+            {
+                url = new Url(GetDocumentBaseUrl(), address.OriginalString);
+                return true;
+            }
+
+            var prefix = imports.Keys
+                .Where(key => key.EndsWith("/") && specifier.StartsWith(key, StringComparison.Ordinal))
+                .OrderByDescending(key => key.Length)
+                .FirstOrDefault();
+
+            if (prefix != null)
+            {
+                var target = imports[prefix].OriginalString;
+
+                if (target.EndsWith("/"))
+                {
+                    url = new Url(new Url(GetDocumentBaseUrl(), target), specifier.Substring(prefix.Length));
+                    return true;
+                }
+            }
+
+            url = null;
+            return false;
         }
 
         private static ResolvedSpecifier Resolved(ModuleRequest moduleRequest, Url url)
