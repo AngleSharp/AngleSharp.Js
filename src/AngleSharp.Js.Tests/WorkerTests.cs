@@ -146,6 +146,23 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SharedWorkerKeyIncludesResolvedScriptUrl()
+        {
+            var source = "var count = 0; onconnect = function (e) { count++; e.ports[0].postMessage(count); };";
+            var document = await OpenWithSourcesAsync(
+                ("https://example.com/shared.js", source),
+                ("https://example.com/other.js", source)).ConfigureAwait(false);
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('shared.js', 'same').port.onmessage = function (e) { log.push('a=' + e.data); };
+                new SharedWorker('/shared.js', 'same').port.onmessage = function (e) { log.push('b=' + e.data); };
+                new SharedWorker('other.js', 'same').port.onmessage = function (e) { log.push('c=' + e.data); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "3").ConfigureAwait(false));
+            Assert.AreEqual("a=1,b=2,c=1", document.ExecuteScript("log.sort().join(',')")?.ToString());
+        }
+
+        [Test]
         public async Task UnknownWorkerTypeIsRefused()
         {
             var document = await OpenWithSourcesAsync();
