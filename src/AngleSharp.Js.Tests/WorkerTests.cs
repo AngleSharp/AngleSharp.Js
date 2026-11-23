@@ -76,6 +76,19 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task WorkerHasWebCrypto()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/worker.js", "crypto.subtle.digest('SHA-1', new Uint8Array(0)).then(function (d) { self.__d = d.byteLength; });"));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+
+            Assert.IsTrue(await WaitFor(() => worker.IsInitialized || worker.StartupError != null));
+            Assert.IsNull(worker.StartupError, worker.StartupError?.ToString());
+            Assert.IsTrue(await WaitFor(() => worker.EvaluateInWorker("String(self.__d)")?.ToString() == "20"));
+            Assert.AreEqual("object,function", worker.EvaluateInWorker("[typeof crypto.subtle, typeof CryptoKey].join()")?.ToString());
+            worker.Terminate();
+        }
+
+        [Test]
         public async Task WorkerKnowsItsAddress()
         {
             var document = await OpenWithSourcesAsync(("https://example.com/a/worker.js", ""));

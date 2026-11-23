@@ -300,5 +300,78 @@ namespace AngleSharp.Js.Tests
             await document.WhenStable();
             return document;
         }
-    }
+    
+        // what a module does once something it awaits is settled comes after the page was loaded
+        private static async Task<String> WaitForTitleAsync(IDocument document, String initial = "")
+        {
+            for (var i = 0; i < 100 && document.Title == initial; i++)
+            {
+                await Task.Delay(50);
+            }
+
+            return document.Title;
+        }
+
+        [Test]
+        public async Task ImportMapPrefixFindsTheRestOfTheSpecifier()
+        {
+            var document = await OpenAsync(@"<!doctype html><script type=importmap>{""imports"":{""lib/"":""/js/lib/"",""lib/special/"":""/other/""}}</script><script type=module>import { a } from 'lib/a.js'; import { b } from 'lib/special/b.js'; document.title = a + b;</script>", new Dictionary<String, String>
+            {
+                { "/js/lib/a.js", "export const a = 'a';" },
+                { "/other/b.js", "export const b = 'b';" },
+            });
+
+            Assert.AreEqual("ab", document.Title);
+        }
+
+        [Test]
+        public async Task ModuleWithATopLevelAwaitGoesOnOnceItIsSettled()
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var document = await OpenAsync("<!doctype html><script>window.onerror = function (e) { document.title = 'error ' + e; };</script><script type=module>import { value } from './later.js'; document.title = value;</script>", new Dictionary<String, String>
+            {
+                { "/dir/later.js", "export const value = await new Promise(resolve => setTimeout(() => resolve('settled'), 20));" },
+            });
+
+            Assert.AreEqual("settled", await WaitForTitleAsync(document));
+            // the timer runs on the event loop, which the module doesn't wait for
+            Assert.Less(watch.ElapsedMilliseconds, 5000);
+        }
+
+        [Test]
+        public async Task ImportOfAModuleNotFoundRejectsWithATypeError()
+        {
+            var document = await OpenAsync("<!doctype html><script type=module>import('./missing.js').then(() => document.title = 'found', e => document.title = e instanceof TypeError ? 'TypeError' : 'other ' + e);</script>");
+
+            Assert.AreEqual("TypeError", await WaitForTitleAsync(document));
+        }
+
+        [Test]
+        public async Task CssModuleGivesAStyleSheet()
+        {
+            var config = Configuration.Default
+                .WithCss()
+                .WithJs()
+                .WithEventLoop()
+                .With(new MockHttpClientRequester(new Dictionary<String, String> { { "/dir/style.css", ".a { color: red } .b { color: blue }" } }))
+                .WithDefaultLoader(new LoaderOptions { IsResourceLoadingEnabled = true });
+            var document = await BrowsingContext.New(config).OpenAsync(r => r.Address(Page).Content("<!doctype html><script>try { new CSSStyleSheet(); } catch (e) { window.notConstructible = true; }</script><script type=module>import('./style.css', { with: { type: 'css' } }).then(m => document.title = (m.default instanceof CSSStyleSheet) + ' ' + m.default.cssRules.length, e => document.title = window.notConstructible ? 'not constructible' : 'error ' + e);</script>"));
+            await document.WhenStable();
+
+            if (await WaitForTitleAsync(document) == "not constructible")
+            {
+                Assert.Ignore("The style sheets of the referenced AngleSharp.Css can't be constructed.");
+            }
+
+            Assert.AreEqual("true 2", await WaitForTitleAsync(document));
+        }
+
+        [Test]
+        public async Task ImportMetaResolveGivesTheAddressOfASpecifier()
+        {
+            var document = await OpenAsync(@"<!doctype html><script type=importmap>{""imports"":{""dep"":""/js/dep.js""}}</script><script type=module>document.title = import.meta.resolve('./x.js') + ' ' + import.meta.resolve('dep');</script>");
+
+            Assert.AreEqual("https://example.com/dir/x.js https://example.com/js/dep.js", document.Title);
+        }
+}
 }

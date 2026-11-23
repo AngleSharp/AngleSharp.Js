@@ -237,9 +237,35 @@ namespace AngleSharp.Scripting
 
         private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) => context
             .GetServices<Object>()
-            .Select(m => m.GetType().GetAssembly())
+            .SelectMany(GetAssemblies)
             .Distinct()
             .Where(m => m.FullName.StartsWith("AngleSharp"));
+
+        //  A service registered by a creator (e.g. WithWasm's runtime factory) is only created when
+        //  first asked for, so until then it is the delegate, a type of the framework: the library
+        //  is the one of the type it creates and of its code.
+        private static IEnumerable<Assembly> GetAssemblies(Object service)
+        {
+            yield return service.GetType().GetAssembly();
+
+            if (service is Delegate creator)
+            {
+                var type = creator.GetType();
+
+                if (type.GetTypeInfo().IsGenericType)
+                {
+                    foreach (var argument in type.GetTypeInfo().GenericTypeArguments)
+                    {
+                        yield return argument.GetAssembly();
+                    }
+                }
+
+                if (creator.GetMethodInfo()?.DeclaringType is Type declaring)
+                {
+                    yield return declaring.GetAssembly();
+                }
+            }
+        }
 
         #endregion
     }
