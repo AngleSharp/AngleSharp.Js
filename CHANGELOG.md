@@ -1,6 +1,6 @@
 # 1.3.0
 
-Released on tbd.
+Released on Monday, November 23 2026.
 
 - Fixed a module with a top-level `await` blocking the page for many seconds
 - Fixed import map entries of a prefix not being used
