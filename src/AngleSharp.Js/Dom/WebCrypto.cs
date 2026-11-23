@@ -14,7 +14,8 @@ namespace AngleSharp.Js.Dom
 
     /// <summary>
     /// The operations of crypto.subtle (Web Cryptography API, W3C), done with the cryptography
-    /// of .NET. AES-GCM, the formats spki and pkcs8, and ECDH need .NET 8 or later.
+    /// of .NET. Where the older targets lack it, AES-GCM and the formats spki and pkcs8 come from
+    /// ManagedAesGcm and KeyDer. ECDH needs .NET 8 or later, or .NET Framework on Windows 10.
     /// </summary>
     static class WebCrypto
     {
@@ -196,11 +197,7 @@ namespace AngleSharp.Js.Dom
 
                     try
                     {
-                        using (var rsa = RSA.Create())
-                        {
-                            rsa.KeySize = bits;
-                            parameters = rsa.ExportParameters(true);
-                        }
+                        parameters = GenerateRsa(bits);
                     }
                     catch (CryptographicException)
                     {
@@ -503,7 +500,8 @@ namespace AngleSharp.Js.Dom
 
             return result;
 #else
-            throw NotSupportedError();
+            var parameters = GetAesGcmParameters(algorithm);
+            return ManagedAesGcm.Encrypt(key, parameters.Iv, data, parameters.AdditionalData, parameters.TagLength);
 #endif
         }
 
@@ -526,7 +524,14 @@ namespace AngleSharp.Js.Dom
 
             return result;
 #else
-            throw NotSupportedError();
+            var parameters = GetAesGcmParameters(algorithm);
+
+            if (data.Length < parameters.TagLength)
+            {
+                throw OperationError();
+            }
+
+            return ManagedAesGcm.Decrypt(key, parameters.Iv, data, parameters.AdditionalData, parameters.TagLength);
 #endif
         }
 
@@ -699,11 +704,18 @@ namespace AngleSharp.Js.Dom
 
         private static Byte[] EcdhSecret(CryptoKey privateKey, CryptoKey publicKey)
         {
-#if NET8_0_OR_GREATER
-            using (var mine = ECDiffieHellman.Create(privateKey.Ec.Value.ToParameters()))
-            using (var theirs = ECDiffieHellman.Create(publicKey.Ec.Value.ToParameters()))
+#if NET8_0_OR_GREATER || NETFRAMEWORK
+            try
             {
-                return mine.DeriveRawSecretAgreement(theirs.PublicKey);
+                return privateKey.Ec.Value.DeriveSecret(publicKey.Ec.Value);
+            }
+            catch (PlatformNotSupportedException)
+            {
+                throw NotSupportedError();
+            }
+            catch (CryptographicException)
+            {
+                throw OperationError();
             }
 #else
             throw NotSupportedError();
@@ -933,7 +945,19 @@ namespace AngleSharp.Js.Dom
                 throw DataError();
             }
 #else
-            throw NotSupportedError();
+            EcKeyParameters parameters;
+
+            try
+            {
+                parameters = KeyDer.ReadEc(format, data, curve);
+            }
+            catch (CryptographicException)
+            {
+                throw DataError();
+            }
+
+            //  without the public point, which would have to be computed from the private key
+            return parameters.X != null ? parameters : throw NotSupportedError();
 #endif
         }
 
@@ -983,7 +1007,7 @@ namespace AngleSharp.Js.Dom
 
             try
             {
-                using (var rsa = RSA.Create())
+                using (var rsa = CreateRsa())
                 {
                     rsa.ImportParameters(parameters);
                 }
@@ -1021,7 +1045,14 @@ namespace AngleSharp.Js.Dom
                 throw DataError();
             }
 #else
-            throw NotSupportedError();
+            try
+            {
+                return KeyDer.ReadRsa(format, data);
+            }
+            catch (CryptographicException)
+            {
+                throw DataError();
+            }
 #endif
         }
 
@@ -1119,7 +1150,7 @@ namespace AngleSharp.Js.Dom
                 return isPublic ? rsa.ExportSubjectPublicKeyInfo() : rsa.ExportPkcs8PrivateKey();
             }
 #else
-            throw NotSupportedError();
+            return key.Ec is EcKeyParameters ec ? KeyDer.WriteEc(format, ec) : KeyDer.WriteRsa(format, key.Rsa.Value);
 #endif
         }
 
@@ -1181,9 +1212,40 @@ namespace AngleSharp.Js.Dom
 
         private static RSA CreateRsa(CryptoKey key)
         {
-            var rsa = RSA.Create();
+            var rsa = CreateRsa();
             rsa.ImportParameters(key.Rsa.Value);
             return rsa;
+        }
+
+        //  RSA.Create() of .NET Framework is the CryptoAPI provider, which can neither sign with
+        //  PSS nor encrypt with OAEP of a SHA-2 hash - CNG can.
+        private static RSA CreateRsa() =>
+#if NETFRAMEWORK
+            new RSACng();
+#else
+            RSA.Create();
+#endif
+
+        private static RSAParameters GenerateRsa(Int32 bits)
+        {
+#if NETFRAMEWORK
+            //  the key has to allow the export explicitly, as its private part is taken out of it
+            var creation = new CngKeyCreationParameters { ExportPolicy = CngExportPolicies.AllowPlaintextExport };
+            creation.Parameters.Add(new CngProperty("Length", BitConverter.GetBytes(bits), CngPropertyOptions.None));
+
+            //  RSACng duplicates the handle of the key it is given
+            using (var key = CngKey.Create(CngAlgorithm.Rsa, null, creation))
+            using (var rsa = new RSACng(key))
+            {
+                return rsa.ExportParameters(true);
+            }
+#else
+            using (var rsa = RSA.Create())
+            {
+                rsa.KeySize = bits;
+                return rsa.ExportParameters(true);
+            }
+#endif
         }
 
         private static RSASignaturePadding GetRsaPadding(Algorithm algorithm, CryptoKey key)

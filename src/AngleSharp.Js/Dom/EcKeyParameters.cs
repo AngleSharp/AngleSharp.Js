@@ -2,11 +2,15 @@ namespace AngleSharp.Js.Dom
 {
     using System;
     using System.Security.Cryptography;
+#if NETFRAMEWORK
+    using Microsoft.Win32.SafeHandles;
+    using System.Runtime.InteropServices;
+#endif
 
     /// <summary>
     /// The material of an elliptic curve key on one of the named curves of the Web Cryptography
-    /// API. It stands in for ECParameters, which .NET Framework 4.6.2 does not have: there the
-    /// key reaches the platform as a CNG key blob instead.
+    /// API. It stands in for ECParameters, which .NET Framework 4.6.2 does not have: on .NET
+    /// Framework the key reaches the platform (CNG) as a key blob instead.
     /// </summary>
     readonly struct EcKeyParameters
     {
@@ -44,7 +48,8 @@ namespace AngleSharp.Js.Dom
         /// </summary>
         public static EcKeyParameters Generate(String curve)
         {
-#if NET462
+#if NETFRAMEWORK
+            //  the key has to allow the export explicitly, as its private part is taken out of it
             var creation = new CngKeyCreationParameters { ExportPolicy = CngExportPolicies.AllowPlaintextExport };
 
             using (var key = CngKey.Create(GetCngAlgorithm(curve), null, creation))
@@ -65,25 +70,92 @@ namespace AngleSharp.Js.Dom
         /// </summary>
         public ECDsa CreateEcdsa()
         {
-#if NET462
-            var format = IsPrivate ? CngKeyBlobFormat.EccPrivateBlob : CngKeyBlobFormat.EccPublicBlob;
-            return new ECDsaCng(CngKey.Import(ToBlob(), format));
+#if NETFRAMEWORK
+            //  ECDsaCng duplicates the handle of the key it is given
+            using (var key = ImportCngKey(false))
+            {
+                return new ECDsaCng(key);
+            }
 #else
             return ECDsa.Create(ToParameters());
 #endif
         }
 
-#if NET462
+#if NET8_0_OR_GREATER || NETFRAMEWORK
+        /// <summary>
+        /// Derives the shared secret of ECDH (the x coordinate of the product, not hashed) of
+        /// this private key and the given public key. Throws a PlatformNotSupportedException
+        /// if the platform can't give out the secret as it is.
+        /// </summary>
+        public Byte[] DeriveSecret(EcKeyParameters publicKey)
+        {
+#if NETFRAMEWORK
+            //  ECDiffieHellmanCng only gives out secrets put through a KDF, but CNG itself gives
+            //  out the raw one (BCRYPT_KDF_RAW_SECRET, since Windows 10) - which is how .NET
+            //  implements DeriveRawSecretAgreement on Windows
+            using (var mine = ImportCngKey(true))
+            using (var theirs = publicKey.ImportCngKey(true))
+            using (var ecdh = new ECDiffieHellmanCng(mine))
+            using (var secret = ecdh.DeriveSecretAgreementHandle(theirs))
+            {
+                //  asked for the length first, then for the secret
+                var status = NCryptDeriveKey(secret, RawSecretKdf, IntPtr.Zero, null, 0, out var length, 0);
+                var result = new Byte[status == 0 ? length : 0];
+
+                if (status == 0)
+                {
+                    status = NCryptDeriveKey(secret, RawSecretKdf, IntPtr.Zero, result, result.Length, out length, 0);
+                }
+
+                if (status == NotSupportedStatus || status == InvalidParameterStatus)
+                {
+                    throw new PlatformNotSupportedException();
+                }
+                else if (status != 0)
+                {
+                    throw new CryptographicException(status);
+                }
+
+                //  CNG gives out the secret as a little endian number
+                Array.Reverse(result, 0, length);
+                return length == result.Length ? result : Slice(result, 0, length);
+            }
+#else
+            using (var mine = ECDiffieHellman.Create(ToParameters()))
+            using (var theirs = ECDiffieHellman.Create(publicKey.ToParameters()))
+            {
+                return mine.DeriveRawSecretAgreement(theirs.PublicKey);
+            }
+#endif
+        }
+#endif
+
+#if NETFRAMEWORK
+        private const String RawSecretKdf = "TRUNCATE";
+
+        private const Int32 NotSupportedStatus = unchecked((Int32)0x80090029);
+
+        private const Int32 InvalidParameterStatus = unchecked((Int32)0x80090027);
+
         //  BCRYPT_ECCKEY_BLOB: the magic and the length of a coordinate (each a little endian
         //  UInt32), followed by X, Y and - for a private key - D, each of that length.
         private const Int32 BlobHeaderLength = 8;
 
-        private Byte[] ToBlob()
+        [DllImport("ncrypt.dll", CharSet = CharSet.Unicode)]
+        private static extern Int32 NCryptDeriveKey(SafeNCryptSecretHandle hSharedSecret, String pwszKDF, IntPtr pParameterList, Byte[] pbDerivedKey, Int32 cbDerivedKey, out Int32 pcbResult, Int32 dwFlags);
+
+        private CngKey ImportCngKey(Boolean isEcdh)
+        {
+            var format = IsPrivate ? CngKeyBlobFormat.EccPrivateBlob : CngKeyBlobFormat.EccPublicBlob;
+            return CngKey.Import(ToBlob(isEcdh), format);
+        }
+
+        private Byte[] ToBlob(Boolean isEcdh)
         {
             var size = CoordinateLength(Curve);
             var count = IsPrivate ? 3 : 2;
             var blob = new Byte[BlobHeaderLength + count * size];
-            WriteUInt32(blob, 0, GetMagic(Curve, IsPrivate));
+            WriteUInt32(blob, 0, GetMagic(Curve, isEcdh, IsPrivate));
             WriteUInt32(blob, 4, (UInt32)size);
             CopyPadded(X, blob, BlobHeaderLength, size);
             CopyPadded(Y, blob, BlobHeaderLength + size, size);
@@ -106,12 +178,12 @@ namespace AngleSharp.Js.Dom
             return new EcKeyParameters(curve, x, y, d);
         }
 
-        //  The ECDSA magics ("ECS1" to "ECS6"): an ECDH key only ever reaches the platform to be
-        //  checked here, which the ECDSA algorithm of the same curve does just as well.
-        private static UInt32 GetMagic(String curve, Boolean isPrivate)
+        //  "ECS1" to "ECS6" for ECDSA and "ECK1" to "ECK6" for ECDH: public and private of each
+        //  curve in turn, as little endian UInt32 values.
+        private static UInt32 GetMagic(String curve, Boolean isEcdh, Boolean isPrivate)
         {
             var index = curve == "P-256" ? 1u : curve == "P-384" ? 3u : 5u;
-            return 0x30534345u + index + (isPrivate ? 1u : 0u);
+            return (isEcdh ? 0x304B4345u : 0x30534345u) + index + (isPrivate ? 1u : 0u);
         }
 
         private static CngAlgorithm GetCngAlgorithm(String curve)
