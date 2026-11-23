@@ -48,6 +48,16 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task ObjectNamedLikeAnUnrelatedClassOfAnotherLibraryKeepsItsMembers()
+        {
+            //  the CanvasGradient of a canvas got the prototype of the one of CSS paint worklets,
+            //  whose addColorStop could not be invoked on it
+            var result = await Run("var own = Interop.ownLocation(); return [own.describe(), typeof own.reload, own instanceof Location].join();");
+
+            Assert.AreEqual("ok:own,undefined,false", result);
+        }
+
+        [Test]
         public async Task DelegateIsAFunction()
         {
             var result = await Run(@"
@@ -143,6 +153,17 @@ namespace AngleSharp.Js.Tests
     {
     }
 
+    /// <summary>
+    /// Named like the Location of AngleSharp, but unrelated to it.
+    /// </summary>
+    [DomName("Location")]
+    [DomNoInterfaceObject]
+    public sealed class OwnLocation
+    {
+        [DomName("describe")]
+        public String Describe() => "own";
+    }
+
     public delegate Object Variadic(Object[] arguments);
 
     [DomName("Interop")]
@@ -152,6 +173,9 @@ namespace AngleSharp.Js.Tests
         private static readonly Byte[] Bytes = new Byte[4];
         private static readonly Func<Double, Double, Double> Add = (a, b) => a + b;
         private static readonly Variadic Join = arguments => String.Join("|", Array.ConvertAll(arguments, m => m == System.Reflection.Missing.Value ? "Missing" : m.GetType().Name + ":" + m));
+
+        [DomName("ownLocation")]
+        public static OwnLocation CreateOwnLocation() => new OwnLocation();
 
         [DomName("twice")]
         public static Double Twice(this IWindow window, Double value) => 2 * value;

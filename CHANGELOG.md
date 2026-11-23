@@ -6,6 +6,7 @@ Released on tbd.
 - Fixed import map entries of a prefix not being used
 - Fixed an `import()` of a module that could not be fetched not rejecting with a `TypeError`
 - Fixed the DOM of libraries registered by a creator only being missing
+- Fixed an object getting the prototype of an unrelated class of another library
 - Updated a WebIDL namespace to be a plain object, whose members are no longer members of the window too
 - Added `SharedWorker`, which the scripts of an origin creating it for the same address
 - Added CSS module scripts (`import sheet from './a.css' with { type: 'css' }`), whose default export is a constructed style sheet
