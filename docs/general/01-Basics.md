@@ -4,11 +4,7 @@ section: "AngleSharp.Js"
 ---
 # Getting Started
 
-AngleSharp.Js runs JavaScript against an AngleSharp document. It integrates the
-[Jint](https://github.com/sebastienros/jint) interpreter with AngleSharp, so scripts can
-read and change the same DOM that your .NET code uses. This is useful when processing pages
-whose behavior depends on script execution, evaluating a snippet in a document context, or
-hosting JavaScript APIs alongside your application.
+AngleSharp.Js runs JavaScript against an AngleSharp document. It integrates the [Jint](https://github.com/sebastienros/jint) interpreter with AngleSharp, so scripts can read and change the same DOM that your .NET code uses. This is useful when processing pages whose behavior depends on script execution, evaluating a snippet in a document context, or hosting JavaScript APIs alongside your application.
 
 ## Install and configure
 
@@ -18,13 +14,9 @@ Install the package:
 Install-Package AngleSharp.Js
 ```
 
-Add `WithJs()` to the AngleSharp configuration. Add `WithEventLoop()` when scripts, events,
-or resource callbacks must run in the browser-like task queue. Add a loader when the document
-needs to fetch external scripts or other resources.
+Add `WithJs()` to the AngleSharp configuration. Add `WithEventLoop()` when scripts, events, or resource callbacks must run in the browser-like task queue. Add a loader when the document needs to fetch external scripts or other resources.
 
-For many real-world scripts, `WithJs()` alone is not enough. AngleSharp.Js exposes interfaces
-from the AngleSharp services present in the browsing context, so you usually want to include
-AngleSharp.Io and AngleSharp.Css to provide most of the required API surface.
+For many real-world scripts, `WithJs()` alone is not enough. AngleSharp.Js exposes interfaces from the AngleSharp services present in the browsing context, so you usually want to include AngleSharp.Io and AngleSharp.Css to provide most of the required API surface.
 
 ```cs
 var configuration = Configuration.Default
@@ -42,12 +34,9 @@ var document = await context.OpenAsync("https://example.com");
 await document.WaitUntilAvailable();
 ```
 
-Some highly specialized scripts may also depend on additional AngleSharp packages. For example,
-in niche scenarios, libraries such as AngleSharp.Wasm can be relevant.
+Some highly specialized scripts may also depend on additional  AngleSharp packages. For example, in niche scenarios, libraries such as AngleSharp.Wasm can be relevant.
 
-`WithJs()` registers the JavaScript scripting service, support for inline event attributes
-such as `onclick`, a navigation handler for `javascript:` URLs, and a default `navigator`
-when the configuration does not already provide one.
+`WithJs()` registers the JavaScript scripting service, support for inline event attributes such as `onclick`, a navigation handler for `javascript:` URLs, structured cloning (for `postMessage` and workers) and the host for custom elements. It does not register a loader, an event loop or a navigator; `WithNavigator()` from AngleSharp.Io provides a full `navigator`.
 
 ### Customize the event loop
 
@@ -93,11 +82,21 @@ var configuration = Configuration.Default
     });
 ```
 
+### Configure the Jint engine
+
+Register an `EngineCreator` to construct the Jint engine yourself, for example to limit the statements, time or memory a script may use. The delegate runs once per window and must build the engine from the supplied options:
+
+```cs
+var configuration = Configuration.Default
+    .With(new EngineCreator((window, options) => new Jint.Engine(options
+        .MaxStatements(1_000_000)
+        .TimeoutInterval(TimeSpan.FromSeconds(5)))))
+    .WithJs();
+```
+
 ## Execute JavaScript
 
-HTML `<script>` elements execute while AngleSharp processes the document. For a script you
-want to run yourself, call `ExecuteScript` on the document. The return value is converted to
-the corresponding .NET value where possible.
+HTML `<script>` elements execute while AngleSharp processes the document. For a script you want to run yourself, call `ExecuteScript` on the document. The return value is converted to the corresponding .NET value where possible: numbers become `Double`, DOM objects the AngleSharp objects, `undefined` the string `"undefined"`, and other objects stay Jint values.
 
 ```cs
 var document = await BrowsingContext.New(Configuration.Default.WithJs())
@@ -199,7 +198,9 @@ example, adding CSS support also makes its AngleSharp DOM types available to scr
 
 In addition to the DOM provided by AngleSharp, the package supplies:
 
-- `console.log`, `atob`, `btoa`, `DOMParser`, `Image`, `screen`, and `XMLHttpRequest`.
+- `console`, `atob`, `btoa`, `structuredClone`, `queueMicrotask`, `DOMParser`, `Image`, `Audio`, and `screen`.
+- `requestAnimationFrame`, `requestIdleCallback`, `performance`, `crypto`, `TextEncoder`, and `TextDecoder`.
+- `Worker`, `SharedWorker`, `MessageChannel`, and `window.postMessage`.
 - `javascript:` URL navigation.
 - Inline event-handler attributes and DOM event callbacks.
 - ES modules and import maps through Jint's module loader.
@@ -214,13 +215,13 @@ they meet a script's needs:
 | `DOMParser` | `parseFromString` creates a document through the configured `IDocumentFactory`. The requested MIME type must be supported by that configuration. |
 | `Image` | Creates an AngleSharp `<img>` element; optional width and height become its display dimensions. |
 | `window.postMessage` | Queues a `message` event on the current window. It requires an event loop; it does not transfer objects, deliver to another browsing context, or enforce `targetOrigin`. |
-| `XMLHttpRequest` | Supports `open`, `send`, request headers, status, text responses, and lifecycle events through the configured document loader. |
-| `console` | Supports `console.log` only. |
+| `console` | All methods are available; their arguments (or, for `count`/`time*`, the formatted result) are passed to the `IConsoleLogger`. The severity is not distinguished. |
 | `screen` | Exposes fixed 1920-by-1080 dimensions and 24-bit color depth for compatibility. |
 
-To replace the supplied behavior, register your own compatible AngleSharp service before
-calling `WithJs()`. In particular, `WithJs()` preserves an existing `INavigator`, and the
-`WithEventLoop` overloads accept either an existing `IEventLoop` or a factory for one.
+APIs such as `fetch`, `XMLHttpRequest`, `WebSocket` and `localStorage` come from AngleSharp.Io, and `getComputedStyle` or `matchMedia` from AngleSharp.Css. They appear once the respective
+services are registered (e.g. `WithRequesters()` or `WithCss()`).
+
+The `WithEventLoop` overloads accept either an existing `IEventLoop` or a factory for one.
 
 ## Supported behavior and limitations
 
@@ -231,15 +232,13 @@ complete browser parity.
 
 Notable limitations include:
 
-- The package does not calculate layout. Its `scroll*`, `client*`, and `offset*` element
-  properties return `0`.
-- The default `navigator` is intentionally minimal. Its platform is empty, registration
-  methods are no-ops, and its user-agent value is a fixed compatibility string.
-- Network-backed features such as external scripts and `XMLHttpRequest` require suitable
-  AngleSharp requesters and resource loading configuration.
-- `XMLHttpRequest` currently provides text responses only. Its `response`, `responseXML`, and
-  `upload` properties are unavailable, `responseType` always has its empty value, and its
-  `timeout` and `withCredentials` settings do not affect requests.
-- The JavaScript engine executes application-provided or page-provided code in your process.
-  Treat untrusted scripts as untrusted code and apply the constraints appropriate to your
-  application.
+- The package does not calculate layout. Its `scroll*`, `client*`, and `offset*` element properties return `0`.
+- Without AngleSharp.Io's `WithNavigator()`, `navigator` is minimal (e.g. an empty `userAgent`).
+- Network-backed features such as external scripts, modules, workers, `fetch` and `XMLHttpRequest` require suitable AngleSharp requesters and resource loading configuration.
+- The JavaScript engine executes application-provided or page-provided code in your process. Treat untrusted scripts as untrusted code and apply the constraints appropriate to your application.
+
+## Where to go next
+
+- [API Documentation](../tutorials/01-API.md) lists every public type and how .NET types map to JavaScript.
+- [Examples](../tutorials/02-Examples.md) has ready-to-use recipes.
+- [Frequently Asked Questions](../tutorials/03-Questions.md) covers common pitfalls.
