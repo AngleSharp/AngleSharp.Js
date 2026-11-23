@@ -14,7 +14,7 @@ Released on tbd.
 - Added delegates of the DOM as functions of scripts
 - Added `BigInteger` as BigInt, `Memory<Byte>` as an ArrayBuffer
 - Added exceptions of the DOM (e.g. `WebAssembly.RuntimeError`) being errors of their class
-- Added the Web Cryptography API (`crypto.subtle`, also in workers)
+- Added the Web Cryptography API (`crypto.subtle`, also in workers; not on .NET Framework)
 
 # 1.2.3
 

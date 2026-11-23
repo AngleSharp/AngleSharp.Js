@@ -25,6 +25,12 @@
     <PackageReference Include="Jint" />
   </ItemGroup>
 
+  <!-- crypto.subtle is built on cryptography .NET Framework lacks (ECParameters, AesGcm, spki and
+       pkcs8, raw ECDH secrets) and is therefore left out there; crypto itself stays. -->
+  <ItemGroup Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework' ">
+    <Compile Remove="Dom\WebCrypto.cs;Dom\SubtleCrypto.cs;Dom\CryptoKey.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\..\logo.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory)..\..\README.md" Pack="true" PackagePath="\" Visible="false" />

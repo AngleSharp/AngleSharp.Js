@@ -1,3 +1,5 @@
+//  crypto.subtle is not available on .NET Framework
+#if !NETFRAMEWORK
 namespace AngleSharp.Js.Tests
 {
     using NUnit.Framework;
@@ -329,3 +331,4 @@ namespace AngleSharp.Js.Tests
         }
     }
 }
+#endif

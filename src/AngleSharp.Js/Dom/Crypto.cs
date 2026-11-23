@@ -20,11 +20,14 @@ namespace AngleSharp.Js.Dom
         {
         }
 
+#if !NETFRAMEWORK
         /// <summary>
-        /// Gets the operations of the Web Cryptography API.
+        /// Gets the operations of the Web Cryptography API, which is not available on .NET
+        /// Framework.
         /// </summary>
         [DomName("subtle")]
         public SubtleCrypto Subtle { get; } = new SubtleCrypto();
+#endif
 
         /// <summary>
         /// Fills the given array of integers with random numbers.

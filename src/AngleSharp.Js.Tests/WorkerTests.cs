@@ -75,6 +75,8 @@ namespace AngleSharp.Js.Tests
             worker.Terminate();
         }
 
+#if !NETFRAMEWORK
+        //  crypto.subtle is not available on .NET Framework
         [Test]
         public async Task WorkerHasWebCrypto()
         {
@@ -87,6 +89,7 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual("object,function", worker.EvaluateInWorker("[typeof crypto.subtle, typeof CryptoKey].join()")?.ToString());
             worker.Terminate();
         }
+#endif
 
         [Test]
         public async Task WorkerKnowsItsAddress()
