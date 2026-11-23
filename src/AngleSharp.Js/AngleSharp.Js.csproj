@@ -27,7 +27,7 @@
 
   <!-- crypto.subtle is built on cryptography .NET Framework lacks (ECParameters, AesGcm, spki and
        pkcs8, raw ECDH secrets) and is therefore left out there; crypto itself stays. -->
-  <ItemGroup Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'net472' ">
     <Compile Remove="Dom\WebCrypto.cs;Dom\SubtleCrypto.cs;Dom\CryptoKey.cs" />
   </ItemGroup>
 
