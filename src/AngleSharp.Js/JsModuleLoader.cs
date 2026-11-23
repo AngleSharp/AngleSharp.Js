@@ -4,18 +4,21 @@ namespace AngleSharp.Js
     using AngleSharp.Io;
     using AngleSharp.Text;
     using Jint;
+    using Jint.Native;
+    using Jint.Runtime;
     using Jint.Runtime.Modules;
     using System.Collections.Generic;
     using System.IO;
     using System;
     using System.Linq;
 
-    internal class JsModuleLoader : ModuleLoader
+    internal class JsModuleLoader : ModuleLoader, IModuleLoader
     {
         private readonly EngineInstance _instance;
         private readonly IResourceLoader _resourceLoader;
         private readonly IElement _scriptElement;
         private readonly IDocument _document;
+        private JavaScriptException _failure;
 
         public JsModuleLoader(EngineInstance instance, IDocument document)
         {
@@ -70,16 +73,57 @@ namespace AngleSharp.Js
             return new ResolvedSpecifier(moduleRequest, specifier, null, SpecifierType.Bare);
         }
 
+        //  A CSS module script (import ... with { type: 'css' }) has the style sheet it gives as
+        //  its default export, a constructed one, as the page adopts it like such one. Jint's own
+        //  loading can't be overridden, so the interface is implemented anew.
+        Module IModuleLoader.LoadModule(Engine engine, ResolvedSpecifier resolved)
+        {
+            _failure = null;
+
+            try
+            {
+                return LoadModule(engine, resolved);
+            }
+            catch (JavaScriptException) when (_failure != null)
+            {
+                //  Jint replaces what went wrong with a string telling the module could not be loaded
+                throw _failure;
+            }
+        }
+
+        private new Module LoadModule(Engine engine, ResolvedSpecifier resolved)
+        {
+            if (IsCssModule(resolved.ModuleRequest))
+            {
+                var source = FetchModule(engine, GetModuleUrl(resolved));
+                var constructor = engine.GetValue("CSSStyleSheet");
+
+                if (!constructor.IsConstructor())
+                {
+                    throw new JavaScriptException(engine.Intrinsics.TypeError, $"The CSS module '{resolved.Key}' needs style sheets to be constructed.");
+                }
+
+                var sheet = engine.Construct(constructor);
+                engine.Invoke(sheet.Get("replaceSync"), sheet, new Object[] { source });
+                return ModuleFactory.BuildJsonModule(engine, sheet, resolved.Key);
+            }
+
+            return base.LoadModule(engine, resolved);
+        }
+
+        private static Boolean IsCssModule(ModuleRequest request) =>
+            request.Attributes?.Any(attribute => attribute.Key == "type" && attribute.Value == "css") ?? false;
+
         //  Every module comes through AngleSharp's resource loader, whatever its scheme, so the
         //  requesters the host registered decide what a page can reach.
         protected override string LoadModuleContents(Engine engine, ResolvedSpecifier resolved)
         {
-            return FetchModule(GetModuleUrl(resolved));
+            return FetchModule(engine, GetModuleUrl(resolved));
         }
 
         protected override Byte[] LoadModuleContentsAsBytes(Engine engine, ResolvedSpecifier resolved)
         {
-            return FetchModuleBytes(GetModuleUrl(resolved));
+            return FetchModuleBytes(engine, GetModuleUrl(resolved));
         }
 
         //  A key of the map is either the whole specifier, or, ending with a slash, a prefix of it,
@@ -149,14 +193,14 @@ namespace AngleSharp.Js
             return new Url(resolved.Key);
         }
 
-        private string FetchModule(Url moduleUrl)
+        private string FetchModule(Engine engine, Url moduleUrl)
         {
             if (_resourceLoader == null)
             {
                 return string.Empty;
             }
 
-            var response = Fetch(moduleUrl);
+            var response = Fetch(engine, moduleUrl);
 
             string content;
 
@@ -168,14 +212,14 @@ namespace AngleSharp.Js
             return content;
         }
 
-        private Byte[] FetchModuleBytes(Url moduleUrl)
+        private Byte[] FetchModuleBytes(Engine engine, Url moduleUrl)
         {
             if (_resourceLoader == null)
             {
                 return Array.Empty<Byte>();
             }
 
-            var response = Fetch(moduleUrl);
+            var response = Fetch(engine, moduleUrl);
 
             using (var content = new MemoryStream())
             {
@@ -184,11 +228,21 @@ namespace AngleSharp.Js
             }
         }
 
-        private IResponse Fetch(Url moduleUrl)
+        //  A module that could not be fetched, or was answered with an error (e.g. a page telling it
+        //  was not found), is a TypeError, which is what an import() of it rejects with.
+        private IResponse Fetch(Engine engine, Url moduleUrl)
         {
             var request = new ResourceRequest(_scriptElement, moduleUrl);
             var response = _resourceLoader.FetchAsync(request).Task.GetAwaiter().GetResult();
-            return response ?? throw new InvalidOperationException($"No requester could load the module '{moduleUrl.Href}'.");
+
+            if (response == null || (Int32)response.StatusCode < 200 || (Int32)response.StatusCode > 299)
+            {
+                response?.Dispose();
+                _failure = new JavaScriptException(engine.Intrinsics.TypeError, $"Failed to fetch the module '{moduleUrl.Href}'.");
+                throw _failure;
+            }
+
+            return response;
         }
     }
 }

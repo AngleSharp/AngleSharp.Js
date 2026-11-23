@@ -75,6 +75,22 @@ namespace AngleSharp.Js.Tests
             worker.Terminate();
         }
 
+#if !NETFRAMEWORK
+        //  crypto.subtle is not available on .NET Framework
+        [Test]
+        public async Task WorkerHasWebCrypto()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/worker.js", "crypto.subtle.digest('SHA-1', new Uint8Array(0)).then(function (d) { self.__d = d.byteLength; });"));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+
+            Assert.IsTrue(await WaitFor(() => worker.IsInitialized || worker.StartupError != null));
+            Assert.IsNull(worker.StartupError, worker.StartupError?.ToString());
+            Assert.IsTrue(await WaitFor(() => worker.EvaluateInWorker("String(self.__d)")?.ToString() == "20"));
+            Assert.AreEqual("object,function", worker.EvaluateInWorker("[typeof crypto.subtle, typeof CryptoKey].join()")?.ToString());
+            worker.Terminate();
+        }
+#endif
+
         [Test]
         public async Task WorkerKnowsItsAddress()
         {
@@ -143,6 +159,23 @@ namespace AngleSharp.Js.Tests
 
             Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
             Assert.AreEqual("1,1", document.ExecuteScript("log.join(',')")?.ToString());
+        }
+
+        [Test]
+        public async Task SharedWorkerKeyIncludesResolvedScriptUrl()
+        {
+            var source = "var count = 0; onconnect = function (e) { count++; e.ports[0].postMessage(count); };";
+            var document = await OpenWithSourcesAsync(
+                ("https://example.com/shared.js", source),
+                ("https://example.com/other.js", source)).ConfigureAwait(false);
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('shared.js', 'same').port.onmessage = function (e) { log.push('a=' + e.data); };
+                new SharedWorker('/shared.js', 'same').port.onmessage = function (e) { log.push('b=' + e.data); };
+                new SharedWorker('other.js', 'same').port.onmessage = function (e) { log.push('c=' + e.data); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "3").ConfigureAwait(false));
+            Assert.AreEqual("a=1,b=2,c=1", document.ExecuteScript("log.sort().join(',')")?.ToString());
         }
 
         [Test]

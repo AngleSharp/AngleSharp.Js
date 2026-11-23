@@ -102,7 +102,11 @@ namespace AngleSharp.Js.Cache
             {
                 foreach (var lib in libs)
                 {
-                    if (GetDefiningTypes(lib).TryGetValue(name, out var definingType))
+                    //  Unrelated classes of different libraries may carry the same name (the
+                    //  CanvasGradient of CSS paint worklets and the one of a canvas); a member
+                    //  of one cannot be invoked on the other, so each keeps its own prototype.
+                    if (GetDefiningTypes(lib).TryGetValue(name, out var definingType) &&
+                        (definingType.IsAssignableFrom(type) || type.IsAssignableFrom(definingType)))
                     {
                         return definingType;
                     }

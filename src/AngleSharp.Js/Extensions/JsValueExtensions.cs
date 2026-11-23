@@ -16,6 +16,7 @@ namespace AngleSharp.Js
     using System.Collections.Generic;
     using System.Globalization;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     static class JsValueExtensions
     {
@@ -130,6 +131,13 @@ namespace AngleSharp.Js
 
         private static Object AsComplex(this JsValue value, Type targetType, EngineInstance engine)
         {
+            //  A function standing for a delegate of the DOM is that delegate (e.g. an exported
+            //  function of WebAssembly put into a table).
+            if (targetType == typeof(Object) && engine.TryGetDelegate(value, out var callback))
+            {
+                return callback;
+            }
+
             var obj = value.FromJsValue();
             var sourceType = obj.GetType();
 
@@ -319,6 +327,12 @@ namespace AngleSharp.Js
 
         public static Object As(this JsValue value, Type targetType, EngineInstance engine)
         {
+            //  A promise (or any value) given for a task, e.g. the fetch() a library awaits.
+            if (targetType == typeof(Task) || (targetType.GetTypeInfo().IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Task<>)))
+            {
+                return engine.ToTask(value, targetType == typeof(Task) ? typeof(Object) : targetType.GetTypeInfo().GenericTypeArguments[0]);
+            }
+
             if (value != JsValue.Null)
             {
                 if (targetType == typeof(Int32))
@@ -339,6 +353,10 @@ namespace AngleSharp.Js
                 else if (targetType == typeof(Double))
                 {
                     return TypeConverter.ToNumber(value);
+                }
+                else if (targetType == typeof(System.Numerics.BigInteger))
+                {
+                    return TypeConverter.ToBigInt(value);
                 }
                 else if (targetType == typeof(String))
                 {

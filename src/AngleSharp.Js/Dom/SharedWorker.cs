@@ -21,7 +21,7 @@ namespace AngleSharp.Js.Dom
     {
         #region Fields
 
-        private static readonly Dictionary<(JsScriptingService, String, String, String), Scope> Scopes = new Dictionary<(JsScriptingService, String, String, String), Scope>();
+        private static readonly Dictionary<Tuple<JsScriptingService, String, String, String>, Scope> Scopes = new Dictionary<Tuple<JsScriptingService, String, String, String>, Scope>();
 
         private readonly MessagePort _port;
 
@@ -64,7 +64,7 @@ namespace AngleSharp.Js.Dom
             var scripting = document.Context.GetService<JsScriptingService>() ?? throw new DomException(DomError.NotSupported);
             var url = Worker.ResolveUrl(document, source);
             var name = options is WorkerOptions workerOptions ? workerOptions.Name ?? String.Empty : options?.ToString() ?? String.Empty;
-            var key = (scripting, document.Origin ?? String.Empty, url.Href, name);
+            var key = Tuple.Create(scripting, document.Origin ?? String.Empty, url.Href, name);
 
             // the port of the window, and the one of the worker, which gets its document once started
             var gate = new Object();
@@ -130,7 +130,7 @@ if (self && typeof self.onconnect === 'function') {
 }
 })();";
 
-            private readonly (JsScriptingService, String, String, String) _key;
+            private readonly Tuple<JsScriptingService, String, String, String> _key;
             private readonly JsScriptingService _scripting;
             private readonly IEventLoop _loop;
             private readonly IBrowsingContext _context;
@@ -138,7 +138,7 @@ if (self && typeof self.onconnect === 'function') {
             private IDocument _document;
             private Exception _startupError;
 
-            public Scope((JsScriptingService, String, String, String) key, IDocument creator, JsScriptingService scripting, Url url)
+            public Scope(Tuple<JsScriptingService, String, String, String> key, IDocument creator, JsScriptingService scripting, Url url)
             {
                 _key = key;
                 _scripting = scripting;

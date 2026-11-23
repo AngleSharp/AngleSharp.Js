@@ -1,9 +1,22 @@
 # 1.3.0
 
-Released on tbd.
+Released on Monday, November 23 2026.
 
+- Fixed a module with a top-level `await` blocking the page for many seconds
+- Fixed import map entries of a prefix not being used
+- Fixed an `import()` of a module that could not be fetched not rejecting with a `TypeError`
+- Fixed the DOM of libraries registered by a creator only being missing
+- Fixed an object getting the prototype of an unrelated class of another library
+- Updated a WebIDL namespace to be a plain object, whose members are no longer members of the window too
 - Added `WithJs(JsDomRegistration)` (and `JsScriptingOptions.DomRegistration`) to declare the DOM surface
 - Added `SharedWorker`, which the scripts of an origin creating it for the same address
+- Added CSS module scripts (`import sheet from './a.css' with { type: 'css' }`), whose default export is a constructed style sheet
+- Added `import.meta.resolve()`
+- Added interfaces of a namespace (`[DomExposed("WebAssembly")]` puts `WebAssembly.Module` there instead of on the window)
+- Added delegates of the DOM as functions of scripts
+- Added `BigInteger` as BigInt, `Memory<Byte>` as an ArrayBuffer
+- Added exceptions of the DOM (e.g. `WebAssembly.RuntimeError`) being errors of their class
+- Added the Web Cryptography API (`crypto.subtle`, also in workers; not on .NET Framework)
 
 # 1.2.3
 

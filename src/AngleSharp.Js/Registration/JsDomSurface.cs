@@ -177,8 +177,12 @@ namespace AngleSharp.Js.Cache
                 builder.PerRealmSlot(ConstructorName, DomShapeBuilder.CreateConstructor, enumerable: false, writable: true, configurable: true);
             }
 
-            return new DomShape(type, registered.BaseType ?? typeof(Object), registered.Name, builder.Build(), registered.Indexers, registered.Definition, members);
+            return new DomShape(type, registered.BaseType ?? GetRootType(type), registered.Name, builder.Build(), registered.Indexers, registered.Definition, members);
         }
+
+        //  An exception inheriting no registered type is an Error still, as it is by reflection.
+        private static Type GetRootType(Type type) =>
+            typeof(Exception).IsAssignableFrom(type) ? typeof(Exception) : typeof(Object);
 
         private static void Declare(JsObjectShape.Builder builder, RegisteredType registered, Dictionary<String, DomShapeBuilder.Member> members, Boolean perRealm)
         {

@@ -1,5 +1,6 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Attributes;
     using AngleSharp.Dom;
     using AngleSharp.Dom.Events;
     using AngleSharp.Html.Dom;
@@ -14,6 +15,15 @@ namespace AngleSharp.Js.Tests
         public sealed class Thing
         {
             public Int32 Value => 42;
+        }
+
+        [DomName("Oops")]
+        public sealed class Oops : Exception
+        {
+            public Oops(String message)
+                : base(message)
+            {
+            }
         }
 
         private static void RegisterDom(IJsDomRegistry registry)
@@ -266,6 +276,38 @@ namespace AngleSharp.Js.Tests
                 .Method("fail", (window, args) => throw new InvalidOperationException("nope"));
             var (service, document) = await OpenAsync(registration, "");
             Assert.AreEqual("nope", Eval(service, document, "try { fail(); } catch (e) { e.message }"));
+        }
+
+        [Test]
+        public async Task RegisteredExceptionsAreErrorsOfTheirClass()
+        {
+            JsDomRegistration registration = registry =>
+            {
+                registry.Type<IWindow>("Window").Method("fail", (window, args) => throw new Oops("nope"));
+                registry.Type<Oops>("Oops");
+            };
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("true|true|nope", Eval(service, document, "try { fail(); } catch (e) { (e instanceof Oops) + '|' + (e instanceof Error) + '|' + e.message }"));
+        }
+
+        [Test]
+        public async Task UnregisteredDomExceptionsArePlainErrors()
+        {
+            JsDomRegistration registration = registry => registry
+                .Type<IWindow>("Window")
+                .Method("fail", (window, args) => throw new Oops("nope"));
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("true|nope", Eval(service, document, "try { fail(); } catch (e) { (e instanceof Error) + '|' + e.message }"));
+        }
+
+        [Test]
+        public async Task RegisteredDelegatesAreFunctions()
+        {
+            JsDomRegistration registration = registry => registry
+                .Type<IWindow>("Window")
+                .Property("twice", window => (Func<Double, Double>)(x => x * 2));
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual(8.0, Eval(service, document, "twice(4)"));
         }
 
         [Test]

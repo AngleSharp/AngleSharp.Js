@@ -66,8 +66,15 @@ namespace AngleSharp.Js
 
         private Boolean IsConstructible => _constructors.Length > 0 || (_registered != null && _registered.IsConstructible);
 
-        private void AddStaticMembers(StaticMember[] members)
+        private void AddStaticMembers(StaticMember[] members) => AddStaticMembers(_instance, this, members);
+
+        /// <summary>
+        /// Adds the static members of a type to its constructor, or to the object of a namespace.
+        /// </summary>
+        public static void AddStaticMembers(EngineInstance instance, ObjectInstance target, StaticMember[] members)
         {
+            var engine = instance.Jint;
+
             foreach (var member in members)
             {
                 var name = member.Name;
@@ -76,15 +83,15 @@ namespace AngleSharp.Js
                 {
                     var getter = member.Getter;
                     var setter = member.Setter;
-                    var get = getter == null ? null : new ClrFunction(Engine, "get " + name, (_, arguments) => _instance.CallStatic(getter, arguments));
-                    var set = setter == null ? null : new ClrFunction(Engine, "set " + name, (_, arguments) => _instance.CallStatic(setter, arguments));
-                    SetOwnProperty(name, new GetSetPropertyDescriptor(get, set, true, true));
+                    var get = getter == null ? null : new ClrFunction(engine, "get " + name, (_, arguments) => instance.CallStatic(getter, arguments));
+                    var set = setter == null ? null : new ClrFunction(engine, "set " + name, (_, arguments) => instance.CallStatic(setter, arguments));
+                    target.FastSetProperty(name, new GetSetPropertyDescriptor(get, set, true, true));
                 }
                 else
                 {
                     var overloads = member.Overloads;
-                    var function = new ClrFunction(Engine, name, (_, arguments) => _instance.CallStatic(overloads.SelectOverload(arguments), arguments));
-                    SetOwnProperty(name, new PropertyDescriptor(function, true, true, true));
+                    var function = new ClrFunction(engine, name, (_, arguments) => instance.CallStatic(overloads.SelectOverload(arguments), arguments));
+                    target.FastSetProperty(name, new PropertyDescriptor(function, true, true, true));
                 }
             }
         }

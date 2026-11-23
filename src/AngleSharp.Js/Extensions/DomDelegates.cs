@@ -104,6 +104,16 @@ namespace AngleSharp.Js
 
         public static Delegate ToDelegate(this Type type, Function function, EngineInstance engine)
         {
+            if (engine.TryGetDelegate(function, out var given) && type.GetTypeInfo().IsAssignableFrom(given.GetType().GetTypeInfo()))
+            {
+                return given;
+            }
+
+            if (type != typeof(DomEventHandler) && AngleSharp.Js.Proxies.ScriptCallback.IsVariadic(type))
+            {
+                return AngleSharp.Js.Proxies.ScriptCallback.Create(type, function, engine);
+            }
+
             if (type != typeof(DomEventHandler))
             {
                 var method = _converters.GetOrAdd(type, CreateConverter);
