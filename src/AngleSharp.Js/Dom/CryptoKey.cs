@@ -60,7 +60,7 @@ namespace AngleSharp.Js.Dom
 
         internal RSAParameters? Rsa { get; set; }
 
-        internal ECParameters? Ec { get; set; }
+        internal EcKeyParameters? Ec { get; set; }
 
         internal Boolean Allows(String usage) => Array.IndexOf(_usages, usage) >= 0;
     }

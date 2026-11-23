@@ -87,7 +87,7 @@ namespace AngleSharp.Js.Dom
                 case "HMAC":
                     return Hmac(key.Hash, key.Secret, data);
                 case "ECDSA":
-                    using (var ecdsa = ECDsa.Create(key.Ec.Value))
+                    using (var ecdsa = key.Ec.Value.CreateEcdsa())
                     {
                         return ecdsa.SignData(data, HashName(normalized.GetHash()));
                     }
@@ -111,10 +111,10 @@ namespace AngleSharp.Js.Dom
                 case "HMAC":
                     return AreEqual(Hmac(key.Hash, key.Secret, data), signature);
                 case "ECDSA":
-                    using (var ecdsa = ECDsa.Create(key.Ec.Value))
+                    using (var ecdsa = key.Ec.Value.CreateEcdsa())
                     {
                         //  the signature is r and s, each as long as a coordinate (IEEE P1363)
-                        return signature.Length == 2 * CoordinateLength(key.Curve) &&
+                        return signature.Length == 2 * EcKeyParameters.CoordinateLength(key.Curve) &&
                             ecdsa.VerifyData(data, signature, HashName(normalized.GetHash()));
                     }
                 default:
@@ -173,21 +173,15 @@ namespace AngleSharp.Js.Dom
                     var isEcdsa = normalized.Name == "ECDSA";
                     CheckUsages(usages, isEcdsa ? new[] { Sign_, Verify_ } : new[] { DeriveKey_, DeriveBits_ });
                     var curve = GetCurve(normalized);
-                    ECParameters parameters;
-
-                    using (var ecdsa = ECDsa.Create(GetNamedCurve(curve)))
-                    {
-                        parameters = ecdsa.ExportParameters(true);
-                    }
-
-                    var publicKey = CreateEcKey(normalized.Name, curve, PublicPart(parameters), true, Intersect(usages, isEcdsa ? new[] { Verify_ } : new String[0]));
-                    var privateKey = CreateEcKey(normalized.Name, curve, parameters, extractable, Intersect(usages, isEcdsa ? new[] { Sign_ } : new[] { DeriveKey_, DeriveBits_ }));
+                    var parameters = EcKeyParameters.Generate(curve);
+                    var publicKey = CreateEcKey(normalized.Name, parameters.PublicPart, true, Intersect(usages, isEcdsa ? new[] { Verify_ } : new String[0]));
+                    var privateKey = CreateEcKey(normalized.Name, parameters, extractable, Intersect(usages, isEcdsa ? new[] { Sign_ } : new[] { DeriveKey_, DeriveBits_ }));
                     return CreateKeyPair(publicKey, RequireUsages(privateKey));
                 }
                 default:
                 {
-                    var (publicUsages, privateUsages) = GetRsaUsages(normalized.Name);
-                    CheckUsages(usages, publicUsages.Concat(privateUsages).ToArray());
+                    var rsaUsages = GetRsaUsages(normalized.Name);
+                    CheckUsages(usages, rsaUsages.Public.Concat(rsaUsages.Private).ToArray());
                     var bits = normalized.GetInteger("modulusLength") ?? throw TypeError("The modulusLength is missing.");
                     var exponent = normalized.GetBytes("publicExponent");
                     var hash = normalized.GetHash();
@@ -213,8 +207,8 @@ namespace AngleSharp.Js.Dom
                         throw OperationError();
                     }
 
-                    var publicKey = CreateRsaKey(normalized.Name, hash, PublicPart(parameters), true, Intersect(usages, publicUsages));
-                    var privateKey = CreateRsaKey(normalized.Name, hash, parameters, extractable, Intersect(usages, privateUsages));
+                    var publicKey = CreateRsaKey(normalized.Name, hash, PublicPart(parameters), true, Intersect(usages, rsaUsages.Public));
+                    var privateKey = CreateRsaKey(normalized.Name, hash, parameters, extractable, Intersect(usages, rsaUsages.Private));
                     return CreateKeyPair(publicKey, RequireUsages(privateKey));
                 }
             }
@@ -291,9 +285,9 @@ namespace AngleSharp.Js.Dom
                     {
                         return (Byte[])key.Secret.Clone();
                     }
-                    else if (key.Ec is ECParameters ec && key.Type == "public")
+                    else if (key.Ec is EcKeyParameters ec && key.Type == "public")
                     {
-                        return EncodePoint(ec, key.Curve);
+                        return EncodePoint(ec);
                     }
 
                     throw InvalidAccessError();
@@ -499,12 +493,12 @@ namespace AngleSharp.Js.Dom
         private static Byte[] AesGcmEncrypt(Algorithm algorithm, Byte[] key, Byte[] data)
         {
 #if NET8_0_OR_GREATER
-            var (iv, additionalData, tagLength) = GetAesGcmParameters(algorithm);
-            var result = new Byte[data.Length + tagLength];
+            var parameters = GetAesGcmParameters(algorithm);
+            var result = new Byte[data.Length + parameters.TagLength];
 
-            using (var gcm = new AesGcm(key, tagLength))
+            using (var gcm = new AesGcm(key, parameters.TagLength))
             {
-                gcm.Encrypt(iv, data, result.AsSpan(0, data.Length), result.AsSpan(data.Length), additionalData);
+                gcm.Encrypt(parameters.Iv, data, result.AsSpan(0, data.Length), result.AsSpan(data.Length), parameters.AdditionalData);
             }
 
             return result;
@@ -516,18 +510,18 @@ namespace AngleSharp.Js.Dom
         private static Byte[] AesGcmDecrypt(Algorithm algorithm, Byte[] key, Byte[] data)
         {
 #if NET8_0_OR_GREATER
-            var (iv, additionalData, tagLength) = GetAesGcmParameters(algorithm);
+            var parameters = GetAesGcmParameters(algorithm);
 
-            if (data.Length < tagLength)
+            if (data.Length < parameters.TagLength)
             {
                 throw OperationError();
             }
 
-            var result = new Byte[data.Length - tagLength];
+            var result = new Byte[data.Length - parameters.TagLength];
 
-            using (var gcm = new AesGcm(key, tagLength))
+            using (var gcm = new AesGcm(key, parameters.TagLength))
             {
-                gcm.Decrypt(iv, data.AsSpan(0, result.Length), data.AsSpan(result.Length), result, additionalData);
+                gcm.Decrypt(parameters.Iv, data.AsSpan(0, result.Length), data.AsSpan(result.Length), result, parameters.AdditionalData);
             }
 
             return result;
@@ -536,7 +530,7 @@ namespace AngleSharp.Js.Dom
 #endif
         }
 
-        private static (Byte[] Iv, Byte[] AdditionalData, Int32 TagLength) GetAesGcmParameters(Algorithm algorithm)
+        private static AesGcmParameters GetAesGcmParameters(Algorithm algorithm)
         {
             var iv = algorithm.GetBytes("iv");
             var additionalData = algorithm.GetBytes("additionalData", false);
@@ -553,7 +547,7 @@ namespace AngleSharp.Js.Dom
                 throw NotSupportedError();
             }
 
-            return (iv, additionalData, tagLength / 8);
+            return new AesGcmParameters(iv, additionalData, tagLength / 8);
         }
 
         private static readonly Byte[] KeyWrapIv = { 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6 };
@@ -706,8 +700,8 @@ namespace AngleSharp.Js.Dom
         private static Byte[] EcdhSecret(CryptoKey privateKey, CryptoKey publicKey)
         {
 #if NET8_0_OR_GREATER
-            using (var mine = ECDiffieHellman.Create(privateKey.Ec.Value))
-            using (var theirs = ECDiffieHellman.Create(publicKey.Ec.Value))
+            using (var mine = ECDiffieHellman.Create(privateKey.Ec.Value.ToParameters()))
+            using (var theirs = ECDiffieHellman.Create(publicKey.Ec.Value.ToParameters()))
             {
                 return mine.DeriveRawSecretAgreement(theirs.PublicKey);
             }
@@ -744,19 +738,18 @@ namespace AngleSharp.Js.Dom
             var result = new Byte[length];
             var hashLength = HashLength(hash);
 
-            using (var hmac = IncrementalHash.CreateHMAC(HashName(hash), password))
+            using (var hmac = CreateHmac(hash, password))
             {
                 for (var block = 1; (block - 1) * hashLength < length; block++)
                 {
-                    hmac.AppendData(salt);
-                    hmac.AppendData(new[] { (Byte)(block >> 24), (Byte)(block >> 16), (Byte)(block >> 8), (Byte)block });
-                    var u = hmac.GetHashAndReset();
+                    hmac.TransformBlock(salt, 0, salt.Length, null, 0);
+                    hmac.TransformFinalBlock(new[] { (Byte)(block >> 24), (Byte)(block >> 16), (Byte)(block >> 8), (Byte)block }, 0, 4);
+                    var u = hmac.Hash;
                     var t = (Byte[])u.Clone();
 
                     for (var i = 1; i < iterations; i++)
                     {
-                        hmac.AppendData(u);
-                        u = hmac.GetHashAndReset();
+                        u = hmac.ComputeHash(u);
 
                         for (var k = 0; k < t.Length; k++)
                         {
@@ -781,7 +774,7 @@ namespace AngleSharp.Js.Dom
             var result = new Byte[length];
             var previous = new Byte[0];
 
-            for (var (i, offset) = (1, 0); offset < length; i++, offset += hashLength)
+            for (Int32 i = 1, offset = 0; offset < length; i++, offset += hashLength)
             {
                 var input = new Byte[previous.Length + info.Length + 1];
                 Buffer.BlockCopy(previous, 0, input, 0, previous.Length);
@@ -854,8 +847,8 @@ namespace AngleSharp.Js.Dom
         {
             var isEcdsa = algorithm.Name == "ECDSA";
             var curve = GetCurve(algorithm);
-            var size = CoordinateLength(curve);
-            ECParameters parameters;
+            var size = EcKeyParameters.CoordinateLength(curve);
+            EcKeyParameters parameters;
 
             switch (format)
             {
@@ -865,11 +858,7 @@ namespace AngleSharp.Js.Dom
                         throw DataError();
                     }
 
-                    parameters = new ECParameters
-                    {
-                        Curve = GetNamedCurve(curve),
-                        Q = new ECPoint { X = Slice(data, 1, size), Y = Slice(data, 1 + size, size) },
-                    };
+                    parameters = new EcKeyParameters(curve, Slice(data, 1, size), Slice(data, 1 + size, size), null);
                     break;
                 case "jwk":
                     jwk.CheckType("EC");
@@ -885,12 +874,8 @@ namespace AngleSharp.Js.Dom
                         jwk.CheckAlgorithm(curve == "P-521" ? "ES512" : "ES" + curve.Substring(2));
                     }
 
-                    parameters = new ECParameters
-                    {
-                        Curve = GetNamedCurve(curve),
-                        Q = new ECPoint { X = jwk.GetBytes("x", size), Y = jwk.GetBytes("y", size) },
-                        D = jwk.Get("d") != null ? jwk.GetBytes("d", size) : null,
-                    };
+                    var d = jwk.Get("d") != null ? jwk.GetBytes("d", size) : null;
+                    parameters = new EcKeyParameters(curve, jwk.GetBytes("x", size), jwk.GetBytes("y", size), d);
                     break;
                 default:
                     parameters = ImportEcDer(format, data, curve);
@@ -899,7 +884,7 @@ namespace AngleSharp.Js.Dom
 
             try
             {
-                using (var ecdsa = ECDsa.Create(parameters))
+                using (var ecdsa = parameters.CreateEcdsa())
                 {
                     //  validated by the platform, e.g. that the point is on the curve
                 }
@@ -909,7 +894,7 @@ namespace AngleSharp.Js.Dom
                 throw DataError();
             }
 
-            var isPrivate = parameters.D != null;
+            var isPrivate = parameters.IsPrivate;
 
             if (isPrivate)
             {
@@ -920,10 +905,10 @@ namespace AngleSharp.Js.Dom
                 CheckUsages(usages, isEcdsa ? new[] { Verify_ } : new String[0]);
             }
 
-            return CreateEcKey(algorithm.Name, curve, parameters, extractable, usages);
+            return CreateEcKey(algorithm.Name, parameters, extractable, usages);
         }
 
-        private static ECParameters ImportEcDer(String format, Byte[] data, String curve)
+        private static EcKeyParameters ImportEcDer(String format, Byte[] data, String curve)
         {
 #if NET8_0_OR_GREATER
             try
@@ -939,8 +924,8 @@ namespace AngleSharp.Js.Dom
                         ecdsa.ImportPkcs8PrivateKey(data, out _);
                     }
 
-                    var parameters = ecdsa.ExportParameters(format == "pkcs8");
-                    return GetCurveName(parameters.Curve) == curve ? parameters : throw DataError();
+                    var parameters = EcKeyParameters.From(ecdsa.ExportParameters(format == "pkcs8"));
+                    return parameters?.Curve == curve ? parameters.Value : throw DataError();
                 }
             }
             catch (CryptographicException)
@@ -955,7 +940,7 @@ namespace AngleSharp.Js.Dom
         private static CryptoKey ImportRsaKey(String format, Byte[] data, Jwk jwk, Algorithm algorithm, Boolean extractable, String[] usages)
         {
             var hash = algorithm.GetHash();
-            var (publicUsages, privateUsages) = GetRsaUsages(algorithm.Name);
+            var rsaUsages = GetRsaUsages(algorithm.Name);
             RSAParameters parameters;
 
             switch (format)
@@ -1008,7 +993,7 @@ namespace AngleSharp.Js.Dom
                 throw DataError();
             }
 
-            CheckUsages(usages, parameters.D != null ? privateUsages : publicUsages);
+            CheckUsages(usages, parameters.D != null ? rsaUsages.Private : rsaUsages.Public);
             return CreateRsaKey(algorithm.Name, hash, parameters, extractable, usages);
         }
 
@@ -1067,11 +1052,11 @@ namespace AngleSharp.Js.Dom
                 case "ECDH":
                 {
                     var ec = key.Ec.Value;
-                    var size = CoordinateLength(key.Curve);
+                    var size = EcKeyParameters.CoordinateLength(key.Curve);
                     jwk["kty"] = "EC";
                     jwk["crv"] = key.Curve;
-                    jwk["x"] = ToBase64Url(Pad(ec.Q.X, size));
-                    jwk["y"] = ToBase64Url(Pad(ec.Q.Y, size));
+                    jwk["x"] = ToBase64Url(Pad(ec.X, size));
+                    jwk["y"] = ToBase64Url(Pad(ec.Y, size));
 
                     if (key.Type == "private")
                     {
@@ -1121,9 +1106,9 @@ namespace AngleSharp.Js.Dom
             }
 
 #if NET8_0_OR_GREATER
-            if (key.Ec is ECParameters ec)
+            if (key.Ec is EcKeyParameters ec)
             {
-                using (var ecdsa = ECDsa.Create(ec))
+                using (var ecdsa = ec.CreateEcdsa())
                 {
                     return isPublic ? ecdsa.ExportSubjectPublicKeyInfo() : ecdsa.ExportPkcs8PrivateKey();
                 }
@@ -1163,12 +1148,12 @@ namespace AngleSharp.Js.Dom
             return new CryptoKey("secret", extractable, algorithm, usages) { Secret = data };
         }
 
-        private static CryptoKey CreateEcKey(String name, String curve, ECParameters parameters, Boolean extractable, String[] usages)
+        private static CryptoKey CreateEcKey(String name, EcKeyParameters parameters, Boolean extractable, String[] usages)
         {
             var algorithm = CreateAlgorithm(name);
-            algorithm["namedCurve"] = curve;
-            var type = parameters.D != null ? "private" : "public";
-            return new CryptoKey(type, extractable, algorithm, usages) { Ec = parameters, Curve = curve };
+            algorithm["namedCurve"] = parameters.Curve;
+            var type = parameters.IsPrivate ? "private" : "public";
+            return new CryptoKey(type, extractable, algorithm, usages) { Ec = parameters, Curve = parameters.Curve };
         }
 
         private static CryptoKey CreateRsaKey(String name, String hash, RSAParameters parameters, Boolean extractable, String[] usages)
@@ -1190,9 +1175,6 @@ namespace AngleSharp.Js.Dom
 
         private static Dictionary<String, Object> CreateAlgorithm(String name) =>
             new Dictionary<String, Object> { ["name"] = name };
-
-        private static ECParameters PublicPart(ECParameters parameters) =>
-            new ECParameters { Curve = parameters.Curve, Q = parameters.Q };
 
         private static RSAParameters PublicPart(RSAParameters parameters) =>
             new RSAParameters { Modulus = parameters.Modulus, Exponent = parameters.Exponent };
@@ -1254,10 +1236,10 @@ namespace AngleSharp.Js.Dom
             }
         }
 
-        private static (String[] Public, String[] Private) GetRsaUsages(String name) =>
+        private static KeyPairUsages GetRsaUsages(String name) =>
             name == "RSA-OAEP"
-                ? (new[] { Encrypt_, WrapKey_ }, new[] { Decrypt_, UnwrapKey_ })
-                : (new[] { Verify_ }, new[] { Sign_ });
+                ? new KeyPairUsages(new[] { Encrypt_, WrapKey_ }, new[] { Decrypt_, UnwrapKey_ })
+                : new KeyPairUsages(new[] { Verify_ }, new[] { Sign_ });
 
         private static String[] GetAesUsages(String name) =>
             name == "AES-KW" ? new[] { WrapKey_, UnwrapKey_ } : new[] { Encrypt_, Decrypt_, WrapKey_, UnwrapKey_ };
@@ -1275,57 +1257,13 @@ namespace AngleSharp.Js.Dom
             return curve == "P-256" || curve == "P-384" || curve == "P-521" ? curve : throw NotSupportedError();
         }
 
-        private static ECCurve GetNamedCurve(String curve)
+        private static Byte[] EncodePoint(EcKeyParameters parameters)
         {
-            switch (curve)
-            {
-                case "P-256":
-                    return ECCurve.NamedCurves.nistP256;
-                case "P-384":
-                    return ECCurve.NamedCurves.nistP384;
-                default:
-                    return ECCurve.NamedCurves.nistP521;
-            }
-        }
-
-        private static String GetCurveName(ECCurve curve)
-        {
-            switch (curve.Oid?.Value)
-            {
-                case "1.2.840.10045.3.1.7":
-                    return "P-256";
-                case "1.3.132.0.34":
-                    return "P-384";
-                case "1.3.132.0.35":
-                    return "P-521";
-            }
-
-            switch (curve.Oid?.FriendlyName)
-            {
-                case "nistP256":
-                case "ECDSA_P256":
-                    return "P-256";
-                case "nistP384":
-                case "ECDSA_P384":
-                    return "P-384";
-                case "nistP521":
-                case "ECDSA_P521":
-                    return "P-521";
-            }
-
-            return null;
-        }
-
-        private static Int32 CoordinateLength(String curve) =>
-            curve == "P-256" ? 32 : curve == "P-384" ? 48 : 66;
-
-        private static Byte[] EncodePoint(ECParameters parameters, String curve)
-        {
-            var size = CoordinateLength(curve);
+            var size = EcKeyParameters.CoordinateLength(parameters.Curve);
             var result = new Byte[1 + 2 * size];
             result[0] = 4;
-            Buffer.BlockCopy(Pad(parameters.Q.X, size), 0, result, 1, size);
-            Buffer.BlockCopy(Pad(parameters.Q.Y, size), 0, result, 1 + size, size);
+            Buffer.BlockCopy(Pad(parameters.X, size), 0, result, 1, size);
+            Buffer.BlockCopy(Pad(parameters.Y, size), 0, result, 1 + size, size);
             return result;
         }
 
@@ -1460,19 +1398,48 @@ namespace AngleSharp.Js.Dom
 
         private static Byte[] Hash(String hash, Byte[] data)
         {
-            using (var algorithm = IncrementalHash.CreateHash(HashName(hash)))
+            using (var algorithm = CreateHash(hash))
             {
-                algorithm.AppendData(data);
-                return algorithm.GetHashAndReset();
+                return algorithm.ComputeHash(data);
             }
         }
 
         private static Byte[] Hmac(String hash, Byte[] key, Byte[] data)
         {
-            using (var algorithm = IncrementalHash.CreateHMAC(HashName(hash), key))
+            using (var algorithm = CreateHmac(hash, key))
             {
-                algorithm.AppendData(data);
-                return algorithm.GetHashAndReset();
+                return algorithm.ComputeHash(data);
+            }
+        }
+
+        //  Not IncrementalHash, which .NET Framework 4.6.2 does not have.
+        private static HashAlgorithm CreateHash(String hash)
+        {
+            switch (hash)
+            {
+                case "SHA-1":
+                    return SHA1.Create();
+                case "SHA-256":
+                    return SHA256.Create();
+                case "SHA-384":
+                    return SHA384.Create();
+                default:
+                    return SHA512.Create();
+            }
+        }
+
+        private static HMAC CreateHmac(String hash, Byte[] key)
+        {
+            switch (hash)
+            {
+                case "SHA-1":
+                    return new HMACSHA1(key);
+                case "SHA-256":
+                    return new HMACSHA256(key);
+                case "SHA-384":
+                    return new HMACSHA384(key);
+                default:
+                    return new HMACSHA512(key);
             }
         }
 
@@ -1572,6 +1539,41 @@ namespace AngleSharp.Js.Dom
         #endregion
 
         #region Nested types
+
+        /// <summary>
+        /// The usages the public and the private key of a pair may have.
+        /// </summary>
+        private readonly struct KeyPairUsages
+        {
+            public KeyPairUsages(String[] @public, String[] @private)
+            {
+                Public = @public;
+                Private = @private;
+            }
+
+            public String[] Public { get; }
+
+            public String[] Private { get; }
+        }
+
+        /// <summary>
+        /// The parameters of AES-GCM, with the length of the tag in bytes.
+        /// </summary>
+        private readonly struct AesGcmParameters
+        {
+            public AesGcmParameters(Byte[] iv, Byte[] additionalData, Int32 tagLength)
+            {
+                Iv = iv;
+                AdditionalData = additionalData;
+                TagLength = tagLength;
+            }
+
+            public Byte[] Iv { get; }
+
+            public Byte[] AdditionalData { get; }
+
+            public Int32 TagLength { get; }
+        }
 
         /// <summary>
         /// A normalized algorithm: its name, and the object of a script with its parameters.
