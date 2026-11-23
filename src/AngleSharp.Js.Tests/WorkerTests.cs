@@ -148,6 +148,41 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
+        public async Task SharedWorkerStartsOnlyAfterTheTaskCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { var port = e.ports[0]; count++; port.onmessage = function (m) { port.postMessage(m.data + ':' + count); }; };"));
+            //  ample time for a worker started right away to answer before the second connects
+            document.ExecuteScript(@"
+                window.log = [];
+                var a = new SharedWorker('shared.js');
+                a.port.onmessage = function (e) { log.push('a=' + e.data); };
+                a.port.postMessage('ping');
+                var until = Date.now() + 300;
+                while (Date.now() < until) {}
+                var b = new SharedWorker('shared.js');
+                b.port.onmessage = function (e) { log.push('b=' + e.data); };
+                b.port.postMessage('pong');");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            var log = document.ExecuteScript("log.sort().join(',')")?.ToString();
+            Assert.AreEqual("a=ping:2,b=pong:2", log);
+        }
+
+        [Test]
+        public async Task SharedWorkerFailingToStartIsAnErrorForEveryScriptCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/broken.js", "not valid javascript ("));
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('broken.js').onerror = function (e) { log.push('a=' + e.type); };
+                new SharedWorker('broken.js').onerror = function (e) { log.push('b=' + e.type); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            Assert.AreEqual("a=error,b=error", document.ExecuteScript("log.sort().join(',')")?.ToString());
+        }
+
+        [Test]
         public async Task SharedWorkerOfAnotherNameIsAnother()
         {
             var document = await OpenWithSourcesAsync(("https://example.com/shared.js",

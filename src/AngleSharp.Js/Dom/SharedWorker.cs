@@ -82,10 +82,8 @@ namespace AngleSharp.Js.Dom
                     Scopes[key] = scope;
                 }
 
-                scope.Attach(window, this);
+                scope.Attach(window, this, inside);
             }
-
-            scope.Connect(inside);
         }
 
         #endregion
@@ -135,6 +133,8 @@ if (self && typeof self.onconnect === 'function') {
             private readonly IEventLoop _loop;
             private readonly IBrowsingContext _context;
             private readonly List<IWindow> _windows = new List<IWindow>();
+            private readonly Object _gate = new Object();
+            private List<Connection> _pending = new List<Connection>();
             private IDocument _document;
             private Exception _startupError;
 
@@ -145,25 +145,30 @@ if (self && typeof self.onconnect === 'function') {
                 _loop = new JsEventLoop();
                 _context = Worker.CreateContext(creator.Context, scripting, _loop);
 
-                Worker.Enqueue(_loop, TaskPriority.Critical, () =>
+                //  The fetch of the script is asynchronous in a browser, so the worker cannot run
+                //  before the script creating it is done: whatever else that script connects (a
+                //  second SharedWorker for the same script) is connected before the worker sees a
+                //  message. Here the script arrives synchronously on a thread of its own, so it is
+                //  the start that waits instead - for the lock the creating script holds while it
+                //  runs, whether it runs as a task of the event loop or was called from outside.
+                var creatorEngine = scripting.GetOrCreateInstance(creator).Jint;
+                var creatorLoop = creator.Context.GetService<IEventLoop>();
+                Worker.Enqueue(creatorLoop, TaskPriority.Normal, () =>
                 {
-                    try
+                    lock (creatorEngine)
                     {
-                        _document = _context.OpenAsync(request => request.Address(url).Content("<!doctype html>")).GetAwaiter().GetResult();
-                        var source = Worker.FetchScript(creator, url);
-                        _scripting.EvaluateScript(_document, Worker.WorkerBootstrap, MimeTypeNames.DefaultJavaScript, url.Href);
-                        _scripting.EvaluateScript(_document, source, MimeTypeNames.DefaultJavaScript, url.Href);
-                    }
-                    catch (Exception ex)
-                    {
-                        _startupError = ex;
+                        //  the window may have gone in the meantime, and the worker with it
+                        if (!IsClosed)
+                        {
+                            Worker.Enqueue(_loop, TaskPriority.Critical, () => Start(creator, url));
+                        }
                     }
                 });
             }
 
             public Boolean IsClosed { get; private set; }
 
-            public void Attach(IWindow window, SharedWorker worker)
+            public void Attach(IWindow window, SharedWorker worker, MessagePort port)
             {
                 if (!_windows.Contains(window))
                 {
@@ -171,38 +176,79 @@ if (self && typeof self.onconnect === 'function') {
                     window.Unloaded += OnUnloaded;
                 }
 
-                // the worker failing to start is told to every window connecting
-                Worker.Enqueue(_loop, TaskPriority.Normal, () =>
-                {
-                    if (_startupError is { } error)
-                    {
-                        var loop = window.Document?.Context.GetService<IEventLoop>();
-                        Worker.Enqueue(loop, TaskPriority.Normal, () =>
-                        {
-                            var ev = new ErrorEvent();
-                            ev.Init(_key.Item3, 0, 0, error);
-                            worker.Dispatch(ev);
-                        });
-                    }
-                });
-            }
+                var connection = new Connection(window, worker, port);
 
-            public void Connect(MessagePort port)
-            {
-                Worker.Enqueue(_loop, TaskPriority.Normal, () =>
+                lock (_gate)
                 {
-                    if (_document == null || IsClosed)
+                    //  until the script ran there is nothing to connect to, nor an error to tell
+                    if (_pending != null)
                     {
+                        _pending.Add(connection);
                         return;
                     }
+                }
 
-                    port.SetDocument(_document);
-                    var instance = _scripting.GetOrCreateInstance(_document);
-                    var ports = new[] { port };
-                    instance.Jint.SetValue(WorkerIncomingPortsName, ports.ToJsValue(instance));
-                    _document.DefaultView?.Dispatch(new MessageEvent("connect", false, false, String.Empty, String.Empty, String.Empty, null, ports));
-                    _scripting.EvaluateScript(_document, ConnectScript, MimeTypeNames.DefaultJavaScript, _document.Url);
-                });
+                Worker.Enqueue(_loop, TaskPriority.Normal, () => Connect(connection));
+            }
+
+            private void Start(IDocument creator, Url url)
+            {
+                try
+                {
+                    _document = _context.OpenAsync(request => request.Address(url).Content("<!doctype html>")).GetAwaiter().GetResult();
+                    var source = Worker.FetchScript(creator, url);
+                    _scripting.EvaluateScript(_document, Worker.WorkerBootstrap, MimeTypeNames.DefaultJavaScript, url.Href);
+                    _scripting.EvaluateScript(_document, source, MimeTypeNames.DefaultJavaScript, url.Href);
+                }
+                catch (Exception ex)
+                {
+                    _startupError = ex;
+                }
+
+                List<Connection> pending;
+
+                lock (_gate)
+                {
+                    pending = _pending;
+                    _pending = null;
+                }
+
+                //  all within this task, so that a message of the first port is delivered after
+                //  the last of them is connected
+                foreach (var connection in pending)
+                {
+                    Connect(connection);
+                }
+            }
+
+            private void Connect(Connection connection)
+            {
+                if (IsClosed)
+                {
+                    return;
+                }
+
+                // the worker failing to start is told to every window connecting
+                if (_startupError != null)
+                {
+                    var worker = connection.Worker;
+                    var loop = connection.Window.Document?.Context.GetService<IEventLoop>();
+                    Worker.Enqueue(loop, TaskPriority.Normal, () =>
+                    {
+                        var ev = new ErrorEvent();
+                        ev.Init(_key.Item3, 0, 0, _startupError);
+                        worker.Dispatch(ev);
+                    });
+                    return;
+                }
+
+                var port = connection.Port;
+                port.SetDocument(_document);
+                var instance = _scripting.GetOrCreateInstance(_document);
+                var ports = new[] { port };
+                instance.Jint.SetValue(WorkerIncomingPortsName, ports.ToJsValue(instance));
+                _document.DefaultView?.Dispatch(new MessageEvent("connect", false, false, String.Empty, String.Empty, String.Empty, null, ports));
+                _scripting.EvaluateScript(_document, ConnectScript, MimeTypeNames.DefaultJavaScript, _document.Url);
             }
 
             private void OnUnloaded(Object sender, Event ev)
@@ -223,6 +269,22 @@ if (self && typeof self.onconnect === 'function') {
                         ((IDisposable)_loop).Dispose();
                     }
                 }
+            }
+
+            private sealed class Connection
+            {
+                public Connection(IWindow window, SharedWorker worker, MessagePort port)
+                {
+                    Window = window;
+                    Worker = worker;
+                    Port = port;
+                }
+
+                public IWindow Window { get; }
+
+                public SharedWorker Worker { get; }
+
+                public MessagePort Port { get; }
             }
         }
 
