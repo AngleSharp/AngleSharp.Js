@@ -27,7 +27,6 @@ namespace AngleSharp.Js.Dom
         private readonly IWindow _window;
         private readonly IBrowsingContext _workerContext;
         private readonly JsScriptingService _scripting;
-        private readonly IEventLoop _windowLoop;
         private readonly IEventLoop _workerLoop;
         private readonly Queue<SerializedMessage> _pendingMessages;
 
@@ -76,9 +75,9 @@ namespace AngleSharp.Js.Dom
             }
 
             _window = window;
-            _windowLoop = _window.Document.Context.GetService<IEventLoop>();
 
-            var parentContext = _window.Document.Context;
+            var ownerDocument = _window.Document;
+            var parentContext = ownerDocument.Context;
             _scripting = parentContext.GetService<JsScriptingService>() ?? throw new DomException(DomError.NotSupported);
             EnsureLoaderAvailable();
             var workerUrl = ResolveUrl(source);
@@ -100,7 +99,7 @@ namespace AngleSharp.Js.Dom
                     catch (Exception ex)
                     {
                         _startupError = ex;
-                        Enqueue(_windowLoop, TaskPriority.Normal, () => ReportStartupError(workerUrl, ex));
+                        MessageTaskQueue.Enqueue(ownerDocument, () => ReportStartupError(workerUrl, ex));
                     }
                 });
             }
