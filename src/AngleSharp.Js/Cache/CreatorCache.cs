@@ -342,6 +342,18 @@ namespace AngleSharp.Js.Cache
             Overloads = overloads;
         }
 
+        public ConstructorDefinition(Type type, String[] names, RegisteredInterface registered)
+            : this(type, names, Array.Empty<ConstructorInfo>())
+        {
+            Registered = registered;
+        }
+
+        /// <summary>
+        /// Gets what a registration declared of the interface object, or null if it is found by
+        /// reflection - in which case the overloads and the static members are reflected.
+        /// </summary>
+        public RegisteredInterface Registered { get; }
+
         /// <summary>
         /// Gets the type the constructor creates instances of.
         /// </summary>

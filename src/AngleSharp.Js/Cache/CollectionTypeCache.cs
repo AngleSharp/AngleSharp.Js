@@ -104,6 +104,10 @@ namespace AngleSharp.Js.Cache
             _item = item;
         }
 
+        //  what a registration declared is already a delegate, so there is nothing to compile
+        public static IndexedCollection Create(Func<Object, Int32> length, Func<Object, Int32, Object> item) =>
+            new IndexedCollection(length, item);
+
         public static IndexedCollection TryCreate(Type type, MethodInfo indexer, MethodInfo length)
         {
             //  What carries the DOM attributes and what can actually be called are not always the

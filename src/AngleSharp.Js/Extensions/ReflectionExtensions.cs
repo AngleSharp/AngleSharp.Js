@@ -18,10 +18,43 @@ namespace AngleSharp.Js
         public static Object GetDefaultValue(this Type type) =>
             type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 
+        //  A namespace (e.g. CSS) is exposed to the window as an object of its own, so what it
+        //  takes the window for (CSS.supports) is none of the window's members.
         public static IEnumerable<Type> GetExtensionTypes(this IEnumerable<Assembly> libs, String name) => libs
             .SelectMany(m => m.ExportedTypes)
-            .Where(m => m.GetTypeInfo().GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
+            .Where(m => !m.IsDomNamespace() && m.GetTypeInfo().GetCustomAttributes<DomExposedAttribute>().Any(n => n.Target.Is(name)))
             .ToArray();
+
+        /// <summary>
+        /// Gets if the type is a WebIDL namespace (e.g. CSS or WebAssembly): a static class with a
+        /// DOM name, which scripts see as a plain object holding its members, rather than a mixin
+        /// (a static class without an interface object, e.g. WindowBase64) adding them elsewhere.
+        /// </summary>
+        public static Boolean IsDomNamespace(this Type type)
+        {
+            var info = type.GetTypeInfo();
+            return info.IsAbstract && info.IsSealed && info.IsDefined(typeof(DomNameAttribute), false) && !type.HasNoInterfaceObject();
+        }
+
+        public static Boolean HasNoInterfaceObject(this Type type) =>
+            type.GetTypeInfo().IsDefined(typeof(DomNoInterfaceObjectAttribute), false);
+
+        /// <summary>
+        /// Gets the namespace the type is exposed to (WebIDL's [LegacyNamespace], e.g. the Module
+        /// of WebAssembly), if one of the names it is exposed to is one of the given namespaces.
+        /// </summary>
+        public static String GetDomNamespace(this Type type, ICollection<String> namespaces) =>
+            namespaces.Count == 0
+                ? null
+                : type.GetTypeInfo().GetCustomAttributes<DomExposedAttribute>()
+                    .Select(m => m.Target)
+                    .FirstOrDefault(namespaces.Contains);
+
+        public static ICollection<String> GetDomNamespaces(this IEnumerable<Assembly> libs) => new HashSet<String>(libs
+            .SelectMany(m => m.ExportedTypes)
+            .Where(IsDomNamespace)
+            .SelectMany(m => m.GetTypeInfo().GetCustomAttributes<DomNameAttribute>())
+            .Select(m => m.OfficialName), StringComparer.Ordinal);
 
         public static Type GetGenericInterface(this Type type, Type definition)
         {

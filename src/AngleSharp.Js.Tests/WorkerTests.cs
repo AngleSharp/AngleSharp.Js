@@ -1,11 +1,14 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
+    using AngleSharp.Scripting;
     using NUnit.Framework;
     using System;
     using System.Diagnostics;
+    using System.Threading;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -75,6 +78,22 @@ namespace AngleSharp.Js.Tests
             worker.Terminate();
         }
 
+#if !NETFRAMEWORK
+        //  crypto.subtle is not available on .NET Framework
+        [Test]
+        public async Task WorkerHasWebCrypto()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/worker.js", "crypto.subtle.digest('SHA-1', new Uint8Array(0)).then(function (d) { self.__d = d.byteLength; });"));
+            var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "https://example.com/worker.js");
+
+            Assert.IsTrue(await WaitFor(() => worker.IsInitialized || worker.StartupError != null));
+            Assert.IsNull(worker.StartupError, worker.StartupError?.ToString());
+            Assert.IsTrue(await WaitFor(() => worker.EvaluateInWorker("String(self.__d)")?.ToString() == "20"));
+            Assert.AreEqual("object,function", worker.EvaluateInWorker("[typeof crypto.subtle, typeof CryptoKey].join()")?.ToString());
+            worker.Terminate();
+        }
+#endif
+
         [Test]
         public async Task WorkerKnowsItsAddress()
         {
@@ -110,6 +129,133 @@ namespace AngleSharp.Js.Tests
                 w.postMessage('sent right away');");
 
             Assert.IsTrue(await WaitFor(() => document.Title == "error:error"), document.Title);
+        }
+
+        [Test]
+        public async Task SharedWorkerIsSharedByTheScriptsCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { var port = e.ports[0]; count++; port.onmessage = function (m) { port.postMessage(m.data + ':' + count); }; };"));
+            document.ExecuteScript(@"
+                window.log = [];
+                var a = new SharedWorker('shared.js');
+                a.port.onmessage = function (e) { log.push('a=' + e.data); };
+                a.port.postMessage('ping');
+                var b = new SharedWorker('shared.js');
+                b.port.onmessage = function (e) { log.push('b=' + e.data); };
+                b.port.postMessage('pong');");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            var log = document.ExecuteScript("log.sort().join(',')")?.ToString();
+            Assert.AreEqual("a=ping:2,b=pong:2", log);
+        }
+
+        [Test]
+        public async Task SharedWorkerStartsOnlyAfterTheTaskCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { var port = e.ports[0]; count++; port.onmessage = function (m) { port.postMessage(m.data + ':' + count); }; };"));
+            //  ample time for a worker started right away to answer before the second connects
+            document.ExecuteScript(@"
+                window.log = [];
+                var a = new SharedWorker('shared.js');
+                a.port.onmessage = function (e) { log.push('a=' + e.data); };
+                a.port.postMessage('ping');
+                var until = Date.now() + 300;
+                while (Date.now() < until) {}
+                var b = new SharedWorker('shared.js');
+                b.port.onmessage = function (e) { log.push('b=' + e.data); };
+                b.port.postMessage('pong');");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            var log = document.ExecuteScript("log.sort().join(',')")?.ToString();
+            Assert.AreEqual("a=ping:2,b=pong:2", log);
+        }
+
+        [Test]
+        public async Task SharedWorkerFailingToStartIsAnErrorForEveryScriptCreatingIt()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/broken.js", "not valid javascript ("));
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('broken.js').onerror = function (e) { log.push('a=' + e.type); };
+                new SharedWorker('broken.js').onerror = function (e) { log.push('b=' + e.type); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            Assert.AreEqual("a=error,b=error", document.ExecuteScript("log.sort().join(',')")?.ToString());
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task WorkerErrorIsDispatchedAsAnEngineTask(Boolean shared)
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/broken.js", "not valid javascript (")).ConfigureAwait(false);
+            var instance = document.Context.GetService<JsScriptingService>().GetOrCreateInstance(document);
+            var dispatched = new TaskCompletionSource<Boolean>();
+            var loopEntered = new TaskCompletionSource<Boolean>();
+            var releaseLoop = new TaskCompletionSource<Boolean>();
+            var loop = document.Context.GetService<IEventLoop>();
+            loop.Enqueue(_ =>
+            {
+                loopEntered.TrySetResult(true);
+                releaseLoop.Task.GetAwaiter().GetResult();
+            }, TaskPriority.Normal);
+
+            try
+            {
+                Assert.AreSame(loopEntered.Task, await Task.WhenAny(loopEntered.Task, Task.Delay(3000)).ConfigureAwait(false));
+
+                if (shared)
+                {
+                    var worker = new AngleSharp.Js.Dom.SharedWorker(document.DefaultView, "broken.js");
+                    worker.Failed += (_, _) => dispatched.TrySetResult(
+                        EngineInstance.Current == instance && Monitor.IsEntered(instance.Jint));
+                }
+                else
+                {
+                    var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "broken.js");
+                    worker.Failed += (_, _) => dispatched.TrySetResult(
+                        EngineInstance.Current == instance && Monitor.IsEntered(instance.Jint));
+                }
+            }
+            finally
+            {
+                releaseLoop.TrySetResult(true);
+            }
+
+            Assert.AreSame(dispatched.Task, await Task.WhenAny(dispatched.Task, Task.Delay(3000)).ConfigureAwait(false));
+            Assert.IsTrue(await dispatched.Task.ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task SharedWorkerOfAnotherNameIsAnother()
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/shared.js",
+                "var count = 0; onconnect = function (e) { count++; e.ports[0].postMessage(count); };"));
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('shared.js', 'one').port.onmessage = function (e) { log.push(e.data); };
+                new SharedWorker('shared.js', { name: 'two' }).port.onmessage = function (e) { log.push(e.data); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
+            Assert.AreEqual("1,1", document.ExecuteScript("log.join(',')")?.ToString());
+        }
+
+        [Test]
+        public async Task SharedWorkerKeyIncludesResolvedScriptUrl()
+        {
+            var source = "var count = 0; onconnect = function (e) { count++; e.ports[0].postMessage(count); };";
+            var document = await OpenWithSourcesAsync(
+                ("https://example.com/shared.js", source),
+                ("https://example.com/other.js", source)).ConfigureAwait(false);
+            document.ExecuteScript(@"
+                window.log = [];
+                new SharedWorker('shared.js', 'same').port.onmessage = function (e) { log.push('a=' + e.data); };
+                new SharedWorker('/shared.js', 'same').port.onmessage = function (e) { log.push('b=' + e.data); };
+                new SharedWorker('other.js', 'same').port.onmessage = function (e) { log.push('c=' + e.data); };");
+
+            Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "3").ConfigureAwait(false));
+            Assert.AreEqual("a=1,b=2,c=1", document.ExecuteScript("log.sort().join(',')")?.ToString());
         }
 
         [Test]

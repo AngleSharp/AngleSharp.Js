@@ -66,6 +66,21 @@ namespace AngleSharp
             configuration.WithJs(new JsScriptingOptions());
 
         /// <summary>
+        /// Sets scripting to true, registers the JavaScript engine exposing the
+        /// DOM surface the given registration declares instead of the one found
+        /// by reflection, and returns a new configuration with the scripting
+        /// service and possible auxiliary services, if not yet registered.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        /// <param name="registration">Declares the DOM types exposed to script.</param>
+        /// <returns>The new configuration.</returns>
+        public static IConfiguration WithJs(this IConfiguration configuration, DomRegistration registration) =>
+            configuration.WithJs(new JsScriptingOptions
+            {
+                DomRegistration = registration ?? throw new ArgumentNullException(nameof(registration)),
+            });
+
+        /// <summary>
         /// Sets scripting to true, registers the JavaScript engine with the
         /// given options and returns a new configuration with the scripting
         /// service and possible auxiliary services, if not yet registered.

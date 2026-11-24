@@ -7,6 +7,7 @@ namespace AngleSharp.Js
     using AngleSharp.Io;
     using AngleSharp.Js.Cache;
     using AngleSharp.Js.Dom;
+    using AngleSharp.Scripting;
     using AngleSharp.Text;
     using Jint;
     using Jint.Native;
@@ -19,6 +20,8 @@ namespace AngleSharp.Js
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
+    using AngleSharp.Js.Proxies;
+    using System.Runtime.InteropServices;
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
@@ -48,6 +51,10 @@ namespace AngleSharp.Js
         #region Fields
 
         private Int32 _scriptDepth;
+        private ICollection<String> _namespaces;
+        private readonly ConditionalWeakTable<Delegate, ClrFunction> _functions = new ConditionalWeakTable<Delegate, ClrFunction>();
+        private readonly ConditionalWeakTable<ClrFunction, Delegate> _delegates = new ConditionalWeakTable<ClrFunction, Delegate>();
+        private readonly ConditionalWeakTable<Byte[], JsValue> _buffers = new ConditionalWeakTable<Byte[], JsValue>();
         private const String ScriptValueKey = "AngleSharp.ScriptValue";
 
         //  Jint's StackGuard.Disabled, which is internal.
@@ -55,11 +62,14 @@ namespace AngleSharp.Js
 
         private readonly Engine _engine;
         private readonly TimeSpan _regexTimeout;
+        private readonly Options.ConstraintOptions _constraints;
         private readonly Boolean _retainFunctionSourceText;
         private readonly PrototypeCache _prototypes;
         private readonly ReferenceCache _references;
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
+        private readonly JsDomSurface _surface;
+        private readonly JsArgumentReader _arguments;
         private readonly DomNodeInstance _window;
         private readonly IDocument _document;
         private readonly JsImportMap _importMap;
@@ -76,12 +86,13 @@ namespace AngleSharp.Js
 
         #region ctor
 
-        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options)
+        public EngineInstance(IWindow window, IDictionary<String, Object> assignments, IEnumerable<Assembly> libs, JsScriptingOptions options, JsDomSurface surface = null)
         {
             _importMap = new JsImportMap();
             var engineOptions = new Options();
-            engineOptions.EnableModules(new JsModuleLoader(this, window.Document));
-            engineOptions.UseHostFactory(_ => new JsHost(window.Document));
+            var moduleLoader = new JsModuleLoader(this, window.Document);
+            engineOptions.EnableModules(moduleLoader);
+            engineOptions.UseHostFactory(engine => new JsHost(engine, window.Document, moduleLoader));
             // The handler uses the caches initialized below. The creator must return the
             // engine before DOM objects are wrapped or page scripts are evaluated.
             engineOptions.SetWrapObjectHandler(WrapObject);
@@ -95,8 +106,11 @@ namespace AngleSharp.Js
             _engine = (creator is null ? new Engine(engineOptions) : creator.Invoke(window, engineOptions))
                 ?? throw new InvalidOperationException("The engine creator must return a Jint engine.");
             _regexTimeout = engineOptions.Constraints.RegexTimeout;
+            _constraints = engineOptions.Constraints;
             _libs = new LibrarySet(libs);
-            _prototypes = new PrototypeCache(_engine, _libs);
+            _surface = surface;
+            _arguments = new JsArgumentReader(this);
+            _prototypes = new PrototypeCache(_engine, _libs, surface);
             _references = new ReferenceCache();
             _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
 
@@ -116,6 +130,7 @@ namespace AngleSharp.Js
                 this.AddInstances(_window, lib);
             }
 
+            _surface?.Publish(this, _window);
             _window.FastSetProperty("DOMException", CreateDomExceptionProperty());
 
             foreach (var property in _window.GetOwnProperties())
@@ -144,7 +159,22 @@ namespace AngleSharp.Js
 
         public IEnumerable<Assembly> Libs => _libs.Assemblies;
 
+        /// <summary>
+        /// Gets the names of the WebIDL namespaces (e.g. CSS) of the libraries.
+        /// </summary>
+        public ICollection<String> Namespaces => _namespaces ??= _libs.Assemblies.GetDomNamespaces();
+
         public DomNodeInstance Window => _window;
+
+        /// <summary>
+        /// Gets the registered DOM surface, or null if the surface is found by reflection.
+        /// </summary>
+        public JsDomSurface Surface => _surface;
+
+        /// <summary>
+        /// Gets the arguments of a call to a registered member, read by the engine's one reader.
+        /// </summary>
+        public DomArguments CreateArguments(JsValue[] values) => _arguments.Create(values);
 
         /// <summary>
         /// Gets the document the engine runs the scripts of.
@@ -477,34 +507,42 @@ namespace AngleSharp.Js
             {
                 var current = getter.Invoke(owner, Array.Empty<Object>());
 
-                if (current == null)
-                {
-                    return JsValue.Null;
-                }
-
-                // Nodes and windows already have a canonical proxy. Preserve its identity,
-                // concrete prototype and script-owned properties across SameObject getters.
-                if (IsOutOfReach(current))
-                {
-                    return JsValue.Null;
-                }
-
-                if (current is INode || current is IWindow)
-                {
-                    return GetDomNode(current);
-                }
-
-                var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
-
                 //  The interface of a collection doesn't tell that it is one, the class does: script
                 //  iterates over document.links or element.children like any other.
-                var type = current is ITokenList || current.GetType().GetGenericInterface(typeof(IHtmlCollection<>)) != null ? current.GetType() : getter.ReturnType;
-                return cache.GetOrUpdate(getter, current, () => CreateInstance(current, type));
+                var type = current != null && (current is ITokenList || current.GetType().GetGenericInterface(typeof(IHtmlCollection<>)) != null) ? current.GetType() : getter.ReturnType;
+                return GetSameObject(owner, getter, current, type);
             }
             catch (TargetInvocationException ex)
             {
                 throw ToScriptError(ex);
             }
+        }
+
+        /// <summary>
+        /// Gets the object script sees for what a [SameObject] attribute read, which is the one it
+        /// saw before - kept per owner and per attribute, the key standing for the latter.
+        /// </summary>
+        public JsValue GetSameObject(Object owner, Object key, Object current, Type type)
+        {
+            if (current == null)
+            {
+                return JsValue.Null;
+            }
+
+            // Nodes and windows already have a canonical proxy. Preserve its identity,
+            // concrete prototype and script-owned properties across SameObject getters.
+            if (IsOutOfReach(current))
+            {
+                return JsValue.Null;
+            }
+
+            if (current is INode || current is IWindow)
+            {
+                return GetDomNode(current);
+            }
+
+            var cache = _sameObjects.GetValue(owner, _ => new SameObjectCache());
+            return cache.GetOrUpdate(key, current, () => CreateInstance(current, type));
         }
 
         /// <summary>
@@ -604,9 +642,170 @@ namespace AngleSharp.Js
                 return error.Data[ScriptValueKey].ToJsValue(this);
             }
 
-            return error is DomException exception
-                ? GetDomException(exception)
-                : _engine.Intrinsics.Error.Construct(error?.Message ?? String.Empty);
+            if (error is DomException exception)
+            {
+                return GetDomException(exception);
+            }
+
+            //  An exception of the DOM (e.g. WebAssembly.RuntimeError) is an Error of its class. With
+            //  a registration only a registered one has a class, any other stays a plain Error.
+            if (error != null && (_surface != null ? _prototypes.Canonicalize(error.GetType()) != typeof(Object) : error.GetType().IsDomType()))
+            {
+                return GetDomNode(error);
+            }
+
+            return _engine.Intrinsics.Error.Construct(error?.Message ?? String.Empty);
+        }
+
+        /// <summary>
+        /// Gets the function of a script for a delegate, which is the same one each time; for the
+        /// delegate of a function of a script, that function.
+        /// </summary>
+        public JsValue GetFunction(Delegate callback)
+        {
+            if (callback.Target is ScriptCallback script && ReferenceEquals(script.Engine, this))
+            {
+                return script.Function;
+            }
+
+            return _functions.GetValue(callback, target =>
+            {
+                var invoke = target.GetType().GetTypeInfo().GetDeclaredMethod("Invoke");
+                var parameters = invoke.GetParameters();
+                var isVariadic = ScriptCallback.IsVariadic(target.GetType());
+                var function = new ClrFunction(_engine, String.Empty, (self, arguments) => InvokeDelegate(target, parameters, isVariadic, arguments), isVariadic ? 0 : parameters.Length, PropertyFlag.Configurable);
+                _delegates.Add(function, target);
+                return function;
+            });
+        }
+
+        /// <summary>
+        /// Gets the delegate a function was made for by <see cref="GetFunction(Delegate)"/>, so a
+        /// script handing it back gives the library what it gave (e.g. an exported function of a
+        /// WebAssembly module imported by another one).
+        /// </summary>
+        public Boolean TryGetDelegate(JsValue function, out Delegate callback)
+        {
+            callback = null;
+            return function is ClrFunction clr && _delegates.TryGetValue(clr, out callback);
+        }
+
+        private JsValue InvokeDelegate(Delegate callback, ParameterInfo[] parameters, Boolean isVariadic, JsValue[] arguments)
+        {
+            try
+            {
+                Object result;
+
+                if (isVariadic)
+                {
+                    var values = new Object[arguments.Length];
+
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        values[i] = ScriptCallback.ToClr(arguments[i]);
+                    }
+
+                    result = ScriptCallback.InvokeVariadic(callback, values);
+                }
+                else
+                {
+                    var values = new Object[parameters.Length];
+
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        var argument = i < arguments.Length ? arguments[i] : JsValue.Undefined;
+                        values[i] = argument.IsUndefined() && parameters[i].ParameterType.GetTypeInfo().IsValueType
+                            ? Activator.CreateInstance(parameters[i].ParameterType)
+                            : argument.As(parameters[i].ParameterType, this);
+                    }
+
+                    result = callback.DynamicInvoke(values);
+                }
+
+                return result == Missing.Value ? JsValue.Undefined : result.ToJsValue(this);
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw ToScriptError(ex);
+            }
+            catch (Exception ex) when (!(ex is JavaScriptException))
+            {
+                throw new JavaScriptException(ToScriptValue(ex));
+            }
+        }
+
+        /// <summary>
+        /// Gets the ArrayBuffer sharing the bytes of the given memory (e.g. the memory of a
+        /// WebAssembly module), which is the same one for the same array. Memory that is only a
+        /// part of its array is copied, as an ArrayBuffer can only be a whole array.
+        /// </summary>
+        public JsValue GetSharedBuffer(Memory<Byte> memory)
+        {
+            if (MemoryMarshal.TryGetArray<Byte>(memory, out var segment) && segment.Offset == 0 && segment.Count == segment.Array.Length)
+            {
+                return _buffers.GetValue(segment.Array, array => _engine.Intrinsics.ArrayBuffer.Construct(array));
+            }
+
+            return _engine.Intrinsics.ArrayBuffer.Construct(memory.ToArray());
+        }
+
+        /// <summary>
+        /// Gets a task for what a script gave, which is settled by a promise as it settles.
+        /// </summary>
+        public Object ToTask(JsValue value, Type resultType)
+        {
+            var source = (ITaskSource)Activator.CreateInstance(typeof(TaskSource<>).MakeGenericType(resultType));
+            var onFulfilled = new ClrFunction(_engine, String.Empty, (self, arguments) =>
+            {
+                try
+                {
+                    source.Resolve(arguments.Length > 0 ? arguments[0] : JsValue.Undefined, this);
+                }
+                catch (Exception ex)
+                {
+                    source.Reject(ex);
+                }
+
+                return JsValue.Undefined;
+            });
+            var onRejected = new ClrFunction(_engine, String.Empty, (self, arguments) =>
+            {
+                source.Reject(new JavaScriptException(arguments.Length > 0 ? arguments[0] : JsValue.Undefined));
+                return JsValue.Undefined;
+            });
+
+            //  a thenable settles it, anything else is the result right away
+            if (value is ObjectInstance thenable && thenable.Get("then") is Jint.Native.Function.Function)
+            {
+                _engine.Call(thenable.Get("then"), thenable, new JsValue[] { onFulfilled, onRejected });
+            }
+            else
+            {
+                _engine.Call(onFulfilled, JsValue.Undefined, new[] { value });
+            }
+
+            return source.Task;
+        }
+
+        private interface ITaskSource
+        {
+            Object Task { get; }
+
+            void Resolve(JsValue value, EngineInstance engine);
+
+            void Reject(Exception error);
+        }
+
+        private sealed class TaskSource<T> : ITaskSource
+        {
+            private readonly TaskCompletionSource<T> _source = new TaskCompletionSource<T>();
+
+            public Object Task => _source.Task;
+
+            public void Resolve(JsValue value, EngineInstance engine) =>
+                _source.TrySetResult(typeof(T) == typeof(Object) ? (T)ScriptCallback.ToClr(value) : (T)value.As(typeof(T), engine));
+
+            public void Reject(Exception error) => _source.TrySetException(error);
         }
 
         /// <summary>
@@ -813,10 +1012,32 @@ namespace AngleSharp.Js
             }
 
             _engine.Modules.Add(specifier, source);
-            _engine.Modules.Import(specifier);
+
+            //  A module with a top-level await (of its own or of an import) is evaluated up to there,
+            //  and goes on once what it awaits is settled, e.g. by a timer, which can only run once
+            //  this is done. Jint waits for that, so it is told not to; it only wants it done now.
+            var timeout = _constraints.PromiseTimeout;
+            _constraints.PromiseTimeout = TimeSpan.FromMilliseconds(1);
+
+            try
+            {
+                _engine.Modules.Import(specifier);
+            }
+            catch (InvalidOperationException ex) when (IsAwaitingModule(ex))
+            {
+            }
+            finally
+            {
+                _constraints.PromiseTimeout = timeout;
+            }
 
             return JsValue.Undefined;
         }
+
+        //  Jint has no other way to tell that the promise of evaluating the module is pending
+        private static Boolean IsAwaitingModule(InvalidOperationException ex) =>
+            ex.Message.EndsWith("Pending", StringComparison.Ordinal) ||
+            (ex.InnerException?.Message.EndsWith("Pending", StringComparison.Ordinal) ?? false);
 
         #endregion
 
@@ -861,14 +1082,41 @@ namespace AngleSharp.Js
                 return CreateInstance(new CrossOriginWindow(window, _document), typeof(CrossOriginWindow));
             }
 
-            return IsOutOfReach(obj) ? new Jint.Native.JsObject(_engine) : CreateInstance(obj, obj.GetType());
+            if (IsOutOfReach(obj))
+            {
+                return new Jint.Native.JsObject(_engine);
+            }
+
+            var instance = CreateInstance(obj, obj.GetType());
+
+            if (obj is Exception error)
+            {
+                SetErrorProperties(instance, error);
+            }
+
+            return instance;
+        }
+
+        //  An exception of the DOM is an Error (its prototype is one): like a native error it has
+        //  a message and a stack, which Jint takes when it is thrown again (e.g. by an await).
+        private void SetErrorProperties(ObjectInstance instance, Exception error)
+        {
+            var message = error.Message ?? String.Empty;
+
+            if (!instance.HasOwnProperty("message"))
+            {
+                instance.FastSetProperty("message", new PropertyDescriptor(message, true, false, true));
+            }
+
+            var stack = _engine.Intrinsics.Error.Construct(message).Get("stack");
+            instance.FastSetProperty("stack", new PropertyDescriptor(stack.IsString() ? stack : (JsValue)String.Empty, true, false, true));
         }
 
         private ObjectInstance CreateInstance(Object obj, Type type)
         {
             //  A node indexed like a collection (a form, a select) is a node still: only the node's
             //  proxy holds its event handler attributes (form.onsubmit), and it asks the indexers too.
-            var collection = obj is INode ? null : type.GetIndexedCollection();
+            var collection = obj is INode ? null : (_surface != null ? _surface.GetCollection(_prototypes.Canonicalize(type)) : type.GetIndexedCollection());
 
             if (collection != null)
             {
@@ -885,7 +1133,7 @@ namespace AngleSharp.Js
         /// </summary>
         private ObjectInstance CreatePrototype(Type type)
         {
-            var shape = DomShapeCache.GetOrCreate(type, _libs, _engine);
+            var shape = _surface != null ? _surface.GetShape(type) : DomShapeCache.GetOrCreate(type, _libs, _engine);
             var prototype = shape.Shape.Instantiate(_engine, GetParentPrototype(type, shape.BaseType));
             JsObjectShape.SetHostState(prototype, new DomPrototypeState(this, prototype, shape));
             SetIterator(prototype, shape);
@@ -897,9 +1145,11 @@ namespace AngleSharp.Js
         //  the cache entry currently being built, so the fold is ruled out before the ask and the
         //  chain stops at Object.prototype, which is where it used to stop as well.
         private ObjectInstance GetParentPrototype(Type type, Type baseType) =>
-            ReferenceEquals(_prototypes.Canonicalize(baseType), type)
-                ? _engine.Intrinsics.Object.PrototypeObject
-                : GetDomPrototype(baseType);
+            baseType == typeof(Exception)
+                ? (ObjectInstance)_engine.Intrinsics.Error.Get("prototype")
+                : ReferenceEquals(_prototypes.Canonicalize(baseType), type)
+                    ? _engine.Intrinsics.Object.PrototypeObject
+                    : GetDomPrototype(baseType);
 
         /// <summary>
         /// Converts a value handed over from C#, which reaches Jint through JsValue.FromObject
@@ -916,9 +1166,9 @@ namespace AngleSharp.Js
 
         private sealed class SameObjectCache
         {
-            private readonly Dictionary<MethodInfo, ObjectInstance> _entries = new Dictionary<MethodInfo, ObjectInstance>();
+            private readonly Dictionary<Object, ObjectInstance> _entries = new Dictionary<Object, ObjectInstance>();
 
-            public ObjectInstance GetOrUpdate(MethodInfo getter, Object value, Func<ObjectInstance> create)
+            public ObjectInstance GetOrUpdate(Object getter, Object value, Func<ObjectInstance> create)
             {
                 lock (_entries)
                 {

@@ -22,6 +22,8 @@ namespace AngleSharp.Js
     {
         private readonly MethodInfo _addHandler;
         private readonly MethodInfo _removeHandler;
+        private readonly Action<Object, DomEventHandler> _add;
+        private readonly Action<Object, DomEventHandler> _remove;
 
         public DomEventDefinition(MethodInfo addHandler, MethodInfo removeHandler)
         {
@@ -29,8 +31,16 @@ namespace AngleSharp.Js
             _removeHandler = removeHandler;
         }
 
+        //  for a registered event handler, see DomRegistration
+        public DomEventDefinition(Action<Object, DomEventHandler> add, Action<Object, DomEventHandler> remove)
+        {
+            _add = add;
+            _remove = remove;
+        }
+
         public Boolean IsSameAs(DomEventDefinition other) =>
-            _addHandler == other._addHandler && _removeHandler == other._removeHandler;
+            _addHandler == other._addHandler && _removeHandler == other._removeHandler &&
+            _add == other._add && _remove == other._remove;
 
         public JsValue GetHandler(JsValue thisObject, JsValue[] arguments)
         {
@@ -50,7 +60,14 @@ namespace AngleSharp.Js
 
                 if (previous != null)
                 {
-                    _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
+                    if (_remove != null)
+                    {
+                        _remove.Invoke(node.Value, previous.Handler);
+                    }
+                    else
+                    {
+                        _removeHandler?.Invoke(node.Value, new Object[] { previous.Handler });
+                    }
                 }
 
                 var engine = node.Instance;
@@ -61,7 +78,15 @@ namespace AngleSharp.Js
                     var handler = function.ToEventHandler(engine);
 
                     node.SetEventHandler(this, new Registration(value, handler));
-                    _addHandler?.Invoke(node.Value, new Object[] { handler });
+
+                    if (_add != null)
+                    {
+                        _add.Invoke(node.Value, handler);
+                    }
+                    else
+                    {
+                        _addHandler?.Invoke(node.Value, new Object[] { handler });
+                    }
                 }
             }
 

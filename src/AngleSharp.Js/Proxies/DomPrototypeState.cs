@@ -116,6 +116,13 @@ namespace AngleSharp.Js
         /// </summary>
         public DomConstructorInstance GetConstructor(ConstructorDefinition definition)
         {
+            //  a type sharing the interface object of another one (see DomRegistry.Type) has
+            //  the constructor that the prototype of that one holds
+            if (definition != null && definition.Type != _shape.Type && definition.Registered != null)
+            {
+                return _instance.GetDomConstructor(definition);
+            }
+
             if (_constructor == null)
             {
                 _constructor = new DomConstructorInstance(_instance, definition);

@@ -217,7 +217,7 @@ namespace AngleSharp.Js.Cache
         /// script reads off the window under the type's name, which is what keeps naming a type
         /// and asking one of its instances for its constructor the same answer.
         /// </summary>
-        private static JsValue CreateConstructor(ObjectInstance prototype)
+        internal static JsValue CreateConstructor(ObjectInstance prototype)
         {
             var state = DomPrototypeState.Of(prototype);
             return state != null ? state.GetConstructor(state.Shape.Constructor) : JsValue.Undefined;

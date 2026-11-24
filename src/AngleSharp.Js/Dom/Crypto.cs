@@ -9,7 +9,7 @@ namespace AngleSharp.Js.Dom
     using System.Security.Cryptography;
 
     /// <summary>
-    /// Represents the Crypto interface: random numbers, without the operations of crypto.subtle.
+    /// Represents the Crypto interface: random numbers and the operations of crypto.subtle.
     /// </summary>
     [DomName("Crypto")]
     public sealed class Crypto
@@ -19,6 +19,15 @@ namespace AngleSharp.Js.Dom
         internal Crypto()
         {
         }
+
+#if !NETFRAMEWORK
+        /// <summary>
+        /// Gets the operations of the Web Cryptography API, which is not available on .NET
+        /// Framework.
+        /// </summary>
+        [DomName("subtle")]
+        public SubtleCrypto Subtle { get; } = new SubtleCrypto();
+#endif
 
         /// <summary>
         /// Fills the given array of integers with random numbers.

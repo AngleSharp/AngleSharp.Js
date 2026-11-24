@@ -1,14 +1,17 @@
 namespace AngleSharp.Js
 {
     using AngleSharp.Dom;
+    using Jint;
     using Jint.Native;
+    using Jint.Runtime.Interop;
     using Jint.Runtime;
     using Jint.Runtime.Modules;
     using System;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Tells a module what the engine leaves to the host: where it comes from (import.meta.url).
+    /// Tells a module what the engine leaves to the host: where it comes from (import.meta.url) and
+    /// what it would import (import.meta.resolve).
     /// </summary>
     sealed class JsHost : Host
     {
@@ -18,18 +21,37 @@ namespace AngleSharp.Js
         /// </summary>
         public const String InlineModuleMark = "#inline-module-";
 
+        private readonly Engine _engine;
         private readonly IDocument _document;
+        private readonly IModuleLoader _loader;
 
-        public JsHost(IDocument document)
+        public JsHost(Engine engine, IDocument document, IModuleLoader loader)
         {
+            _engine = engine;
             _document = document;
+            _loader = loader;
         }
 
         public override List<KeyValuePair<JsValue, JsValue>> GetImportMetaProperties(Module module)
         {
             var properties = base.GetImportMetaProperties(module) ?? new List<KeyValuePair<JsValue, JsValue>>();
             properties.Add(new KeyValuePair<JsValue, JsValue>("url", GetAddress(module.Location)));
+            properties.Add(new KeyValuePair<JsValue, JsValue>("resolve", new ClrFunction(_engine, "resolve", (_, arguments) =>
+                Resolve(module.Location, TypeConverter.ToString(arguments.At(0))), 1)));
             return properties;
+        }
+
+        //  the address the module would import, without importing it; a name nothing maps fails
+        private JsValue Resolve(String location, String specifier)
+        {
+            var resolved = _loader.Resolve(location, new ModuleRequest(specifier, Array.Empty<ModuleImportAttribute>()));
+
+            if (resolved.Type != SpecifierType.RelativeOrAbsolute)
+            {
+                throw new JavaScriptException(_engine.Intrinsics.TypeError, $"The specifier '{specifier}' could not be resolved.");
+            }
+
+            return resolved.Key;
         }
 
         private String GetAddress(String location)

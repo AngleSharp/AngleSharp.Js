@@ -1,5 +1,6 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Scripting;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
@@ -42,6 +43,55 @@ namespace AngleSharp.Js
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// Picks one of several registered overloads, by the same rules as for reflected ones.
+        /// </summary>
+        public static Int32 SelectSignature(this DomSignature[] signatures, JsValue[] arguments)
+        {
+            var count = CountPassed(arguments);
+            var best = 0;
+            var bestScore = Int32.MinValue;
+
+            for (var i = 0; i < signatures.Length; i++)
+            {
+                var signature = signatures[i];
+                var parameters = signature.Parameters;
+                var score = count < signature.Required
+                    ? -1000 + count - signature.Required
+                    : count > parameters.Count && !signature.IsVariadic ? parameters.Count - count : 0;
+
+                if (count >= signature.Required)
+                {
+                    for (var j = 0; j < Math.Min(count, parameters.Count); j++)
+                    {
+                        var type = parameters[j];
+                        var isRest = signature.IsVariadic && j == parameters.Count - 1;
+                        score += Match(arguments[j], isRest ? type.GetElementType() : type);
+                    }
+                }
+
+                if (score > bestScore)
+                {
+                    best = i;
+                    bestScore = score;
+                }
+            }
+
+            return best;
+        }
+
+        private static Int32 CountPassed(JsValue[] arguments)
+        {
+            var count = arguments.Length;
+
+            while (count > 0 && arguments[count - 1].IsUndefined())
+            {
+                count--;
+            }
+
+            return count;
         }
 
         private static Int32 Score(MethodBase method, JsValue[] arguments, Int32 count)
@@ -97,6 +147,11 @@ namespace AngleSharp.Js
             if (value.IsNull() || value.IsUndefined())
             {
                 return !info.IsValueType || type != target ? 1 : 0;
+            }
+
+            if (value.IsBigInt())
+            {
+                return target == typeof(System.Numerics.BigInteger) ? 2 : target == typeof(Object) ? 1 : 0;
             }
 
             if (value.IsCallable())

@@ -5,6 +5,7 @@ namespace AngleSharp.Scripting
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js;
+    using AngleSharp.Js.Cache;
     using AngleSharp.Js.Dom;
     using AngleSharp.Text;
     using Jint;
@@ -29,6 +30,17 @@ namespace AngleSharp.Scripting
         private readonly ConditionalWeakTable<IWindow, EngineInstance> _contexts;
         private readonly Dictionary<String, Object> _external;
         private readonly JsScriptingOptions _options;
+        private readonly Lazy<JsDomSurface> _surface;
+
+        #endregion
+
+        #region Test Support
+
+        /// <summary>
+        /// Gets or sets the registration a service given none uses instead of reflection. Only the
+        /// test suite sets it, to run every test against the registered DOM as well.
+        /// </summary>
+        internal static DomRegistration DefaultDomRegistration { get; set; }
 
         #endregion
 
@@ -52,6 +64,17 @@ namespace AngleSharp.Scripting
             _contexts = new ConditionalWeakTable<IWindow, EngineInstance>();
             _external = new Dictionary<String, Object>();
             _options = (options ?? throw new ArgumentNullException(nameof(options))).Clone();
+
+            //  Built on the first document that runs a script, once for every one after it: what a
+            //  registration declares does not depend on the document, and it may declare a lot.
+            //  The DOM of AngleSharp itself and of this library always come first: this library's
+            //  builds on the core one (MessagePort is an EventTarget), and as under reflection a
+            //  library implementing one of its stubs (the renderer's layout members) wins over it.
+            //  Only the libraries beyond these two are for the registration to name.
+            var registration = _options.DomRegistration ?? DefaultDomRegistration;
+            _surface = registration != null
+                ? new Lazy<JsDomSurface>(() => JsDomSurface.Create(DomRegistrations.Combine(CoreDom.Register, JsDom.Register, registration)), LazyThreadSafetyMode.ExecutionAndPublication)
+                : null;
         }
 
         #endregion
@@ -227,8 +250,9 @@ namespace AngleSharp.Scripting
 
             if (!_contexts.TryGetValue(objectContext, out var instance))
             {
-                var libs = GetAssemblies(document.Context).ToArray();
-                instance = new EngineInstance(objectContext, _external, libs, _options);
+                var surface = _surface?.Value;
+                var libs = surface != null ? Array.Empty<Assembly>() : GetAssemblies(document.Context).ToArray();
+                instance = new EngineInstance(objectContext, _external, libs, _options, surface);
                 _contexts.Add(objectContext, instance);
             }
 
@@ -237,9 +261,35 @@ namespace AngleSharp.Scripting
 
         private static IEnumerable<Assembly> GetAssemblies(IBrowsingContext context) => context
             .GetServices<Object>()
-            .Select(m => m.GetType().GetAssembly())
+            .SelectMany(GetAssemblies)
             .Distinct()
             .Where(m => m.FullName.StartsWith("AngleSharp"));
+
+        //  A service registered by a creator (e.g. WithWasm's runtime factory) is only created when
+        //  first asked for, so until then it is the delegate, a type of the framework: the library
+        //  is the one of the type it creates and of its code.
+        private static IEnumerable<Assembly> GetAssemblies(Object service)
+        {
+            yield return service.GetType().GetAssembly();
+
+            if (service is Delegate creator)
+            {
+                var type = creator.GetType();
+
+                if (type.GetTypeInfo().IsGenericType)
+                {
+                    foreach (var argument in type.GetTypeInfo().GenericTypeArguments)
+                    {
+                        yield return argument.GetAssembly();
+                    }
+                }
+
+                if (creator.GetMethodInfo()?.DeclaringType is Type declaring)
+                {
+                    yield return declaring.GetAssembly();
+                }
+            }
+        }
 
         #endregion
     }

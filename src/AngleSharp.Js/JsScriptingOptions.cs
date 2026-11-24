@@ -1,5 +1,6 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Scripting;
     using System;
 
     /// <summary>
@@ -26,6 +27,15 @@ namespace AngleSharp.Js
         /// </summary>
         public Boolean RetainFunctionSourceText { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets what declares the DOM surface exposed to script. Defaults to null, which
+        /// discovers the surface by reflecting over the AngleSharp libraries behind the services
+        /// of the browsing context. Given one, nothing is reflected over and the engine exposes
+        /// exactly what it registers - which is what a trimmed or natively compiled application
+        /// needs.
+        /// </summary>
+        public DomRegistration DomRegistration { get; set; }
+
         //  An engine is built per window, long after the options were handed over, so
         //  reading them then would let a later edit of the caller's object decide how
         //  the next document behaves. The service takes this copy instead.
@@ -33,6 +43,7 @@ namespace AngleSharp.Js
         {
             MaxCallStackDepth = MaxCallStackDepth,
             RetainFunctionSourceText = RetainFunctionSourceText,
+            DomRegistration = DomRegistration,
         };
     }
 }

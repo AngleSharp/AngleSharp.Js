@@ -8,6 +8,7 @@ namespace AngleSharp.Js
     using Jint.Native;
     using Jint.Native.Number;
     using Jint.Native.Object;
+    using Jint.Native.Symbol;
     using Jint.Runtime;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
@@ -15,6 +16,7 @@ namespace AngleSharp.Js
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
 
@@ -67,7 +69,8 @@ namespace AngleSharp.Js
                 }
                 else if (obj is Enum literal)
                 {
-                    var name = literal.GetLiteralName();
+                    //  a registration is all there is, see DomRegistration
+                    var name = engine.Surface != null ? engine.Surface.GetLiteral(literal) : literal.GetLiteralName();
 
                     if (name != null)
                     {
@@ -104,6 +107,19 @@ namespace AngleSharp.Js
                 else if (obj is Task task)
                 {
                     return engine.CreatePromise(task);
+                }
+                else if (obj is Delegate callback)
+                {
+                    //  e.g. an exported function of a WebAssembly module, which scripts call
+                    return engine.GetFunction(callback);
+                }
+                else if (obj is System.Numerics.BigInteger integer)
+                {
+                    return new JsBigInt(integer);
+                }
+                else if (obj is Memory<Byte> memory)
+                {
+                    return engine.GetSharedBuffer(memory);
                 }
                 else if (obj is IDictionary<String, Object> record)
                 {
@@ -283,15 +299,55 @@ namespace AngleSharp.Js
                 }
             }
 
-            var definitions = SelectConstructors(assembly.ExportedTypes);
+            //  A mixin has no name of its own for scripts, and what a namespace holds is found there.
+            var namespaces = engine.Namespaces;
+            var exposed = assembly.ExportedTypes.Where(m => !m.HasNoInterfaceObject() && m.GetDomNamespace(namespaces) == null);
+            var definitions = SelectConstructors(exposed);
 
             foreach (var definition in definitions)
             {
-                ctx.FastSetProperty(definition.Key, CreateConstructorProperty(engine, definition.Value));
+                var property = definition.Value.Type.IsDomNamespace()
+                    ? CreateNamespaceProperty(engine, definition.Value)
+                    : CreateConstructorProperty(engine, definition.Value);
+                ctx.FastSetProperty(definition.Key, property);
             }
         }
 
-        private static void SetEnumLiteral(EngineInstance engine, ObjectInstance obj, EnumLiteralDefinition enumDefinition)
+        //  A namespace is writable and configurable, but not enumerable, like an interface object.
+        private static PropertyDescriptor CreateNamespaceProperty(EngineInstance engine, ConstructorDefinition definition) =>
+            PropertyDescriptor.CreateLazy(
+                new ConstructorRequest(engine, definition),
+                static request => request.Instance.CreateNamespace(request.Definition),
+                PropertyFlag.NonEnumerable);
+
+        /// <summary>
+        /// Creates the object of a WebIDL namespace: its static members, its constants and the
+        /// interfaces exposed to it (e.g. WebAssembly.Module), but no constructor of its own.
+        /// </summary>
+        internal static ObjectInstance CreateNamespace(this EngineInstance engine, ConstructorDefinition definition)
+        {
+            var obj = new JsObject(engine.Jint);
+            DomConstructorInstance.AddStaticMembers(engine, obj, definition.Type.GetStaticMembers());
+
+            foreach (var constant in engine.Libs.GetConstants(definition.Name))
+            {
+                obj.FastSetProperty(constant.Key, new PropertyDescriptor(JsNumber.Create(constant.Value), false, true, false));
+            }
+
+            var members = engine.Libs
+                .SelectMany(m => m.ExportedTypes)
+                .Where(m => !m.IsDomNamespace() && definition.Names.Contains(m.GetDomNamespace(engine.Namespaces)));
+
+            foreach (var member in SelectConstructors(members))
+            {
+                obj.FastSetProperty(member.Key, CreateConstructorProperty(engine, member.Value));
+            }
+
+            obj.FastSetProperty(GlobalSymbolRegistry.ToStringTag, new PropertyDescriptor(definition.Name, false, false, true));
+            return obj;
+        }
+
+        internal static void SetEnumLiteral(EngineInstance engine, ObjectInstance obj, EnumLiteralDefinition enumDefinition)
         {
             var target = obj.Get(enumDefinition.Name) as ObjectInstance;
 
@@ -416,7 +472,7 @@ namespace AngleSharp.Js
         /// learn that a custom value became a constant. A type name is exactly the sort of global a
         /// script reads over and over.
         /// </remarks>
-        private static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
+        internal static PropertyDescriptor CreateConstructorProperty(EngineInstance engine, ConstructorDefinition definition) =>
             PropertyDescriptor.CreateLazy(
                 new ConstructorRequest(engine, definition),
                 static request => request.Instance.GetDomConstructor(request.Definition),

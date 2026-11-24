@@ -10,6 +10,14 @@
     <ProjectReference Include="..\AngleSharp.Js\AngleSharp.Js.csproj" />
   </ItemGroup>
 
+  <!-- The DOM types the tests declare themselves, for the run against the registered DOM
+       (registered=true, see RegisteredDomSetup), in which nothing is found by reflection. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="AngleSharp.Attributes.GenerateDomRegistrationAttribute">
+      <_Parameter1>AngleSharp.Js.Tests.TestDom</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Fixtures\Html5Test\**\*" />
   </ItemGroup>
