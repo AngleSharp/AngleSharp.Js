@@ -1,5 +1,6 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Scripting;
     using Jint.Native;
     using System;
     using System.Collections.Concurrent;
@@ -31,7 +32,7 @@ namespace AngleSharp.Js
         }
 
         /// <summary>
-        /// Creates an indexer from a registered accessor, see <see cref="JsDomRegistration"/>. It
+        /// Creates an indexer from a registered accessor, see <see cref="DomRegistration"/>. It
         /// has to fail the way a reflected one does - with a TargetInvocationException - as that
         /// is what the callers tell an index out of range by.
         /// </summary>

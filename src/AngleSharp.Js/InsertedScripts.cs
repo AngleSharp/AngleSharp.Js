@@ -19,12 +19,6 @@ namespace AngleSharp.Js
     /// </summary>
     static class InsertedScripts
     {
-        //  If AngleSharp prepared a script (its "already started" flag), which it does not expose.
-        //  Without the field the scripts run when AngleSharp evaluates them, as before.
-        private static readonly FieldInfo StartedField = typeof(IHtmlScriptElement).Assembly
-            .GetType("AngleSharp.Html.Dom.HtmlScriptElement")?
-            .GetField("_started", BindingFlags.Instance | BindingFlags.NonPublic) is { } field && field.FieldType == typeof(Boolean) ? field : null;
-
         private static readonly ConditionalWeakTable<IHtmlScriptElement, Object> Ran = new ConditionalWeakTable<IHtmlScriptElement, Object>();
 
         /// <summary>
@@ -33,11 +27,6 @@ namespace AngleSharp.Js
         /// </summary>
         public static List<IHtmlScriptElement> FindUnstarted(Object target, Object[] arguments)
         {
-            if (StartedField is null)
-            {
-                return null;
-            }
-
             var found = default(List<IHtmlScriptElement>);
             Add(target, ref found);
 
@@ -66,11 +55,6 @@ namespace AngleSharp.Js
         /// </summary>
         public static List<IHtmlScriptElement> FindUnstarted(Object target, JsValue[] arguments)
         {
-            if (StartedField is null)
-            {
-                return null;
-            }
-
             var found = default(List<IHtmlScriptElement>);
             Add(target, ref found);
 
@@ -94,7 +78,7 @@ namespace AngleSharp.Js
         {
             foreach (var script in scripts)
             {
-                if (IsStarted(script) && CanRunNow(script, document))
+                if (script.IsScriptStarted() && CanRunNow(script, document))
                 {
                     Ran.Remove(script);
                     Ran.Add(script, null);
@@ -119,7 +103,7 @@ namespace AngleSharp.Js
 
         private static void Add(Object candidate, ref List<IHtmlScriptElement> found)
         {
-            if (candidate is IHtmlScriptElement script && !IsStarted(script))
+            if (candidate is IHtmlScriptElement script && !script.IsScriptStarted())
             {
                 (found ??= new List<IHtmlScriptElement>()).Add(script);
             }
@@ -132,9 +116,6 @@ namespace AngleSharp.Js
                 }
             }
         }
-
-        private static Boolean IsStarted(IHtmlScriptElement script) =>
-            script.GetType() == StartedField.DeclaringType && (Boolean)StartedField.GetValue(script);
 
         //  a classic script with its text (not one to download, a module or an import map), in
         //  the document the engine runs, as AngleSharp runs it

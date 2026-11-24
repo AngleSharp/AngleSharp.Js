@@ -74,7 +74,7 @@ namespace AngleSharp
         /// <param name="configuration">The configuration to use.</param>
         /// <param name="registration">Declares the DOM types exposed to script.</param>
         /// <returns>The new configuration.</returns>
-        public static IConfiguration WithJs(this IConfiguration configuration, JsDomRegistration registration) =>
+        public static IConfiguration WithJs(this IConfiguration configuration, DomRegistration registration) =>
             configuration.WithJs(new JsScriptingOptions
             {
                 DomRegistration = registration ?? throw new ArgumentNullException(nameof(registration)),

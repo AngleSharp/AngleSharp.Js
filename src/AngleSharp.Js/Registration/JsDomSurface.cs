@@ -2,8 +2,10 @@ namespace AngleSharp.Js.Cache
 {
     using AngleSharp.Dom;
     using AngleSharp.Js.Proxies;
+    using AngleSharp.Scripting;
     using Jint.Native;
     using Jint.Native.Object;
+    using Jint.Native.Symbol;
     using Jint.Runtime.Descriptors;
     using Jint.Runtime.Interop;
     using System;
@@ -12,7 +14,7 @@ namespace AngleSharp.Js.Cache
     using System.Reflection;
 
     /// <summary>
-    /// The DOM surface a <see cref="JsDomRegistration"/> declared, standing in for the libraries
+    /// The DOM surface a <see cref="DomRegistration"/> declared, standing in for the libraries
     /// otherwise reflected over.
     /// </summary>
     /// <remarks>
@@ -44,7 +46,7 @@ namespace AngleSharp.Js.Cache
             _build = BuildShape;
         }
 
-        public static JsDomSurface Create(JsDomRegistration registration)
+        public static JsDomSurface Create(DomRegistration registration)
         {
             var registry = new Registry();
             registration.Invoke(registry);
@@ -81,7 +83,8 @@ namespace AngleSharp.Js.Cache
         {
             foreach (var registered in _registry.Ordered)
             {
-                if (registered.Definition == null)
+                //  one sharing the interface object of another is published by that one
+                if (registered.Definition == null || registered.Owner != null || registered.Namespace != null)
                 {
                     continue;
                 }
@@ -90,6 +93,14 @@ namespace AngleSharp.Js.Cache
                 {
                     window.FastSetProperty(name, EngineExtensions.CreateConstructorProperty(engine, registered.Definition));
                 }
+            }
+
+            foreach (var ns in _registry.NamespaceOrder)
+            {
+                window.FastSetProperty(ns.Name, PropertyDescriptor.CreateLazy(
+                    new NamespaceRequest(engine, ns),
+                    static request => request.Namespace.Create(request.Engine),
+                    PropertyFlag.NonEnumerable));
             }
 
             foreach (var constants in _registry.ConstantObjects)
@@ -230,17 +241,30 @@ namespace AngleSharp.Js.Cache
 
         private sealed class RegisteredType
         {
-            public RegisteredType(Type type, String name, Boolean isMixin)
+            public RegisteredType(Type type, String name, Boolean isMixin, RegisteredType owner)
             {
                 Type = type;
                 Name = name;
                 IsMixin = isMixin;
-                Names = new List<String> { name };
+                Owner = owner;
+                Names = owner?.Names ?? new List<String> { name };
                 Includes = new List<Type>();
                 Order = new List<String>();
                 Members = new Dictionary<String, DomShapeBuilder.Member>(StringComparer.Ordinal);
-                Interface = new RegisteredInterface();
+                Interface = owner?.Interface ?? new RegisteredInterface();
+                Interface.Types.Add(type);
             }
+
+            /// <summary>
+            /// Gets the type declared first under the same name, whose interface object this one
+            /// shares, or null if it is that type itself.
+            /// </summary>
+            public RegisteredType Owner { get; private set; }
+
+            /// <summary>
+            /// Gets the namespace the interface object is published on instead of the window.
+            /// </summary>
+            public String Namespace { get; set; }
 
             public Type Type { get; }
 
@@ -248,11 +272,38 @@ namespace AngleSharp.Js.Cache
 
             public Boolean IsMixin { get; }
 
-            public Boolean HasInterfaceObject { get; set; } = true;
+            private Boolean _hasInterfaceObject = true;
+
+            public Boolean HasInterfaceObject
+            {
+                get => Owner?.HasInterfaceObject ?? _hasInterfaceObject;
+                set
+                {
+                    //  A type without an interface object shares none: it is unrelated to the one
+                    //  of its name (an own Location of a library), which keeps its interface object.
+                    if (Owner != null && !value)
+                    {
+                        Owner.Interface.Types.Remove(Type);
+                        Owner = null;
+                        Names = new List<String> { Name };
+                        Interface = new RegisteredInterface();
+                        Interface.Types.Add(Type);
+                    }
+
+                    if (Owner != null)
+                    {
+                        Owner.HasInterfaceObject = value;
+                    }
+                    else
+                    {
+                        _hasInterfaceObject = value;
+                    }
+                }
+            }
 
             public Type BaseType { get; set; }
 
-            public List<String> Names { get; }
+            public List<String> Names { get; private set; }
 
             public List<Type> Includes { get; }
 
@@ -260,7 +311,7 @@ namespace AngleSharp.Js.Cache
 
             public Dictionary<String, DomShapeBuilder.Member> Members { get; }
 
-            public RegisteredInterface Interface { get; }
+            public RegisteredInterface Interface { get; private set; }
 
             public Indexer NumericIndexer { get; set; }
 
@@ -295,6 +346,13 @@ namespace AngleSharp.Js.Cache
                         typeof(IStringMap).IsAssignableFrom(Type) ? DomIndexers.ToDatasetName : null);
                 }
 
+                if (Owner != null)
+                {
+                    //  completed before, as it was declared before
+                    Definition = Owner.Definition;
+                    return;
+                }
+
                 Interface.Complete();
                 Definition = HasInterfaceObject ? new ConstructorDefinition(Type, Names.ToArray(), Interface) : null;
             }
@@ -319,7 +377,7 @@ namespace AngleSharp.Js.Cache
             public Int32 Length { get; }
         }
 
-        private sealed class Registry : IJsDomRegistry
+        private sealed class Registry : DomRegistry
         {
             private readonly Dictionary<String, List<EnumLiteralMember>> _constants = new Dictionary<String, List<EnumLiteralMember>>(StringComparer.Ordinal);
             private readonly List<String> _constantOrder = new List<String>();
@@ -327,6 +385,13 @@ namespace AngleSharp.Js.Cache
             public Dictionary<Type, RegisteredType> Types { get; } = new Dictionary<Type, RegisteredType>();
 
             public List<RegisteredType> Ordered { get; } = new List<RegisteredType>();
+
+            //  the first non-mixin type of a name, whose interface object later ones of it share
+            private Dictionary<String, RegisteredType> ByName { get; } = new Dictionary<String, RegisteredType>(StringComparer.Ordinal);
+
+            public Dictionary<String, RegisteredNamespace> Namespaces { get; } = new Dictionary<String, RegisteredNamespace>(StringComparer.Ordinal);
+
+            public List<RegisteredNamespace> NamespaceOrder { get; } = new List<RegisteredNamespace>();
 
             public List<EnumLiteralDefinition> ConstantObjects { get; } = new List<EnumLiteralDefinition>();
 
@@ -347,11 +412,25 @@ namespace AngleSharp.Js.Cache
                 }
             }
 
-            public IJsTypeRegistration<T> Type<T>(String name) where T : class => Declare<T>(name, false);
+            public override DomTypeRegistration<T> Type<T>(String name) where T : class => Declare<T>(name, false);
 
-            public IJsTypeRegistration<T> Mixin<T>(String name) where T : class => Declare<T>(name, true);
+            public override DomTypeRegistration<T> Mixin<T>(String name) where T : class => Declare<T>(name, true);
 
-            public IJsConstantsRegistration Constants(String name)
+            public override DomNamespaceRegistration Namespace(String name)
+            {
+                CheckName(name);
+
+                if (!Namespaces.TryGetValue(name, out var ns))
+                {
+                    ns = new RegisteredNamespace(name);
+                    Namespaces.Add(name, ns);
+                    NamespaceOrder.Add(ns);
+                }
+
+                return new NamespaceRegistration(ns.Interface);
+            }
+
+            public override DomConstantsRegistration Constants(String name)
             {
                 CheckName(name);
 
@@ -365,7 +444,7 @@ namespace AngleSharp.Js.Cache
                 return new ConstantsRegistration(members);
             }
 
-            public IJsLiteralsRegistration<TEnum> Literals<TEnum>() where TEnum : struct, Enum
+            public override DomLiteralsRegistration<TEnum> Literals<TEnum>()
             {
                 if (!LiteralValues.TryGetValue(typeof(TEnum), out var values))
                 {
@@ -376,7 +455,7 @@ namespace AngleSharp.Js.Cache
                 return new LiteralsRegistration<TEnum>(this, values);
             }
 
-            public void ConstructorFunction<T>(String name, Func<JsDomArguments, T> create, Int32 length = 0) where T : class
+            public override void ConstructorFunction<T>(String name, Func<DomArguments, T> create, Int32 length = 0)
             {
                 CheckName(name);
                 create = create ?? throw new ArgumentNullException(nameof(create));
@@ -386,7 +465,7 @@ namespace AngleSharp.Js.Cache
                     {
                         try
                         {
-                            var result = create.Invoke(new JsDomArguments(instance, arguments));
+                            var result = create.Invoke(instance.CreateArguments(arguments));
                             scope.Complete();
                             return result;
                         }
@@ -398,13 +477,13 @@ namespace AngleSharp.Js.Cache
                 }, length));
             }
 
-            public void Instance(String name, Func<IWindow, Object> create)
+            public override void Instance(String name, Func<IWindow, Object> create)
             {
                 CheckName(name);
                 Instances.Add(new KeyValuePair<String, Func<IWindow, Object>>(name, create ?? throw new ArgumentNullException(nameof(create))));
             }
 
-            private IJsTypeRegistration<T> Declare<T>(String name, Boolean isMixin) where T : class
+            private DomTypeRegistration<T> Declare<T>(String name, Boolean isMixin) where T : class
             {
                 CheckName(name);
 
@@ -417,7 +496,14 @@ namespace AngleSharp.Js.Cache
                 }
                 else
                 {
-                    existing = new RegisteredType(typeof(T), name, isMixin);
+                    var owner = !isMixin && ByName.TryGetValue(name, out var first) ? first : null;
+                    existing = new RegisteredType(typeof(T), name, isMixin, owner);
+
+                    if (!isMixin && owner == null)
+                    {
+                        ByName.Add(name, existing);
+                    }
+
                     Types.Add(typeof(T), existing);
                     Ordered.Add(existing);
                 }
@@ -453,7 +539,25 @@ namespace AngleSharp.Js.Cache
                         throw new InvalidOperationException($"'{registered.Name}' has no interface object to carry an alias, a constructor or static members.");
                     }
 
+                    if (registered.Namespace != null)
+                    {
+                        if (!Namespaces.TryGetValue(registered.Namespace, out var ns))
+                        {
+                            throw new InvalidOperationException($"'{registered.Name}' is in the namespace '{registered.Namespace}', which is not registered.");
+                        }
+
+                        if (registered.Owner == null && registered.HasInterfaceObject)
+                        {
+                            ns.Types.Add(registered);
+                        }
+                    }
+
                     registered.Complete();
+                }
+
+                foreach (var ns in NamespaceOrder)
+                {
+                    ns.Interface.Complete();
                 }
 
                 foreach (var name in _constantOrder)
@@ -463,7 +567,112 @@ namespace AngleSharp.Js.Cache
             }
         }
 
-        private sealed class ConstantsRegistration : IJsConstantsRegistration
+        private sealed class NamespaceRegistration : DomNamespaceRegistration
+        {
+            private readonly RegisteredInterface _interface;
+
+            public NamespaceRegistration(RegisteredInterface registered)
+            {
+                _interface = registered;
+            }
+
+            public override DomNamespaceRegistration Static(String name, Func<DomArguments, Object> invoke, Int32 length = 0)
+            {
+                Registry.CheckName(name);
+                _interface.DefineStatic(name, new RegisteredStatic(invoke ?? throw new ArgumentNullException(nameof(invoke)), length));
+                return this;
+            }
+
+            public override DomNamespaceRegistration Static(String name, Func<DomArguments, Object> invoke, DomSignature signature)
+            {
+                Registry.CheckName(name);
+                invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
+                signature = signature ?? throw new ArgumentNullException(nameof(signature));
+
+                if (_interface.TryGetStatic(name, out var existing) && existing.IsOverloadSet)
+                {
+                    existing.Add(invoke, signature);
+                }
+                else
+                {
+                    _interface.DefineStatic(name, new RegisteredStatic(invoke, signature));
+                }
+
+                return this;
+            }
+
+            public override DomNamespaceRegistration StaticProperty<TValue>(String name, Func<TValue> getter, Action<TValue> setter = null)
+            {
+                Registry.CheckName(name);
+                _interface.DefineStatic(name, RegisteredStatic.ForProperty(getter ?? throw new ArgumentNullException(nameof(getter)), setter));
+                return this;
+            }
+
+            public override DomNamespaceRegistration StaticProperty<TValue>(String name, Func<IWindow, TValue> getter, Action<IWindow, TValue> setter = null)
+            {
+                Registry.CheckName(name);
+                _interface.DefineStatic(name, RegisteredStatic.ForProperty(getter ?? throw new ArgumentNullException(nameof(getter)), setter));
+                return this;
+            }
+
+            public override DomNamespaceRegistration Constant(String name, Double value)
+            {
+                Registry.CheckName(name);
+                _interface.AddConstant(name, value);
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// A WebIDL namespace: its static members and constants, kept like those of an interface
+        /// object, and the interface objects published on it.
+        /// </summary>
+        private sealed class RegisteredNamespace
+        {
+            public RegisteredNamespace(String name)
+            {
+                Name = name;
+            }
+
+            public String Name { get; }
+
+            public RegisteredInterface Interface { get; } = new RegisteredInterface();
+
+            public List<RegisteredType> Types { get; } = new List<RegisteredType>();
+
+            public ObjectInstance Create(EngineInstance engine)
+            {
+                var obj = new JsObject(engine.Jint);
+                Interface.AddStaticMembers(engine, obj);
+
+                foreach (var registered in Types)
+                {
+                    foreach (var name in registered.Definition.Names)
+                    {
+                        obj.FastSetProperty(name, EngineExtensions.CreateConstructorProperty(engine, registered.Definition));
+                    }
+                }
+
+                obj.FastSetProperty(GlobalSymbolRegistry.ToStringTag, new PropertyDescriptor(Name, false, false, true));
+                return obj;
+            }
+        }
+
+        //  handed to the lazy descriptor rather than captured, as for the constructors
+        private readonly struct NamespaceRequest
+        {
+            public NamespaceRequest(EngineInstance engine, RegisteredNamespace ns)
+            {
+                Engine = engine;
+                Namespace = ns;
+            }
+
+            public EngineInstance Engine { get; }
+
+            public RegisteredNamespace Namespace { get; }
+        }
+
+        private sealed class ConstantsRegistration : DomConstantsRegistration
         {
             private readonly List<EnumLiteralMember> _members;
 
@@ -472,7 +681,7 @@ namespace AngleSharp.Js.Cache
                 _members = members;
             }
 
-            public IJsConstantsRegistration Constant(String name, Double value)
+            public override DomConstantsRegistration Constant(String name, Double value)
             {
                 Registry.CheckName(name);
                 _members.Add(new EnumLiteralMember(name, value));
@@ -480,7 +689,7 @@ namespace AngleSharp.Js.Cache
             }
         }
 
-        private sealed class LiteralsRegistration<TEnum> : IJsLiteralsRegistration<TEnum> where TEnum : struct, Enum
+        private sealed class LiteralsRegistration<TEnum> : DomLiteralsRegistration<TEnum> where TEnum : struct, Enum
         {
             private readonly Registry _registry;
             private readonly Dictionary<String, Object> _values;
@@ -491,7 +700,7 @@ namespace AngleSharp.Js.Cache
                 _values = values;
             }
 
-            public IJsLiteralsRegistration<TEnum> Literal(TEnum value, String literal)
+            public override DomLiteralsRegistration<TEnum> Literal(TEnum value, String literal)
             {
                 literal = literal ?? throw new ArgumentNullException(nameof(literal));
                 Object boxed = value;
@@ -501,7 +710,7 @@ namespace AngleSharp.Js.Cache
             }
         }
 
-        private sealed class TypeRegistration<T> : IJsTypeRegistration<T> where T : class
+        private sealed class TypeRegistration<T> : DomTypeRegistration<T> where T : class
         {
             private readonly RegisteredType _type;
 
@@ -510,7 +719,7 @@ namespace AngleSharp.Js.Cache
                 _type = type;
             }
 
-            public IJsTypeRegistration<T> Inherits<TBase>() where TBase : class
+            public override DomTypeRegistration<T> Inherits<TBase>() where TBase : class
             {
                 if (typeof(TBase) == typeof(T) || !typeof(TBase).IsAssignableFrom(typeof(T)))
                 {
@@ -521,7 +730,7 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> Includes<TMixin>() where TMixin : class
+            public override DomTypeRegistration<T> Includes<TMixin>() where TMixin : class
             {
                 if (typeof(TMixin) == typeof(T) || !typeof(TMixin).IsAssignableFrom(typeof(T)))
                 {
@@ -536,13 +745,20 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> WithoutInterfaceObject()
+            public override DomTypeRegistration<T> WithoutInterfaceObject()
             {
                 _type.HasInterfaceObject = false;
                 return this;
             }
 
-            public IJsTypeRegistration<T> Alias(String name)
+            public override DomTypeRegistration<T> InNamespace(String name)
+            {
+                Registry.CheckName(name);
+                _type.Namespace = name;
+                return this;
+            }
+
+            public override DomTypeRegistration<T> Alias(String name)
             {
                 Registry.CheckName(name);
 
@@ -554,13 +770,13 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> Constructor(Func<JsDomArguments, T> create, Int32 length = 0)
+            public override DomTypeRegistration<T> Constructor(Func<DomArguments, T> create, Int32 length = 0)
             {
                 _type.Interface.AddConstructor(create ?? throw new ArgumentNullException(nameof(create)), null, length);
                 return this;
             }
 
-            public IJsTypeRegistration<T> Constructor(Func<JsDomArguments, T> create, JsDomSignature signature)
+            public override DomTypeRegistration<T> Constructor(Func<DomArguments, T> create, DomSignature signature)
             {
                 _type.Interface.AddConstructor(
                     create ?? throw new ArgumentNullException(nameof(create)),
@@ -569,29 +785,29 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> Property<TValue>(String name, Func<T, TValue> getter, Action<T, TValue> setter = null, JsDomPropertyFlags flags = JsDomPropertyFlags.None)
+            public override DomTypeRegistration<T> Property<TValue>(String name, Func<T, TValue> getter, Action<T, TValue> setter = null, DomPropertyFlags flags = DomPropertyFlags.None)
             {
                 _type.Define(name, new RegisteredProperty<T, TValue>(getter ?? throw new ArgumentNullException(nameof(getter)), setter, flags, null));
                 return this;
             }
 
-            public IJsTypeRegistration<T> ForwardingProperty<TValue>(String name, Func<T, TValue> getter, String forwardTo)
+            public override DomTypeRegistration<T> ForwardingProperty<TValue>(String name, Func<T, TValue> getter, String forwardTo)
             {
                 Registry.CheckName(forwardTo);
-                _type.Define(name, new RegisteredProperty<T, TValue>(getter ?? throw new ArgumentNullException(nameof(getter)), null, JsDomPropertyFlags.None, forwardTo));
+                _type.Define(name, new RegisteredProperty<T, TValue>(getter ?? throw new ArgumentNullException(nameof(getter)), null, DomPropertyFlags.None, forwardTo));
                 return this;
             }
 
-            public IJsTypeRegistration<T> Method(String name, Func<T, JsDomArguments, Object> invoke, Int32 length = 0)
+            public override DomTypeRegistration<T> Method(String name, Func<T, DomArguments, Object> invoke, Int32 length = 0)
             {
                 _type.Define(name, new RegisteredMethod<T>(invoke ?? throw new ArgumentNullException(nameof(invoke)), length));
                 return this;
             }
 
-            public IJsTypeRegistration<T> Method(String name, Action<T, JsDomArguments> invoke, Int32 length = 0) =>
+            public override DomTypeRegistration<T> Method(String name, Action<T, DomArguments> invoke, Int32 length = 0) =>
                 Method(name, ToFunc(invoke), length);
 
-            public IJsTypeRegistration<T> Method(String name, Func<T, JsDomArguments, Object> invoke, JsDomSignature signature)
+            public override DomTypeRegistration<T> Method(String name, Func<T, DomArguments, Object> invoke, DomSignature signature)
             {
                 invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
                 signature = signature ?? throw new ArgumentNullException(nameof(signature));
@@ -608,10 +824,10 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> Method(String name, Action<T, JsDomArguments> invoke, JsDomSignature signature) =>
+            public override DomTypeRegistration<T> Method(String name, Action<T, DomArguments> invoke, DomSignature signature) =>
                 Method(name, ToFunc(invoke), signature);
 
-            public IJsTypeRegistration<T> EventHandler(String name, Action<T, DomEventHandler> add, Action<T, DomEventHandler> remove)
+            public override DomTypeRegistration<T> EventHandler(String name, Action<T, DomEventHandler> add, Action<T, DomEventHandler> remove)
             {
                 add = add ?? throw new ArgumentNullException(nameof(add));
                 remove = remove ?? throw new ArgumentNullException(nameof(remove));
@@ -620,21 +836,21 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> Constant(String name, Double value)
+            public override DomTypeRegistration<T> Constant(String name, Double value)
             {
                 Registry.CheckName(name);
                 _type.Interface.AddConstant(name, value);
                 return this;
             }
 
-            public IJsTypeRegistration<T> Static(String name, Func<JsDomArguments, Object> invoke, Int32 length = 0)
+            public override DomTypeRegistration<T> Static(String name, Func<DomArguments, Object> invoke, Int32 length = 0)
             {
                 Registry.CheckName(name);
                 _type.Interface.DefineStatic(name, new RegisteredStatic(invoke ?? throw new ArgumentNullException(nameof(invoke)), length));
                 return this;
             }
 
-            public IJsTypeRegistration<T> Static(String name, Func<JsDomArguments, Object> invoke, JsDomSignature signature)
+            public override DomTypeRegistration<T> Static(String name, Func<DomArguments, Object> invoke, DomSignature signature)
             {
                 Registry.CheckName(name);
                 invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
@@ -652,21 +868,28 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> StaticProperty<TValue>(String name, Func<TValue> getter, Action<TValue> setter = null)
+            public override DomTypeRegistration<T> StaticProperty<TValue>(String name, Func<TValue> getter, Action<TValue> setter = null)
             {
                 Registry.CheckName(name);
                 _type.Interface.DefineStatic(name, RegisteredStatic.ForProperty(getter ?? throw new ArgumentNullException(nameof(getter)), setter));
                 return this;
             }
 
-            public IJsTypeRegistration<T> Indexer(Func<T, Int32, Object> getter)
+            public override DomTypeRegistration<T> StaticProperty<TValue>(String name, Func<IWindow, TValue> getter, Action<IWindow, TValue> setter = null)
+            {
+                Registry.CheckName(name);
+                _type.Interface.DefineStatic(name, RegisteredStatic.ForProperty(getter ?? throw new ArgumentNullException(nameof(getter)), setter));
+                return this;
+            }
+
+            public override DomTypeRegistration<T> Indexer(Func<T, Int32, Object> getter)
             {
                 getter = getter ?? throw new ArgumentNullException(nameof(getter));
                 _type.NumericIndexer = new Indexer((target, arguments, engine) => Guard(() => getter.Invoke((T)target, (Int32)arguments[0])));
                 return this;
             }
 
-            public IJsTypeRegistration<T> Collection(Func<T, Int32> length, Func<T, Int32, Object> item)
+            public override DomTypeRegistration<T> Collection(Func<T, Int32> length, Func<T, Int32, Object> item)
             {
                 length = length ?? throw new ArgumentNullException(nameof(length));
                 item = item ?? throw new ArgumentNullException(nameof(item));
@@ -682,7 +905,7 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            public IJsTypeRegistration<T> NamedIndexer<TValue>(Func<T, String, TValue> getter, Action<T, String, TValue> setter = null)
+            public override DomTypeRegistration<T> NamedIndexer<TValue>(Func<T, String, TValue> getter, Action<T, String, TValue> setter = null)
             {
                 getter = getter ?? throw new ArgumentNullException(nameof(getter));
                 _type.NamedGetter = new Indexer((target, arguments, engine) => Guard(() => getter.Invoke((T)target, (String)arguments[0])));
@@ -695,7 +918,7 @@ namespace AngleSharp.Js.Cache
                 return this;
             }
 
-            private static Func<T, JsDomArguments, Object> ToFunc(Action<T, JsDomArguments> invoke)
+            private static Func<T, DomArguments, Object> ToFunc(Action<T, DomArguments> invoke)
             {
                 invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
                 return (target, arguments) =>
@@ -727,22 +950,40 @@ namespace AngleSharp.Js.Cache
     /// </summary>
     sealed class RegisteredInterface
     {
-        private readonly List<Func<JsDomArguments, Object>> _constructors = new List<Func<JsDomArguments, Object>>();
-        private readonly List<JsDomSignature> _constructorSignatures = new List<JsDomSignature>();
+        private readonly List<Func<DomArguments, Object>> _constructors = new List<Func<DomArguments, Object>>();
+        private readonly List<DomSignature> _constructorSignatures = new List<DomSignature>();
         private readonly List<String> _staticOrder = new List<String>();
         private readonly Dictionary<String, RegisteredStatic> _statics = new Dictionary<String, RegisteredStatic>(StringComparer.Ordinal);
         private readonly List<KeyValuePair<String, Double>> _constants = new List<KeyValuePair<String, Double>>();
-        private Func<JsDomArguments, Object>[] _creates;
-        private JsDomSignature[] _signatures;
+        private Func<DomArguments, Object>[] _creates;
+        private DomSignature[] _signatures;
         private Int32 _length;
 
         public Boolean IsConstructible => _constructors.Count > 0;
+
+        /// <summary>
+        /// Gets the CLR types standing for the interface, see <see cref="DomRegistry.Type{T}(String)"/>.
+        /// </summary>
+        public List<Type> Types { get; } = new List<Type>();
+
+        public Boolean IsInstance(Type type)
+        {
+            foreach (var candidate in Types)
+            {
+                if (candidate.IsAssignableFrom(type))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public Boolean HasStatics => _statics.Count > 0;
 
         public IReadOnlyList<KeyValuePair<String, Double>> Constants => _constants;
 
-        public void AddConstructor(Func<JsDomArguments, Object> create, JsDomSignature signature, Int32 length)
+        public void AddConstructor(Func<DomArguments, Object> create, DomSignature signature, Int32 length)
         {
             //  as for methods: one without a signature replaces, ones with a signature accumulate
             if (signature == null || _constructorSignatures.Count == 0 || _constructorSignatures[0] == null)
@@ -756,7 +997,22 @@ namespace AngleSharp.Js.Cache
             _length = signature == null ? length : Math.Min(_constructors.Count == 1 ? Int32.MaxValue : _length, signature.Required);
         }
 
-        public void AddConstant(String name, Double value) => _constants.Add(new KeyValuePair<String, Double>(name, value));
+        //  declared again, a constant is replaced, as any member is
+        public void AddConstant(String name, Double value)
+        {
+            var constant = new KeyValuePair<String, Double>(name, value);
+
+            for (var i = 0; i < _constants.Count; i++)
+            {
+                if (String.Equals(_constants[i].Key, name, StringComparison.Ordinal))
+                {
+                    _constants[i] = constant;
+                    return;
+                }
+            }
+
+            _constants.Add(constant);
+        }
 
         public Boolean TryGetStatic(String name, out RegisteredStatic member) => _statics.TryGetValue(name, out member);
 
@@ -784,7 +1040,7 @@ namespace AngleSharp.Js.Cache
             {
                 try
                 {
-                    var result = create.Invoke(new JsDomArguments(instance, arguments));
+                    var result = create.Invoke(instance.CreateArguments(arguments));
                     scope.Complete();
                     return result;
                 }

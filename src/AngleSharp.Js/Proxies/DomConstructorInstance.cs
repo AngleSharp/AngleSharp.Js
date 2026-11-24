@@ -144,6 +144,12 @@ namespace AngleSharp.Js
 
         private Boolean IsInstance(Type type)
         {
+            //  all the types a registration declared under the name, see DomRegistry.Type
+            if (_registered != null)
+            {
+                return _registered.IsInstance(type);
+            }
+
             if (_type.IsAssignableFrom(type))
             {
                 return true;

@@ -43,6 +43,8 @@ namespace AngleSharp.Js.Tests
         [Test]
         public void ShapeIsSharedAcrossEngines()
         {
+            //  about the cache of the reflected shapes, which a registered DOM does not use
+            Assume.That(!RegisteredDomSetup.IsRegistered, "the registered DOM builds no reflected shapes");
             var first = Open();
             var second = Open();
 

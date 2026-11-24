@@ -17,6 +17,14 @@ namespace AngleSharp.Js.Tests
             public Int32 Value => 42;
         }
 
+        public class ProbeBase
+        {
+        }
+
+        public sealed class ProbeDerived : ProbeBase
+        {
+        }
+
         [DomName("Oops")]
         public sealed class Oops : Exception
         {
@@ -26,7 +34,7 @@ namespace AngleSharp.Js.Tests
             }
         }
 
-        private static void RegisterDom(IJsDomRegistry registry)
+        private static void RegisterDom(DomRegistry registry)
         {
             registry.Type<IWindow>("Window")
                 .Property("document", window => window.Document);
@@ -37,7 +45,7 @@ namespace AngleSharp.Js.Tests
             registry.Type<INode>("Node")
                 .Constant("ELEMENT_NODE", 1)
                 .Property("textContent", node => node.TextContent, (node, value) => node.TextContent = value)
-                .Property("childNodes", node => node.ChildNodes, flags: JsDomPropertyFlags.SameObject)
+                .Property("childNodes", node => node.ChildNodes, flags: DomPropertyFlags.SameObject)
                 .Method("forEachChild", (node, args) =>
                 {
                     var callback = args.GetCallback(0);
@@ -47,9 +55,9 @@ namespace AngleSharp.Js.Tests
                         callback?.Invoke(child);
                     }
                 }, length: 1)
-                .Method("kind", (node, args) => "number", new JsDomSignature(typeof(Double)))
-                .Method("kind", (node, args) => "string", new JsDomSignature(typeof(String)))
-                .Method("kind", (node, args) => "none", new JsDomSignature());
+                .Method("kind", (node, args) => "number", new DomSignature(typeof(Double)))
+                .Method("kind", (node, args) => "string", new DomSignature(typeof(String)))
+                .Method("kind", (node, args) => "none", new DomSignature());
 
             registry.Type<IElement>("Element")
                 .Inherits<INode>()
@@ -63,7 +71,7 @@ namespace AngleSharp.Js.Tests
 
             registry.Type<IHtmlElement>("HTMLElement")
                 .Inherits<IElement>()
-                .Property("dataset", element => element.Dataset, flags: JsDomPropertyFlags.SameObject);
+                .Property("dataset", element => element.Dataset, flags: DomPropertyFlags.SameObject);
 
             registry.Type<IDocument>("Document")
                 .Inherits<INode>()
@@ -97,7 +105,7 @@ namespace AngleSharp.Js.Tests
             registry.Instance("thing", window => new Thing());
         }
 
-        private static async Task<(JsScriptingService Service, IDocument Document)> OpenAsync(JsDomRegistration registration, String html)
+        private static async Task<(JsScriptingService Service, IDocument Document)> OpenAsync(DomRegistration registration, String html)
         {
             var context = BrowsingContext.New(Configuration.Default.WithJs(registration));
             var document = await context.OpenAsync(m => m.Content(html));
@@ -129,16 +137,24 @@ namespace AngleSharp.Js.Tests
         }
 
         [Test]
-        public async Task NothingIsDiscoveredByReflectionBesideTheRegistration()
+        public async Task OnlyTheCoreDomAndTheRegistrationAreExposed()
         {
-            Assert.AreEqual("undefined", await EvalAsync("<p>Hello</p>", "typeof document.createElement"));
-            Assert.AreEqual("undefined", await EvalAsync("<p>Hello</p>", "typeof HTMLDivElement"));
+            //  AngleSharp.Css is a service of the context, which reflection would expose; a
+            //  registration naming it not leaves it out
+            var context = BrowsingContext.New(Configuration.Default.WithCss().WithJs(RegisterDom));
+            var document = await context.OpenAsync(m => m.Content("<p>Hello</p>"));
+            var service = context.GetService<JsScriptingService>();
+            Assert.AreEqual("undefined", Eval(service, document, "typeof CSSStyleSheet"));
+            Assert.AreEqual("function", Eval(service, document, "typeof document.createElement"));
+            Assert.AreEqual("function", Eval(service, document, "typeof HTMLDivElement"));
+            Assert.AreEqual(42.0, Eval(service, document, "thing.value"));
         }
 
         [Test]
         public async Task PrototypesFollowTheRegisteredInheritance()
         {
-            Assert.AreEqual("[object HTMLElement]", await EvalAsync("<p>Hello</p>", "Object.prototype.toString.call(document.querySelector('p'))"));
+            Assert.AreEqual("[object HTMLElement]", await EvalAsync("<b>Hello</b>", "Object.prototype.toString.call(document.querySelector('b'))"));
+            Assert.AreEqual("[object HTMLParagraphElement]", await EvalAsync("<p>Hello</p>", "Object.prototype.toString.call(document.querySelector('p'))"));
             Assert.AreEqual(true, await EvalAsync("<p>Hello</p>", "Object.getPrototypeOf(HTMLElement.prototype) === Element.prototype"));
             Assert.AreEqual(true, await EvalAsync("<p>Hello</p>", "document.querySelector('p') instanceof Node"));
         }
@@ -148,7 +164,7 @@ namespace AngleSharp.Js.Tests
         {
             Assert.AreEqual("function", await EvalAsync("", "typeof Element"));
             Assert.AreEqual(true, await EvalAsync("", "Elem === Element"));
-            Assert.AreEqual(true, await EvalAsync("<p></p>", "document.querySelector('p').constructor === HTMLElement"));
+            Assert.AreEqual(true, await EvalAsync("<p></p>", "document.querySelector('p').constructor === HTMLParagraphElement"));
         }
 
         [Test]
@@ -194,7 +210,7 @@ namespace AngleSharp.Js.Tests
         {
             Assert.AreEqual(2.0, await EvalAsync("<div><b></b><i></i></div>", "document.querySelector('div').childElementCount"));
             Assert.AreEqual(1.0, await EvalAsync("", "document.childElementCount"));
-            Assert.AreEqual("[object Document]", await EvalAsync("", "Object.prototype.toString.call(document)"));
+            Assert.AreEqual("[object HTMLDocument]", await EvalAsync("", "Object.prototype.toString.call(document)"));
         }
 
         [Test]
@@ -248,7 +264,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task ConstructorFunctionsAndInstancesArePublished()
         {
-            Assert.AreEqual("[object HTMLElement]", await EvalAsync("", "Object.prototype.toString.call(new Para())"));
+            Assert.AreEqual("[object HTMLParagraphElement]", await EvalAsync("", "Object.prototype.toString.call(new Para())"));
             Assert.AreEqual(true, await EvalAsync("", "new Para() instanceof Element"));
             Assert.AreEqual(0.0, await EvalAsync("", "Para.length"));
             Assert.AreEqual(42.0, await EvalAsync("", "thing.value"));
@@ -271,7 +287,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task ClrErrorsBecomeScriptErrors()
         {
-            JsDomRegistration registration = registry => registry
+            DomRegistration registration = registry => registry
                 .Type<IWindow>("Window")
                 .Method("fail", (window, args) => throw new InvalidOperationException("nope"));
             var (service, document) = await OpenAsync(registration, "");
@@ -281,7 +297,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task RegisteredExceptionsAreErrorsOfTheirClass()
         {
-            JsDomRegistration registration = registry =>
+            DomRegistration registration = registry =>
             {
                 registry.Type<IWindow>("Window").Method("fail", (window, args) => throw new Oops("nope"));
                 registry.Type<Oops>("Oops");
@@ -293,7 +309,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task UnregisteredDomExceptionsArePlainErrors()
         {
-            JsDomRegistration registration = registry => registry
+            DomRegistration registration = registry => registry
                 .Type<IWindow>("Window")
                 .Method("fail", (window, args) => throw new Oops("nope"));
             var (service, document) = await OpenAsync(registration, "");
@@ -303,7 +319,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task RegisteredDelegatesAreFunctions()
         {
-            JsDomRegistration registration = registry => registry
+            DomRegistration registration = registry => registry
                 .Type<IWindow>("Window")
                 .Property("twice", window => (Func<Double, Double>)(x => x * 2));
             var (service, document) = await OpenAsync(registration, "");
@@ -314,7 +330,7 @@ namespace AngleSharp.Js.Tests
         public async Task RegistrationRunsOncePerServiceAndIsCombinable()
         {
             var calls = 0;
-            var registration = JsDomRegistrations.Combine(RegisterDom, registry =>
+            var registration = DomRegistrations.Combine(RegisterDom, registry =>
             {
                 calls++;
                 registry.Type<IElement>("Element").Property("tag", element => element.LocalName);
@@ -328,7 +344,99 @@ namespace AngleSharp.Js.Tests
             Assert.AreEqual(1, calls);
         }
 
-        private static void RegisterPageDom(IJsDomRegistry registry)
+        [Test]
+        public async Task RequiredArgumentsConvertUndefinedOptionalOnesFallBack()
+        {
+            DomRegistration registration = registry => registry
+                .Type<IWindow>("Window")
+                .Method("required", (window, args) => args.Get<String>(0) ?? "<none>", length: 1)
+                .Method("optional", (window, args) => args.Get<String>(0, "fallback"));
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("undefined", Eval(service, document, "required(undefined)"));
+            Assert.AreEqual("<none>", Eval(service, document, "required()"));
+            Assert.AreEqual("fallback", Eval(service, document, "optional(undefined)"));
+            Assert.AreEqual("fallback", Eval(service, document, "optional()"));
+            Assert.AreEqual("1", Eval(service, document, "optional(1)"));
+        }
+
+        [Test]
+        public async Task DictionaryMembersAreReadByName()
+        {
+            DomRegistration registration = registry => registry
+                .Type<IWindow>("Window")
+                .Method("dict", (window, args) => args.GetMember<String>(0, "name", "none") + ":" + args.GetMember<Double>(0, "count", -1.0));
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("a:2", Eval(service, document, "dict({ name: 'a', count: '2' })"));
+            Assert.AreEqual("none:-1", Eval(service, document, "dict({ name: undefined })"));
+            Assert.AreEqual("none:-1", Eval(service, document, "dict(5)"));
+            Assert.AreEqual("none:-1", Eval(service, document, "dict()"));
+        }
+
+        [Test]
+        public async Task CallbackResultsAreConverted()
+        {
+            DomRegistration registration = registry => registry
+                .Type<IWindow>("Window")
+                .Method("check", (window, args) => args.GetCallback(0)?.Invoke<Int32>(3) ?? -1, length: 1);
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual(7.0, Eval(service, document, "check(function (x) { return '' + (x + 4); })"));
+        }
+
+        [Test]
+        public async Task TypesOfTheSameNameShareTheInterfaceObject()
+        {
+            DomRegistration registration = registry =>
+            {
+                registry.Type<IWindow>("Window")
+                    .Property("elements", window => window.Document.Body.Children)
+                    .Property("images", window => window.Document.Images);
+                registry.Type<IHtmlCollection<IElement>>("HTMLCollection")
+                    .Property("length", list => list.Length)
+                    .Constant("ANSWER", 42);
+                registry.Type<IHtmlCollection<IHtmlImageElement>>("HTMLCollection")
+                    .Property("length", list => list.Length);
+            };
+            var (service, document) = await OpenAsync(registration, "<img><img>");
+            Assert.AreEqual("true|true|true|2|2|42", Eval(service, document,
+                "[elements instanceof HTMLCollection, images instanceof HTMLCollection, Object.getPrototypeOf(images).constructor === HTMLCollection, elements.length, images.length, images.ANSWER].join('|')"));
+        }
+
+        [Test]
+        public async Task NamespacesArePlainObjectsHoldingTheirMembers()
+        {
+            DomRegistration registration = registry =>
+            {
+                RegisterDom(registry);
+                registry.Namespace("Maths")
+                    .Static("twice", args => args.Get<Double>(0) * 2, length: 1)
+                    .StaticProperty("answer", () => 42)
+                    .Constant("ONE", 1);
+                registry.Type<Thing>("Thing").InNamespace("Maths");
+            };
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("8|42|1|function|undefined|[object Maths]|true", Eval(service, document,
+                "[Maths.twice(4), Maths.answer, Maths.ONE, typeof Maths.Thing, typeof Thing, Object.prototype.toString.call(Maths), thing instanceof Maths.Thing].join('|')"));
+        }
+
+        [Test]
+        public async Task TypeWithoutInterfaceObjectSharesNoneOfItsName()
+        {
+            //  an unrelated type of another library named like the Location of AngleSharp
+            DomRegistration registration = registry =>
+            {
+                registry.Type<Thing>("Location").WithoutInterfaceObject().Property("value", thing => thing.Value);
+                registry.Instance("thing", window => new Thing());
+            };
+            var (service, document) = await OpenAsync(registration, "");
+            Assert.AreEqual("function|42|false|true", Eval(service, document,
+                "[typeof Location, thing.value, thing instanceof Location, location instanceof Location].join('|')"));
+        }
+
+        [Test]
+        public void TypeInAnUnregisteredNamespaceIsRejected() =>
+            AssertRejected(registry => registry.Type<Thing>("Thing").InNamespace("Nowhere"));
+
+        private static void RegisterPageDom(DomRegistry registry)
         {
             registry.Type<IWindow>("Window")
                 .Property("document", window => window.Document)
@@ -388,9 +496,9 @@ namespace AngleSharp.Js.Tests
                 }
                 customElements.define('my-a', class extends Item {});
                 customElements.define('my-b', class extends Item {});
-                var parent = document.createElement('div');
-                document.body.appendChild(parent);
-                parent.innerHTML = '<my-a id=a></my-a><my-b id=b></my-b>';",
+                var host = document.createElement('div');
+                document.body.appendChild(host);
+                host.innerHTML = '<my-a id=a></my-a><my-b id=b></my-b>';",
                 "log.join()"));
         }
 
@@ -410,7 +518,7 @@ namespace AngleSharp.Js.Tests
         [Test]
         public async Task TypesWithoutInterfaceObjectAreNotPublished()
         {
-            JsDomRegistration registration = registry =>
+            DomRegistration registration = registry =>
             {
                 RegisterDom(registry);
                 registry.Mixin<IParentNode>("ParentNode").WithoutInterfaceObject();
@@ -431,7 +539,7 @@ namespace AngleSharp.Js.Tests
 
         [Test]
         public void InheritingFromAnUnregisteredTypeIsRejected() =>
-            AssertRejected(registry => registry.Type<IElement>("Element").Inherits<INode>());
+            AssertRejected(registry => registry.Type<ProbeDerived>("ProbeDerived").Inherits<ProbeBase>());
 
         [Test]
         public void IncludingWhatIsNoMixinIsRejected() =>
@@ -453,7 +561,7 @@ namespace AngleSharp.Js.Tests
                 registry.Type<IElement>("Other");
             });
 
-        private static void AssertRejected(JsDomRegistration registration)
+        private static void AssertRejected(DomRegistration registration)
         {
             var context = BrowsingContext.New(Configuration.Default.WithJs(registration));
             var document = context.OpenNewAsync().Result;

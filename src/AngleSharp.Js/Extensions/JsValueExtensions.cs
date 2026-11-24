@@ -376,14 +376,14 @@ namespace AngleSharp.Js
                 }
                 else if (targetType.GetTypeInfo().IsEnum)
                 {
-                    if (value.IsString() && engine?.Surface != null)
+                    if (value.IsString() && engine?.Surface != null && engine.Surface.TryParseLiteral(targetType, TypeConverter.ToString(value), out var parsed))
                     {
-                        if (engine.Surface.TryParseLiteral(targetType, TypeConverter.ToString(value), out var parsed))
-                        {
-                            return parsed;
-                        }
+                        return parsed;
                     }
-                    else if (value.IsString())
+
+                    //  A string also names a member of an enum of constants (a dictionary member such
+                    //  as mode: 'far'), which a registration declares no literals for.
+                    if (value.IsString())
                     {
                         var literal = TypeConverter.ToString(value);
                         var member = targetType

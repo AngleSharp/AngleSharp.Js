@@ -2,6 +2,7 @@ namespace AngleSharp.Js.Cache
 {
     using AngleSharp.Dom;
     using AngleSharp.Html.Dom;
+    using AngleSharp.Scripting;
     using Jint;
     using Jint.Native;
     using Jint.Native.Object;
@@ -9,6 +10,7 @@ namespace AngleSharp.Js.Cache
     using Jint.Runtime.Interop;
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
 
     /// <summary>
     /// What a call of a DOM member is wrapped in, the same for a registered member as in
@@ -91,14 +93,14 @@ namespace AngleSharp.Js.Cache
         /// <summary>
         /// Picks the overload for a call: the only one, or the best match of the signatures.
         /// </summary>
-        public static Int32 Select(JsDomSignature[] signatures, JsValue[] arguments) =>
+        public static Int32 Select(DomSignature[] signatures, JsValue[] arguments) =>
             signatures == null || signatures.Length < 2 ? 0 : signatures.SelectSignature(arguments);
 
         /// <summary>
         /// Adds an overload to a set, which is a single declaration without a signature until one
         /// with a signature comes along - that one starts the set anew, as declaring replaces.
         /// </summary>
-        public static void Add<TDelegate>(ref TDelegate[] invokes, ref JsDomSignature[] signatures, TDelegate invoke, JsDomSignature signature)
+        public static void Add<TDelegate>(ref TDelegate[] invokes, ref DomSignature[] signatures, TDelegate invoke, DomSignature signature)
         {
             if (signature == null || signatures == null)
             {
@@ -115,7 +117,7 @@ namespace AngleSharp.Js.Cache
         }
 
         //  What Function.length reports for a set of overloads: the fewest arguments any takes.
-        public static Int32 GetLength(JsDomSignature[] signatures, Int32 length)
+        public static Int32 GetLength(DomSignature[] signatures, Int32 length)
         {
             if (signatures == null)
             {
@@ -135,24 +137,24 @@ namespace AngleSharp.Js.Cache
 
     sealed class RegisteredMethod<T> : DomShapeBuilder.Member where T : class
     {
-        private Func<T, JsDomArguments, Object>[] _invokes;
-        private JsDomSignature[] _signatures;
+        private Func<T, DomArguments, Object>[] _invokes;
+        private DomSignature[] _signatures;
         private Int32 _length;
 
-        public RegisteredMethod(Func<T, JsDomArguments, Object> invoke, Int32 length)
+        public RegisteredMethod(Func<T, DomArguments, Object> invoke, Int32 length)
         {
             _invokes = new[] { invoke };
             _length = length;
         }
 
-        public RegisteredMethod(Func<T, JsDomArguments, Object> invoke, JsDomSignature signature)
+        public RegisteredMethod(Func<T, DomArguments, Object> invoke, DomSignature signature)
         {
             Add(invoke, signature);
         }
 
         public Boolean IsOverloadSet => _signatures != null;
 
-        public void Add(Func<T, JsDomArguments, Object> invoke, JsDomSignature signature)
+        public void Add(Func<T, DomArguments, Object> invoke, DomSignature signature)
         {
             RegisteredCall.Add(ref _invokes, ref _signatures, invoke, signature);
             _length = RegisteredCall.GetLength(_signatures, 0);
@@ -211,7 +213,7 @@ namespace AngleSharp.Js.Cache
             {
                 try
                 {
-                    var result = invoke.Invoke(target, new JsDomArguments(instance, arguments)).ToJsValue(instance);
+                    var result = invoke.Invoke(target, instance.CreateArguments(arguments)).ToJsValue(instance);
                     scope.Complete();
                     return result;
                 }
@@ -230,11 +232,17 @@ namespace AngleSharp.Js.Cache
         private readonly Boolean _sameObject;
         private readonly JsString _forwardTo;
 
-        public RegisteredProperty(Func<T, TValue> getter, Action<T, TValue> setter, JsDomPropertyFlags flags, String forwardTo)
+        //  an IList<T> attribute is a WebIDL ObservableArray, an array for script, as by reflection
+        private static readonly Type ObservableElementType = ObservableArrays.GetElementType(typeof(TValue));
+
+        //  a WebIDL union is given to script as its conversion away, as by reflection
+        private static readonly MethodInfo GivenConversion = typeof(TValue).GetGivenConversion();
+
+        public RegisteredProperty(Func<T, TValue> getter, Action<T, TValue> setter, DomPropertyFlags flags, String forwardTo)
         {
             _getter = getter;
             _setter = setter;
-            _sameObject = (flags & JsDomPropertyFlags.SameObject) != 0;
+            _sameObject = (flags & DomPropertyFlags.SameObject) != 0;
             _forwardTo = forwardTo != null ? new JsString(forwardTo) : null;
         }
 
@@ -256,10 +264,17 @@ namespace AngleSharp.Js.Cache
                 {
                     Object value = _getter.Invoke(target);
 
+                    if (GivenConversion != null && value != null)
+                    {
+                        value = GivenConversion.Invoke(null, new[] { value });
+                    }
+
                     //  untyped, so that the node keeps its identity and its own prototype
-                    var result = _sameObject && value != null
-                        ? instance.GetSameObject(target, this, value, value.GetType())
-                        : value.ToJsValue(instance);
+                    var result = ObservableElementType != null && value != null && !instance.IsOutOfReach(value)
+                        ? instance.GetObservableArray(value, ObservableElementType)
+                        : _sameObject && value != null
+                            ? instance.GetSameObject(target, this, value, value.GetType())
+                            : value.ToJsValue(instance);
                     scope.Complete();
                     return result;
                 }
@@ -285,7 +300,7 @@ namespace AngleSharp.Js.Cache
             {
                 try
                 {
-                    _setter.Invoke(target, new JsDomArguments(instance, arguments).Get<TValue>(0));
+                    _setter.Invoke(target, instance.CreateArguments(arguments).Get<TValue>(0));
                     scope.Complete();
                     return JsValue.Undefined;
                 }
@@ -328,17 +343,17 @@ namespace AngleSharp.Js.Cache
     /// </summary>
     sealed class RegisteredStatic
     {
-        private Func<JsDomArguments, Object>[] _invokes;
-        private JsDomSignature[] _signatures;
+        private Func<DomArguments, Object>[] _invokes;
+        private DomSignature[] _signatures;
         private Int32 _length;
 
-        public RegisteredStatic(Func<JsDomArguments, Object> invoke, Int32 length)
+        public RegisteredStatic(Func<DomArguments, Object> invoke, Int32 length)
         {
             _invokes = new[] { invoke };
             _length = length;
         }
 
-        public RegisteredStatic(Func<JsDomArguments, Object> invoke, JsDomSignature signature)
+        public RegisteredStatic(Func<DomArguments, Object> invoke, DomSignature signature)
         {
             Add(invoke, signature);
         }
@@ -359,7 +374,7 @@ namespace AngleSharp.Js.Cache
 
         public Int32 Length => _length;
 
-        public void Add(Func<JsDomArguments, Object> invoke, JsDomSignature signature)
+        public void Add(Func<DomArguments, Object> invoke, DomSignature signature)
         {
             RegisteredCall.Add(ref _invokes, ref _signatures, invoke, signature);
             _length = RegisteredCall.GetLength(_signatures, 0);
@@ -373,7 +388,7 @@ namespace AngleSharp.Js.Cache
             {
                 try
                 {
-                    var result = invoke.Invoke(new JsDomArguments(instance, arguments)).ToJsValue(instance);
+                    var result = invoke.Invoke(instance.CreateArguments(arguments)).ToJsValue(instance);
                     scope.Complete();
                     return result;
                 }
@@ -388,7 +403,15 @@ namespace AngleSharp.Js.Cache
             instance => Guard(instance, () => ((Object)getter.Invoke()).ToJsValue(instance)),
             setter == null ? null : (instance, value) => Guard(instance, () =>
             {
-                setter.Invoke(new JsDomArguments(instance, new[] { value }).Get<TValue>(0));
+                setter.Invoke(instance.CreateArguments(new[] { value }).Get<TValue>(0));
+                return JsValue.Undefined;
+            }));
+
+        public static RegisteredStatic ForProperty<TValue>(Func<IWindow, TValue> getter, Action<IWindow, TValue> setter) => new RegisteredStatic(
+            instance => Guard(instance, () => ((Object)getter.Invoke(instance.Window.Value as IWindow)).ToJsValue(instance)),
+            setter == null ? null : (instance, value) => Guard(instance, () =>
+            {
+                setter.Invoke(instance.Window.Value as IWindow, instance.CreateArguments(new[] { value }).Get<TValue>(0));
                 return JsValue.Undefined;
             }));
 

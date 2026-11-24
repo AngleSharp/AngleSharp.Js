@@ -31,7 +31,7 @@ namespace AngleSharp.Js
             _removeHandler = removeHandler;
         }
 
-        //  for a registered event handler, see JsDomRegistration
+        //  for a registered event handler, see DomRegistration
         public DomEventDefinition(Action<Object, DomEventHandler> add, Action<Object, DomEventHandler> remove)
         {
             _add = add;

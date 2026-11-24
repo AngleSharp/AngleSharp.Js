@@ -1,5 +1,6 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Scripting;
     using System;
 
     /// <summary>
@@ -33,7 +34,7 @@ namespace AngleSharp.Js
         /// exactly what it registers - which is what a trimmed or natively compiled application
         /// needs.
         /// </summary>
-        public JsDomRegistration DomRegistration { get; set; }
+        public DomRegistration DomRegistration { get; set; }
 
         //  An engine is built per window, long after the options were handed over, so
         //  reading them then would let a later edit of the caller's object decide how

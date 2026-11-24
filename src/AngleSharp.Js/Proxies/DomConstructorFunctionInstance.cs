@@ -29,7 +29,7 @@ namespace AngleSharp.Js.Proxies
                 instance.GetDomPrototype(constructorFunction.ReturnType), false, false, false));
         }
 
-        //  for a registered named constructor, see JsDomRegistration
+        //  for a registered named constructor, see DomRegistration
         public DomConstructorFunctionInstance(EngineInstance instance, String name, Type returnType, Func<EngineInstance, JsValue[], Object> create) : base(instance.Jint, name)
         {
             _instance = instance;

@@ -7,6 +7,7 @@ namespace AngleSharp.Js
     using AngleSharp.Io;
     using AngleSharp.Js.Cache;
     using AngleSharp.Js.Dom;
+    using AngleSharp.Scripting;
     using AngleSharp.Text;
     using Jint;
     using Jint.Native;
@@ -68,6 +69,7 @@ namespace AngleSharp.Js
         private readonly ConditionalWeakTable<Object, SameObjectCache> _sameObjects;
         private readonly LibrarySet _libs;
         private readonly JsDomSurface _surface;
+        private readonly JsArgumentReader _arguments;
         private readonly DomNodeInstance _window;
         private readonly IDocument _document;
         private readonly JsImportMap _importMap;
@@ -107,6 +109,7 @@ namespace AngleSharp.Js
             _constraints = engineOptions.Constraints;
             _libs = new LibrarySet(libs);
             _surface = surface;
+            _arguments = new JsArgumentReader(this);
             _prototypes = new PrototypeCache(_engine, _libs, surface);
             _references = new ReferenceCache();
             _sameObjects = new ConditionalWeakTable<Object, SameObjectCache>();
@@ -167,6 +170,11 @@ namespace AngleSharp.Js
         /// Gets the registered DOM surface, or null if the surface is found by reflection.
         /// </summary>
         public JsDomSurface Surface => _surface;
+
+        /// <summary>
+        /// Gets the arguments of a call to a registered member, read by the engine's one reader.
+        /// </summary>
+        public DomArguments CreateArguments(JsValue[] values) => _arguments.Create(values);
 
         /// <summary>
         /// Gets the document the engine runs the scripts of.

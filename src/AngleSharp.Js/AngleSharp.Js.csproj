@@ -41,5 +41,9 @@
     <AssemblyAttribute Include="System.Runtime.InteropServices.ComVisibleAttribute">
       <_Parameter1>false</_Parameter1>
     </AssemblyAttribute>
+    <!-- the DOM this library brings itself, always registered first, see JsScriptingService -->
+    <AssemblyAttribute Include="AngleSharp.Attributes.GenerateDomRegistrationAttribute">
+      <_Parameter1>AngleSharp.Js.JsDom</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

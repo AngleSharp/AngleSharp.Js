@@ -1,5 +1,6 @@
 namespace AngleSharp.Js
 {
+    using AngleSharp.Scripting;
     using Jint;
     using Jint.Native;
     using Jint.Native.Function;
@@ -47,7 +48,7 @@ namespace AngleSharp.Js
         /// <summary>
         /// Picks one of several registered overloads, by the same rules as for reflected ones.
         /// </summary>
-        public static Int32 SelectSignature(this JsDomSignature[] signatures, JsValue[] arguments)
+        public static Int32 SelectSignature(this DomSignature[] signatures, JsValue[] arguments)
         {
             var count = CountPassed(arguments);
             var best = 0;

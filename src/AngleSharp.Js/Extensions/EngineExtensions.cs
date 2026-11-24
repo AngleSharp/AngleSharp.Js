@@ -69,7 +69,7 @@ namespace AngleSharp.Js
                 }
                 else if (obj is Enum literal)
                 {
-                    //  a registration is all there is, see JsDomRegistration
+                    //  a registration is all there is, see DomRegistration
                     var name = engine.Surface != null ? engine.Surface.GetLiteral(literal) : literal.GetLiteralName();
 
                     if (name != null)

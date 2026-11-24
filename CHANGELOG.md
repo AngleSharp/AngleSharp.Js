@@ -1,6 +1,6 @@
 # 1.3.0
 
-Released on Monday, November 23 2026.
+Released on Tuesday, November 24 2026.
 
 - Fixed a module with a top-level `await` blocking the page for many seconds
 - Fixed import map entries of a prefix not being used
@@ -8,7 +8,8 @@ Released on Monday, November 23 2026.
 - Fixed the DOM of libraries registered by a creator only being missing
 - Fixed an object getting the prototype of an unrelated class of another library
 - Updated a WebIDL namespace to be a plain object, whose members are no longer members of the window too
-- Added `WithJs(JsDomRegistration)` (and `JsScriptingOptions.DomRegistration`) to declare the DOM surface
+- Updated minimum version of AngleSharp to 1.11.0
+- Added `WithJs(DomRegistration)` to register the DOM of libraries declared for a scripting engine (#152)
 - Added `SharedWorker`, which the scripts of an origin creating it for the same address
 - Added CSS module scripts (`import sheet from './a.css' with { type: 'css' }`), whose default export is a constructed style sheet
 - Added `import.meta.resolve()`

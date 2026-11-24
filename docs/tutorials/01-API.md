@@ -12,7 +12,7 @@ The package targets `netstandard2.0`, `net462`, `net472`, `net8.0` and `net10.0`
 
 | Type / member | Namespace | Purpose |
 | --- | --- | --- |
-| `WithJs()`, `WithJs(JsScriptingOptions)` | `AngleSharp` | Registers the JavaScript engine and its auxiliary services. |
+| `WithJs()`, `WithJs(JsScriptingOptions)`, `WithJs(DomRegistration)` | `AngleSharp` | Registers the JavaScript engine and its auxiliary services. |
 | `WithEventLoop()` and overloads | `AngleSharp` | Registers the event loop that runs scripts, timers and callbacks. |
 | `WithConsoleLogger(Func<IBrowsingContext, IConsoleLogger>)` | `AngleSharp` | Routes `console.*` output to your code. |
 | `ExecuteScript(document, code, type, sourceUrl)` | `AngleSharp.Js` | Runs JavaScript in the document's engine and returns the result. |
@@ -49,6 +49,22 @@ Registers:
 - a custom element host, so `customElements.define` works with JavaScript classes.
 
 Calling `WithJs` does **not** register an event loop or a loader. Most documents that run scripts need both (see `WithEventLoop` and AngleSharp's `WithDefaultLoader`).
+
+### `WithJs(DomRegistration registration)`
+
+By default the engine finds the DOM exposed to scripts by reflecting over the DOM attributes of the AngleSharp libraries behind the services of the browsing context. Given a registration (also `JsScriptingOptions.DomRegistration`), it exposes exactly what is registered instead: nothing is reflected over, which is what a trimmed or natively compiled (AoT) application needs.
+
+Each library ships the registration of its DOM, generated at build time from its DOM attributes: `CssDom.Register` of AngleSharp.Css, `IoDom.Register` of AngleSharp.Io, and so on. The DOM of AngleSharp itself (`CoreDom`) and of this library are always registered first, so a registration only names the further libraries in use:
+
+```cs
+var config = Configuration.Default
+    .WithCss()
+    .WithIo()
+    .WithJs(DomRegistrations.Combine(CssDom.Register, IoDom.Register))
+    .WithEventLoop();
+```
+
+A library that is a service of the context but not part of the registration is not exposed to scripts. An application can add its own types with `[DomName]` attributes and `[assembly: GenerateDomRegistration("MyApp.AppDom")]`, or declare members by hand on the `DomRegistry` (see AngleSharp's documentation).
 
 ### `WithEventLoop()`
 

@@ -34,6 +34,16 @@ namespace AngleSharp.Scripting
 
         #endregion
 
+        #region Test Support
+
+        /// <summary>
+        /// Gets or sets the registration a service given none uses instead of reflection. Only the
+        /// test suite sets it, to run every test against the registered DOM as well.
+        /// </summary>
+        internal static DomRegistration DefaultDomRegistration { get; set; }
+
+        #endregion
+
         #region ctor
 
         /// <summary>
@@ -57,9 +67,13 @@ namespace AngleSharp.Scripting
 
             //  Built on the first document that runs a script, once for every one after it: what a
             //  registration declares does not depend on the document, and it may declare a lot.
-            var registration = _options.DomRegistration;
+            //  The DOM of AngleSharp itself and of this library always come first: this library's
+            //  builds on the core one (MessagePort is an EventTarget), and as under reflection a
+            //  library implementing one of its stubs (the renderer's layout members) wins over it.
+            //  Only the libraries beyond these two are for the registration to name.
+            var registration = _options.DomRegistration ?? DefaultDomRegistration;
             _surface = registration != null
-                ? new Lazy<JsDomSurface>(() => JsDomSurface.Create(registration), LazyThreadSafetyMode.ExecutionAndPublication)
+                ? new Lazy<JsDomSurface>(() => JsDomSurface.Create(DomRegistrations.Combine(CoreDom.Register, JsDom.Register, registration)), LazyThreadSafetyMode.ExecutionAndPublication)
                 : null;
         }
 
