@@ -1,11 +1,14 @@
 namespace AngleSharp.Js.Tests
 {
+    using AngleSharp.Browser;
     using AngleSharp.Dom;
     using AngleSharp.Io;
     using AngleSharp.Js.Tests.Mocks;
+    using AngleSharp.Scripting;
     using NUnit.Framework;
     using System;
     using System.Diagnostics;
+    using System.Threading;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -180,6 +183,48 @@ namespace AngleSharp.Js.Tests
 
             Assert.IsTrue(await WaitFor(() => document.ExecuteScript("log.length")?.ToString() == "2"));
             Assert.AreEqual("a=error,b=error", document.ExecuteScript("log.sort().join(',')")?.ToString());
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task WorkerErrorIsDispatchedAsAnEngineTask(Boolean shared)
+        {
+            var document = await OpenWithSourcesAsync(("https://example.com/broken.js", "not valid javascript (")).ConfigureAwait(false);
+            var instance = document.Context.GetService<JsScriptingService>().GetOrCreateInstance(document);
+            var dispatched = new TaskCompletionSource<Boolean>();
+            var loopEntered = new TaskCompletionSource<Boolean>();
+            var releaseLoop = new TaskCompletionSource<Boolean>();
+            var loop = document.Context.GetService<IEventLoop>();
+            loop.Enqueue(_ =>
+            {
+                loopEntered.TrySetResult(true);
+                releaseLoop.Task.GetAwaiter().GetResult();
+            }, TaskPriority.Normal);
+
+            try
+            {
+                Assert.AreSame(loopEntered.Task, await Task.WhenAny(loopEntered.Task, Task.Delay(3000)).ConfigureAwait(false));
+
+                if (shared)
+                {
+                    var worker = new AngleSharp.Js.Dom.SharedWorker(document.DefaultView, "broken.js");
+                    worker.Failed += (_, _) => dispatched.TrySetResult(
+                        EngineInstance.Current == instance && Monitor.IsEntered(instance.Jint));
+                }
+                else
+                {
+                    var worker = new AngleSharp.Js.Dom.Worker(document.DefaultView, "broken.js");
+                    worker.Failed += (_, _) => dispatched.TrySetResult(
+                        EngineInstance.Current == instance && Monitor.IsEntered(instance.Jint));
+                }
+            }
+            finally
+            {
+                releaseLoop.TrySetResult(true);
+            }
+
+            Assert.AreSame(dispatched.Task, await Task.WhenAny(dispatched.Task, Task.Delay(3000)).ConfigureAwait(false));
+            Assert.IsTrue(await dispatched.Task.ConfigureAwait(false));
         }
 
         [Test]

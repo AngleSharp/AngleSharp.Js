@@ -232,8 +232,14 @@ if (self && typeof self.onconnect === 'function') {
                 if (_startupError != null)
                 {
                     var worker = connection.Worker;
-                    var loop = connection.Window.Document?.Context.GetService<IEventLoop>();
-                    Worker.Enqueue(loop, TaskPriority.Normal, () =>
+                    var document = connection.Window.Document;
+
+                    if (document == null)
+                    {
+                        return;
+                    }
+
+                    MessageTaskQueue.Enqueue(document, () =>
                     {
                         var ev = new ErrorEvent();
                         ev.Init(_key.Item3, 0, 0, _startupError);
